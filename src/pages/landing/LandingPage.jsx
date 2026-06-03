@@ -12,10 +12,11 @@ import LanguageSwitcher from '../../components/LanguageSwitcher';
 import BrandShield from '../../components/ui/BrandShield';
 import './LandingPage.css';
 
-// Phase 1: feature ISO 9001 prominently and hide other standards from the
-// public funnel (the owner asked us to start with one ISO and add the rest
-// back later). To re-enable, set this to false.
-const PHASE_1_ISO_9001_ONLY = true;
+// Phase 1 (retired): we originally featured ISO 9001 only and hid the rest of
+// the funnel. All standards are now published publicly, so this flag is off.
+// Per-standard visibility is still controlled by `iso_link_settings.is_active`
+// (managed from the Super Admin "Shareable Links" page).
+const PHASE_1_ISO_9001_ONLY = false;
 
 const ICON_MAP = {
   Award, Globe2, Shield, Lock, Apple, GraduationCap, Zap, Scale, Activity, Stethoscope,

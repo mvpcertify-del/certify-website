@@ -4,6 +4,8 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import en from './locales/en.json';
 import ar from './locales/ar.json';
 import es from './locales/es.json';
+import ru from './locales/ru.json';
+import fr from './locales/fr.json';
 import {
   detectLanguageFromRegionSync,
   detectLanguageFromRegion,
@@ -39,9 +41,11 @@ i18n
       en: { translation: en },
       ar: { translation: ar },
       es: { translation: es },
+      ru: { translation: ru },
+      fr: { translation: fr },
     },
     fallbackLng: 'en',
-    supportedLngs: ['en', 'ar', 'es'],
+    supportedLngs: ['en', 'ar', 'es', 'ru', 'fr'],
     nonExplicitSupportedLngs: true,
     interpolation: {
       escapeValue: false,

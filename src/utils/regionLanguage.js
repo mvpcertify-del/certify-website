@@ -1,7 +1,7 @@
 // Region-based default language resolution.
-// Maps the user's country to one of the three supported app languages: en, ar, es.
-// Anything outside the explicit Arabic/Spanish lists falls back to English
-// (so India, US, UK, Germany, Japan, etc. all default to en).
+// Maps the user's country to one of the supported app languages: en, ar, es, ru, fr.
+// Anything outside the explicit Arabic/Spanish/Russian/French lists falls back to
+// English (so India, US, UK, Germany, Japan, etc. all default to en).
 
 const ARABIC_COUNTRIES = new Set([
   'SA', 'AE', 'QA', 'KW', 'BH', 'OM', 'JO', 'LB', 'IQ', 'SY', 'YE', 'PS',
@@ -11,6 +11,16 @@ const ARABIC_COUNTRIES = new Set([
 const SPANISH_COUNTRIES = new Set([
   'ES', 'MX', 'AR', 'CO', 'CL', 'PE', 'VE', 'EC', 'BO', 'PY', 'UY',
   'GT', 'HN', 'SV', 'NI', 'CR', 'PA', 'CU', 'DO', 'PR', 'GQ',
+]);
+
+// Russia + Belarus + Russian-speaking Central Asia.
+const RUSSIAN_COUNTRIES = new Set([
+  'RU', 'BY', 'KZ', 'KG',
+]);
+
+// France + the main French-speaking Western European countries/territories.
+const FRENCH_COUNTRIES = new Set([
+  'FR', 'BE', 'CH', 'LU', 'MC',
 ]);
 
 // Timezone IANA city → ISO country code. Used as an offline fallback when the
@@ -37,9 +47,20 @@ const TIMEZONE_TO_COUNTRY = {
   'america/tegucigalpa': 'HN', 'america/el_salvador': 'SV', 'america/managua': 'NI',
   'america/costa_rica': 'CR', 'america/panama': 'PA', 'america/havana': 'CU',
   'america/santo_domingo': 'DO', 'america/puerto_rico': 'PR',
+  // Russian-speaking
+  'europe/moscow': 'RU', 'europe/kaliningrad': 'RU', 'europe/samara': 'RU',
+  'europe/volgograd': 'RU', 'europe/saratov': 'RU', 'europe/astrakhan': 'RU',
+  'asia/yekaterinburg': 'RU', 'asia/omsk': 'RU', 'asia/novosibirsk': 'RU',
+  'asia/krasnoyarsk': 'RU', 'asia/irkutsk': 'RU', 'asia/yakutsk': 'RU',
+  'asia/vladivostok': 'RU', 'asia/magadan': 'RU', 'asia/kamchatka': 'RU',
+  'europe/minsk': 'BY', 'asia/almaty': 'KZ', 'asia/aqtobe': 'KZ',
+  'asia/bishkek': 'KG',
+  // French-speaking
+  'europe/paris': 'FR', 'europe/brussels': 'BE', 'europe/zurich': 'CH',
+  'europe/luxembourg': 'LU', 'europe/monaco': 'MC',
 };
 
-const SUPPORTED = new Set(['en', 'ar', 'es']);
+const SUPPORTED = new Set(['en', 'ar', 'es', 'ru', 'fr']);
 const COUNTRY_CACHE_KEY = 'certifycx-detected-country';
 const COUNTRY_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -48,6 +69,8 @@ export function languageForCountry(countryCode) {
   const code = countryCode.toUpperCase();
   if (ARABIC_COUNTRIES.has(code)) return 'ar';
   if (SPANISH_COUNTRIES.has(code)) return 'es';
+  if (RUSSIAN_COUNTRIES.has(code)) return 'ru';
+  if (FRENCH_COUNTRIES.has(code)) return 'fr';
   return 'en';
 }
 

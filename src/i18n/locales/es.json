@@ -51,10 +51,14 @@
     "title": "¿Cambiar idioma?",
     "messageAr": "¿Le gustaría ver este sitio en árabe?",
     "messageEs": "¿Le gustaría ver este sitio en español?",
+    "messageRu": "¿Le gustaría ver este sitio en ruso?",
+    "messageFr": "¿Le gustaría ver este sitio en francés?",
     "switchTo": "Cambiar a {{language}}",
     "keepEnglish": "Mantener inglés",
     "arabic": "Árabe",
-    "spanish": "Español"
+    "spanish": "Español",
+    "russian": "Ruso",
+    "french": "Francés"
   },
   "nav": {
     "howItWorks": "Cómo funciona",
