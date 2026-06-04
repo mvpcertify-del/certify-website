@@ -23,7 +23,7 @@ export const ISO_CATALOG = {
     titleKey: 'iso.iso14001Title',
     descKey: 'iso.iso14001Desc',
     icon: 'Globe2',
-    color: '#00C2FF',
+    color: '#3ECF8E',
   },
   'iso-45001': {
     slug: 'iso-45001',
@@ -31,7 +31,7 @@ export const ISO_CATALOG = {
     titleKey: 'iso.iso45001Title',
     descKey: 'iso.iso45001Desc',
     icon: 'Shield',
-    color: '#A78BFA',
+    color: '#3ECF8E',
   },
   'iso-22000': {
     slug: 'iso-22000',
@@ -39,7 +39,7 @@ export const ISO_CATALOG = {
     titleKey: 'iso.iso22000Title',
     descKey: 'iso.iso22000Desc',
     icon: 'Apple',
-    color: '#F59E0B',
+    color: '#3ECF8E',
   },
   'iso-21001': {
     slug: 'iso-21001',
@@ -47,7 +47,7 @@ export const ISO_CATALOG = {
     titleKey: 'iso.iso21001Title',
     descKey: 'iso.iso21001Desc',
     icon: 'GraduationCap',
-    color: '#EC4899',
+    color: '#3ECF8E',
   },
   'iso-iec-27001': {
     slug: 'iso-iec-27001',
@@ -55,7 +55,7 @@ export const ISO_CATALOG = {
     titleKey: 'iso.iso27001Title',
     descKey: 'iso.iso27001Desc',
     icon: 'Lock',
-    color: '#6366F1',
+    color: '#3ECF8E',
   },
   'iso-iec-27701': {
     slug: 'iso-iec-27701',
@@ -63,7 +63,7 @@ export const ISO_CATALOG = {
     titleKey: 'iso.iso27701Title',
     descKey: 'iso.iso27701Desc',
     icon: 'ShieldCheck',
-    color: '#0891B2',
+    color: '#3ECF8E',
   },
   'iso-iec-42001': {
     slug: 'iso-iec-42001',
@@ -71,7 +71,7 @@ export const ISO_CATALOG = {
     titleKey: 'iso.iso42001Title',
     descKey: 'iso.iso42001Desc',
     icon: 'BrainCircuit',
-    color: '#D946EF',
+    color: '#3ECF8E',
   },
   'iso-50001': {
     slug: 'iso-50001',
@@ -79,7 +79,7 @@ export const ISO_CATALOG = {
     titleKey: 'iso.iso50001Title',
     descKey: 'iso.iso50001Desc',
     icon: 'Zap',
-    color: '#10B981',
+    color: '#3ECF8E',
   },
   'iso-37001': {
     slug: 'iso-37001',
@@ -87,7 +87,7 @@ export const ISO_CATALOG = {
     titleKey: 'iso.iso37001Title',
     descKey: 'iso.iso37001Desc',
     icon: 'Scale',
-    color: '#8B5CF6',
+    color: '#3ECF8E',
   },
   'iso-22301': {
     slug: 'iso-22301',
@@ -95,7 +95,7 @@ export const ISO_CATALOG = {
     titleKey: 'iso.iso22301Title',
     descKey: 'iso.iso22301Desc',
     icon: 'Activity',
-    color: '#F43F5E',
+    color: '#3ECF8E',
   },
   'iso-13485': {
     slug: 'iso-13485',
@@ -103,7 +103,7 @@ export const ISO_CATALOG = {
     titleKey: 'iso.iso13485Title',
     descKey: 'iso.iso13485Desc',
     icon: 'Stethoscope',
-    color: '#0EA5E9',
+    color: '#3ECF8E',
   },
 };
 
