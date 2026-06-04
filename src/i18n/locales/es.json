@@ -58,7 +58,15 @@
     "arabic": "Árabe",
     "spanish": "Español",
     "russian": "Ruso",
-    "french": "Francés"
+    "french": "Francés",
+    "portuguese": "Portugués",
+    "german": "Alemán",
+    "chinese": "Chino",
+    "hindi": "Hindi",
+    "messagePt": "¿Le gustaría ver este sitio en portugués?",
+    "messageDe": "¿Le gustaría ver este sitio en alemán?",
+    "messageZh": "¿Le gustaría ver este sitio en chino?",
+    "messageHi": "¿Le gustaría ver este sitio en hindi?"
   },
   "nav": {
     "howItWorks": "Cómo funciona",

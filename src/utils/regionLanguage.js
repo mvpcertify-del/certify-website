@@ -1,7 +1,7 @@
 // Region-based default language resolution.
-// Maps the user's country to one of the supported app languages: en, ar, es, ru, fr.
-// Anything outside the explicit Arabic/Spanish/Russian/French lists falls back to
-// English (so India, US, UK, Germany, Japan, etc. all default to en).
+// Maps the user's country to one of the supported app languages: en, ar, es, ru,
+// fr, pt, de, zh, hi. Anything outside the explicit country lists falls back to
+// English (so US, UK, Japan, etc. all default to en).
 
 const ARABIC_COUNTRIES = new Set([
   'SA', 'AE', 'QA', 'KW', 'BH', 'OM', 'JO', 'LB', 'IQ', 'SY', 'YE', 'PS',
@@ -21,6 +21,26 @@ const RUSSIAN_COUNTRIES = new Set([
 // France + the main French-speaking Western European countries/territories.
 const FRENCH_COUNTRIES = new Set([
   'FR', 'BE', 'CH', 'LU', 'MC',
+]);
+
+// Brazil + Portugal + the main Portuguese-speaking countries.
+const PORTUGUESE_COUNTRIES = new Set([
+  'BR', 'PT', 'AO', 'MZ', 'CV', 'GW', 'ST', 'TL',
+]);
+
+// Germany + the German-speaking countries.
+const GERMAN_COUNTRIES = new Set([
+  'DE', 'AT', 'LI',
+]);
+
+// Mainland China + the main Simplified-Chinese-speaking markets.
+const CHINESE_COUNTRIES = new Set([
+  'CN', 'SG',
+]);
+
+// India (Hindi belt).
+const HINDI_COUNTRIES = new Set([
+  'IN',
 ]);
 
 // Timezone IANA city → ISO country code. Used as an offline fallback when the
@@ -58,9 +78,22 @@ const TIMEZONE_TO_COUNTRY = {
   // French-speaking
   'europe/paris': 'FR', 'europe/brussels': 'BE', 'europe/zurich': 'CH',
   'europe/luxembourg': 'LU', 'europe/monaco': 'MC',
+  // Portuguese-speaking
+  'america/sao_paulo': 'BR', 'america/bahia': 'BR', 'america/fortaleza': 'BR',
+  'america/recife': 'BR', 'america/manaus': 'BR', 'america/belem': 'BR',
+  'america/cuiaba': 'BR', 'america/porto_velho': 'BR',
+  'europe/lisbon': 'PT', 'atlantic/madeira': 'PT', 'atlantic/azores': 'PT',
+  'africa/luanda': 'AO', 'africa/maputo': 'MZ', 'atlantic/cape_verde': 'CV',
+  // German-speaking
+  'europe/berlin': 'DE', 'europe/vienna': 'AT', 'europe/vaduz': 'LI',
+  'europe/busingen': 'DE',
+  // Chinese-speaking
+  'asia/shanghai': 'CN', 'asia/urumqi': 'CN', 'asia/singapore': 'SG',
+  // Hindi
+  'asia/kolkata': 'IN', 'asia/calcutta': 'IN',
 };
 
-const SUPPORTED = new Set(['en', 'ar', 'es', 'ru', 'fr']);
+const SUPPORTED = new Set(['en', 'ar', 'es', 'ru', 'fr', 'pt', 'de', 'zh', 'hi']);
 const COUNTRY_CACHE_KEY = 'certifycx-detected-country';
 const COUNTRY_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -71,6 +104,10 @@ export function languageForCountry(countryCode) {
   if (SPANISH_COUNTRIES.has(code)) return 'es';
   if (RUSSIAN_COUNTRIES.has(code)) return 'ru';
   if (FRENCH_COUNTRIES.has(code)) return 'fr';
+  if (PORTUGUESE_COUNTRIES.has(code)) return 'pt';
+  if (GERMAN_COUNTRIES.has(code)) return 'de';
+  if (CHINESE_COUNTRIES.has(code)) return 'zh';
+  if (HINDI_COUNTRIES.has(code)) return 'hi';
   return 'en';
 }
 

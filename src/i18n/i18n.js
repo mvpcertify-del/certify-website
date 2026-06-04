@@ -6,6 +6,10 @@ import ar from './locales/ar.json';
 import es from './locales/es.json';
 import ru from './locales/ru.json';
 import fr from './locales/fr.json';
+import pt from './locales/pt.json';
+import de from './locales/de.json';
+import zh from './locales/zh.json';
+import hi from './locales/hi.json';
 import {
   detectLanguageFromRegionSync,
   detectLanguageFromRegion,
@@ -43,9 +47,13 @@ i18n
       es: { translation: es },
       ru: { translation: ru },
       fr: { translation: fr },
+      pt: { translation: pt },
+      de: { translation: de },
+      zh: { translation: zh },
+      hi: { translation: hi },
     },
     fallbackLng: 'en',
-    supportedLngs: ['en', 'ar', 'es', 'ru', 'fr'],
+    supportedLngs: ['en', 'ar', 'es', 'ru', 'fr', 'pt', 'de', 'zh', 'hi'],
     nonExplicitSupportedLngs: true,
     interpolation: {
       escapeValue: false,

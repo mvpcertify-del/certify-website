@@ -47,8 +47,8 @@ export default function LanguageSuggestionPopup() {
 
   if (!show || !suggestedLang) return null;
 
-  const LANG_NAME_KEY = { ar: 'arabic', es: 'spanish', ru: 'russian', fr: 'french' };
-  const LANG_MESSAGE_KEY = { ar: 'messageAr', es: 'messageEs', ru: 'messageRu', fr: 'messageFr' };
+  const LANG_NAME_KEY = { ar: 'arabic', es: 'spanish', ru: 'russian', fr: 'french', pt: 'portuguese', de: 'german', zh: 'chinese', hi: 'hindi' };
+  const LANG_MESSAGE_KEY = { ar: 'messageAr', es: 'messageEs', ru: 'messageRu', fr: 'messageFr', pt: 'messagePt', de: 'messageDe', zh: 'messageZh', hi: 'messageHi' };
   const langName = t(`languageSuggestion.${LANG_NAME_KEY[suggestedLang] || 'arabic'}`);
   const message = t(`languageSuggestion.${LANG_MESSAGE_KEY[suggestedLang] || 'messageAr'}`);
 

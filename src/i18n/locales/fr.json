@@ -58,7 +58,15 @@
     "arabic": "Arabe",
     "spanish": "Espagnol",
     "russian": "Russe",
-    "french": "Français"
+    "french": "Français",
+    "portuguese": "Portugais",
+    "german": "Allemand",
+    "chinese": "Chinois",
+    "hindi": "Hindi",
+    "messagePt": "Souhaitez-vous afficher ce site en portugais ?",
+    "messageDe": "Souhaitez-vous afficher ce site en allemand ?",
+    "messageZh": "Souhaitez-vous afficher ce site en chinois ?",
+    "messageHi": "Souhaitez-vous afficher ce site en hindi ?"
   },
   "nav": {
     "howItWorks": "Comment ça marche",
