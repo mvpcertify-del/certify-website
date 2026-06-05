@@ -1071,6 +1071,32 @@
       "employees_other": "Zusätzliche Mitarbeiter ({{count}} Staffeln)",
       "locations": "Zusätzlicher Standort ({{count}})",
       "locations_other": "Zusätzliche Standorte ({{count}})"
+    },
+    "calculator": {
+      "title": "Preisrechner",
+      "subtitle": "Berechnen Sie Ihren Gesamtpreis anhand der Größe Ihrer Organisation.",
+      "employeesLabel": "Anzahl der Mitarbeiter",
+      "locationsLabel": "Anzahl der Standorte",
+      "employeesHint": "1–10 Mitarbeiter inklusive, dann +200 $ pro 10",
+      "locationsHint": "1 Standort inklusive · {{amount}} je weiterer",
+      "decreaseEmployees": "Weniger Mitarbeiter",
+      "increaseEmployees": "Mehr Mitarbeiter",
+      "decreaseLocations": "Weniger Standorte",
+      "increaseLocations": "Mehr Standorte",
+      "summaryTitle": "Preisübersicht",
+      "basePackage": "Grundpaketpreis",
+      "employeeCharges": "Mitarbeitergebühren",
+      "locationCharges": "Standortgebühren",
+      "finalTotal": "Endbetrag",
+      "included": "Inklusive",
+      "employeesUnit": "Mitarbeiter",
+      "locationsUnit": "Standorte",
+      "generateInvoice": "Rechnung erstellen",
+      "invoiceTitle": "Rechnung",
+      "invoiceDate": "Datum",
+      "invoiceItem": "Position",
+      "invoiceAmount": "Betrag",
+      "invoiceFooter": "Dies ist eine von Certify.cx erstellte Schätzung und keine Steuerrechnung."
     }
   }
 }

@@ -1071,6 +1071,32 @@
       "employees_other": "अतिरिक्त कर्मचारी ({{count}} बैंड)",
       "locations": "अतिरिक्त स्थान ({{count}})",
       "locations_other": "अतिरिक्त स्थान ({{count}})"
+    },
+    "calculator": {
+      "title": "मूल्य कैलकुलेटर",
+      "subtitle": "अपने संगठन के आकार के आधार पर अपना कुल अनुमान लगाएं।",
+      "employeesLabel": "कर्मचारियों की संख्या",
+      "locationsLabel": "स्थानों की संख्या",
+      "employeesHint": "1–10 कर्मचारी शामिल, फिर प्रति 10 पर +$200",
+      "locationsHint": "1 स्थान शामिल · प्रत्येक अतिरिक्त के लिए {{amount}}",
+      "decreaseEmployees": "कम कर्मचारी",
+      "increaseEmployees": "अधिक कर्मचारी",
+      "decreaseLocations": "कम स्थान",
+      "increaseLocations": "अधिक स्थान",
+      "summaryTitle": "मूल्य सारांश",
+      "basePackage": "आधार पैकेज मूल्य",
+      "employeeCharges": "कर्मचारी शुल्क",
+      "locationCharges": "स्थान शुल्क",
+      "finalTotal": "अंतिम कुल राशि",
+      "included": "शामिल",
+      "employeesUnit": "कर्मचारी",
+      "locationsUnit": "स्थान",
+      "generateInvoice": "चालान बनाएं",
+      "invoiceTitle": "चालान",
+      "invoiceDate": "तारीख",
+      "invoiceItem": "मद",
+      "invoiceAmount": "राशि",
+      "invoiceFooter": "यह Certify.cx द्वारा बनाया गया अनुमान है और कर चालान नहीं है।"
     }
   }
 }

@@ -1071,6 +1071,32 @@
       "employees_other": "Employés supplémentaires ({{count}} tranches)",
       "locations": "Site supplémentaire ({{count}})",
       "locations_other": "Sites supplémentaires ({{count}})"
+    },
+    "calculator": {
+      "title": "Calculateur de prix",
+      "subtitle": "Estimez votre total en fonction de la taille de votre organisation.",
+      "employeesLabel": "Nombre d'employés",
+      "locationsLabel": "Nombre de sites",
+      "employeesHint": "1 à 10 employés inclus, puis +200 $ par tranche de 10",
+      "locationsHint": "1 site inclus · {{amount}} par site supplémentaire",
+      "decreaseEmployees": "Moins d'employés",
+      "increaseEmployees": "Plus d'employés",
+      "decreaseLocations": "Moins de sites",
+      "increaseLocations": "Plus de sites",
+      "summaryTitle": "Récapitulatif des prix",
+      "basePackage": "Prix du forfait de base",
+      "employeeCharges": "Frais d'employés",
+      "locationCharges": "Frais de sites",
+      "finalTotal": "Montant total final",
+      "included": "Inclus",
+      "employeesUnit": "employés",
+      "locationsUnit": "sites",
+      "generateInvoice": "Générer une facture",
+      "invoiceTitle": "Facture",
+      "invoiceDate": "Date",
+      "invoiceItem": "Article",
+      "invoiceAmount": "Montant",
+      "invoiceFooter": "Ceci est une estimation générée par Certify.cx et non une facture fiscale."
     }
   }
 }

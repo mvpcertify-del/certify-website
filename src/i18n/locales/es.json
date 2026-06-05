@@ -1071,6 +1071,32 @@
       "employees_other": "Empleados adicionales ({{count}} grupos)",
       "locations": "Ubicación adicional ({{count}})",
       "locations_other": "Ubicaciones adicionales ({{count}})"
+    },
+    "calculator": {
+      "title": "Calculadora de precios",
+      "subtitle": "Calcula tu total según el tamaño de tu organización.",
+      "employeesLabel": "Número de empleados",
+      "locationsLabel": "Número de ubicaciones",
+      "employeesHint": "1–10 empleados incluidos, luego +$200 por cada 10",
+      "locationsHint": "1 ubicación incluida · {{amount}} por cada adicional",
+      "decreaseEmployees": "Menos empleados",
+      "increaseEmployees": "Más empleados",
+      "decreaseLocations": "Menos ubicaciones",
+      "increaseLocations": "Más ubicaciones",
+      "summaryTitle": "Resumen de precios",
+      "basePackage": "Precio del paquete base",
+      "employeeCharges": "Cargos por empleados",
+      "locationCharges": "Cargos por ubicaciones",
+      "finalTotal": "Importe total final",
+      "included": "Incluido",
+      "employeesUnit": "empleados",
+      "locationsUnit": "ubicaciones",
+      "generateInvoice": "Generar factura",
+      "invoiceTitle": "Factura",
+      "invoiceDate": "Fecha",
+      "invoiceItem": "Concepto",
+      "invoiceAmount": "Importe",
+      "invoiceFooter": "Esta es una estimación generada por Certify.cx y no es una factura fiscal."
     }
   }
 }

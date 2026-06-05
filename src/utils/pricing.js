@@ -120,6 +120,54 @@ export function computeTotal({
   };
 }
 
+// -------------------------------------------------------
+// Public landing-page Pricing Calculator
+//
+// A self-service estimator shown on the ISO landing page, distinct from the
+// post-purchase checkout surcharge model above. The buyer types an exact
+// headcount and location count; charges are flat per 10-employee band and
+// per additional site:
+//   Employees  1–10 → included, then +$200 per 10 (11–20 +$200, 21–30 +$400 …)
+//   Locations  1 included, then +$300 each additional
+// -------------------------------------------------------
+export const CALC_EMPLOYEES_INCLUDED = 10;
+export const CALC_EMPLOYEES_PER_BAND = 10;
+export const CALC_CHARGE_PER_EMPLOYEE_BAND = 200;
+export const CALC_LOCATIONS_INCLUDED = 1;
+export const CALC_CHARGE_PER_LOCATION = 300;
+
+// Flat employee surcharge for an exact headcount. 10 → $0; 11–20 → $200;
+// 21–30 → $400; … and continues linearly for larger organizations.
+export function calcEmployeeCharge(employeeCount) {
+  const n = Math.max(0, Math.floor(Number(employeeCount) || 0));
+  if (n <= CALC_EMPLOYEES_INCLUDED) return 0;
+  const bands = Math.ceil((n - CALC_EMPLOYEES_INCLUDED) / CALC_EMPLOYEES_PER_BAND);
+  return bands * CALC_CHARGE_PER_EMPLOYEE_BAND;
+}
+
+// Flat location surcharge: $300 for every site beyond the first.
+export function calcLocationCharge(locationCount) {
+  const n = Math.max(0, Math.floor(Number(locationCount) || 0));
+  const additional = Math.max(0, n - CALC_LOCATIONS_INCLUDED);
+  return additional * CALC_CHARGE_PER_LOCATION;
+}
+
+// Full calculator breakdown for the landing page and its generated invoice.
+//   basePrice      base package price (defaults to the standard tier)
+//   employeeCount  exact headcount entered by the buyer
+//   locationCount  exact number of sites entered by the buyer
+export function calcPackageTotal({ basePrice, employeeCount = 1, locationCount = 1 }) {
+  const base = Math.max(0, Number(basePrice) || 0);
+  const employeeCharge = calcEmployeeCharge(employeeCount);
+  const locationCharge = calcLocationCharge(locationCount);
+  return {
+    basePrice: base,
+    employeeCharge,
+    locationCharge,
+    total: base + employeeCharge + locationCharge,
+  };
+}
+
 // Pricing table across all catalog standards. Useful for an admin overview
 // or a public pricing matrix.
 export function getPricingTable() {

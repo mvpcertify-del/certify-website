@@ -11,6 +11,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROLES } from '../../utils/roles';
 import PricingTiers from '../../components/pricing/PricingTiers';
+import PricingCalculator from '../../components/pricing/PricingCalculator';
 import './IsoLanding.css';
 
 const ICON_MAP = {
@@ -168,6 +169,15 @@ export default function IsoLanding() {
         {/* Pricing Tiers — Free / Standard / Premium (priced per standard). */}
         <section className="iso-landing__section">
           <PricingTiers standardSlug={config.slug} />
+        </section>
+
+        {/* Pricing Calculator — employee/location surcharges + invoice. */}
+        <section className="iso-landing__section">
+          <PricingCalculator
+            standardSlug={config.slug}
+            standardCode={config.code}
+            accent={config.color}
+          />
         </section>
 
         {/* Payment Info */}

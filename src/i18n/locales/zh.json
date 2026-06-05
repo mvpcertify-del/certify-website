@@ -1071,6 +1071,32 @@
       "employees_other": "额外员工（{{count}} 个区间）",
       "locations": "额外经营场所（{{count}}）",
       "locations_other": "额外经营场所（{{count}}）"
+    },
+    "calculator": {
+      "title": "价格计算器",
+      "subtitle": "根据您组织的规模估算总价。",
+      "employeesLabel": "员工人数",
+      "locationsLabel": "经营场所数量",
+      "employeesHint": "包含 1–10 名员工，之后每 10 名 +$200",
+      "locationsHint": "包含 1 个经营场所 · 每增加一个 {{amount}}",
+      "decreaseEmployees": "减少员工",
+      "increaseEmployees": "增加员工",
+      "decreaseLocations": "减少经营场所",
+      "increaseLocations": "增加经营场所",
+      "summaryTitle": "价格摘要",
+      "basePackage": "基础套餐价格",
+      "employeeCharges": "员工费用",
+      "locationCharges": "经营场所费用",
+      "finalTotal": "最终总金额",
+      "included": "已包含",
+      "employeesUnit": "名员工",
+      "locationsUnit": "个经营场所",
+      "generateInvoice": "生成发票",
+      "invoiceTitle": "发票",
+      "invoiceDate": "日期",
+      "invoiceItem": "项目",
+      "invoiceAmount": "金额",
+      "invoiceFooter": "这是由 Certify.cx 生成的估算，并非税务发票。"
     }
   }
 }

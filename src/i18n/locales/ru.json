@@ -1071,6 +1071,32 @@
       "employees_other": "Дополнительные сотрудники ({{count}} диапазонов)",
       "locations": "Дополнительная площадка ({{count}})",
       "locations_other": "Дополнительные площадки ({{count}})"
+    },
+    "calculator": {
+      "title": "Калькулятор цен",
+      "subtitle": "Рассчитайте итог в зависимости от размера вашей организации.",
+      "employeesLabel": "Количество сотрудников",
+      "locationsLabel": "Количество площадок",
+      "employeesHint": "1–10 сотрудников включено, далее +$200 за каждые 10",
+      "locationsHint": "1 площадка включена · {{amount}} за каждую дополнительную",
+      "decreaseEmployees": "Меньше сотрудников",
+      "increaseEmployees": "Больше сотрудников",
+      "decreaseLocations": "Меньше площадок",
+      "increaseLocations": "Больше площадок",
+      "summaryTitle": "Сводка по ценам",
+      "basePackage": "Базовая цена пакета",
+      "employeeCharges": "Плата за сотрудников",
+      "locationCharges": "Плата за площадки",
+      "finalTotal": "Итоговая сумма",
+      "included": "Включено",
+      "employeesUnit": "сотрудников",
+      "locationsUnit": "площадок",
+      "generateInvoice": "Сформировать счёт",
+      "invoiceTitle": "Счёт",
+      "invoiceDate": "Дата",
+      "invoiceItem": "Позиция",
+      "invoiceAmount": "Сумма",
+      "invoiceFooter": "Это оценка, сформированная Certify.cx, и не является налоговым счётом."
     }
   }
 }

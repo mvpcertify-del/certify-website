@@ -1071,6 +1071,32 @@
       "employees_other": "موظفون إضافيون ({{count}} مجموعات)",
       "locations": "موقع إضافي ({{count}})",
       "locations_other": "مواقع إضافية ({{count}})"
+    },
+    "calculator": {
+      "title": "حاسبة الأسعار",
+      "subtitle": "احسب إجماليك بناءً على حجم مؤسستك.",
+      "employeesLabel": "عدد الموظفين",
+      "locationsLabel": "عدد المواقع",
+      "employeesHint": "من 1 إلى 10 موظفين مشمولون، ثم +200$ لكل 10",
+      "locationsHint": "موقع واحد مشمول · {{amount}} لكل موقع إضافي",
+      "decreaseEmployees": "عدد أقل من الموظفين",
+      "increaseEmployees": "عدد أكبر من الموظفين",
+      "decreaseLocations": "عدد أقل من المواقع",
+      "increaseLocations": "عدد أكبر من المواقع",
+      "summaryTitle": "ملخص الأسعار",
+      "basePackage": "سعر الباقة الأساسية",
+      "employeeCharges": "رسوم الموظفين",
+      "locationCharges": "رسوم المواقع",
+      "finalTotal": "المبلغ الإجمالي النهائي",
+      "included": "مشمول",
+      "employeesUnit": "موظفين",
+      "locationsUnit": "مواقع",
+      "generateInvoice": "إنشاء فاتورة",
+      "invoiceTitle": "فاتورة",
+      "invoiceDate": "التاريخ",
+      "invoiceItem": "البند",
+      "invoiceAmount": "المبلغ",
+      "invoiceFooter": "هذا تقدير تم إنشاؤه بواسطة Certify.cx وليس فاتورة ضريبية."
     }
   }
 }
