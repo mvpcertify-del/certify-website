@@ -99,11 +99,11 @@
     "applicationFields": "Benutzerdefinierte Antragsfelder"
   },
   "landing": {
-    "iafBadge": "IAF-akkreditierter Partner",
+    "iafBadge": "IAF-akkreditierte Zertifizierungsstellen-Partner",
     "heroTitle": "IAF-akkreditierte",
     "heroAccent": "ISO-Zertifizierungen",
     "heroSubtitle": "Der schnellste Weg für Unternehmen, international anerkannte ISO-Zertifizierungen zu erlangen. Online beantragen, auditieren lassen und Ihr Zertifikat erhalten – alles über eine einzige Plattform.",
-    "statCompanies": "Zertifizierte Unternehmen",
+    "statCompanies": "Zertifizierte Auditoren",
     "statRegions": "Globale Regionen",
     "statApproval": "Genehmigungsrate",
     "processTag": "Ablauf",

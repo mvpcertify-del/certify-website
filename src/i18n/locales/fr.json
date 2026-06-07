@@ -99,11 +99,11 @@
     "applicationFields": "Champs de demande personnalisés"
   },
   "landing": {
-    "iafBadge": "Partenaire accrédité IAF",
+    "iafBadge": "Partenaires d'organismes de certification accrédités IAF",
     "heroTitle": "Certifications ISO",
     "heroAccent": "accréditées IAF",
     "heroSubtitle": "Le moyen le plus rapide pour les entreprises d'obtenir des certifications ISO reconnues internationalement. Postulez en ligne, faites-vous auditer et recevez votre certificat — le tout depuis une seule plateforme.",
-    "statCompanies": "Entreprises certifiées",
+    "statCompanies": "Auditeurs certifiés",
     "statRegions": "Régions mondiales",
     "statApproval": "Taux d'approbation",
     "processTag": "Processus",

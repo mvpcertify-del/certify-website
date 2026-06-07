@@ -64,7 +64,7 @@
   background: none;
   border: none;
   border-radius: var(--radius-sm, 4px);
-  color: var(--color-text-secondary, #a0a0a0);
+  color: var(--color-accent, #3ECF8E);
   cursor: pointer;
   font-size: var(--font-size-sm, 0.8125rem);
   text-align: left;
@@ -83,6 +83,16 @@
 .lang-switcher__item--active {
   color: var(--color-accent, #3ECF8E);
   font-weight: 600;
+}
+
+.lang-switcher__check {
+  margin-left: auto;
+  color: var(--color-accent, #3ECF8E);
+}
+
+[dir="rtl"] .lang-switcher__check {
+  margin-left: 0;
+  margin-right: auto;
 }
 
 /* Landing page variant */

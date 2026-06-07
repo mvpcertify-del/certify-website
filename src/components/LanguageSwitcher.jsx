@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Globe, ChevronDown } from 'lucide-react';
+import { Globe, ChevronDown, Check } from 'lucide-react';
 import './LanguageSwitcher.css';
 
 const LANGUAGES = [
@@ -65,6 +65,9 @@ export default function LanguageSwitcher({ variant = 'default' }) {
             >
               <span>{lang.flag}</span>
               <span>{lang.label}</span>
+              {lang.code === i18n.language && (
+                <Check size={14} className="lang-switcher__check" />
+              )}
             </button>
           ))}
         </div>

@@ -99,11 +99,11 @@
     "applicationFields": "Campos de solicitud"
   },
   "landing": {
-    "iafBadge": "Socio acreditado por IAF",
+    "iafBadge": "Socios de Organismos de Certificación Acreditados por IAF",
     "heroTitle": "Certificaciones ISO",
     "heroAccent": "acreditadas por IAF",
     "heroSubtitle": "La forma más rápida para que las empresas obtengan certificaciones ISO reconocidas internacionalmente. Solicita en línea, recibe la auditoría y obtén tu certificado — todo desde una sola plataforma.",
-    "statCompanies": "Empresas certificadas",
+    "statCompanies": "Auditores certificados",
     "statRegions": "Regiones globales",
     "statApproval": "Tasa de aprobación",
     "processTag": "Proceso",

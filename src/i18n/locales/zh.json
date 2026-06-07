@@ -99,11 +99,11 @@
     "applicationFields": "自定义申请字段"
   },
   "landing": {
-    "iafBadge": "IAF 认可合作伙伴",
+    "iafBadge": "IAF 认可认证机构合作伙伴",
     "heroTitle": "IAF 认可的",
     "heroAccent": "ISO 认证",
     "heroSubtitle": "企业获得国际认可 ISO 认证的最快途径。在线申请、接受审核并领取证书——全部在一个平台上完成。",
-    "statCompanies": "已认证企业",
+    "statCompanies": "认证审核员",
     "statRegions": "全球区域",
     "statApproval": "通过率",
     "processTag": "流程",
