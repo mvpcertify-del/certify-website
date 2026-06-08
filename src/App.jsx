@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import DashboardLayout from './components/layout/DashboardLayout';
@@ -318,12 +319,14 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <ErrorBoundary>
-          <AppRoutes />
-          <LanguageSuggestionPopup />
-        </ErrorBoundary>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <ErrorBoundary>
+            <AppRoutes />
+            <LanguageSuggestionPopup />
+          </ErrorBoundary>
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

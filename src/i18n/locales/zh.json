@@ -38,6 +38,8 @@
     "inactive": "已停用",
     "activate": "启用",
     "deactivate": "停用",
+    "lightMode": "浅色模式",
+    "darkMode": "深色模式",
     "remove": "移除",
     "noAccess": "您无权访问此页面。",
     "saved": "已保存！",

@@ -38,6 +38,8 @@
     "inactive": "Inactive",
     "activate": "Activate",
     "deactivate": "Deactivate",
+    "lightMode": "Light Mode",
+    "darkMode": "Dark Mode",
     "remove": "Remove",
     "noAccess": "You do not have access to this page.",
     "saved": "Saved!",

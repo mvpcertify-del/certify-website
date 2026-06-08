@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { REGIONS, ROLES, hasPermission, PERMISSIONS, getDisplayRoleLabel } from '../../utils/roles';
 import {
   Menu,
@@ -12,12 +13,15 @@ import {
   User,
   Settings,
   ChevronRight,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import LanguageSwitcher from '../LanguageSwitcher';
 import './TopBar.css';
 
 export default function TopBar({ pageTitle, onMenuClick, collapsed }) {
   const { user, logout } = useAuth();
+  const { isLight, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [regionOpen, setRegionOpen] = useState(false);
@@ -88,6 +92,17 @@ export default function TopBar({ pageTitle, onMenuClick, collapsed }) {
 
         {/* Language Switcher */}
         <LanguageSwitcher />
+
+        {/* Theme Toggle (Dark / Light) */}
+        <button
+          className="topbar__icon-btn"
+          onClick={toggleTheme}
+          title={isLight ? t('common.darkMode') : t('common.lightMode')}
+          aria-label={isLight ? t('common.darkMode') : t('common.lightMode')}
+          aria-pressed={isLight}
+        >
+          {isLight ? <Moon size={18} /> : <Sun size={18} />}
+        </button>
 
         {/* Notifications */}
         <button className="topbar__icon-btn" title={t('common.notifications')} onClick={() => navigate('/notifications')}>

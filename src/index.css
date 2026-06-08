@@ -81,6 +81,64 @@
   --sidebar-width: 260px;
   --sidebar-collapsed: 0px;
   --topbar-height: 56px;
+
+  /* Hint native UI (scrollbars, form controls, date pickers) — dark default */
+  color-scheme: dark;
+}
+
+/* ============================================
+   LIGHT THEME
+   Overrides the SAME variable names so every component that uses
+   var(--color-*) re-themes automatically. Activated by setting
+   <html data-theme="light"> (see ThemeContext / main.jsx).
+   ============================================ */
+:root[data-theme="light"] {
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f7f8fa;
+  --color-bg-surface: #ffffff;
+  --color-bg-surface-hover: #f1f3f5;
+  --color-bg-elevated: #ffffff;
+  --color-bg-overlay: rgba(15, 23, 42, 0.45);
+
+  --color-border: #e4e7eb;
+  --color-border-light: #d0d5dd;
+  --color-border-focus: #3ECF8E;
+
+  /* Brand green is light on white, so use a slightly deeper green for
+     accents/links/text to keep contrast readable. Buttons keep white text. */
+  --color-accent: #0e9f6e;
+  --color-accent-hover: #0b8a5f;
+  --color-accent-light: rgba(14, 159, 110, 0.12);
+  --color-accent-text: #0a7251;
+
+  --color-text-primary: #1a1d21;
+  --color-text-secondary: #5b6470;
+  --color-text-tertiary: #8a929e;
+  --color-text-inverse: #ffffff;
+
+  --color-danger: #dc2626;
+  --color-danger-bg: rgba(220, 38, 38, 0.10);
+  --color-warning: #b45309;
+  --color-warning-bg: rgba(180, 83, 9, 0.12);
+  --color-info: #2563eb;
+  --color-info-bg: rgba(37, 99, 235, 0.10);
+  --color-success: #059669;
+  --color-success-bg: rgba(5, 150, 105, 0.12);
+  --color-neutral: #6b7280;
+  --color-neutral-bg: rgba(107, 114, 128, 0.12);
+
+  /* Softer shadows read better on light backgrounds. */
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
+  --shadow-md: 0 4px 12px rgba(16, 24, 40, 0.08);
+  --shadow-lg: 0 8px 24px rgba(16, 24, 40, 0.12);
+  --shadow-glow: 0 0 0 3px rgba(62, 207, 142, 0.18);
+
+  color-scheme: light;
+}
+
+/* Smooth (color-only — no layout shift) transition when toggling themes. */
+body {
+  transition: background-color var(--transition-base), color var(--transition-base);
 }
 
 /* ---- Reset & Base ---- */
