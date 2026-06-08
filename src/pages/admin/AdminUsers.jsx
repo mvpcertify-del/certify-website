@@ -8,6 +8,8 @@ import StatusBadge from '../../components/ui/StatusBadge';
 import { ROLES, ROLE_LABELS, REGIONS, hasPermission, PERMISSIONS, getCreatableRoles, getDisplayRoleLabel } from '../../utils/roles';
 import { STAKEHOLDER_TYPES } from '../../utils/stakeholderTypes';
 import { supabase } from '../../lib/supabase';
+import { apiPost } from '../../lib/apiClient';
+import RowActions from '../../components/ui/RowActions';
 
 // Client-role stakeholder variants an admin can pick when creating a client.
 // 'client' is the default (regular company client). The rest reuse the `client`
@@ -15,7 +17,7 @@ import { supabase } from '../../lib/supabase';
 const CLIENT_STAKEHOLDER_OPTIONS = Object.values(STAKEHOLDER_TYPES)
   .filter(st => st.role === 'client')
   .map(st => ({ value: st.id, label: st.singularTitle }));
-import { UserPlus, AlertCircle, CheckCircle, Shield, Trash2 } from 'lucide-react';
+import { UserPlus, AlertCircle, CheckCircle, Shield } from 'lucide-react';
 import './AdminUsers.css';
 
 export default function AdminUsers() {
@@ -50,6 +52,8 @@ export default function AdminUsers() {
 
   const allowedRoles = getCreatableRoles(user?.role);
   const isRegionalAdmin = user?.role === ROLES.REGIONAL_ADMIN;
+  // Activate/Deactivate + Delete are Super-Admin-only (server enforces this too).
+  const isSuperAdmin = user?.role === ROLES.SUPER_ADMIN;
 
   useEffect(() => {
     fetchUsers();
@@ -110,24 +114,14 @@ export default function AdminUsers() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/create-user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          password,
-          full_name,
-          role,
-          region,
-          ...(resolvedStakeholderType ? { stakeholder_type: resolvedStakeholderType } : {}),
-        }),
+      await apiPost('/api/create-user', {
+        email,
+        password,
+        full_name,
+        role,
+        region,
+        ...(resolvedStakeholderType ? { stakeholder_type: resolvedStakeholderType } : {}),
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create user');
-      }
 
       setSuccess(`${t('admin.successCreated')} ${ROLE_LABELS[role]}: ${full_name}`);
       setShowCreateModal(false);
@@ -154,14 +148,7 @@ export default function AdminUsers() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'update-role', userId: editingUser.id, newRole }),
-      });
-
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'Failed to update role');
+      await apiPost('/api/user', { action: 'update-role', userId: editingUser.id, newRole });
 
       setSuccess(t('admin.roleUpdated', { name: editingUser.full_name || editingUser.email, role: ROLE_LABELS[newRole] }));
       setUsers(prev => prev.map(u => u.id === editingUser.id ? { ...u, role: newRole } : u));
@@ -179,17 +166,7 @@ export default function AdminUsers() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/delete-user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: deletingUser.id }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to delete user');
-      }
+      await apiPost('/api/delete-user', { userId: deletingUser.id });
 
       setSuccess(`${t('admin.successDeleted')} ${deletingUser.full_name || deletingUser.email}`);
       setUsers(prev => prev.filter(u => u.id !== deletingUser.id));
@@ -200,6 +177,22 @@ export default function AdminUsers() {
     }
 
     setLoading(false);
+  };
+
+  // --- Activate / Deactivate User ---
+  const handleToggleActive = async (userRow) => {
+    setError('');
+    setSuccess('');
+    const next = !(userRow.is_active !== false); // treat null/undefined as active
+    try {
+      await apiPost('/api/user', { action: 'set-active', userId: userRow.id, isActive: next });
+      setUsers(prev => prev.map(u => u.id === userRow.id ? { ...u, is_active: next } : u));
+      setSuccess(
+        `${next ? t('common.activate') : t('common.deactivate')}: ${userRow.full_name || userRow.email}`
+      );
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   const columns = [
@@ -219,27 +212,47 @@ export default function AdminUsers() {
     }},
     { key: 'created_at', label: t('admin.joined'), render: (val) => val ? new Date(val).toLocaleDateString() : '—' },
     {
-      key: 'actions', label: t('dashboard.action'), render: (_, userRow) => (
-        <div style={{ display: 'flex', gap: '4px' }}>
-          <Button size="sm" variant="ghost" onClick={() => {
-            setEditingUser(userRow);
-            setNewRole(userRow.role);
-            setError('');
-            setShowEditModal(true);
-          }}>
+      key: 'is_active', label: t('dashboard.status'), render: (val) => (
+        <StatusBadge
+          status={val === false ? 'inactive' : 'active'}
+          label={val === false ? t('common.inactive') : t('common.active')}
+        />
+      )
+    },
+    {
+      key: 'actions', label: t('dashboard.action'), render: (_, userRow) => {
+        const openEditRole = () => {
+          setEditingUser(userRow);
+          setNewRole(userRow.role);
+          setError('');
+          setShowEditModal(true);
+        };
+        // Super Admin gets the full action cluster: [Deactivate] [Edit] [Delete]
+        // (Edit opens the role editor). Destructive actions are server-enforced
+        // and never offered on your own account.
+        if (isSuperAdmin) {
+          return (
+            <RowActions
+              isActive={userRow.is_active !== false}
+              showToggle={userRow.id !== user?.id}
+              showDelete={userRow.id !== user?.id}
+              onToggle={() => handleToggleActive(userRow)}
+              onEdit={openEditRole}
+              onDelete={() => {
+                setDeletingUser(userRow);
+                setError('');
+                setShowDeleteModal(true);
+              }}
+            />
+          );
+        }
+        // Other admins (e.g. regional) keep only their existing Edit-Role action.
+        return (
+          <Button size="sm" variant="ghost" onClick={openEditRole}>
             {t('admin.editRole')}
           </Button>
-          {userRow.id !== user?.id && (
-            <Button size="sm" variant="ghost" onClick={() => {
-              setDeletingUser(userRow);
-              setError('');
-              setShowDeleteModal(true);
-            }} style={{ color: 'var(--color-danger, #ef4444)' }}>
-              <Trash2 size={14} />
-            </Button>
-          )}
-        </div>
-      )
+        );
+      }
     }
   ];
 

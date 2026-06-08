@@ -6,7 +6,9 @@ import { Button, Input } from '../../components/ui/FormElements';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROLES } from '../../utils/roles';
-import { Plus, Search, Pencil, Trash2 } from 'lucide-react';
+import StatusBadge from '../../components/ui/StatusBadge';
+import RowActions from '../../components/ui/RowActions';
+import { Plus, Search } from 'lucide-react';
 
 const EMPTY = { name: '', acronym: '' };
 
@@ -117,6 +119,21 @@ export default function AdminAccreditationBodies() {
     }
   };
 
+  const toggleActive = async (row) => {
+    if (!canEditDelete) return;
+    const next = !(row.is_active !== false);
+    try {
+      const { error: upErr } = await supabase
+        .from('accreditation_bodies')
+        .update({ is_active: next, updated_at: new Date().toISOString() })
+        .eq('id', row.id);
+      if (upErr) throw upErr;
+      setItems(prev => prev.map(x => x.id === row.id ? { ...x, is_active: next } : x));
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   if (!user || loading) {
     return <div className="page-container"><p>{t('common.loadingDashboard')}</p></div>;
   }
@@ -160,41 +177,25 @@ export default function AdminAccreditationBodies() {
 
   if (canEditDelete) {
     columns.push({
+      key: 'is_active',
+      label: t('dashboard.status'),
+      render: (v) => (
+        <StatusBadge
+          status={v === false ? 'inactive' : 'active'}
+          label={v === false ? t('common.inactive') : t('common.active')}
+        />
+      ),
+    });
+    columns.push({
       key: 'actions',
       label: t('common.actions') || 'Actions',
       render: (_, row) => (
-        <div style={{ display: 'flex', gap: 6 }}>
-          <button
-            type="button"
-            onClick={() => openEdit(row)}
-            title={t('common.edit') || 'Edit'}
-            style={{
-              background: 'transparent',
-              border: '1px solid var(--color-border)',
-              borderRadius: 6,
-              padding: 6,
-              cursor: 'pointer',
-              color: 'var(--color-text-secondary)',
-            }}
-          >
-            <Pencil size={14} />
-          </button>
-          <button
-            type="button"
-            onClick={() => handleDelete(row)}
-            title={t('common.delete') || 'Delete'}
-            style={{
-              background: 'transparent',
-              border: '1px solid rgba(239,68,68,0.4)',
-              borderRadius: 6,
-              padding: 6,
-              cursor: 'pointer',
-              color: '#ef4444',
-            }}
-          >
-            <Trash2 size={14} />
-          </button>
-        </div>
+        <RowActions
+          isActive={row.is_active !== false}
+          onToggle={() => toggleActive(row)}
+          onEdit={() => openEdit(row)}
+          onDelete={() => handleDelete(row)}
+        />
       ),
     });
   }

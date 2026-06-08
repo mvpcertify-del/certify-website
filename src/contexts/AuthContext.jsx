@@ -220,9 +220,17 @@ export function AuthProvider({ children }) {
     if (data?.user) {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('approval_status')
+        .select('approval_status, is_active')
         .eq('id', data.user.id)
         .maybeSingle();
+
+      if (profile?.is_active === false) {
+        await supabase.auth.signOut();
+        return {
+          success: false,
+          error: 'Your account has been deactivated. Please contact a CertifyCX administrator.',
+        };
+      }
 
       if (profile?.approval_status === 'pending') {
         await supabase.auth.signOut();

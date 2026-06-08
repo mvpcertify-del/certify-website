@@ -68,8 +68,8 @@ export default function CertificationBodies() {
             cb_standard_pricing ( iso_standard, initial_price, surveillance_price, recertification_price, currency )
           `)
           .order('created_at', { ascending: false }),
-        supabase.from('accreditation_bodies').select('id, name, acronym').order('name'),
-        supabase.from('countries').select('id, name').order('name'),
+        supabase.from('accreditation_bodies').select('id, name, acronym, is_active').order('name'),
+        supabase.from('countries').select('id, name, is_active').order('name'),
       ]);
 
       if (cbRes.data) setBodies(cbRes.data);
@@ -85,13 +85,20 @@ export default function CertificationBodies() {
   useEffect(() => { fetchData(); }, []);
 
   // --- Dropdown option lists ---
+  // Only offer ACTIVE records as selectable options. Deactivated ones
+  // (is_active === false) are hidden here; `!== false` keeps everything visible
+  // if the is_active column isn't present yet (pre-migration safety).
   const abOptions = useMemo(
-    () => accreditationBodies.map(ab => ({ value: ab.id, label: `${ab.acronym} — ${ab.name}` })),
+    () => accreditationBodies
+      .filter(ab => ab.is_active !== false)
+      .map(ab => ({ value: ab.id, label: `${ab.acronym} — ${ab.name}` })),
     [accreditationBodies]
   );
 
   const countryOptions = useMemo(
-    () => dbCountries.map(c => ({ value: c.id, label: c.name })),
+    () => dbCountries
+      .filter(c => c.is_active !== false)
+      .map(c => ({ value: c.id, label: c.name })),
     [dbCountries]
   );
 

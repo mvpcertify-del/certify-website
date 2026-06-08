@@ -6,7 +6,8 @@ import { Button, Input } from '../../components/ui/FormElements';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROLES } from '../../utils/roles';
-import { Plus, Pencil, Trash2, TrendingUp } from 'lucide-react';
+import RowActions from '../../components/ui/RowActions';
+import { Plus, TrendingUp } from 'lucide-react';
 
 const EMPTY = {
   min_conversions: '',
@@ -138,6 +139,19 @@ export default function AdminCommissionTiers() {
     }
   };
 
+  const toggleActive = async (row) => {
+    try {
+      const { error: upErr } = await supabase
+        .from('referral_commission_tiers')
+        .update({ is_active: !row.is_active, updated_at: new Date().toISOString() })
+        .eq('id', row.id);
+      if (upErr) throw upErr;
+      setItems(prev => prev.map(c => c.id === row.id ? { ...c, is_active: !row.is_active } : c));
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   const columns = [
     {
       key: 'label',
@@ -178,38 +192,12 @@ export default function AdminCommissionTiers() {
       key: 'actions',
       label: t('common.actions') || 'Actions',
       render: (_, row) => (
-        <div style={{ display: 'flex', gap: 6 }}>
-          <button
-            type="button"
-            title={t('common.edit')}
-            onClick={() => openEdit(row)}
-            style={{
-              background: 'transparent',
-              border: '1px solid var(--color-border)',
-              borderRadius: 6,
-              padding: 6,
-              cursor: 'pointer',
-              color: 'var(--color-text-secondary)',
-            }}
-          >
-            <Pencil size={14} />
-          </button>
-          <button
-            type="button"
-            title={t('common.delete')}
-            onClick={() => handleDelete(row)}
-            style={{
-              background: 'transparent',
-              border: '1px solid rgba(239,68,68,0.4)',
-              borderRadius: 6,
-              padding: 6,
-              cursor: 'pointer',
-              color: '#ef4444',
-            }}
-          >
-            <Trash2 size={14} />
-          </button>
-        </div>
+        <RowActions
+          isActive={!!row.is_active}
+          onToggle={() => toggleActive(row)}
+          onEdit={() => openEdit(row)}
+          onDelete={() => handleDelete(row)}
+        />
       ),
     },
   ];

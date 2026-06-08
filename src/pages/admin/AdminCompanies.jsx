@@ -3,10 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { Input, Select, Button } from '../../components/ui/FormElements';
 import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
+import StatusBadge from '../../components/ui/StatusBadge';
+import RowActions from '../../components/ui/RowActions';
 import { ROLES, ROLE_LABELS, REGIONS } from '../../utils/roles';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
-import { UserPlus, AlertCircle, CheckCircle, Pencil } from 'lucide-react';
+import { apiPost } from '../../lib/apiClient';
+import { UserPlus, AlertCircle, CheckCircle } from 'lucide-react';
 
 export default function AdminCompanies() {
   const { user } = useAuth();
@@ -65,13 +68,7 @@ export default function AdminCompanies() {
 
     setSaving(true);
     try {
-      const response = await fetch('/api/create-user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, full_name, role: 'client', region, company_name }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to create client');
+      await apiPost('/api/create-user', { email, password, full_name, role: 'client', region, company_name });
 
       setSuccess(`${t('admin.clientCreated')} ${company_name}`);
       setShowCreateModal(false);
@@ -106,20 +103,14 @@ export default function AdminCompanies() {
 
     setSaving(true);
     try {
-      const response = await fetch('/api/user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'update-profile',
-          userId: editingClient.id,
-          full_name: editForm.full_name,
-          email: editForm.email,
-          company_name: editForm.company_name,
-          region: editForm.region || null,
-        }),
+      await apiPost('/api/user', {
+        action: 'update-profile',
+        userId: editingClient.id,
+        full_name: editForm.full_name,
+        email: editForm.email,
+        company_name: editForm.company_name,
+        region: editForm.region || null,
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to update client');
 
       setSuccess(`${t('admin.clientUpdated')} ${editForm.company_name}`);
       setShowEditModal(false);
@@ -132,6 +123,33 @@ export default function AdminCompanies() {
     setSaving(false);
   };
 
+  // --- Activate / Deactivate Client ---
+  const handleToggleActive = async (client) => {
+    setError('');
+    const next = !(client.is_active !== false);
+    try {
+      await apiPost('/api/user', { action: 'set-active', userId: client.id, isActive: next });
+      setCompanies(prev => prev.map(c => c.id === client.id ? { ...c, is_active: next } : c));
+      setSuccess(`${next ? t('common.activate') : t('common.deactivate')}: ${client.company_name || client.full_name || client.email}`);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  // --- Delete Client ---
+  const handleDelete = async (client) => {
+    setError('');
+    const name = client.company_name || client.full_name || client.email;
+    if (!window.confirm(t('admin.deleteUserConfirm') + ` ${name}?`)) return;
+    try {
+      await apiPost('/api/delete-user', { userId: client.id });
+      setCompanies(prev => prev.filter(c => c.id !== client.id));
+      setSuccess(`${t('admin.successDeleted')} ${name}`);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const columns = [
     { key: 'company_name', label: t('admin.companyName'), render: (val) => val || '—' },
     { key: 'full_name', label: t('admin.contactPerson'), render: (val) => val || '—' },
@@ -142,13 +160,26 @@ export default function AdminCompanies() {
       return r ? r.label : val;
     }},
     { key: 'created_at', label: t('admin.joined'), render: (val) => val ? new Date(val).toLocaleDateString() : '—' },
-    ...(isSuperAdmin ? [{
-      key: 'actions', label: t('dashboard.action'), render: (_, row) => (
-        <Button size="sm" variant="ghost" onClick={() => openEditModal(row)}>
-          <Pencil size={14} /> {t('common.edit')}
-        </Button>
-      )
-    }] : []),
+    ...(isSuperAdmin ? [
+      {
+        key: 'is_active', label: t('dashboard.status'), render: (val) => (
+          <StatusBadge
+            status={val === false ? 'inactive' : 'active'}
+            label={val === false ? t('common.inactive') : t('common.active')}
+          />
+        )
+      },
+      {
+        key: 'actions', label: t('dashboard.action'), render: (_, row) => (
+          <RowActions
+            isActive={row.is_active !== false}
+            onToggle={() => handleToggleActive(row)}
+            onEdit={() => openEditModal(row)}
+            onDelete={() => handleDelete(row)}
+          />
+        )
+      },
+    ] : []),
   ];
 
   return (
@@ -189,6 +220,13 @@ export default function AdminCompanies() {
         <div className="admin-users__success">
           <CheckCircle size={16} />
           <span>{success}</span>
+        </div>
+      )}
+
+      {error && !showCreateModal && !showEditModal && (
+        <div className="auth-form__error">
+          <AlertCircle size={16} />
+          <span>{error}</span>
         </div>
       )}
 

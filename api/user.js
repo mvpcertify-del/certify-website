@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { verifyAdmin } from './_verifyAdmin.js';
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -21,6 +22,7 @@ export default async function handler(req, res) {
     const action = req.body?.action;
     if (action === 'update-profile') return await updateProfile(req, res);
     if (action === 'update-role') return await updateRole(req, res);
+    if (action === 'set-active') return await setActive(req, res);
     return res.status(400).json({ error: 'Unknown action' });
   } catch (error) {
     console.error('User route error:', error);
@@ -105,6 +107,43 @@ async function updateRole(req, res) {
   }
 
   return res.status(200).json({ success: true });
+}
+
+// Activate / Deactivate a user account.
+// Super-admin only. Flips profiles.is_active AND bans/unbans the auth user so a
+// deactivated account cannot log in. Authorization is enforced HERE (not on the
+// other actions) so the token-less OAuth profile bootstrap keeps working.
+async function setActive(req, res) {
+  const auth = await verifyAdmin(req, { requireSuperAdmin: true });
+  if (auth.error) {
+    return res.status(auth.status).json({ error: auth.error });
+  }
+
+  const { userId, isActive } = req.body;
+  if (!userId || typeof isActive !== 'boolean') {
+    return res.status(400).json({ error: 'Missing required fields: userId, isActive (boolean)' });
+  }
+  if (userId === auth.caller.id) {
+    return res.status(400).json({ error: 'You cannot deactivate your own account.' });
+  }
+
+  const { error: profileError } = await supabaseAdmin
+    .from('profiles')
+    .update({ is_active: isActive })
+    .eq('id', userId);
+  if (profileError) {
+    return res.status(500).json({ error: profileError.message });
+  }
+
+  // Block / restore login. ban_duration: 'none' lifts an existing ban.
+  const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+    ban_duration: isActive ? 'none' : '876000h', // ~100 years = effectively permanent
+  });
+  if (authError) {
+    return res.status(400).json({ error: `Status saved but login toggle failed: ${authError.message}` });
+  }
+
+  return res.status(200).json({ success: true, is_active: isActive });
 }
 
 async function getMeta(req, res) {

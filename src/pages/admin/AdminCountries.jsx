@@ -6,7 +6,9 @@ import { Button, Input, Select } from '../../components/ui/FormElements';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROLES, REGIONS, getRegionLabel, getRegionFromCountry } from '../../utils/roles';
-import { Plus, Search, Pencil, Trash2, Wand2 } from 'lucide-react';
+import StatusBadge from '../../components/ui/StatusBadge';
+import RowActions from '../../components/ui/RowActions';
+import { Plus, Search, Wand2 } from 'lucide-react';
 
 const EMPTY = { name: '', region_id: '' };
 
@@ -33,7 +35,7 @@ export default function AdminCountries() {
     setFetching(true);
     const { data, error: err } = await supabase
       .from('countries')
-      .select('id, name, region_id')
+      .select('id, name, region_id, is_active')
       .order('name');
     if (!err && data) setItems(data);
     setFetching(false);
@@ -153,6 +155,21 @@ export default function AdminCountries() {
     }
   };
 
+  const toggleActive = async (row) => {
+    if (!canWrite) return;
+    const next = !(row.is_active !== false);
+    try {
+      const { error: upErr } = await supabase
+        .from('countries')
+        .update({ is_active: next, updated_at: new Date().toISOString() })
+        .eq('id', row.id);
+      if (upErr) throw upErr;
+      setItems(prev => prev.map(c => c.id === row.id ? { ...c, is_active: next } : c));
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return items.filter(c => {
@@ -173,41 +190,25 @@ export default function AdminCountries() {
 
   if (canWrite) {
     columns.push({
+      key: 'is_active',
+      label: t('dashboard.status'),
+      render: (v) => (
+        <StatusBadge
+          status={v === false ? 'inactive' : 'active'}
+          label={v === false ? t('common.inactive') : t('common.active')}
+        />
+      ),
+    });
+    columns.push({
       key: 'actions',
       label: t('common.actions') || 'Actions',
       render: (_, row) => (
-        <div style={{ display: 'flex', gap: 6 }}>
-          <button
-            type="button"
-            title={t('common.edit') || 'Edit'}
-            onClick={() => openEdit(row)}
-            style={{
-              background: 'transparent',
-              border: '1px solid var(--color-border)',
-              borderRadius: 6,
-              padding: 6,
-              cursor: 'pointer',
-              color: 'var(--color-text-secondary)',
-            }}
-          >
-            <Pencil size={14} />
-          </button>
-          <button
-            type="button"
-            title={t('common.delete') || 'Delete'}
-            onClick={() => handleDelete(row)}
-            style={{
-              background: 'transparent',
-              border: '1px solid rgba(239,68,68,0.4)',
-              borderRadius: 6,
-              padding: 6,
-              cursor: 'pointer',
-              color: '#ef4444',
-            }}
-          >
-            <Trash2 size={14} />
-          </button>
-        </div>
+        <RowActions
+          isActive={row.is_active !== false}
+          onToggle={() => toggleActive(row)}
+          onEdit={() => openEdit(row)}
+          onDelete={() => handleDelete(row)}
+        />
       ),
     });
   }

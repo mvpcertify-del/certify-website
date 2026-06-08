@@ -7,7 +7,8 @@ import { Button, Input, Select } from '../../components/ui/FormElements';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROLES, ROLE_LABELS } from '../../utils/roles';
-import { Plus, Pencil, Trash2, Users } from 'lucide-react';
+import RowActions from '../../components/ui/RowActions';
+import { Plus, Users } from 'lucide-react';
 
 const FIELD_TYPES = ['text', 'textarea', 'number', 'select', 'multiselect', 'date', 'boolean'];
 
@@ -158,6 +159,19 @@ export default function AdminUserFields() {
     }
   };
 
+  const toggleActive = async (row) => {
+    try {
+      const { error: upErr } = await supabase
+        .from('custom_user_fields')
+        .update({ is_active: !row.is_active, updated_at: new Date().toISOString() })
+        .eq('id', row.id);
+      if (upErr) throw upErr;
+      setItems(prev => prev.map(c => c.id === row.id ? { ...c, is_active: !row.is_active } : c));
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   const columns = [
     { key: 'label', label: t('userFields.label'), render: v => <strong>{v}</strong> },
     { key: 'field_key', label: t('userFields.key'), render: v => <code style={{ fontSize: '0.78rem' }}>{v}</code> },
@@ -185,14 +199,12 @@ export default function AdminUserFields() {
       key: 'actions',
       label: t('common.actions'),
       render: (_, row) => (
-        <div style={{ display: 'flex', gap: 6 }}>
-          <button type="button" title={t('common.edit')} onClick={() => openEdit(row)} style={iconBtn}>
-            <Pencil size={14} />
-          </button>
-          <button type="button" title={t('common.delete')} onClick={() => handleDelete(row)} style={dangerBtn}>
-            <Trash2 size={14} />
-          </button>
-        </div>
+        <RowActions
+          isActive={!!row.is_active}
+          onToggle={() => toggleActive(row)}
+          onEdit={() => openEdit(row)}
+          onDelete={() => handleDelete(row)}
+        />
       ),
     },
   ];
@@ -324,23 +336,6 @@ export default function AdminUserFields() {
   );
 }
 
-const iconBtn = {
-  background: 'transparent',
-  border: '1px solid var(--color-border)',
-  borderRadius: 6,
-  padding: 6,
-  cursor: 'pointer',
-  color: 'var(--color-text-secondary)',
-};
-
-const dangerBtn = {
-  background: 'transparent',
-  border: '1px solid rgba(239,68,68,0.4)',
-  borderRadius: 6,
-  padding: 6,
-  cursor: 'pointer',
-  color: '#ef4444',
-};
 
 const infoBannerStyle = {
   display: 'flex',
