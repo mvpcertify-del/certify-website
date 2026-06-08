@@ -1,61 +1,70 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Shared service-role client for token verification + profile lookups.
-const supabaseAdmin = createClient(
-  process.env.VITE_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
-
-/**
- * Verify the caller's Supabase access token (sent as `Authorization: Bearer`)
- * and confirm they hold an admin role.
- *
- * Returns one of:
- *   { caller: { id, role, region } }                 — authorized
- *   { error: '<message>', status: 401 | 403 }         — rejected
- *
- * Options:
- *   requireSuperAdmin (default false) — when true, only `super_admin` passes.
- *                                       Otherwise super_admin OR regional_admin.
- *
- * The handler is responsible for turning a rejection into a JSON response, e.g.
- *   const auth = await verifyAdmin(req, { requireSuperAdmin: true });
- *   if (auth.error) return res.status(auth.status).json({ error: auth.error });
- */
-export async function verifyAdmin(req, { requireSuperAdmin = false } = {}) {
-  const header =
-    req.headers?.authorization || req.headers?.Authorization || '';
-  const token = header.startsWith('Bearer ') ? header.slice(7).trim() : null;
-
-  if (!token) {
-    return { error: 'Unauthorized: missing access token', status: 401 };
+// Lazily create the service-role client INSIDE a function (not at module top
+// level). If an env var is missing, the throw happens when a handler calls
+// getAdmin() — inside its try/catch — so the caller returns readable JSON
+// instead of crashing the whole function (Vercel FUNCTION_INVOCATION_FAILED).
+let _admin = null;
+export function getAdmin() {
+  if (_admin) return _admin;
+  const url = process.env.VITE_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    throw new Error(
+      'Server misconfigured: missing VITE_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY'
+    );
   }
-
-  // Validate the JWT against Supabase Auth.
-  const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);
-  if (userErr || !userData?.user) {
-    return { error: 'Unauthorized: invalid or expired session', status: 401 };
-  }
-
-  // Read the authoritative role from the profile row (not from client claims).
-  const { data: profile } = await supabaseAdmin
-    .from('profiles')
-    .select('id, role, region')
-    .eq('id', userData.user.id)
-    .maybeSingle();
-
-  const role = profile?.role || null;
-  const isSuper = role === 'super_admin';
-  const isRegional = role === 'regional_admin';
-
-  if (requireSuperAdmin && !isSuper) {
-    return { error: 'Forbidden: super admin access required', status: 403 };
-  }
-  if (!isSuper && !isRegional) {
-    return { error: 'Forbidden: admin access required', status: 403 };
-  }
-
-  return { caller: { id: userData.user.id, role, region: profile?.region || null } };
+  _admin = createClient(url, key);
+  return _admin;
 }
 
-export { supabaseAdmin };
+/**
+ * Verify the caller's Supabase access token (Authorization: Bearer) and confirm
+ * they hold an admin role.
+ *
+ * Returns:
+ *   { caller: { id, role, region } }            — authorized
+ *   { error: '<message>', status: 401|403|500 } — rejected
+ *
+ * Options: requireSuperAdmin (default false) — when true, only super_admin passes.
+ * Never throws; a config/network failure is returned as { error, status: 500 }.
+ */
+export async function verifyAdmin(req, { requireSuperAdmin = false } = {}) {
+  try {
+    const header =
+      req.headers?.authorization || req.headers?.Authorization || '';
+    const token = header.startsWith('Bearer ') ? header.slice(7).trim() : null;
+
+    if (!token) {
+      return { error: 'Unauthorized: missing access token', status: 401 };
+    }
+
+    const admin = getAdmin();
+
+    const { data: userData, error: userErr } = await admin.auth.getUser(token);
+    if (userErr || !userData?.user) {
+      return { error: 'Unauthorized: invalid or expired session', status: 401 };
+    }
+
+    const { data: profile } = await admin
+      .from('profiles')
+      .select('id, role, region')
+      .eq('id', userData.user.id)
+      .maybeSingle();
+
+    const role = profile?.role || null;
+    const isSuper = role === 'super_admin';
+    const isRegional = role === 'regional_admin';
+
+    if (requireSuperAdmin && !isSuper) {
+      return { error: 'Forbidden: super admin access required', status: 403 };
+    }
+    if (!isSuper && !isRegional) {
+      return { error: 'Forbidden: admin access required', status: 403 };
+    }
+
+    return { caller: { id: userData.user.id, role, region: profile?.region || null } };
+  } catch (err) {
+    return { error: `Auth check failed: ${err.message}`, status: 500 };
+  }
+}
