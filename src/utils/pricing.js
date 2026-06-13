@@ -31,8 +31,10 @@ const PRICING = {
 };
 
 // Package add-ons stacked on top of the base (Bronze) certification price.
-export const ADDON_ONLINE_SUPPORT = 300; // Silver adds this over Bronze
-export const ADDON_INTERNAL_AUDIT = 500; // Gold adds this over Silver
+// Each step up a package is a flat +$200. e.g. ISO 9001 (base 799):
+// Bronze 799 → Silver 999 → Gold 1199.
+export const ADDON_ONLINE_SUPPORT = 200; // Silver adds this over Bronze
+export const ADDON_INTERNAL_AUDIT = 200; // Gold adds this over Silver
 
 // The three packages, cheapest → most expensive. 'silver' is the featured /
 // most-popular tier in the UI.

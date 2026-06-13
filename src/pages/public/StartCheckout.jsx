@@ -22,7 +22,19 @@ export default function StartCheckout() {
 
   const tier = searchParams.get('tier') || 'silver';
   const iso = searchParams.get('iso') || 'iso-9001';
+  // Extra-staff bands / extra-locations chosen on the pricing cards, carried
+  // through to the payment page so the price stays consistent.
+  const staff = searchParams.get('staff') || '';
+  const locations = searchParams.get('locations') || '';
   const isoConfig = getIsoBySlug(iso);
+
+  // Build the query string for the next hop, dropping empty surcharge params.
+  const forwardParams = () => {
+    const p = new URLSearchParams({ tier, iso });
+    if (staff) p.set('staff', staff);
+    if (locations) p.set('locations', locations);
+    return p;
+  };
 
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
@@ -30,9 +42,9 @@ export default function StartCheckout() {
   // Persist the intent so it survives the OAuth round-trip.
   useEffect(() => {
     try {
-      sessionStorage.setItem(PENDING_CHECKOUT_KEY, JSON.stringify({ tier, iso }));
+      sessionStorage.setItem(PENDING_CHECKOUT_KEY, JSON.stringify({ tier, iso, staff, locations }));
     } catch { /* ignore */ }
-  }, [tier, iso]);
+  }, [tier, iso, staff, locations]);
 
   // If a client is already signed in, jump straight to the payment-bootstrap
   // route, which creates a stub application and forwards to Stripe checkout.
@@ -41,10 +53,10 @@ export default function StartCheckout() {
     if (loading) return;
     if (user?.role === ROLES.CLIENT) {
       try { sessionStorage.removeItem(PENDING_CHECKOUT_KEY); } catch { /* ignore */ }
-      const params = new URLSearchParams({ tier, iso });
-      navigate(`/client/start-payment?${params.toString()}`, { replace: true });
+      navigate(`/client/start-payment?${forwardParams().toString()}`, { replace: true });
     }
-  }, [loading, user, navigate, tier, iso]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, user, navigate, tier, iso, staff, locations]);
 
   const handleGoogle = async () => {
     setGoogleLoading(true);

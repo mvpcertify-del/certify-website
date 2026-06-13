@@ -49,8 +49,19 @@ export default function PaymentPlaceholder() {
 
   // Buyer can add 50-employee bands above the included 10 and additional
   // locations above the included 1. Each band/location adds a flat $200.
-  const [employeeBands, setEmployeeBands] = useState(0);
-  const [additionalLocations, setAdditionalLocations] = useState(0);
+  // Pre-fill from ?staff= & ?locations= when the buyer already chose them on
+  // the pricing cards, so the price carried over matches.
+  const initialOrgSize = (() => {
+    try {
+      const p = new URLSearchParams(window.location.search);
+      const toCount = (v) => Math.max(0, Math.floor(Number(v) || 0));
+      return { staff: toCount(p.get('staff')), locations: toCount(p.get('locations')) };
+    } catch {
+      return { staff: 0, locations: 0 };
+    }
+  })();
+  const [employeeBands, setEmployeeBands] = useState(initialOrgSize.staff);
+  const [additionalLocations, setAdditionalLocations] = useState(initialOrgSize.locations);
 
   useEffect(() => {
     let isMounted = true;
@@ -177,7 +188,7 @@ export default function PaymentPlaceholder() {
   const offlineSelected = isOfflineMethod(paymentMethod);
 
   const employeeRangeLabel = (bands) => {
-    if (bands === 0) return t('payment.employeesIncluded', { count: INCLUDED_EMPLOYEES });
+    if (bands === 0) return t('pricing.employeesIncluded', { count: INCLUDED_EMPLOYEES });
     const lower = INCLUDED_EMPLOYEES + (bands - 1) * EMPLOYEES_PER_BAND + 1;
     const upper = INCLUDED_EMPLOYEES + bands * EMPLOYEES_PER_BAND;
     return `${lower}–${upper}`;

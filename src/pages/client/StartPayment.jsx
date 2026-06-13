@@ -29,6 +29,10 @@ export default function StartPayment() {
 
   const tier = (searchParams.get('tier') || 'silver').toLowerCase();
   const isoSlug = searchParams.get('iso') || 'iso-9001';
+  // Extra-staff bands / extra-locations chosen on the pricing cards, forwarded
+  // to the payment page so its steppers pre-fill and the price matches.
+  const staff = searchParams.get('staff') || '';
+  const locations = searchParams.get('locations') || '';
   const isoConfig = getIsoBySlug(isoSlug);
   const recommendedIso = isoConfig?.code || 'ISO 9001:2015';
   // Map the tier to the stored package label. Legacy standard/premium values
@@ -56,14 +60,18 @@ export default function StartPayment() {
         if (insertError) throw insertError;
         if (!data?.id) throw new Error('No application id returned');
 
-        navigate(`/client/checkout/${data.id}`, { replace: true });
+        const checkoutParams = new URLSearchParams();
+        if (staff) checkoutParams.set('staff', staff);
+        if (locations) checkoutParams.set('locations', locations);
+        const qs = checkoutParams.toString();
+        navigate(`/client/checkout/${data.id}${qs ? `?${qs}` : ''}`, { replace: true });
       } catch (err) {
         console.error('StartPayment: failed to create stub application', err);
         setError(err.message || 'Could not start checkout. Please try again.');
         ranRef.current = false;
       }
     })();
-  }, [loading, user?.id, selectedPackage, recommendedIso, navigate]);
+  }, [loading, user?.id, selectedPackage, recommendedIso, staff, locations, navigate]);
 
   return (
     <div className="start-payment">

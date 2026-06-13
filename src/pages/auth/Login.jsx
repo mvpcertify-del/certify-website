@@ -15,11 +15,14 @@ function consumePendingCheckout() {
     const raw = sessionStorage.getItem(PENDING_CHECKOUT_KEY);
     if (!raw) return null;
     sessionStorage.removeItem(PENDING_CHECKOUT_KEY);
-    const { tier, iso } = JSON.parse(raw);
+    const { tier, iso, staff, locations } = JSON.parse(raw);
     const params = new URLSearchParams({
       tier: tier || 'silver',
       iso: iso || 'iso-9001',
     });
+    // Carry the extra-staff / extra-locations selection through the login hop.
+    if (staff) params.set('staff', String(staff));
+    if (locations) params.set('locations', String(locations));
     return { path: `/client/start-payment?${params.toString()}` };
   } catch {
     return null;
