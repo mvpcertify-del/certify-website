@@ -20,7 +20,7 @@ export default function StartCheckout() {
   const [searchParams] = useSearchParams();
   const { user, signInWithGoogle, loading } = useAuth();
 
-  const tier = searchParams.get('tier') || 'standard';
+  const tier = searchParams.get('tier') || 'silver';
   const iso = searchParams.get('iso') || 'iso-9001';
   const isoConfig = getIsoBySlug(iso);
 

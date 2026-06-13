@@ -75,10 +75,10 @@ export default function IsoLanding() {
     // Anyone else: send through the lightweight /start-checkout auth gate so
     // they can pick Google/email at the moment they decide to pay.
     if (user?.role === ROLES.CLIENT) {
-      navigate(`/client/start-payment?tier=standard&iso=${encodeURIComponent(config.slug)}`);
+      navigate(`/client/start-payment?tier=silver&iso=${encodeURIComponent(config.slug)}`);
     } else {
       try { localStorage.setItem('certifycx.preselectedIso', config.code); } catch { /* ignore */ }
-      navigate(`/start-checkout?tier=standard&iso=${encodeURIComponent(config.slug)}`);
+      navigate(`/start-checkout?tier=silver&iso=${encodeURIComponent(config.slug)}`);
     }
   };
 

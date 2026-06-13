@@ -15,7 +15,7 @@ function consumePendingCheckout() {
     sessionStorage.removeItem(PENDING_CHECKOUT_KEY);
     const { tier, iso } = JSON.parse(raw);
     const params = new URLSearchParams({
-      tier: tier || 'standard',
+      tier: tier || 'silver',
       iso: iso || 'iso-9001',
     });
     return { path: `/client/start-payment?${params.toString()}` };

@@ -10,7 +10,19 @@ import {
   INCLUDED_EMPLOYEES,
   EMPLOYEES_PER_BAND,
 } from '../../utils/pricing';
-import { Lock, Shield, CreditCard, CalendarClock, CheckCircle2, Sparkles, Tag, Plus, Minus, Users, MapPin } from 'lucide-react';
+import {
+  PAYMENT_METHODS,
+  isOfflineMethod,
+  BANK_TRANSFER_DETAILS,
+  MONEYGRAM_DETAILS,
+} from '../../config/paymentMethods';
+import {
+  Lock, Shield, CreditCard, Wallet, Send, Landmark, CheckCircle2,
+  Sparkles, Tag, Plus, Minus, Users, MapPin, Copy, ArrowRight,
+} from 'lucide-react';
+
+// Maps the icon name stored in paymentMethods config to a lucide component.
+const METHOD_ICONS = { CreditCard, Wallet, Send, Landmark };
 
 export default function PaymentPlaceholder() {
   const { applicationId } = useParams();
@@ -21,18 +33,22 @@ export default function PaymentPlaceholder() {
   const [application, setApplication] = useState(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
-  const [isMonthly, setIsMonthly] = useState(false);
   const [checkoutError, setCheckoutError] = useState(null);
   const [hasReferralDiscount, setHasReferralDiscount] = useState(false);
+
+  // Chosen payment method (card | paypal | moneygram | bank_transfer).
+  const [paymentMethod, setPaymentMethod] = useState('card');
+  // Once an offline order is recorded, hold its details so we can render the
+  // transfer instructions instead of the checkout form.
+  const [offlineOrder, setOfflineOrder] = useState(null);
 
   const [couponInput, setCouponInput] = useState('');
   const [coupon, setCoupon] = useState(null);
   const [couponError, setCouponError] = useState('');
   const [validatingCoupon, setValidatingCoupon] = useState(false);
 
-  // Phase B surcharges — buyer can add 50-employee bands above the included
-  // 10 and additional locations above the included 1. Each band/location
-  // adds a flat $200.
+  // Buyer can add 50-employee bands above the included 10 and additional
+  // locations above the included 1. Each band/location adds a flat $200.
   const [employeeBands, setEmployeeBands] = useState(0);
   const [additionalLocations, setAdditionalLocations] = useState(0);
 
@@ -58,15 +74,6 @@ export default function PaymentPlaceholder() {
     if (applicationId) fetchApp();
     return () => { isMounted = false; };
   }, [applicationId]);
-
-  // Premium (Package 3) is one-time only — force the toggle off the moment
-  // we learn we're on a Premium order, so the user can't get stuck on the
-  // monthly tab.
-  useEffect(() => {
-    if (application?.selected_package === 'Premium' && isMonthly) {
-      setIsMonthly(false);
-    }
-  }, [application?.selected_package, isMonthly]);
 
   // Check if client is eligible for referral discount
   useEffect(() => {
@@ -147,40 +154,27 @@ export default function PaymentPlaceholder() {
   };
 
   const isoName = application?.recommended_iso || 'ISO 9001:2015';
-  // Premium tier (Package 3) is one-time only — the monthly tab stays hidden.
-  const isPremium = application?.selected_package === 'Premium';
-  const tier = isPremium ? 'premium' : 'standard';
+  const tier = application?.selected_package || 'Bronze';
 
-  // Both totals are computed unconditionally so each tile (Full / Monthly)
-  // can display its own price. computeTotal is the same helper used by
+  // Full (one-time) payment only — computeTotal is the same helper used by
   // api/checkout.js so client and server stay aligned.
-  const fullTotals = computeTotal({
+  const totals = computeTotal({
     standardSlug: isoName,
     tier,
-    isMonthly: false,
     employeeBands,
     locations: additionalLocations,
   });
-  const monthlyTotals = computeTotal({
-    standardSlug: isoName,
-    tier,
-    isMonthly: true,
-    employeeBands,
-    locations: additionalLocations,
-  });
-  const fullPrice = fullTotals.subtotal;
-  const monthlyPrice = monthlyTotals.subtotal;
-  const originalPrice = isMonthly ? monthlyPrice : fullPrice;
-  const activeTotals = isMonthly ? monthlyTotals : fullTotals;
+  const originalPrice = totals.subtotal;
 
   // Coupon and referral discount do not stack — the larger wins.
   const couponPct = coupon ? Number(coupon.discount_percent) : 0;
   const referralPct = hasReferralDiscount ? 10 : 0;
   const appliedDiscountPct = Math.max(couponPct, referralPct);
-  const discountedPrice = appliedDiscountPct > 0
+  const currentPrice = appliedDiscountPct > 0
     ? Math.round(originalPrice * (1 - appliedDiscountPct / 100) * 100) / 100
     : originalPrice;
-  const currentPrice = discountedPrice;
+
+  const offlineSelected = isOfflineMethod(paymentMethod);
 
   const employeeRangeLabel = (bands) => {
     if (bands === 0) return t('payment.employeesIncluded', { count: INCLUDED_EMPLOYEES });
@@ -201,12 +195,12 @@ export default function PaymentPlaceholder() {
         body: JSON.stringify({
           isoName,
           tier,
-          isMonthly,
           applicationId,
           clientId: user?.id,
           couponCode: coupon?.code || null,
           employeeBands,
           additionalLocations,
+          paymentMethod,
         }),
       });
 
@@ -222,7 +216,11 @@ export default function PaymentPlaceholder() {
         );
       }
       if (!response.ok) throw new Error(data.error || 'Failed to initialize checkout');
-      if (data.url) {
+
+      if (data.offline) {
+        // Offline method: show the transfer instructions, don't redirect.
+        setOfflineOrder({ method: paymentMethod, amount: data.amount });
+      } else if (data.url) {
         window.location.href = data.url;
       } else {
         throw new Error('Failed to create checkout session');
@@ -233,6 +231,10 @@ export default function PaymentPlaceholder() {
     } finally {
       setProcessing(false);
     }
+  };
+
+  const copyToClipboard = (text) => {
+    try { navigator.clipboard?.writeText(text); } catch { /* ignore */ }
   };
 
   if (loading) {
@@ -258,6 +260,90 @@ export default function PaymentPlaceholder() {
     );
   }
 
+  // -------- OFFLINE INSTRUCTIONS VIEW --------
+  // Shown after an offline order is recorded. Renders the transfer details and
+  // a button to continue to the post-payment registration form.
+  if (offlineOrder) {
+    const isBank = offlineOrder.method === 'bank_transfer';
+    const rows = isBank
+      ? [
+          { label: t('payment.bankBeneficiary'), value: BANK_TRANSFER_DETAILS.beneficiary },
+          { label: t('payment.bankName'), value: BANK_TRANSFER_DETAILS.bankName },
+          { label: t('payment.bankIban'), value: BANK_TRANSFER_DETAILS.iban, copy: true },
+          { label: t('payment.bankSwift'), value: BANK_TRANSFER_DETAILS.swift, copy: true },
+        ]
+      : [
+          { label: t('payment.moneygramReceiver'), value: MONEYGRAM_DETAILS.receiverName },
+          { label: t('payment.moneygramCountry'), value: MONEYGRAM_DETAILS.country },
+        ];
+
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '3vh 16px', minHeight: '85vh', background: 'linear-gradient(135deg, #f0f4ff 0%, #faf5ff 50%, #f0fdf4 100%)' }}>
+        <div style={{ maxWidth: '560px', width: '100%' }}>
+          <div style={{ background: 'white', borderRadius: '20px', border: '1px solid #e2e8f0', boxShadow: '0 20px 40px -12px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
+            <div style={{ background: 'linear-gradient(135deg, #059669 0%, #047857 100%)', padding: '28px', textAlign: 'center' }}>
+              <div style={{ display: 'inline-flex', width: '56px', height: '56px', borderRadius: '16px', background: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>
+                <CheckCircle2 size={28} color="white" />
+              </div>
+              <h1 style={{ margin: '0 0 6px 0', fontSize: '1.5rem', fontWeight: 800, color: 'white' }}>{t('payment.orderRecorded')}</h1>
+              <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)', fontSize: '0.95rem' }}>{t('payment.transferInstructionsDesc')}</p>
+            </div>
+
+            <div style={{ padding: '28px' }}>
+              {/* Amount + reference */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 18px', background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '12px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#065f46' }}>{t('payment.amountToTransfer')}</span>
+                <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#065f46' }}>${offlineOrder.amount.toLocaleString()}</span>
+              </div>
+
+              <h3 style={{ fontSize: '0.8rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 12px 0' }}>
+                {t('payment.transferInstructionsTitle')}
+              </h3>
+
+              <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', marginBottom: '16px' }}>
+                {rows.map((row, i) => (
+                  <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '12px 16px', borderTop: i === 0 ? 'none' : '1px solid #f1f5f9' }}>
+                    <span style={{ fontSize: '0.82rem', color: '#64748b', flexShrink: 0 }}>{row.label}</span>
+                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#0f172a', fontFamily: row.copy ? 'monospace' : 'inherit', textAlign: 'right', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {row.value}
+                      {row.copy && (
+                        <button type="button" onClick={() => copyToClipboard(row.value)} aria-label="Copy" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 0, display: 'inline-flex' }}>
+                          <Copy size={14} />
+                        </button>
+                      )}
+                    </span>
+                  </div>
+                ))}
+                {/* Reference = order id, so the admin can match the transfer */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '12px 16px', borderTop: '1px solid #f1f5f9' }}>
+                  <span style={{ fontSize: '0.82rem', color: '#64748b', flexShrink: 0 }}>{t('payment.transferReference')}</span>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#0f172a', fontFamily: 'monospace', textAlign: 'right', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {application.id}
+                    <button type="button" onClick={() => copyToClipboard(application.id)} aria-label="Copy" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 0, display: 'inline-flex' }}>
+                      <Copy size={14} />
+                    </button>
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ padding: '12px 14px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '10px', marginBottom: '20px', fontSize: '0.82rem', color: '#92400e', lineHeight: 1.5 }}>
+                {t('payment.awaitingVerificationNote')}
+              </div>
+
+              <button
+                onClick={() => navigate(`/client/apply/${application.id}?payment=pending`)}
+                style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: 'white', border: 'none', borderRadius: '14px', fontSize: '1.05rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}
+              >
+                {t('payment.continueToRegistration')} <ArrowRight size={18} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // -------- CHECKOUT VIEW --------
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '3vh 16px', minHeight: '85vh', background: 'linear-gradient(135deg, #f0f4ff 0%, #faf5ff 50%, #f0fdf4 100%)' }}>
       <div style={{ maxWidth: '560px', width: '100%' }}>
@@ -352,7 +438,7 @@ export default function PaymentPlaceholder() {
               </div>
               <div>
                 <p style={{ margin: '0 0 2px 0', fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('payment.certStandard')}</p>
-                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'white' }}>{isoName}</h3>
+                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'white' }}>{isoName} · {tier}</h3>
               </div>
             </div>
           </div>
@@ -443,120 +529,72 @@ export default function PaymentPlaceholder() {
               </div>
             </div>
 
-            {/* PAYMENT OPTIONS */}
-            <h3 style={{ fontSize: '0.8rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 16px 0' }}>{t('payment.choosePayment')}</h3>
+            {/* PAYMENT METHOD SELECTOR */}
+            <h3 style={{ fontSize: '0.8rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 16px 0' }}>{t('payment.choosePaymentMethod')}</h3>
 
-            <div className="pay-options-grid" style={{ display: 'grid', gridTemplateColumns: isPremium ? '1fr' : '1fr 1fr', gap: '14px', marginBottom: '28px' }}>
-
-              {/* FULL PAYMENT */}
-              <button
-                onClick={() => setIsMonthly(false)}
-                style={{
-                  textAlign: 'center',
-                  padding: '24px 16px',
-                  border: !isMonthly ? '2.5px solid #2563eb' : '2px solid #e2e8f0',
-                  borderRadius: '16px',
-                  background: !isMonthly ? 'linear-gradient(135deg, rgba(37,99,235,0.06), rgba(124,58,237,0.04))' : '#fafbfc',
-                  cursor: 'pointer',
-                  transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                  position: 'relative',
-                  transform: !isMonthly ? 'translateY(-2px)' : 'none',
-                  boxShadow: !isMonthly ? '0 8px 20px rgba(37, 99, 235, 0.12)' : '0 1px 3px rgba(0,0,0,0.04)',
-                }}
-              >
-                {!isMonthly && (
-                  <div style={{ position: 'absolute', top: '10px', right: '10px' }}>
-                    <CheckCircle2 size={20} color="#2563eb" fill="rgba(37,99,235,0.1)" />
-                  </div>
-                )}
-                <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: !isMonthly ? 'linear-gradient(135deg, #2563eb, #7c3aed)' : '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px auto', transition: 'all 0.25s ease' }}>
-                  <CreditCard size={20} color={!isMonthly ? 'white' : '#94a3b8'} />
-                </div>
-                <h4 style={{ margin: '0 0 4px 0', fontSize: '0.9rem', fontWeight: 700, color: !isMonthly ? '#1e3a5f' : '#64748b' }}>{t('payment.fullPayment')}</h4>
-                <div style={{ fontSize: '1.75rem', fontWeight: 800, color: !isMonthly ? '#0f172a' : '#94a3b8', lineHeight: 1.2, margin: '8px 0 4px 0' }}>
-                  {appliedDiscountPct > 0 ? (
-                    <>
-                      <span style={{ textDecoration: 'line-through', fontSize: '1.1rem', color: '#94a3b8', marginRight: '6px' }}>${fullPrice}</span>
-                      ${Math.round(fullPrice * (1 - appliedDiscountPct / 100) * 100) / 100}
-                    </>
-                  ) : (
-                    `$${fullPrice}`
-                  )}
-                </div>
-                <p style={{ margin: 0, fontSize: '0.78rem', color: '#94a3b8', fontWeight: 500 }}>{t('payment.oneTimePayment')}</p>
-                {!isMonthly && (
-                  <div style={{ marginTop: '12px', padding: '4px 10px', background: 'rgba(16,185,129,0.1)', borderRadius: '6px', display: 'inline-block' }}>
-                    <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#059669' }}>{t('payment.bestValue')}</span>
-                  </div>
-                )}
-              </button>
-
-              {/* 12-MONTH RECURRING — hidden for Premium (one-time only) */}
-              {!isPremium && (
-              <button
-                onClick={() => setIsMonthly(true)}
-                style={{
-                  textAlign: 'center',
-                  padding: '24px 16px',
-                  border: isMonthly ? '2.5px solid #2563eb' : '2px solid #e2e8f0',
-                  borderRadius: '16px',
-                  background: isMonthly ? 'linear-gradient(135deg, rgba(37,99,235,0.06), rgba(124,58,237,0.04))' : '#fafbfc',
-                  cursor: 'pointer',
-                  transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                  position: 'relative',
-                  transform: isMonthly ? 'translateY(-2px)' : 'none',
-                  boxShadow: isMonthly ? '0 8px 20px rgba(37, 99, 235, 0.12)' : '0 1px 3px rgba(0,0,0,0.04)',
-                }}
-              >
-                {isMonthly && (
-                  <div style={{ position: 'absolute', top: '10px', right: '10px' }}>
-                    <CheckCircle2 size={20} color="#2563eb" fill="rgba(37,99,235,0.1)" />
-                  </div>
-                )}
-                <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: isMonthly ? 'linear-gradient(135deg, #2563eb, #7c3aed)' : '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px auto', transition: 'all 0.25s ease' }}>
-                  <CalendarClock size={20} color={isMonthly ? 'white' : '#94a3b8'} />
-                </div>
-                <h4 style={{ margin: '0 0 4px 0', fontSize: '0.9rem', fontWeight: 700, color: isMonthly ? '#1e3a5f' : '#64748b' }}>{t('payment.monthlyPlan')}</h4>
-                <div style={{ fontSize: '1.75rem', fontWeight: 800, color: isMonthly ? '#0f172a' : '#94a3b8', lineHeight: 1.2, margin: '8px 0 4px 0' }}>
-                  {appliedDiscountPct > 0 ? (
-                    <>
-                      <span style={{ textDecoration: 'line-through', fontSize: '1.1rem', color: '#94a3b8', marginRight: '6px' }}>${monthlyPrice}</span>
-                      ${Math.round(monthlyPrice * (1 - appliedDiscountPct / 100) * 100) / 100}<span style={{ fontSize: '0.9rem', fontWeight: 500, color: '#64748b' }}>/mo</span>
-                    </>
-                  ) : (
-                    <>${monthlyPrice}<span style={{ fontSize: '0.9rem', fontWeight: 500, color: '#64748b' }}>/mo</span></>
-                  )}
-                </div>
-                <p style={{ margin: 0, fontSize: '0.78rem', color: '#94a3b8', fontWeight: 500 }}>{t('payment.monthlyCommitment')}</p>
-                {isMonthly && (
-                  <div style={{ marginTop: '12px', padding: '4px 10px', background: 'rgba(37,99,235,0.08)', borderRadius: '6px', display: 'inline-block' }}>
-                    <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#2563eb' }}>{t('payment.flexible')}</span>
-                  </div>
-                )}
-              </button>
-              )}
+            <div className="pay-methods-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+              {PAYMENT_METHODS.map((m) => {
+                const Icon = METHOD_ICONS[m.icon] || CreditCard;
+                const active = paymentMethod === m.id;
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setPaymentMethod(m.id)}
+                    style={{
+                      textAlign: 'left',
+                      padding: '16px',
+                      border: active ? '2.5px solid #2563eb' : '2px solid #e2e8f0',
+                      borderRadius: '14px',
+                      background: active ? 'linear-gradient(135deg, rgba(37,99,235,0.06), rgba(124,58,237,0.04))' : '#fafbfc',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      position: 'relative',
+                      boxShadow: active ? '0 6px 16px rgba(37, 99, 235, 0.12)' : 'none',
+                    }}
+                  >
+                    {active && (
+                      <div style={{ position: 'absolute', top: '10px', right: '10px' }}>
+                        <CheckCircle2 size={18} color="#2563eb" fill="rgba(37,99,235,0.1)" />
+                      </div>
+                    )}
+                    <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: active ? 'linear-gradient(135deg, #2563eb, #7c3aed)' : '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px' }}>
+                      <Icon size={18} color={active ? 'white' : '#94a3b8'} />
+                    </div>
+                    <h4 style={{ margin: '0 0 2px 0', fontSize: '0.9rem', fontWeight: 700, color: active ? '#1e3a5f' : '#475569' }}>{t(m.labelKey)}</h4>
+                    <p style={{ margin: 0, fontSize: '0.72rem', color: '#94a3b8', lineHeight: 1.35 }}>{t(m.descKey)}</p>
+                  </button>
+                );
+              })}
             </div>
+
+            {/* OFFLINE NOTE */}
+            {offlineSelected && (
+              <div style={{ padding: '12px 14px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '10px', marginBottom: '20px', fontSize: '0.82rem', color: '#1e40af', lineHeight: 1.5 }}>
+                {t('payment.offlineNote')}
+              </div>
+            )}
 
             {/* DIVIDER */}
             <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent, #e2e8f0 20%, #e2e8f0 80%, transparent)', margin: '0 0 24px 0' }} />
 
             {/* LINE-ITEM BREAKDOWN — base + surcharges, only when surcharges apply */}
-            {(activeTotals.employeeSurchargePerPeriod > 0 || activeTotals.locationSurchargePerPeriod > 0) && (
+            {(totals.employeeSurchargeTotal > 0 || totals.locationSurchargeTotal > 0) && (
               <div style={{ marginBottom: '16px', padding: '14px 18px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: '#475569', marginBottom: 6 }}>
                   <span>{t('pricing.lineItem.base')}</span>
-                  <span style={{ fontWeight: 600 }}>${activeTotals.base.toLocaleString()}{isMonthly ? '/mo' : ''}</span>
+                  <span style={{ fontWeight: 600 }}>${totals.base.toLocaleString()}</span>
                 </div>
-                {activeTotals.employeeSurchargePerPeriod > 0 && (
+                {totals.employeeSurchargeTotal > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: '#475569', marginBottom: 6 }}>
                     <span>{t('pricing.lineItem.employees', { count: employeeBands })}</span>
-                    <span style={{ fontWeight: 600 }}>+${activeTotals.employeeSurchargePerPeriod.toLocaleString()}{isMonthly ? '/mo' : ''}</span>
+                    <span style={{ fontWeight: 600 }}>+${totals.employeeSurchargeTotal.toLocaleString()}</span>
                   </div>
                 )}
-                {activeTotals.locationSurchargePerPeriod > 0 && (
+                {totals.locationSurchargeTotal > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: '#475569' }}>
                     <span>{t('pricing.lineItem.locations', { count: additionalLocations })}</span>
-                    <span style={{ fontWeight: 600 }}>+${activeTotals.locationSurchargePerPeriod.toLocaleString()}{isMonthly ? '/mo' : ''}</span>
+                    <span style={{ fontWeight: 600 }}>+${totals.locationSurchargeTotal.toLocaleString()}</span>
                   </div>
                 )}
               </div>
@@ -566,7 +604,7 @@ export default function PaymentPlaceholder() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', padding: '20px', background: '#f8fafc', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
               <div>
                 <p style={{ margin: '0 0 2px 0', fontSize: '0.78rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  {isMonthly ? t('payment.monthlyPayment') : t('payment.totalAmount')}
+                  {t('payment.totalAmount')}
                 </p>
                 <p style={{ margin: 0, fontSize: '0.82rem', color: '#64748b' }}>
                   {appliedDiscountPct > 0 && (
@@ -576,7 +614,7 @@ export default function PaymentPlaceholder() {
                         : t('payment.referralApplied')} &bull;{' '}
                     </span>
                   )}
-                  {isMonthly ? t('payment.totalOver12', { total: (currentPrice * 12).toFixed(0) }) : t('payment.dueToday')}
+                  {t('payment.dueToday')}
                 </p>
               </div>
               <div style={{ textAlign: 'right' }}>
@@ -588,7 +626,6 @@ export default function PaymentPlaceholder() {
                 <span style={{ fontSize: '2rem', fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>
                   ${currentPrice}
                 </span>
-                {isMonthly && <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 500 }}>/mo</span>}
               </div>
             </div>
 
@@ -630,7 +667,7 @@ export default function PaymentPlaceholder() {
                 </>
               ) : (
                 <>
-                  <Lock size={18} /> {t('payment.proceedCheckout')}
+                  <Lock size={18} /> {offlineSelected ? t('payment.confirmOrderInstructions') : t('payment.proceedCheckout')}
                 </>
               )}
             </button>
@@ -666,7 +703,7 @@ export default function PaymentPlaceholder() {
       <style>{`
         @keyframes spin { 100% { transform: rotate(360deg); } }
         @media (max-width: 640px) {
-          .pay-options-grid { grid-template-columns: 1fr !important; }
+          .pay-methods-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </div>

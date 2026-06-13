@@ -47,8 +47,11 @@ export default function ApplicationForm() {
   // query params (legacy OAuth round-trip), or the stub row when in UPDATE mode.
   const queryTier = searchParams.get('tier');
   const queryIso = searchParams.get('iso');
+  // Map a tier slug (bronze/silver/gold, or legacy standard/premium) to the
+  // stored package label.
+  const PACKAGE_LABELS = { bronze: 'Bronze', silver: 'Silver', gold: 'Gold', standard: 'Silver', premium: 'Gold' };
   const stateSelectedPackage = location.state?.package
-    || (queryTier === 'standard' ? 'Standard' : queryTier)
+    || (queryTier ? (PACKAGE_LABELS[queryTier.toLowerCase()] || queryTier) : null)
     || null;
   const stateRecommendedIso = location.state?.recommendedIso
     || (queryIso ? getIsoBySlug(queryIso)?.code : null)
@@ -186,6 +189,13 @@ export default function ApplicationForm() {
           locations_count: parseInt(formData.locationsCount, 10),
           status: 'pending',
         };
+        // Online checkout returns with ?payment=success — mark it paid so the
+        // CB-visibility gate opens. Offline orders arrive with ?payment=pending
+        // and keep payment_status='awaiting_verification' until an admin
+        // verifies the transfer, so we must NOT touch it here.
+        if (paymentJustSucceeded) {
+          updatePayload.payment_status = 'paid';
+        }
         const { error: updateError } = await supabase
           .from('applications')
           .update(updatePayload)
@@ -200,7 +210,7 @@ export default function ApplicationForm() {
           employee_count: parseInt(formData.employeeCount, 10),
           locations_count: parseInt(formData.locationsCount, 10),
           status: 'pending',
-          selected_package: selectedPackage || 'Standard',
+          selected_package: selectedPackage || 'Bronze',
         };
         if (recommendedIso) {
           insertPayload.recommended_iso = recommendedIso;
@@ -297,7 +307,7 @@ export default function ApplicationForm() {
             }}>
               <CheckCircle2 size={18}/>
               <span>
-                {t('application.applyingFor', { package: selectedPackage || 'Standard' })}
+                {t('application.applyingFor', { package: selectedPackage || 'Bronze' })}
                 {recommendedIso ? ` — ${recommendedIso}` : ''}
               </span>
             </div>

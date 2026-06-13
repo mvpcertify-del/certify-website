@@ -14,8 +14,8 @@ import './StartPayment.css';
 // /client/apply/:applicationId.
 //
 // Inputs:
-//   ?tier=standard|premium  (defaults to 'standard')
-//   ?iso=<iso-slug>         (defaults to 'iso-9001')
+//   ?tier=bronze|silver|gold  (defaults to 'silver', the most-popular package)
+//   ?iso=<iso-slug>           (defaults to 'iso-9001')
 //   sessionStorage[PENDING_CHECKOUT_KEY] is read as a fallback for the
 //   OAuth round-trip case, even though AuthCallback/Login normally clear
 //   it and pass the values via query params.
@@ -27,11 +27,14 @@ export default function StartPayment() {
   const [error, setError] = useState(null);
   const ranRef = useRef(false);
 
-  const tier = (searchParams.get('tier') || 'standard').toLowerCase();
+  const tier = (searchParams.get('tier') || 'silver').toLowerCase();
   const isoSlug = searchParams.get('iso') || 'iso-9001';
   const isoConfig = getIsoBySlug(isoSlug);
   const recommendedIso = isoConfig?.code || 'ISO 9001:2015';
-  const selectedPackage = tier === 'premium' ? 'Premium' : 'Standard';
+  // Map the tier to the stored package label. Legacy standard/premium values
+  // collapse onto silver/gold so older links keep working.
+  const PACKAGE_LABELS = { bronze: 'Bronze', silver: 'Silver', gold: 'Gold', standard: 'Silver', premium: 'Gold' };
+  const selectedPackage = PACKAGE_LABELS[tier] || 'Bronze';
 
   useEffect(() => {
     if (loading || !user?.id || ranRef.current) return;

@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { computeTotal } from '../src/utils/pricing.js';
+import { isOfflineMethod, stripeMethodTypesFor } from '../src/config/paymentMethods.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2023-10-16',
@@ -121,21 +122,28 @@ export default async function handler(req, res) {
     const {
       isoName,
       tier,
-      isMonthly,
       applicationId,
       clientId,
       couponCode,
       employeeBands = 0,
       additionalLocations = 0,
+      paymentMethod = 'card',
     } = req.body;
+
+    // Reject unknown payment methods before they reach the DB or Stripe. The
+    // config helpers fail safe (unknown → online/card), so without this an
+    // arbitrary string would be persisted into applications.payment_method.
+    const VALID_PAYMENT_METHODS = ['card', 'paypal', 'moneygram', 'bank_transfer'];
+    if (!VALID_PAYMENT_METHODS.includes(paymentMethod)) {
+      return res.status(400).json({ error: 'Invalid payment method' });
+    }
 
     // ---- 0. Recompute the buyer's price server-side ----
     // Never trust the client. The same helper feeds the UI total, so the
-    // displayed amount and the Stripe charge always agree.
+    // displayed amount and the charge always agree. Full payment only.
     const totals = computeTotal({
       standardSlug: isoName,
       tier,
-      isMonthly: !!isMonthly,
       employeeBands,
       locations: additionalLocations,
     });
@@ -185,29 +193,73 @@ export default async function handler(req, res) {
     const discountPct = Math.max(couponPct, referralSignupDiscountPct);
     const finalPrice = Math.round(price * (1 - discountPct / 100) * 100) / 100;
 
-    // ---- 4. Stripe session ----
+    // ---- 4. Offline payment (MoneyGram / bank transfer) ----
+    // No Stripe session: the buyer transfers funds out-of-band. We persist the
+    // order with payment_status='awaiting_verification' and surface the
+    // transfer instructions in the UI. Coupon redemption and referral
+    // conversion are intentionally deferred until an admin verifies receipt —
+    // we must not credit a commission or burn a coupon before money arrives.
+    if (isOfflineMethod(paymentMethod)) {
+      // The write is scoped to (id, client_id) so a caller cannot record an
+      // offline order against an application they don't own — an empty result
+      // means the application/owner pair didn't match. NOTE: clientId still
+      // comes from the request body; the robust fix is to verify the caller's
+      // Bearer JWT (see api/_verifyAdmin.js for the getUser pattern) and derive
+      // clientId server-side. Tracked as a follow-up hardening.
+      if (!applicationId || !clientId) {
+        return res.status(400).json({ error: 'Missing application or client reference' });
+      }
+      let updated;
+      try {
+        const { data, error: offErr } = await supabaseAdmin
+          .from('applications')
+          .update({
+            additional_employee_bands: Math.max(0, Math.floor(Number(employeeBands) || 0)),
+            additional_locations: Math.max(0, Math.floor(Number(additionalLocations) || 0)),
+            total_amount: finalPrice,
+            payment_method: paymentMethod,
+            payment_status: 'awaiting_verification',
+            ...(coupon ? { coupon_code: coupon.code } : {}),
+          })
+          .eq('id', applicationId)
+          .eq('client_id', clientId)
+          .select('id');
+        if (offErr) throw offErr;
+        updated = data;
+      } catch (persistErr) {
+        console.error('Offline order persistence error:', persistErr);
+        return res.status(500).json({ error: 'Could not record your order. Please try again.' });
+      }
+      if (!updated || updated.length === 0) {
+        return res.status(403).json({ error: 'Order not found for this account.' });
+      }
+      return res.status(200).json({
+        offline: true,
+        paymentMethod,
+        amount: finalPrice,
+        appliedDiscountPct: discountPct,
+      });
+    }
+
+    // ---- 4a. Stripe session (card / PayPal) — full one-time payment ----
     const lineItem = {
       price_data: {
         currency: 'usd',
         product_data: {
           name: `${isoName} - ${tier} Package`,
-          description: isMonthly ? 'Monthly Subscription' : 'One-Time Payment',
+          description: 'One-Time Payment',
         },
         unit_amount: Math.round(finalPrice * 100),
       },
       quantity: 1,
     };
 
-    if (isMonthly) {
-      lineItem.price_data.recurring = { interval: 'month' };
-    }
-
     const baseUrl = process.env.VITE_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://certify.cx');
 
     const sessionConfig = {
-      payment_method_types: ['card'],
+      payment_method_types: stripeMethodTypesFor(paymentMethod),
       line_items: [lineItem],
-      mode: isMonthly ? 'subscription' : 'payment',
+      mode: 'payment',
       // Allow coupons created directly in the Stripe dashboard to also work,
       // alongside our app-managed discount_coupons table.
       allow_promotion_codes: true,
@@ -216,6 +268,7 @@ export default async function handler(req, res) {
       metadata: {
         applicationId: applicationId,
         clientId: clientId,
+        paymentMethod,
         referralDiscount: referralRecord ? 'true' : 'false',
         couponCode: coupon?.code || '',
         discountPct: String(discountPct),
@@ -236,7 +289,9 @@ export default async function handler(req, res) {
           .update({
             additional_employee_bands: Math.max(0, Math.floor(Number(employeeBands) || 0)),
             additional_locations: Math.max(0, Math.floor(Number(additionalLocations) || 0)),
-            total_amount: isMonthly ? totals.contractTotal : totals.subtotal,
+            total_amount: totals.subtotal,
+            payment_method: paymentMethod,
+            payment_status: 'pending',
           })
           .eq('id', applicationId);
       } catch (persistErr) {
@@ -277,7 +332,7 @@ export default async function handler(req, res) {
     // evaluated on rolling 12-month conversion count.
     if (referralRecord) {
       try {
-        const saleAmount = isMonthly ? finalPrice * 12 : finalPrice;
+        const saleAmount = finalPrice;
         const tierData = await getReferrerTier(referralRecord.referrer_id);
         const commissionPct = Number(tierData.commission_percent);
         const commission = Math.round(saleAmount * (commissionPct / 100) * 100) / 100;

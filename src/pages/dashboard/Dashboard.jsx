@@ -147,9 +147,17 @@ export default function Dashboard() {
     ? clientApplications.find(a => a.id === selectedAppId) || clientApplications[0]
     : clientApplications[0];
 
-  // Client: reveal the assigned certification body only after payment is completed.
-  // Pre-payment statuses = pending / awaiting_payment. Anything else = paid.
-  const isPaid = activeApp && !['pending', 'awaiting_payment'].includes(activeApp.status);
+  // Client: reveal the assigned certification body only after payment is
+  // completed. Online card/PayPal orders are marked 'paid' on the success
+  // redirect; offline (MoneyGram / bank transfer) orders only count once an
+  // admin verifies receipt ('verified'). An unverified offline order must NOT
+  // reveal the CB even after an admin advances its status. Legacy rows (no
+  // payment_status) fall back to the old status heuristic so they keep access.
+  const isPaid = !!activeApp && (
+    activeApp.payment_status === 'paid' ||
+    activeApp.payment_status === 'verified' ||
+    (activeApp.payment_status == null && !['pending', 'awaiting_payment', 'awaiting_registration'].includes(activeApp.status))
+  );
 
   useEffect(() => {
     if (!activeApp || !isPaid || !activeApp.assigned_cb_id) {
@@ -404,8 +412,7 @@ export default function Dashboard() {
                             <h4>Complete Payment for {activeApp.recommended_iso || 'ISO Application'}</h4>
                             <p>Your application is ready for processing. Please complete the payment to proceed.</p>
                             {(() => {
-                              const tier = activeApp.selected_package === 'Premium' ? 'premium' : 'standard';
-                              const headlinePrice = getPriceForStandard(activeApp.recommended_iso, tier);
+                              const headlinePrice = getPriceForStandard(activeApp.recommended_iso, activeApp.selected_package);
                               return (
                                 <Button style={{ width: '100%' }} onClick={() => navigate(`/client/checkout/${activeApp.id}`, { state: { price: headlinePrice, iso: activeApp.recommended_iso } })}>
                                   Pay ${headlinePrice?.toLocaleString()}

@@ -61,7 +61,7 @@ function Stepper({ value, onChange, min, decLabel, incLabel }) {
 export default function PricingCalculator({ standardSlug = 'iso-9001', standardCode = 'ISO 9001', accent = '#3ECF8E' }) {
   const { t, i18n } = useTranslation();
 
-  const basePrice = getPriceForStandard(standardSlug, 'standard');
+  const basePrice = getPriceForStandard(standardSlug, 'bronze');
 
   const [employeeCount, setEmployeeCount] = useState(CALC_EMPLOYEES_INCLUDED);
   const [locationCount, setLocationCount] = useState(CALC_LOCATIONS_INCLUDED);

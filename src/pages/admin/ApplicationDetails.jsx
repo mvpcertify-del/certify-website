@@ -6,7 +6,7 @@ import StatusBadge from '../../components/ui/StatusBadge';
 import { Button, Select } from '../../components/ui/FormElements';
 import Modal from '../../components/ui/Modal';
 import CustomFieldRenderer, { validateCustomFields } from '../../components/CustomFieldRenderer';
-import { ArrowLeft, CheckCircle, FileText, Download, Building, Users, Target, Activity, Globe, ClipboardCheck, XCircle, CheckCircle2, AlertCircle, Award, ShieldCheck, Upload, Trash2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle, FileText, Download, Building, Users, Target, Activity, Globe, ClipboardCheck, XCircle, CheckCircle2, AlertCircle, Award, ShieldCheck, Upload, Trash2, CreditCard } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROLES, REGIONS } from '../../utils/roles';
 import './ApplicationDetails.css';
@@ -208,6 +208,25 @@ export default function ApplicationDetails() {
       showToast(t('admin.appUpdated'));
     } catch (err) {
       console.error('Error updating application', err);
+      alert(t('admin.failedUpdateApp'));
+    } finally { setSaving(false); }
+  };
+
+  // Manually confirm receipt of an offline payment (MoneyGram / bank transfer).
+  // Only super/regional admins; flips payment_status from
+  // 'awaiting_verification' to 'verified'.
+  const handleVerifyPayment = async () => {
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('applications')
+        .update({ payment_status: 'verified' })
+        .eq('id', id);
+      if (error) throw error;
+      setApplication(prev => ({ ...prev, payment_status: 'verified' }));
+      showToast(t('admin.paymentVerified'));
+    } catch (err) {
+      console.error('Error verifying payment', err);
       alert(t('admin.failedUpdateApp'));
     } finally { setSaving(false); }
   };
@@ -469,7 +488,29 @@ export default function ApplicationDetails() {
             <div className="detail-item"><Globe size={16} className="detail-icon" /><div><label>{t('admin.region')}</label><p>{getRegionLabel(application.client?.region)}</p></div></div>
             <div className="detail-item"><Activity size={16} className="detail-icon" /><div><label>{t('admin.recommendedISO')}</label><p>{application.recommended_iso || '—'}</p></div></div>
             <div className="detail-item"><FileText size={16} className="detail-icon" /><div><label>{t('admin.selectedPackage')}</label><p>{application.selected_package ? application.selected_package.replace(/_/g, ' ') : '—'}</p></div></div>
+            {application.payment_method && (
+              <div className="detail-item"><CreditCard size={16} className="detail-icon" /><div>
+                <label>{t('admin.paymentMethod')}</label>
+                <p>
+                  {{ card: t('payment.methodCard'), paypal: t('payment.methodPaypal'), moneygram: t('payment.methodMoneygram'), bank_transfer: t('payment.methodBankTransfer') }[application.payment_method] || application.payment_method}
+                  {application.payment_status && (
+                    <span style={{ marginLeft: 8, fontSize: '0.72rem', fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: application.payment_status === 'verified' ? '#dcfce7' : application.payment_status === 'awaiting_verification' ? '#fef3c7' : '#e2e8f0', color: application.payment_status === 'verified' ? '#166534' : application.payment_status === 'awaiting_verification' ? '#92400e' : '#475569' }}>
+                      {t(`admin.paymentStatus_${application.payment_status}`)}
+                    </span>
+                  )}
+                </p>
+              </div></div>
+            )}
           </div>
+          {canAssign && application.payment_status === 'awaiting_verification' && (
+            <button
+              onClick={handleVerifyPayment}
+              disabled={saving}
+              style={{ marginTop: 12, width: '100%', padding: '10px 16px', background: '#059669', color: 'white', border: 'none', borderRadius: 10, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+            >
+              <CheckCircle2 size={16} /> {t('admin.verifyPayment')}
+            </button>
+          )}
           <div className="contact-info">
             <h4>{t('admin.contactInfo')}</h4>
             <p><strong>Name:</strong> {application.client?.full_name || '—'}</p>
