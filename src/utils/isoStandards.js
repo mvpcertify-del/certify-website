@@ -3,6 +3,7 @@
 
 export const ISO_STANDARD_OPTIONS = [
   'ISO 9001',
+  'ISO 9001:2015',
   'ISO 14001',
   'ISO/IEC 27001',
   'ISO/IEC 27701',

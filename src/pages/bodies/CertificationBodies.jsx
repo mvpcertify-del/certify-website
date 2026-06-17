@@ -4,14 +4,14 @@ import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
 import Modal from '../../components/ui/Modal';
 import MultiSelect from '../../components/ui/MultiSelect';
-import { Button, Input, Select } from '../../components/ui/FormElements';
+import { Button, Input, Select, Textarea } from '../../components/ui/FormElements';
 import { supabase } from '../../lib/supabase';
 import { ROLES } from '../../utils/roles';
 import { useAuth } from '../../contexts/AuthContext';
 import { IAF_COUNTRIES } from '../../utils/countries';
 import { ISO_STANDARD_OPTIONS } from '../../utils/isoStandards';
 import { IAF_SECTOR_CODES } from '../../utils/iafCodes';
-import { Plus, Search, Pencil, Trash2, Upload, Download, FileText } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Upload, Download, FileText, FileUp } from 'lucide-react';
 
 const EMPTY_FORM = {
   name: '',
@@ -44,6 +44,7 @@ export default function CertificationBodies() {
   const [fetching, setFetching] = useState(false);
 
   const [showModal, setShowModal] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
@@ -293,6 +294,35 @@ export default function CertificationBodies() {
     }
   };
 
+  // --- Bulk import: create one CB from pasted/matched data ---
+  // editingId is null here, so writeJoinRows performs inserts only (no wipe).
+  const importCb = async (parsed) => {
+    const payload = {
+      name: parsed.name.trim(),
+      acronym: parsed.acronym?.trim() || null,
+      website: parsed.website?.trim() || null,
+      country: null,
+      status: 'active',
+      currency: parsed.currency || 'USD',
+    };
+    const { data: inserted, error: insErr } = await supabase
+      .from('certification_bodies')
+      .insert([{ ...payload, created_by: user?.id || null }])
+      .select()
+      .single();
+    if (insErr) throw insErr;
+
+    await writeJoinRows(inserted.id, {
+      accreditation_body_ids: parsed.accreditation_body_ids,
+      country_ids: parsed.country_ids,
+      iso_standards: parsed.iso_standards,
+      iaf_codes: parsed.iaf_codes,
+      standard_pricing: {},
+      currency: parsed.currency || 'USD',
+    });
+    await fetchData();
+  };
+
   if (!user || loading) {
     return <div className="page-container"><p>{t('common.loadingDashboard')}</p></div>;
   }
@@ -437,9 +467,14 @@ export default function CertificationBodies() {
           <p className="page-subtitle">{t('admin.certBodiesFound', { count: filtered.length })}</p>
         </div>
         {canAdd && (
-          <Button variant="primary" size="md" onClick={openCreate}>
-            <Plus size={16} /> {t('certBody.addBody')}
-          </Button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Button variant="ghost" size="md" onClick={() => setShowImport(true)}>
+              <FileUp size={16} /> {t('certBody.importBody')}
+            </Button>
+            <Button variant="primary" size="md" onClick={openCreate}>
+              <Plus size={16} /> {t('certBody.addBody')}
+            </Button>
+          </div>
         )}
       </div>
 
@@ -626,7 +661,216 @@ export default function CertificationBodies() {
           </div>
         </form>
       </Modal>
+
+      <BulkImportModal
+        isOpen={showImport}
+        onClose={() => setShowImport(false)}
+        onImport={importCb}
+        abOptions={abOptions}
+        countryOptions={countryOptions.length > 0 ? countryOptions : countryOptionsFallback}
+        isoOptions={isoOptions}
+        iafOptions={iafOptions}
+        t={t}
+      />
     </div>
+  );
+}
+
+// --- Bulk import: paste lists copied from an accreditation schedule ---
+// Matches pasted text against the existing option lists (accreditation bodies,
+// countries, ISO standards, IAF codes) and creates a single CB on confirm.
+const splitItems = (text) =>
+  (text || '')
+    .split(/[\n,;]+/)
+    .map(s => s.trim())
+    .filter(Boolean);
+
+const norm = (s) => (s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+
+function resolveTokens(text, options, kind) {
+  const tokens = splitItems(text);
+  const matched = [];
+  const unmatched = [];
+  const seen = new Set();
+
+  for (const tok of tokens) {
+    let opt = null;
+    if (kind === 'iaf') {
+      const m = tok.match(/\d{1,2}/);
+      if (m) {
+        const code = m[0].padStart(2, '0');
+        opt = options.find(o => o.value === code);
+      }
+    } else if (kind === 'iso') {
+      const compact = norm(tok).replace(/\s+/g, '');
+      opt = options.find(o => norm(o.label).replace(/\s+/g, '') === compact)
+        || options.find(o => norm(o.label).includes(norm(tok)));
+    } else if (kind === 'country') {
+      const tn = norm(tok);
+      opt = options.find(o => norm(o.label) === tn)
+        || (tn.length >= 4 ? options.find(o => norm(o.label).includes(tn)) : null);
+    } else { // accreditation body — match acronym or name within "ACR — Name"
+      const tn = norm(tok);
+      opt = options.find(o => norm(o.label).split('—').some(part => part.trim() === tn))
+        || options.find(o => norm(o.label).includes(tn));
+    }
+
+    if (opt) {
+      if (!seen.has(opt.value)) { seen.add(opt.value); matched.push(opt); }
+    } else {
+      unmatched.push(tok);
+    }
+  }
+  return { matched, unmatched };
+}
+
+function MatchSummary({ result, t }) {
+  return (
+    <div style={{ marginTop: 4, fontSize: '0.75rem' }}>
+      <span style={{ color: 'var(--color-accent, #3ECF8E)', fontWeight: 600 }}>
+        {t('certBody.matched', { count: result.matched.length })}
+      </span>
+      {result.unmatched.length > 0 && (
+        <>
+          <span style={{ color: 'var(--color-text-tertiary)' }}> · </span>
+          <span style={{ color: '#ef4444', fontWeight: 600 }}>
+            {t('certBody.notFound', { count: result.unmatched.length })}
+          </span>
+          <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+            {result.unmatched.map((u, i) => (
+              <span key={i} style={{
+                fontSize: '0.7rem',
+                padding: '2px 6px',
+                borderRadius: 4,
+                background: 'rgba(239,68,68,0.1)',
+                color: '#ef4444',
+              }}>
+                {u}
+              </span>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function BulkImportModal({ isOpen, onClose, onImport, abOptions, countryOptions, isoOptions, iafOptions, t }) {
+  const [name, setName] = useState('');
+  const [acronym, setAcronym] = useState('');
+  const [website, setWebsite] = useState('');
+  const [currency, setCurrency] = useState('USD');
+  const [abText, setAbText] = useState('');
+  const [countryText, setCountryText] = useState('');
+  const [isoText, setIsoText] = useState('');
+  const [iafText, setIafText] = useState('');
+  const [importing, setImporting] = useState(false);
+  const [err, setErr] = useState('');
+
+  const preview = useMemo(() => ({
+    ab: resolveTokens(abText, abOptions, 'ab'),
+    countries: resolveTokens(countryText, countryOptions, 'country'),
+    iso: resolveTokens(isoText, isoOptions, 'iso'),
+    iaf: resolveTokens(iafText, iafOptions, 'iaf'),
+  }), [abText, countryText, isoText, iafText, abOptions, countryOptions, isoOptions, iafOptions]);
+
+  const reset = () => {
+    setName(''); setAcronym(''); setWebsite(''); setCurrency('USD');
+    setAbText(''); setCountryText(''); setIsoText(''); setIafText('');
+    setErr('');
+  };
+
+  const close = () => { reset(); onClose(); };
+
+  const handleImport = async () => {
+    setErr('');
+    if (!name.trim()) { setErr(t('certBody.importNoName')); return; }
+    if (preview.ab.matched.length === 0) { setErr(t('certBody.importNoAB')); return; }
+
+    setImporting(true);
+    try {
+      await onImport({
+        name, acronym, website, currency,
+        accreditation_body_ids: preview.ab.matched.map(o => o.value),
+        country_ids: preview.countries.matched.map(o => o.value),
+        iso_standards: preview.iso.matched.map(o => o.value),
+        iaf_codes: preview.iaf.matched.map(o => o.value),
+      });
+      close();
+    } catch (e) {
+      console.error('Import CB error:', e);
+      setErr(e.message || t('certBody.saveFailed'));
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const taStyle = { minHeight: 70, resize: 'vertical', fontFamily: 'inherit' };
+
+  return (
+    <Modal isOpen={isOpen} onClose={close} title={t('certBody.importBody')} size="lg">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <p style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)', margin: 0 }}>
+          {t('certBody.importIntro')}
+        </p>
+
+        {err && (
+          <div style={{
+            padding: '10px 12px',
+            background: 'rgba(239,68,68,0.08)',
+            border: '1px solid rgba(239,68,68,0.3)',
+            color: '#ef4444',
+            borderRadius: 6,
+            fontSize: '0.85rem',
+          }}>
+            {err}
+          </div>
+        )}
+
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12 }}>
+          <Input label={t('certBody.bodyNameRequired')} value={name} onChange={e => setName(e.target.value)} required />
+          <Input label={t('certBody.acronym')} value={acronym} onChange={e => setAcronym(e.target.value)} />
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12 }}>
+          <Input label={t('admin.website')} type="url" placeholder="https://..." value={website} onChange={e => setWebsite(e.target.value)} />
+          <Select label={t('certBody.currency')} value={currency} onChange={e => setCurrency(e.target.value)}>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+            <option value="AED">AED</option>
+            <option value="INR">INR</option>
+          </Select>
+        </div>
+
+        <div>
+          <Textarea label={t('certBody.pasteABs')} style={taStyle} value={abText} onChange={e => setAbText(e.target.value)} placeholder="EGAC&#10;UAF" />
+          <MatchSummary result={preview.ab} t={t} />
+        </div>
+
+        <div>
+          <Textarea label={t('certBody.pasteCountries')} style={taStyle} value={countryText} onChange={e => setCountryText(e.target.value)} placeholder="India, Thailand, Egypt..." />
+          <MatchSummary result={preview.countries} t={t} />
+        </div>
+
+        <div>
+          <Textarea label={t('certBody.pasteISO')} style={taStyle} value={isoText} onChange={e => setIsoText(e.target.value)} placeholder="ISO 9001:2015&#10;ISO 14001" />
+          <MatchSummary result={preview.iso} t={t} />
+        </div>
+
+        <div>
+          <Textarea label={t('certBody.pasteIAF')} style={taStyle} value={iafText} onChange={e => setIafText(e.target.value)} placeholder="01, 03, 13, 31..." />
+          <MatchSummary result={preview.iaf} t={t} />
+        </div>
+
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 8 }}>
+          <Button type="button" variant="ghost" onClick={close}>{t('common.cancel')}</Button>
+          <Button type="button" variant="primary" loading={importing} onClick={handleImport}>
+            {t('certBody.importBody')}
+          </Button>
+        </div>
+      </div>
+    </Modal>
   );
 }
 

@@ -784,7 +784,17 @@
     "confirmDeleteDoc": "¿Eliminar el documento \"{{name}}\"?",
     "confirmDelete": "¿Está seguro de que desea eliminar \"{{name}}\"?",
     "deleteFailed": "Error al eliminar el organismo de certificación",
-    "saveFailed": "Error al guardar el organismo de certificación"
+    "saveFailed": "Error al guardar el organismo de certificación",
+    "importBody": "Importar organismo de certificación",
+    "importIntro": "Pegue los datos copiados de un programa de acreditación: un elemento por línea o separados por comas. Los elementos se asocian automáticamente con las listas existentes.",
+    "pasteABs": "Organismos de acreditación (nombre o sigla, uno por línea)",
+    "pasteCountries": "Países cubiertos (uno por línea o separados por comas)",
+    "pasteISO": "Normas ISO (una por línea)",
+    "pasteIAF": "Códigos de sector IAF (números o 'código — nombre', uno por línea)",
+    "matched": "{{count}} coincidencias",
+    "notFound": "{{count}} no encontrados",
+    "importNoName": "Introduzca el nombre del organismo",
+    "importNoAB": "Ningún organismo de acreditación coincide: se requiere al menos uno"
   },
   "countries": {
     "title": "Países",

@@ -784,7 +784,17 @@
     "confirmDeleteDoc": "Delete document \"{{name}}\"?",
     "confirmDelete": "Are you sure you want to delete \"{{name}}\"?",
     "deleteFailed": "Failed to delete certification body",
-    "saveFailed": "Failed to save certification body"
+    "saveFailed": "Failed to save certification body",
+    "importBody": "Import Certification Body",
+    "importIntro": "Paste data copied from an accreditation schedule — one item per line, or comma-separated. Items are matched automatically against the existing lists.",
+    "pasteABs": "Accreditation Bodies (name or acronym, one per line)",
+    "pasteCountries": "Countries Covered (one per line or comma-separated)",
+    "pasteISO": "ISO Standards (one per line)",
+    "pasteIAF": "IAF Sector Codes (numbers or 'code — name', one per line)",
+    "matched": "{{count}} matched",
+    "notFound": "{{count}} not found",
+    "importNoName": "Please enter a body name",
+    "importNoAB": "No accreditation body matched — at least one is required"
   },
   "countries": {
     "title": "Countries",
