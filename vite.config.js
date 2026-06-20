@@ -59,4 +59,20 @@ export default defineConfig({
   resolve: {
     dedupe: ['@supabase/supabase-js'],
   },
+  build: {
+    // Split big shared libraries into their own long-lived chunks so they're
+    // cached across deploys and don't bloat each lazy page chunk.
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return;
+          if (/[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(id)) {
+            return 'vendor-react';
+          }
+          if (id.includes('@supabase')) return 'vendor-supabase';
+          if (/i18next|react-i18next/.test(id)) return 'vendor-i18n';
+        },
+      },
+    },
+  },
 })

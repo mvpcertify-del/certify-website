@@ -1,7 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import './i18n/i18n.js'
+import { i18nReady } from './i18n/i18n.js'
 import App from './App.jsx'
 import { applyDocumentDirection, detectLanguageFromRegionSync } from './utils/regionLanguage.js'
 
@@ -19,8 +19,15 @@ document.documentElement.setAttribute(
   storedTheme === 'light' ? 'light' : 'dark'
 );
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+function mount() {
+  createRoot(document.getElementById('root')).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  )
+}
+
+// Wait for the detected language bundle to load before first paint so the UI
+// renders directly in the right language (no English flash). If it somehow
+// fails, mount anyway with the bundled English fallback.
+i18nReady.then(mount).catch(mount)

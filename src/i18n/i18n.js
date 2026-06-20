@@ -1,15 +1,11 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
+// Only English is bundled up-front — it's the fallback and the most common
+// first-paint language. The other 8 locales (~560 kB of JSON combined) are
+// fetched on demand via the lazy backend below, so they never bloat the
+// initial download.
 import en from './locales/en.json';
-import ar from './locales/ar.json';
-import es from './locales/es.json';
-import ru from './locales/ru.json';
-import fr from './locales/fr.json';
-import pt from './locales/pt.json';
-import de from './locales/de.json';
-import zh from './locales/zh.json';
-import hi from './locales/hi.json';
 import {
   detectLanguageFromRegionSync,
   detectLanguageFromRegion,
@@ -37,21 +33,50 @@ const regionDetector = {
 const detector = new LanguageDetector();
 detector.addDetector(regionDetector);
 
-i18n
+// Lazy locale loaders. Vite turns each dynamic import into its own chunk that
+// is only fetched when that language is actually selected.
+const localeLoaders = {
+  ar: () => import('./locales/ar.json'),
+  es: () => import('./locales/es.json'),
+  ru: () => import('./locales/ru.json'),
+  fr: () => import('./locales/fr.json'),
+  pt: () => import('./locales/pt.json'),
+  de: () => import('./locales/de.json'),
+  zh: () => import('./locales/zh.json'),
+  hi: () => import('./locales/hi.json'),
+};
+
+// Minimal i18next backend that resolves a language's translations from the
+// lazy loaders above. i18next calls read() automatically on init for the
+// detected language and again on every changeLanguage().
+const lazyBackend = {
+  type: 'backend',
+  init() {},
+  read(language, _namespace, callback) {
+    const loader = localeLoaders[language];
+    if (!loader) {
+      // en is already bundled; anything else unknown falls back to {}.
+      callback(null, {});
+      return;
+    }
+    loader()
+      .then((mod) => callback(null, mod.default))
+      .catch((err) => callback(err, null));
+  },
+};
+
+// Resolves once the detected first-paint language is loaded — main.jsx awaits
+// this before mounting React so there's no flash of fallback English.
+export const i18nReady = i18n
+  .use(lazyBackend)
   .use(detector)
   .use(initReactI18next)
   .init({
+    // en bundled for instant fallback; everything else comes from the backend.
     resources: {
       en: { translation: en },
-      ar: { translation: ar },
-      es: { translation: es },
-      ru: { translation: ru },
-      fr: { translation: fr },
-      pt: { translation: pt },
-      de: { translation: de },
-      zh: { translation: zh },
-      hi: { translation: hi },
     },
+    partialBundledLanguages: true,
     fallbackLng: 'en',
     supportedLngs: ['en', 'ar', 'es', 'ru', 'fr', 'pt', 'de', 'zh', 'hi'],
     nonExplicitSupportedLngs: true,
@@ -62,6 +87,12 @@ i18n
       order: ['localStorage', 'region', 'navigator'],
       caches: ['localStorage'],
       lookupLocalStorage: STORAGE_KEY,
+    },
+    react: {
+      // Don't suspend on language load — fall back to bundled en until the
+      // target language arrives, then re-render. Avoids needing a Suspense
+      // boundary around every t() call site.
+      useSuspense: false,
     },
   });
 

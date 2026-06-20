@@ -1,74 +1,90 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
-import DashboardLayout from './components/layout/DashboardLayout';
-import AuthLayout from './components/layout/AuthLayout';
 import LanguageSuggestionPopup from './components/LanguageSuggestionPopup';
 import { ROLES, PERMISSIONS } from './utils/roles';
 
+// Layouts and pages are code-split with React.lazy so the initial download is
+// just the shell + the one route the visitor actually landed on. Without this,
+// every admin/client page ships in the first bundle and blocks first paint.
+const DashboardLayout = lazy(() => import('./components/layout/DashboardLayout'));
+const AuthLayout = lazy(() => import('./components/layout/AuthLayout'));
+
 // Public Pages
-import LandingPage from './pages/landing/LandingPage';
-import PublicGapAnalysis from './pages/public/PublicGapAnalysis';
-import StartCheckout from './pages/public/StartCheckout';
+const LandingPage = lazy(() => import('./pages/landing/LandingPage'));
+const PublicGapAnalysis = lazy(() => import('./pages/public/PublicGapAnalysis'));
+const StartCheckout = lazy(() => import('./pages/public/StartCheckout'));
 
 // Auth Pages
-import Login from './pages/auth/Login';
-import SignUp from './pages/auth/SignUp';
-import ForgotPassword from './pages/auth/ForgotPassword';
-import ResetPassword from './pages/auth/ResetPassword';
-import Unauthorized from './pages/auth/Unauthorized';
-import AuthCallback from './pages/auth/AuthCallback';
+const Login = lazy(() => import('./pages/auth/Login'));
+const SignUp = lazy(() => import('./pages/auth/SignUp'));
+const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/auth/ResetPassword'));
+const Unauthorized = lazy(() => import('./pages/auth/Unauthorized'));
+const AuthCallback = lazy(() => import('./pages/auth/AuthCallback'));
 
 // Admin Pages
-import AdminUsers from './pages/admin/AdminUsers';
-import AdminApplications from './pages/admin/AdminApplications';
-import AdminRegionalAdmins from './pages/admin/AdminRegionalAdmins';
-import AdminAuditors from './pages/admin/AdminAuditors';
-import AdminCertBodies from './pages/admin/AdminCertBodies';
-import AdminAccreditationBodies from './pages/admin/AdminAccreditationBodies';
-import AdminCountries from './pages/admin/AdminCountries';
-import AdminCoupons from './pages/admin/AdminCoupons';
-import AdminCommissionTiers from './pages/admin/AdminCommissionTiers';
-import CertificationBodiesRegistry from './pages/bodies/CertificationBodies';
-import AdminCompanies from './pages/admin/AdminCompanies';
-import ApplicationDetails from './pages/admin/ApplicationDetails';
-import ShareableLinks from './pages/admin/ShareableLinks';
-import RegistrationRequests from './pages/admin/RegistrationRequests';
-import AdminPermissions from './pages/admin/AdminPermissions';
-import AdminUserFields from './pages/admin/AdminUserFields';
-import AdminApplicationFields from './pages/admin/AdminApplicationFields';
+const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
+const AdminApplications = lazy(() => import('./pages/admin/AdminApplications'));
+const AdminRegionalAdmins = lazy(() => import('./pages/admin/AdminRegionalAdmins'));
+const AdminAuditors = lazy(() => import('./pages/admin/AdminAuditors'));
+const AdminCertBodies = lazy(() => import('./pages/admin/AdminCertBodies'));
+const AdminAccreditationBodies = lazy(() => import('./pages/admin/AdminAccreditationBodies'));
+const AdminCountries = lazy(() => import('./pages/admin/AdminCountries'));
+const AdminCoupons = lazy(() => import('./pages/admin/AdminCoupons'));
+const AdminCommissionTiers = lazy(() => import('./pages/admin/AdminCommissionTiers'));
+const CertificationBodiesRegistry = lazy(() => import('./pages/bodies/CertificationBodies'));
+const AdminCompanies = lazy(() => import('./pages/admin/AdminCompanies'));
+const ApplicationDetails = lazy(() => import('./pages/admin/ApplicationDetails'));
+const ShareableLinks = lazy(() => import('./pages/admin/ShareableLinks'));
+const RegistrationRequests = lazy(() => import('./pages/admin/RegistrationRequests'));
+const AdminPermissions = lazy(() => import('./pages/admin/AdminPermissions'));
+const AdminUserFields = lazy(() => import('./pages/admin/AdminUserFields'));
+const AdminApplicationFields = lazy(() => import('./pages/admin/AdminApplicationFields'));
 
 // Public Registration Landing
-import RegisterLanding from './pages/register/RegisterLanding';
+const RegisterLanding = lazy(() => import('./pages/register/RegisterLanding'));
 
 // Public ISO Certification Landing (Shareable ISO Links)
-import IsoLanding from './pages/iso/IsoLanding';
+const IsoLanding = lazy(() => import('./pages/iso/IsoLanding'));
 
 // Dashboard Pages
-import Dashboard from './pages/dashboard/Dashboard';
-import Settings from './pages/settings/Settings';
-import Notifications from './pages/notifications/Notifications';
-import ApplicationForm from './pages/client/ApplicationForm';
-import PaymentPlaceholder from './pages/client/PaymentPlaceholder';
-import StartPayment from './pages/client/StartPayment';
-import GapAnalysis from './pages/client/GapAnalysis';
-import MyCertificates from './pages/client/MyCertificates';
-import Referrals from './pages/referrals/Referrals';
+const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'));
+const Settings = lazy(() => import('./pages/settings/Settings'));
+const Notifications = lazy(() => import('./pages/notifications/Notifications'));
+const ApplicationForm = lazy(() => import('./pages/client/ApplicationForm'));
+const PaymentPlaceholder = lazy(() => import('./pages/client/PaymentPlaceholder'));
+const StartPayment = lazy(() => import('./pages/client/StartPayment'));
+const GapAnalysis = lazy(() => import('./pages/client/GapAnalysis'));
+const MyCertificates = lazy(() => import('./pages/client/MyCertificates'));
+const Referrals = lazy(() => import('./pages/referrals/Referrals'));
+
+// Lightweight fallback shown while a route's chunk is being fetched. Kept tiny
+// and theme-aware (transparent background) so it doesn't flash a black screen.
+function RouteFallback() {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        minHeight: '60vh',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+      aria-busy="true"
+    />
+  );
+}
 
 function AppRoutes() {
-  const { loading } = useAuth();
-  const { t } = useTranslation();
-
+  // Public routes render immediately — they don't wait for the Supabase auth
+  // session to resolve. Auth-gated routes still wait via <ProtectedRoute>,
+  // which renders its own loading spinner. This is what removes the long
+  // black "Loading..." screen on first visit to the landing page.
   return (
-    <>
-      {loading ? (
-        <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center' }}>
-          {t('common.loading')}
-        </div>
-      ) : (
+    <Suspense fallback={<RouteFallback />}>
         <Routes>
           {/* ---- Public Landing Page ---- */}
           <Route path="/" element={<LandingPage />} />
@@ -311,8 +327,7 @@ function AppRoutes() {
           {/* ---- Redirect Catch-All ---- */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      )}
-    </>
+    </Suspense>
   );
 }
 

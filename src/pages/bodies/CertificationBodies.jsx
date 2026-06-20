@@ -18,10 +18,12 @@ const EMPTY_FORM = {
   acronym: '',
   website: '',
   country: '',
+  address: '',
   accreditation_body_ids: [],
   country_ids: [],
   iso_standards: [],
-  iaf_codes: [],
+  // Per-standard IAF codes: { [iso_standard]: [code, ...] }
+  iaf_by_standard: {},
   // Per-standard pricing: { [iso_standard]: { initial, surveillance, recertification } }
   standard_pricing: {},
   currency: 'USD',
@@ -58,14 +60,14 @@ export default function CertificationBodies() {
         supabase
           .from('certification_bodies')
           .select(`
-            id, name, acronym, website, country, status,
+            id, name, acronym, website, country, address, status,
             initial_price, surveillance_price, recertification_price, currency,
             created_at,
             cb_accreditation_bodies ( accreditation_body_id,
               accreditation_bodies ( id, name, acronym ) ),
             cb_countries ( country_id, countries ( id, name ) ),
             cb_iso_standards ( iso_standard ),
-            cb_iaf_codes ( iaf_code ),
+            cb_iaf_codes ( iaf_code, iso_standard ),
             cb_standard_pricing ( iso_standard, initial_price, surveillance_price, recertification_price, currency )
           `)
           .order('created_at', { ascending: false }),
@@ -138,16 +140,24 @@ export default function CertificationBodies() {
         recertification: p.recertification_price ?? '',
       };
     }
+    // Group IAF codes under their ISO standard. Legacy rows with no
+    // iso_standard (pre per-standard migration) are skipped here.
+    const iafMap = {};
+    for (const x of row.cb_iaf_codes || []) {
+      if (!x.iso_standard) continue;
+      (iafMap[x.iso_standard] ||= []).push(x.iaf_code);
+    }
     setFormData({
       name: row.name || '',
       acronym: row.acronym || '',
       website: row.website || '',
       country: row.country || '',
+      address: row.address || '',
       accreditation_body_ids: (row.cb_accreditation_bodies || [])
         .map(x => x.accreditation_body_id),
       country_ids: (row.cb_countries || []).map(x => x.country_id),
       iso_standards: (row.cb_iso_standards || []).map(x => x.iso_standard),
-      iaf_codes: (row.cb_iaf_codes || []).map(x => x.iaf_code),
+      iaf_by_standard: iafMap,
       standard_pricing: pricingMap,
       currency: row.currency || 'USD',
       status: row.status || 'active',
@@ -187,10 +197,13 @@ export default function CertificationBodies() {
       cb_id: cbId,
       iso_standard: s,
     }));
-    const iafRows = data.iaf_codes.map(code => ({
-      cb_id: cbId,
-      iaf_code: code,
-    }));
+    // Each standard carries its own IAF codes (a code can repeat across standards).
+    const iafRows = [];
+    for (const std of data.iso_standards) {
+      for (const code of (data.iaf_by_standard?.[std] || [])) {
+        iafRows.push({ cb_id: cbId, iso_standard: std, iaf_code: code });
+      }
+    }
 
     // Only write pricing rows for standards actually selected AND with at least one price.
     const pricingRows = data.iso_standards
@@ -245,6 +258,7 @@ export default function CertificationBodies() {
         acronym: formData.acronym.trim() || null,
         website: formData.website.trim() || null,
         country: formData.country || null,
+        address: formData.address.trim() || null,
         status: formData.status || 'active',
         currency: formData.currency || 'USD',
       };
@@ -302,6 +316,7 @@ export default function CertificationBodies() {
       acronym: parsed.acronym?.trim() || null,
       website: parsed.website?.trim() || null,
       country: null,
+      address: parsed.address?.trim() || null,
       status: 'active',
       currency: parsed.currency || 'USD',
     };
@@ -312,11 +327,16 @@ export default function CertificationBodies() {
       .single();
     if (insErr) throw insErr;
 
+    // Quick import applies the one pasted IAF list to every imported standard;
+    // refine per-standard afterwards via Edit if they differ.
+    const iafByStandard = {};
+    for (const std of parsed.iso_standards) iafByStandard[std] = parsed.iaf_codes;
+
     await writeJoinRows(inserted.id, {
       accreditation_body_ids: parsed.accreditation_body_ids,
       country_ids: parsed.country_ids,
       iso_standards: parsed.iso_standards,
-      iaf_codes: parsed.iaf_codes,
+      iaf_by_standard: iafByStandard,
       standard_pricing: {},
       currency: parsed.currency || 'USD',
     });
@@ -345,6 +365,9 @@ export default function CertificationBodies() {
           <div style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>{val || '—'}</div>
           {row.acronym && (
             <div style={{ fontSize: '0.75rem', color: 'var(--color-text-tertiary)' }}>{row.acronym}</div>
+          )}
+          {row.address && (
+            <div style={{ fontSize: '0.7rem', color: 'var(--color-text-tertiary)', marginTop: 2, maxWidth: 260 }}>{row.address}</div>
           )}
         </div>
       ),
@@ -546,6 +569,14 @@ export default function CertificationBodies() {
             onChange={e => setFormData({ ...formData, website: e.target.value })}
           />
 
+          <Textarea
+            label={t('certBody.address')}
+            name="address"
+            rows={2}
+            value={formData.address}
+            onChange={e => setFormData({ ...formData, address: e.target.value })}
+          />
+
           <MultiSelect
             label={t('certBody.accreditationBodiesRequired')}
             options={abOptions}
@@ -570,13 +601,36 @@ export default function CertificationBodies() {
             placeholder={t('certBody.selectISO')}
           />
 
-          <MultiSelect
-            label={t('certBody.iafCodes')}
-            options={iafOptions}
-            value={formData.iaf_codes}
-            onChange={(vals) => setFormData({ ...formData, iaf_codes: vals })}
-            placeholder={t('certBody.selectIAF')}
-          />
+          <div style={{
+            borderTop: '1px solid var(--color-border)',
+            paddingTop: 12,
+            marginTop: 4,
+          }}>
+            <h4 style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-secondary)', margin: '0 0 10px' }}>
+              {t('certBody.iafCodesPerStandard')}
+            </h4>
+            {formData.iso_standards.length === 0 ? (
+              <p style={{ fontSize: '0.8rem', color: 'var(--color-text-tertiary)', padding: '8px 0' }}>
+                {t('certBody.iafSelectStandardsFirst')}
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {formData.iso_standards.map(std => (
+                  <MultiSelect
+                    key={std}
+                    label={std}
+                    options={iafOptions}
+                    value={formData.iaf_by_standard[std] || []}
+                    onChange={(vals) => setFormData(prev => ({
+                      ...prev,
+                      iaf_by_standard: { ...prev.iaf_by_standard, [std]: vals },
+                    }))}
+                    placeholder={t('certBody.selectIAF')}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
 
           <div style={{
             borderTop: '1px solid var(--color-border)',
