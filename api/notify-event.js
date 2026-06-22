@@ -17,12 +17,14 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { sendViaResend } from './_resendClient.js';
+import { notifyAdmins } from './_notifyAdmins.js';
 import {
   paymentConfirmationEmail,
   applicationReceivedEmail,
   auditScheduledEmail,
   auditCompletedEmail,
   certificateIssuedEmail,
+  renewalReminderEmail,
 } from './_emailTemplates.js';
 
 const supabaseAdmin = createClient(
@@ -59,6 +61,10 @@ async function authenticate(req) {
 }
 
 export default async function handler(req, res) {
+  // GET = the daily Vercel Cron hitting this route for renewal reminders.
+  if (req.method === 'GET') {
+    return await handleRenewalCron(req, res);
+  }
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
@@ -96,7 +102,7 @@ export default async function handler(req, res) {
 
     const { data: clientProfile } = await supabaseAdmin
       .from('profiles')
-      .select('id, email, full_name, name')
+      .select('id, email, full_name, name, region')
       .eq('id', application.client_id)
       .maybeSingle();
 
@@ -164,10 +170,92 @@ export default async function handler(req, res) {
       console.error(`notify-event(${event}): notification insert failed`, err?.message);
     }
 
+    // Admin-side alerts (best-effort) for the events admins care about.
+    if (event === 'payment_confirmed') {
+      await notifyAdmins(supabaseAdmin, {
+        title: 'Payment received',
+        message: `${companyName || name || 'A client'} paid${amount ? ` $${amount}` : ''}${isoStandard ? ` for ${isoStandard}` : ''}.`,
+        region: clientProfile.region || null,
+      });
+    } else if (event === 'application_received') {
+      await notifyAdmins(supabaseAdmin, {
+        title: 'New certification request',
+        message: `${companyName || name || 'A client'} submitted a certification application${isoStandard ? ` for ${isoStandard}` : ''}.`,
+        region: clientProfile.region || null,
+      });
+    }
+
     return res.status(200).json({ success: true, emailSent, ...(emailError ? { emailError } : {}) });
   } catch (err) {
     const status = err.status || 500;
     console.error('notify-event error:', err);
     return res.status(status).json({ error: err.message || 'Internal Server Error' });
   }
+}
+
+// Daily cron: email clients whose certificate expires within 30 days and that
+// haven't been reminded yet. Idempotent via certificates.renewal_reminded_at.
+// Authenticated by the CRON_SECRET that Vercel Cron sends as a Bearer token.
+async function handleRenewalCron(req, res) {
+  const secret = process.env.CRON_SECRET;
+  const auth = req.headers?.authorization || req.headers?.Authorization || '';
+  if (!secret || auth !== `Bearer ${secret}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const now = new Date();
+  const horizon = new Date(now);
+  horizon.setDate(horizon.getDate() + 30);
+
+  const { data: certs, error } = await supabaseAdmin
+    .from('certificates')
+    .select('id, client_id, company_name, iso_standard, certificate_number, expires_at')
+    .eq('status', 'active')
+    .lte('expires_at', horizon.toISOString())
+    .is('renewal_reminded_at', null);
+
+  if (error) {
+    console.error('renewal cron: query failed', error.message);
+    return res.status(500).json({ error: error.message });
+  }
+
+  let reminded = 0;
+  for (const cert of certs || []) {
+    try {
+      const { data: prof } = await supabaseAdmin
+        .from('profiles')
+        .select('email, full_name, name')
+        .eq('id', cert.client_id)
+        .maybeSingle();
+
+      if (prof?.email) {
+        const { subject, html, text } = renewalReminderEmail({
+          name: prof.full_name || prof.name || null,
+          companyName: cert.company_name,
+          isoStandard: cert.iso_standard,
+          certificateNumber: cert.certificate_number,
+          expiresOn: cert.expires_at ? String(cert.expires_at).slice(0, 10) : null,
+          dashboardUrl: `${APP_PUBLIC_URL}/dashboard`,
+        });
+        await sendViaResend({ to: prof.email, subject, html, text });
+        await supabaseAdmin.from('notifications').insert({
+          user_id: cert.client_id,
+          type: 'system',
+          title: 'Certificate renewal due',
+          message: subject,
+        });
+      }
+
+      // Mark as reminded even if the client had no email, so we don't re-scan it daily.
+      await supabaseAdmin
+        .from('certificates')
+        .update({ renewal_reminded_at: now.toISOString() })
+        .eq('id', cert.id);
+      reminded++;
+    } catch (e) {
+      console.error('renewal cron: cert failed', cert.id, e?.message);
+    }
+  }
+
+  return res.status(200).json({ success: true, reminded });
 }

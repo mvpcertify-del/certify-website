@@ -8,5 +8,11 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/notify-event",
+      "schedule": "0 9 * * *"
+    }
   ]
 }

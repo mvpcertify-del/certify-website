@@ -178,6 +178,44 @@ export function auditCompletedEmail({ name, companyName, isoStandard, dashboardU
   return { subject, html, text };
 }
 
+export function renewalReminderEmail({ name, companyName, isoStandard, certificateNumber, expiresOn, dashboardUrl }) {
+  const greeting = name ? `Hi ${name},` : 'Hello,';
+  const subject = `Your ${BRAND_TEXT} certificate is due for renewal`;
+  const html = layout({
+    title: subject,
+    bodyHtml: `
+      ${heading('Time to renew your certificate')}
+      ${body(`${greeting} your ${BRAND_TEXT} certificate is approaching its expiry date. Renew now to keep your certification valid without interruption.`)}
+      ${detailsBox([
+        ['Company', companyName],
+        ['Standard', isoStandard],
+        ['Certificate No.', certificateNumber],
+        ['Expires on', expiresOn],
+      ])}
+      <p style="margin:0 0 28px;">${button(dashboardUrl, 'Start your renewal')}</p>
+      ${muted('If you have already renewed, you can ignore this reminder.')}`,
+  });
+  const text = `${greeting}\n\nYour ${BRAND_TEXT} certificate is due for renewal.\n\nCompany: ${companyName || '-'}\nStandard: ${isoStandard || '-'}\nCertificate No.: ${certificateNumber || '-'}\nExpires on: ${expiresOn || '-'}\n\nRenew from your dashboard: ${dashboardUrl}\n\nQuestions? ${SUPPORT_EMAIL}\n\n— ${BRAND_TEXT}`;
+  return { subject, html, text };
+}
+
+// Internal alert sent to admins (super + regional) when something needs their
+// attention — a new registration/lead, a payment, or a new certification
+// request. Plain, no-frills, links straight to the dashboard.
+export function adminAlertEmail({ title, message, actionUrl }) {
+  const subject = `[${BRAND_TEXT}] ${title}`;
+  const html = layout({
+    title: subject,
+    bodyHtml: `
+      ${heading(title)}
+      ${body(message)}
+      ${actionUrl ? `<p style="margin:0 0 28px;">${button(actionUrl, 'Open dashboard')}</p>` : ''}
+      ${muted(`You're receiving this because you're an administrator on ${BRAND_TEXT}.`)}`,
+  });
+  const text = `[${BRAND_TEXT}] ${title}\n\n${message}\n\n${actionUrl || ''}\n\n— ${BRAND_TEXT}`;
+  return { subject, html, text };
+}
+
 export function certificateIssuedEmail({ name, companyName, isoStandard, certificateNumber, dashboardUrl }) {
   const greeting = name ? `Hi ${name},` : 'Hello,';
   const subject = `🎉 Your ${BRAND_TEXT} certificate has been issued`;

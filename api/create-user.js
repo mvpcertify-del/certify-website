@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { sendVerificationEmail } from './_sendVerificationEmail.js';
+import { notifyAdmins } from './_notifyAdmins.js';
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -152,6 +153,17 @@ export default async function handler(req, res) {
         emailSendFailed = true;
         console.error('create-user: verification email send failed', sendResult);
       }
+    }
+
+    // Alert admins to the new client registration / lead (best-effort).
+    // In the current funnel a registered email IS the lead, so this covers
+    // both the "new lead" and "new registration" admin alerts.
+    if (assignedRole === 'client') {
+      await notifyAdmins(supabaseAdmin, {
+        title: 'New registration',
+        message: `${displayName} (${email})${company_name ? ` — ${company_name}` : ''} just registered.`,
+        region: region || null,
+      });
     }
 
     return res.status(200).json({
