@@ -23,6 +23,7 @@ export default async function handler(req, res) {
     if (action === 'update-profile') return await updateProfile(req, res);
     if (action === 'update-role') return await updateRole(req, res);
     if (action === 'set-active') return await setActive(req, res);
+    if (action === 'save-permission-override') return await savePermissionOverride(req, res);
     return res.status(400).json({ error: 'Unknown action' });
   } catch (error) {
     console.error('User route error:', error);
@@ -144,6 +145,48 @@ async function setActive(req, res) {
   }
 
   return res.status(200).json({ success: true, is_active: isActive });
+}
+
+// Upsert / clear a role→permission override (custom_permissions table).
+// Merged here from the former api/save-permission-override.js to stay within
+// the Vercel Hobby 12-function limit. Called by AdminPermissions.jsx.
+async function savePermissionOverride(req, res) {
+  const { role, permission, enabled, updatedBy, clear } = req.body;
+
+  if (!role || !permission) {
+    return res.status(400).json({ error: 'role and permission are required' });
+  }
+
+  // `clear: true` removes the override so the baseline from roles.js applies.
+  if (clear) {
+    const { error } = await supabaseAdmin
+      .from('custom_permissions')
+      .delete()
+      .eq('role', role)
+      .eq('permission', permission);
+    if (error) throw error;
+    return res.status(200).json({ success: true, cleared: true });
+  }
+
+  if (typeof enabled !== 'boolean') {
+    return res.status(400).json({ error: 'enabled must be a boolean (or pass clear:true)' });
+  }
+
+  const { error } = await supabaseAdmin
+    .from('custom_permissions')
+    .upsert(
+      {
+        role,
+        permission,
+        enabled,
+        updated_by: updatedBy || null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'role,permission' }
+    );
+
+  if (error) throw error;
+  return res.status(200).json({ success: true });
 }
 
 async function getMeta(req, res) {

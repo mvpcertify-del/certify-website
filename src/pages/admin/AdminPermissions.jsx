@@ -126,10 +126,10 @@ export default function AdminPermissions() {
       // If the new value matches baseline, clear the override instead of storing it.
       // Keeps the table lean and the "Reset to defaults" state obvious.
       if (next === baseline) {
-        const res = await fetch('/api/save-permission-override', {
+        const res = await fetch('/api/user', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ role, permission, clear: true, updatedBy: user?.id }),
+          body: JSON.stringify({ action: 'save-permission-override', role, permission, clear: true, updatedBy: user?.id }),
         });
         const json = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(json.error || 'Failed to save');
@@ -142,10 +142,10 @@ export default function AdminPermissions() {
           return copy;
         });
       } else {
-        const res = await fetch('/api/save-permission-override', {
+        const res = await fetch('/api/user', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ role, permission, enabled: next, updatedBy: user?.id }),
+          body: JSON.stringify({ action: 'save-permission-override', role, permission, enabled: next, updatedBy: user?.id }),
         });
         const json = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(json.error || 'Failed to save');
@@ -175,10 +175,10 @@ export default function AdminPermissions() {
     try {
       await Promise.all(
         keys.map(permission =>
-          fetch('/api/save-permission-override', {
+          fetch('/api/user', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ role, permission, clear: true, updatedBy: user?.id }),
+            body: JSON.stringify({ action: 'save-permission-override', role, permission, clear: true, updatedBy: user?.id }),
           })
         )
       );
