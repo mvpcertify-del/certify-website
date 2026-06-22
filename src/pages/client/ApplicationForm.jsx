@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { apiPost } from '../../lib/apiClient';
 import { Input, Select, Textarea, Button } from '../../components/ui/FormElements';
 import { ROLES } from '../../utils/roles';
 import { getIsoBySlug } from '../../utils/isoCatalog';
@@ -201,6 +202,14 @@ export default function ApplicationForm() {
           .update(updatePayload)
           .eq('id', applicationId);
         if (updateError) throw updateError;
+
+        // Fire the lifecycle emails once the paid application is registered.
+        // Best-effort + fire-and-forget: a mail hiccup must never block the
+        // customer's redirect to their dashboard.
+        if (paymentJustSucceeded) {
+          apiPost('/api/notify-event', { applicationId, event: 'payment_confirmed' }).catch(() => {});
+          apiPost('/api/notify-event', { applicationId, event: 'application_received' }).catch(() => {});
+        }
       } else {
         const insertPayload = {
           client_id: clientIdForRow,

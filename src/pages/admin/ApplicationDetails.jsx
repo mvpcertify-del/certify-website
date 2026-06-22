@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
+import { apiPost } from '../../lib/apiClient';
 import StatusBadge from '../../components/ui/StatusBadge';
 import { Button, Select } from '../../components/ui/FormElements';
 import Modal from '../../components/ui/Modal';
@@ -198,6 +199,7 @@ export default function ApplicationDetails() {
   // --- Admin Save ---
   const handleSave = async () => {
     setSaving(true);
+    const prevStatus = application?.status;
     try {
       const { error } = await supabase
         .from('applications')
@@ -205,6 +207,10 @@ export default function ApplicationDetails() {
         .eq('id', id);
       if (error) throw error;
       setApplication(prev => ({ ...prev, status, assigned_auditor_id: assignedAuditor || null, assigned_cb_id: assignedCb || null, internal_notes: internalNotes }));
+      // Notify the client when their audit gets scheduled (only on transition).
+      if (status === 'audit_scheduled' && prevStatus !== 'audit_scheduled') {
+        apiPost('/api/notify-event', { applicationId: id, event: 'audit_scheduled' }).catch(() => {});
+      }
       showToast(t('admin.appUpdated'));
     } catch (err) {
       console.error('Error updating application', err);
@@ -265,6 +271,8 @@ export default function ApplicationDetails() {
 
       setApplication(prev => ({ ...prev, status: 'audited' }));
       setStatus('audited');
+      // Let the client know their audit is done and final review has started.
+      apiPost('/api/notify-event', { applicationId: id, event: 'audit_completed' }).catch(() => {});
       showToast(t('admin.auditSubmittedSuccess'));
     } catch (err) {
       console.error('Error submitting audit:', err);

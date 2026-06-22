@@ -1,5 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import { sendViaResend } from './_resendClient.js';
+import { certificateIssuedEmail } from './_emailTemplates.js';
+
+const APP_PUBLIC_URL = (process.env.APP_PUBLIC_URL || '').replace(/\/$/, '');
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -207,6 +211,33 @@ export default async function handler(req, res) {
       // Best-effort cleanup — the upload is now orphaned otherwise.
       await supabaseAdmin.storage.from('certificates').remove([storagePath]).catch(() => {});
       return res.status(500).json({ error: 'Failed to record certificate' });
+    }
+
+    // ---- 6. Email the client their certificate (best-effort, non-blocking) ----
+    try {
+      const { data: clientProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('email, full_name, name')
+        .eq('id', application.client_id)
+        .maybeSingle();
+      if (clientProfile?.email) {
+        const { subject, html, text } = certificateIssuedEmail({
+          name: clientProfile.full_name || clientProfile.name || null,
+          companyName,
+          isoStandard,
+          certificateNumber,
+          dashboardUrl: `${APP_PUBLIC_URL}/dashboard`,
+        });
+        await sendViaResend({ to: clientProfile.email, subject, html, text });
+        await supabaseAdmin.from('notifications').insert({
+          user_id: application.client_id,
+          type: 'system',
+          title: 'Certificate issued',
+          message: subject,
+        });
+      }
+    } catch (mailErr) {
+      console.error('issue-certificate: notification failed (non-blocking):', mailErr?.message);
     }
 
     return res.status(200).json({ certificate: cert, alreadyIssued: false });

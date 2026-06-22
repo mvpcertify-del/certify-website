@@ -8,7 +8,7 @@
 // Design follows the in-app brand: light surface, accent #3ECF8E.
 
 const BRAND_TEXT = 'Certify.cx';
-const SUPPORT_EMAIL = 'info@certify.cx';
+const SUPPORT_EMAIL = 'support@certify.cx';
 
 // Match src/index.css --color-accent.
 const ACCENT = '#3ECF8E';
@@ -82,6 +82,122 @@ const linkFallback = (href) => `
 const heading = (text) => `<h1 style="margin:0 0 16px;font-size:22px;font-weight:700;line-height:1.3;color:${TEXT_PRIMARY};letter-spacing:-0.01em;">${text}</h1>`;
 const body = (text) => `<p style="margin:0 0 24px;font-size:15px;line-height:1.65;color:${TEXT_SECONDARY};">${text}</p>`;
 const muted = (text) => `<p style="margin:0;font-size:13px;line-height:1.5;color:${TEXT_TERTIARY};">${text}</p>`;
+
+// A bordered label/value summary box (e.g. order details). `rows` is an array
+// of [label, value] pairs; falsy values are skipped so callers can pass
+// optional fields without conditionals.
+const detailsBox = (rows) => `
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px;border:1px solid ${BORDER};border-radius:12px;overflow:hidden;">
+    ${rows.filter(([, value]) => value != null && value !== '').map(([label, value], i) => `
+      <tr${i ? ` style="border-top:1px solid ${BORDER};"` : ''}>
+        <td style="padding:12px 16px;font-size:13px;color:${TEXT_TERTIARY};background:#fafbfd;width:42%;vertical-align:top;">${label}</td>
+        <td style="padding:12px 16px;font-size:14px;color:${TEXT_PRIMARY};font-weight:600;">${value}</td>
+      </tr>`).join('')}
+  </table>`;
+
+// What-happens-next checklist used across the lifecycle emails.
+const stepsList = (steps) => `
+  <ul style="margin:0 0 8px;padding-left:20px;font-size:14px;line-height:1.8;color:${TEXT_SECONDARY};">
+    ${steps.map((s) => `<li>${s}</li>`).join('')}
+  </ul>`;
+
+// ---- Certification lifecycle emails (sent from support@certify.cx) ----
+
+export function paymentConfirmationEmail({ name, companyName, amount, isoStandard, packageName, dashboardUrl }) {
+  const greeting = name ? `Hi ${name},` : 'Hello,';
+  const subject = `Payment received — your ${BRAND_TEXT} certification is underway`;
+  const html = layout({
+    title: subject,
+    bodyHtml: `
+      ${heading('Payment received — thank you!')}
+      ${body(`${greeting} we've received your payment and your ISO certification process has started. Here are your order details:`)}
+      ${detailsBox([
+        ['Company', companyName],
+        ['Standard', isoStandard],
+        ['Package', packageName],
+        ['Amount paid', amount ? `$${amount}` : null],
+      ])}
+      <p style="margin:0 0 28px;">${button(dashboardUrl, 'View your dashboard')}</p>
+      <div style="border-top:1px solid ${BORDER};padding-top:24px;">
+        <p style="margin:0 0 12px;font-size:14px;font-weight:600;color:${TEXT_PRIMARY};">What happens next</p>
+        ${stepsList([
+          'Our team reviews your application and assigns your certification body.',
+          'Your audit is scheduled — you\'ll get an email when it\'s booked.',
+          'After a successful audit, your certificate is issued and emailed to you.',
+        ])}
+      </div>`,
+  });
+  const text = `${greeting}\n\nWe've received your payment and your ${BRAND_TEXT} certification has started.\n\nCompany: ${companyName || '-'}\nStandard: ${isoStandard || '-'}\nPackage: ${packageName || '-'}\n${amount ? `Amount paid: $${amount}\n` : ''}\nView your dashboard: ${dashboardUrl}\n\nQuestions? ${SUPPORT_EMAIL}\n\n— ${BRAND_TEXT}`;
+  return { subject, html, text };
+}
+
+export function applicationReceivedEmail({ name, companyName, isoStandard, dashboardUrl }) {
+  const greeting = name ? `Hi ${name},` : 'Hello,';
+  const subject = `We've received your ${BRAND_TEXT} application`;
+  const html = layout({
+    title: subject,
+    bodyHtml: `
+      ${heading('Your application has been received')}
+      ${body(`${greeting} thanks for submitting your details${companyName ? ` for <strong style="color:${TEXT_PRIMARY};">${companyName}</strong>` : ''}. Your certification application is now in our queue${isoStandard ? ` for <strong style="color:${TEXT_PRIMARY};">${isoStandard}</strong>` : ''}.`)}
+      ${body('Our team will review it and get your audit scheduled. You can track the status any time from your dashboard.')}
+      <p style="margin:0 0 28px;">${button(dashboardUrl, 'Track your application')}</p>
+      ${muted('We\'ll email you at each step — application review, audit scheduling, and certificate issuance.')}`,
+  });
+  const text = `${greeting}\n\nWe've received your ${BRAND_TEXT} application${companyName ? ` for ${companyName}` : ''}${isoStandard ? ` (${isoStandard})` : ''}.\n\nTrack it from your dashboard: ${dashboardUrl}\n\nQuestions? ${SUPPORT_EMAIL}\n\n— ${BRAND_TEXT}`;
+  return { subject, html, text };
+}
+
+export function auditScheduledEmail({ name, companyName, isoStandard, dashboardUrl }) {
+  const greeting = name ? `Hi ${name},` : 'Hello,';
+  const subject = `Your ${BRAND_TEXT} audit has been scheduled`;
+  const html = layout({
+    title: subject,
+    bodyHtml: `
+      ${heading('Your audit is scheduled')}
+      ${body(`${greeting} good news — the audit${isoStandard ? ` for your <strong style="color:${TEXT_PRIMARY};">${isoStandard}</strong> certification` : ''}${companyName ? ` (${companyName})` : ''} has been scheduled.`)}
+      ${body('Your assigned auditor will be in touch with the details. Please make sure your documentation is up to date in your dashboard before the audit.')}
+      <p style="margin:0 0 28px;">${button(dashboardUrl, 'Review your documents')}</p>
+      ${muted('Need to reschedule or have a question? Just reply to this email.')}`,
+  });
+  const text = `${greeting}\n\nYour ${BRAND_TEXT} audit${isoStandard ? ` for ${isoStandard}` : ''} has been scheduled. Your auditor will be in touch.\n\nReview your documents: ${dashboardUrl}\n\nQuestions? ${SUPPORT_EMAIL}\n\n— ${BRAND_TEXT}`;
+  return { subject, html, text };
+}
+
+export function auditCompletedEmail({ name, companyName, isoStandard, dashboardUrl }) {
+  const greeting = name ? `Hi ${name},` : 'Hello,';
+  const subject = `Your ${BRAND_TEXT} audit is complete`;
+  const html = layout({
+    title: subject,
+    bodyHtml: `
+      ${heading('Audit complete — final review underway')}
+      ${body(`${greeting} your audit${isoStandard ? ` for <strong style="color:${TEXT_PRIMARY};">${isoStandard}</strong>` : ''}${companyName ? ` (${companyName})` : ''} has been completed.`)}
+      ${body('The certification body is now carrying out the final review of your file. We\'ll email you as soon as a decision is made and your certificate is ready.')}
+      <p style="margin:0 0 28px;">${button(dashboardUrl, 'View status')}</p>`,
+  });
+  const text = `${greeting}\n\nYour ${BRAND_TEXT} audit${isoStandard ? ` for ${isoStandard}` : ''} is complete and is now in final review.\n\nView status: ${dashboardUrl}\n\nQuestions? ${SUPPORT_EMAIL}\n\n— ${BRAND_TEXT}`;
+  return { subject, html, text };
+}
+
+export function certificateIssuedEmail({ name, companyName, isoStandard, certificateNumber, dashboardUrl }) {
+  const greeting = name ? `Hi ${name},` : 'Hello,';
+  const subject = `🎉 Your ${BRAND_TEXT} certificate has been issued`;
+  const html = layout({
+    title: subject,
+    bodyHtml: `
+      ${heading('Congratulations — you\'re certified!')}
+      ${body(`${greeting} your ${BRAND_TEXT} certification is complete. Here are the details:`)}
+      ${detailsBox([
+        ['Company', companyName],
+        ['Standard', isoStandard],
+        ['Certificate No.', certificateNumber],
+      ])}
+      ${body('Your certificate is available to download from your dashboard.')}
+      <p style="margin:0 0 28px;">${button(dashboardUrl, 'Download your certificate')}</p>
+      ${muted('Keep this certificate number for your records. We\'ll remind you before it\'s due for renewal.')}`,
+  });
+  const text = `${greeting}\n\nCongratulations! Your ${BRAND_TEXT} certificate has been issued.\n\nCompany: ${companyName || '-'}\nStandard: ${isoStandard || '-'}\nCertificate No.: ${certificateNumber || '-'}\n\nDownload it from your dashboard: ${dashboardUrl}\n\nQuestions? ${SUPPORT_EMAIL}\n\n— ${BRAND_TEXT}`;
+  return { subject, html, text };
+}
 
 export function verifyEmail({ name, verifyUrl }) {
   const greeting = name ? `Hi ${name},` : 'Hello,';

@@ -15,6 +15,24 @@ import {
 
 const STORAGE_KEY = 'certifycx-lang';
 
+// Marketing deep-link override. A campaign link like
+// `certify.cx/iso/iso-9001?lang=ar` must open directly in that language,
+// regardless of the visitor's region or any previously cached choice. We
+// persist the param into localStorage *before* i18next reads its detectors
+// (localStorage is first in the detection order) and before main.jsx applies
+// the pre-mount <html dir/lang>, so the very first paint is already correct.
+// Writing to localStorage also makes the choice stick across the session.
+if (typeof window !== 'undefined') {
+  try {
+    const urlLang = new URLSearchParams(window.location.search).get('lang');
+    if (urlLang && SUPPORTED_LANGUAGES.has(urlLang)) {
+      localStorage.setItem(STORAGE_KEY, urlLang);
+    }
+  } catch {
+    /* URL/localStorage unavailable; fall back to region detection */
+  }
+}
+
 // Custom detector that resolves the default language from the visitor's region
 // (Lebanon → ar, Mexico → es, India → en, …). Only kicks in when the user has
 // not already made a manual choice. Uses synchronous signals (cache, timezone,

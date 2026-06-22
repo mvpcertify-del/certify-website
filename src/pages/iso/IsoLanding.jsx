@@ -12,6 +12,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { ROLES } from '../../utils/roles';
 import PricingTiers from '../../components/pricing/PricingTiers';
 import PricingCalculator from '../../components/pricing/PricingCalculator';
+import LanguageSwitcher from '../../components/LanguageSwitcher';
 import './IsoLanding.css';
 
 const ICON_MAP = {
@@ -121,6 +122,7 @@ export default function IsoLanding() {
             <div className="iso-landing__logo-icon"><Shield size={22} /></div>
             <span className="iso-landing__logo-text">Certify.cx<sup className="brand-tm">&trade;</sup></span>
           </Link>
+          <LanguageSwitcher variant="landing" />
         </div>
 
         {/* Hero */}
