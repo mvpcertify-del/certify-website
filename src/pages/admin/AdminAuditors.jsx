@@ -24,11 +24,21 @@ export default function AdminAuditors() {
     { key: 'region', label: t('admin.region'), type: 'region' },
   ];
 
+  const createFields = [
+    { key: 'full_name', label: t('admin.fullName'), required: true },
+    { key: 'email', label: t('auth.email'), type: 'email', required: true },
+    { key: 'password', label: t('auth.password'), type: 'password', required: true },
+    { key: 'region', label: t('admin.region'), type: 'region' },
+  ];
+
   return (
     <ProfileManagementTable
       role={ROLES.AUDITOR}
       columns={columns}
       editFields={editFields}
+      createFields={createFields}
+      addLabel={t('admin.addAuditor')}
+      createTitle={t('admin.addAuditor')}
       title={t('admin.auditorsTitle')}
       subtitle={(count) => t('admin.auditorsFound', { count })}
       loadingText={t('admin.loadingAuditors')}

@@ -47,7 +47,9 @@
     "processing": "جاري المعالجة...",
     "uploading": "جاري الرفع...",
     "saving": "جاري الحفظ...",
-    "submitting": "جاري الإرسال..."
+    "submitting": "جاري الإرسال...",
+    "add": "Add",
+    "create": "Create"
   },
   "languageSuggestion": {
     "title": "تغيير اللغة؟",
@@ -746,7 +748,15 @@
     "assigningCB": "تعيين جهة اعتماد لـ",
     "unassigned": "غير معيّن (مستقل)",
     "active": "نشط",
-    "inactive": "غير نشط"
+    "inactive": "غير نشط",
+    "addAuditor": "Add Auditor",
+    "addRegionalAdmin": "Add Regional Admin",
+    "addApplication": "Add Application",
+    "createNewClient": "Create new client",
+    "newClientDetails": "New client details",
+    "selectStandard": "Select ISO standard",
+    "package": "Package",
+    "applicationCreated": "Application created"
   },
   "certBody": {
     "addBody": "إضافة هيئة تصديق",

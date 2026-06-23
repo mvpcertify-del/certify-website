@@ -69,7 +69,7 @@ export default function LandingPage() {
             <a href="#benefits" className="landing__nav-link">{t('nav.benefits')}</a>
             <LanguageSwitcher variant="landing" />
             <Link to="/login" className="landing__nav-link landing__nav-link--login">{t('nav.login')}</Link>
-            <Link to="/iso/iso-9001" className="landing__nav-btn">{t('nav.startGapAnalysis')}</Link>
+            <Link to="/gap-analysis" className="landing__nav-btn">{t('nav.startGapAnalysis')}</Link>
           </div>
         </div>
       </nav>
@@ -89,7 +89,7 @@ export default function LandingPage() {
             {t('landing.heroSubtitle')}
           </p>
           <div className="landing__hero-actions">
-            <Link to="/iso/iso-9001" className="landing__btn landing__btn--primary">
+            <Link to="/gap-analysis" className="landing__btn landing__btn--primary">
               {t('nav.startGapAnalysis')} <ArrowRight size={18} />
             </Link>
             <Link to="/login" className="landing__btn landing__btn--secondary">
@@ -193,7 +193,7 @@ export default function LandingPage() {
         <div className="landing__cta-inner">
           <h2 className="landing__cta-title">{t('landing.ctaTitle')}</h2>
           <p className="landing__cta-desc">{t('landing.ctaDesc')}</p>
-          <Link to="/iso/iso-9001" className="landing__btn landing__btn--primary landing__btn--lg">
+          <Link to="/gap-analysis" className="landing__btn landing__btn--primary landing__btn--lg">
             {t('nav.startGapAnalysis')} <ArrowRight size={18} />
           </Link>
         </div>
@@ -215,7 +215,7 @@ export default function LandingPage() {
               <a href="#how-it-works" className="landing__footer-link">{t('nav.howItWorks')}</a>
               <a href="#standards" className="landing__footer-link">{t('landing.footerISOStandards')}</a>
               <a href="#benefits" className="landing__footer-link">{t('nav.benefits')}</a>
-              <Link to="/iso/iso-9001" className="landing__footer-link">{t('landing.footerGetCertified')}</Link>
+              <Link to="/gap-analysis" className="landing__footer-link">{t('landing.footerGetCertified')}</Link>
             </div>
             <div className="landing__footer-col">
               <h4 className="landing__footer-heading">{t('landing.footerAccount')}</h4>

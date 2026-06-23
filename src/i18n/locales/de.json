@@ -47,7 +47,9 @@
     "processing": "Wird verarbeitet...",
     "uploading": "Wird hochgeladen...",
     "saving": "Wird gespeichert...",
-    "submitting": "Wird übermittelt..."
+    "submitting": "Wird übermittelt...",
+    "add": "Add",
+    "create": "Create"
   },
   "languageSuggestion": {
     "title": "Sprache ändern?",
@@ -746,7 +748,15 @@
     "assigningCB": "Zertifizierungsstelle wird zugewiesen an",
     "unassigned": "Nicht zugewiesen (unabhängig)",
     "active": "Aktiv",
-    "inactive": "Inaktiv"
+    "inactive": "Inaktiv",
+    "addAuditor": "Add Auditor",
+    "addRegionalAdmin": "Add Regional Admin",
+    "addApplication": "Add Application",
+    "createNewClient": "Create new client",
+    "newClientDetails": "New client details",
+    "selectStandard": "Select ISO standard",
+    "package": "Package",
+    "applicationCreated": "Application created"
   },
   "certBody": {
     "addBody": "Zertifizierungsstelle hinzufügen",

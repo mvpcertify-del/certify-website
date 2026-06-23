@@ -47,7 +47,9 @@
     "processing": "Обработка...",
     "uploading": "Загрузка...",
     "saving": "Сохранение...",
-    "submitting": "Отправка..."
+    "submitting": "Отправка...",
+    "add": "Add",
+    "create": "Create"
   },
   "languageSuggestion": {
     "title": "Сменить язык?",
@@ -746,7 +748,15 @@
     "assigningCB": "Назначение ОС для",
     "unassigned": "Не назначено (независимый)",
     "active": "Активен",
-    "inactive": "Неактивен"
+    "inactive": "Неактивен",
+    "addAuditor": "Add Auditor",
+    "addRegionalAdmin": "Add Regional Admin",
+    "addApplication": "Add Application",
+    "createNewClient": "Create new client",
+    "newClientDetails": "New client details",
+    "selectStandard": "Select ISO standard",
+    "package": "Package",
+    "applicationCreated": "Application created"
   },
   "certBody": {
     "addBody": "Добавить орган по сертификации",

@@ -35,7 +35,10 @@ const logoMark = (size = 36) => `
     <path d="M18 32L24.5 38.5L38 24" stroke="${ACCENT}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>`;
 
-const layout = ({ title, bodyHtml }) => `<!DOCTYPE html>
+// `preheader` is the hidden inbox-preview line (so the preview is never blank);
+// it defaults to the title. The card is fluid (width:100% capped at 560px) and
+// the <style> media queries collapse padding / stack the button on phones.
+const layout = ({ title, bodyHtml, preheader }) => `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -43,12 +46,24 @@ const layout = ({ title, bodyHtml }) => `<!DOCTYPE html>
 <meta name="color-scheme" content="light only">
 <meta name="supported-color-schemes" content="light only">
 <title>${title}</title>
+<style>
+  @media only screen and (max-width:600px) {
+    .ccx-wrap { padding: 16px 0 !important; }
+    .ccx-card { width: 100% !important; border-radius: 0 !important; border-left: 0 !important; border-right: 0 !important; }
+    .ccx-body { padding: 26px 22px !important; }
+    .ccx-head { padding: 22px 22px 18px !important; }
+    .ccx-foot { padding: 20px 22px !important; }
+    .ccx-h1 { font-size: 20px !important; }
+    .ccx-btn { display: block !important; text-align: center !important; }
+  }
+</style>
 </head>
 <body style="margin:0;padding:0;background:${SURFACE_BG};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:${TEXT_PRIMARY};-webkit-font-smoothing:antialiased;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${SURFACE_BG};padding:40px 16px;">
-    <tr><td align="center">
-      <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background:${CARD_BG};border-radius:16px;border:1px solid ${BORDER};box-shadow:0 4px 24px rgba(16,24,40,0.06);overflow:hidden;">
-        <tr><td style="padding:28px 36px 24px;border-bottom:1px solid ${BORDER};">
+  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:${SURFACE_BG};opacity:0;">${preheader || title}</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${SURFACE_BG};">
+    <tr><td align="center" class="ccx-wrap" style="padding:40px 16px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="ccx-card" style="max-width:560px;background:${CARD_BG};border-radius:16px;border:1px solid ${BORDER};box-shadow:0 4px 24px rgba(16,24,40,0.06);overflow:hidden;">
+        <tr><td class="ccx-head" style="padding:28px 36px 24px;border-bottom:1px solid ${BORDER};">
           <table role="presentation" cellpadding="0" cellspacing="0" border="0">
             <tr>
               <td style="padding-right:12px;vertical-align:middle;">${logoMark(36)}</td>
@@ -56,8 +71,8 @@ const layout = ({ title, bodyHtml }) => `<!DOCTYPE html>
             </tr>
           </table>
         </td></tr>
-        <tr><td style="padding:36px;">${bodyHtml}</td></tr>
-        <tr><td style="padding:24px 36px;border-top:1px solid ${BORDER};background:#fafbfd;">
+        <tr><td class="ccx-body" style="padding:36px;">${bodyHtml}</td></tr>
+        <tr><td class="ccx-foot" style="padding:24px 36px;border-top:1px solid ${BORDER};background:#fafbfd;">
           <p style="margin:0;font-size:13px;line-height:1.6;color:${TEXT_SECONDARY};">
             Need help? Reach us at <a href="mailto:${SUPPORT_EMAIL}" style="color:${ACCENT};text-decoration:none;font-weight:500;">${SUPPORT_EMAIL}</a>.
           </p>
@@ -71,7 +86,7 @@ const layout = ({ title, bodyHtml }) => `<!DOCTYPE html>
 </body>
 </html>`;
 
-const button = (href, label) => `<a href="${href}" style="display:inline-block;background:${ACCENT};color:#0a1f17;text-decoration:none;padding:13px 26px;border-radius:10px;font-weight:600;font-size:15px;letter-spacing:0.01em;border:1px solid ${ACCENT_HOVER};">${label}</a>`;
+const button = (href, label) => `<a href="${href}" class="ccx-btn" style="display:inline-block;box-sizing:border-box;background:${ACCENT};color:#0a1f17;text-decoration:none;padding:13px 26px;border-radius:10px;font-weight:600;font-size:15px;letter-spacing:0.01em;border:1px solid ${ACCENT_HOVER};">${label}</a>`;
 
 const linkFallback = (href) => `
   <p style="font-size:13px;line-height:1.5;color:${TEXT_TERTIARY};margin:0 0 6px;">Or paste this link into your browser:</p>
@@ -85,15 +100,20 @@ const muted = (text) => `<p style="margin:0;font-size:13px;line-height:1.5;color
 
 // A bordered label/value summary box (e.g. order details). `rows` is an array
 // of [label, value] pairs; falsy values are skipped so callers can pass
-// optional fields without conditionals.
-const detailsBox = (rows) => `
+// optional fields without conditionals. Returns '' when nothing survives, so we
+// never render an empty bordered box.
+const detailsBox = (rows) => {
+  const filtered = rows.filter(([, value]) => value != null && value !== '');
+  if (!filtered.length) return '';
+  return `
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px;border:1px solid ${BORDER};border-radius:12px;overflow:hidden;">
-    ${rows.filter(([, value]) => value != null && value !== '').map(([label, value], i) => `
+    ${filtered.map(([label, value], i) => `
       <tr${i ? ` style="border-top:1px solid ${BORDER};"` : ''}>
         <td style="padding:12px 16px;font-size:13px;color:${TEXT_TERTIARY};background:#fafbfd;width:42%;vertical-align:top;">${label}</td>
         <td style="padding:12px 16px;font-size:14px;color:${TEXT_PRIMARY};font-weight:600;">${value}</td>
       </tr>`).join('')}
   </table>`;
+};
 
 // What-happens-next checklist used across the lifecycle emails.
 const stepsList = (steps) => `

@@ -47,7 +47,9 @@
     "processing": "处理中…",
     "uploading": "上传中…",
     "saving": "保存中…",
-    "submitting": "提交中…"
+    "submitting": "提交中…",
+    "add": "Add",
+    "create": "Create"
   },
   "languageSuggestion": {
     "title": "切换语言？",
@@ -746,7 +748,15 @@
     "assigningCB": "正在指派认证机构给",
     "unassigned": "未指派（独立）",
     "active": "已启用",
-    "inactive": "已停用"
+    "inactive": "已停用",
+    "addAuditor": "Add Auditor",
+    "addRegionalAdmin": "Add Regional Admin",
+    "addApplication": "Add Application",
+    "createNewClient": "Create new client",
+    "newClientDetails": "New client details",
+    "selectStandard": "Select ISO standard",
+    "package": "Package",
+    "applicationCreated": "Application created"
   },
   "certBody": {
     "addBody": "添加认证机构",

@@ -47,7 +47,9 @@
     "processing": "Procesando...",
     "uploading": "Subiendo...",
     "saving": "Guardando...",
-    "submitting": "Enviando..."
+    "submitting": "Enviando...",
+    "add": "Add",
+    "create": "Create"
   },
   "languageSuggestion": {
     "title": "¿Cambiar idioma?",
@@ -746,7 +748,15 @@
     "assigningCB": "Asignando organismo de certificación a",
     "unassigned": "Sin asignar (Independiente)",
     "active": "Activo",
-    "inactive": "Inactivo"
+    "inactive": "Inactivo",
+    "addAuditor": "Add Auditor",
+    "addRegionalAdmin": "Add Regional Admin",
+    "addApplication": "Add Application",
+    "createNewClient": "Create new client",
+    "newClientDetails": "New client details",
+    "selectStandard": "Select ISO standard",
+    "package": "Package",
+    "applicationCreated": "Application created"
   },
   "certBody": {
     "addBody": "Añadir Organismo de Certificación",

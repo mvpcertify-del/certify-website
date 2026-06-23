@@ -24,11 +24,21 @@ export default function AdminRegionalAdmins() {
     { key: 'region', label: t('admin.region'), type: 'region' },
   ];
 
+  const createFields = [
+    { key: 'full_name', label: t('admin.fullName'), required: true },
+    { key: 'email', label: t('auth.email'), type: 'email', required: true },
+    { key: 'password', label: t('auth.password'), type: 'password', required: true },
+    { key: 'region', label: t('admin.region'), type: 'region', required: true },
+  ];
+
   return (
     <ProfileManagementTable
       role={ROLES.REGIONAL_ADMIN}
       columns={columns}
       editFields={editFields}
+      createFields={createFields}
+      addLabel={t('admin.addRegionalAdmin')}
+      createTitle={t('admin.addRegionalAdmin')}
       title={t('admin.regionalAdminsTitle')}
       subtitle={(count) => t('admin.regionalAdminsFound', { count })}
       loadingText={t('admin.loadingRegionalAdmins')}
