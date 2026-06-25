@@ -18,6 +18,15 @@ import { verifyAdmin, getAdmin } from './_verifyAdmin.js';
 //   - Rows the user owns as client/subject -> deleted.
 //   - All of the above run concurrently (Promise.allSettled, never rejects).
 //   - Then delete the profile row, then the auth user (authoritative step).
+//
+// Application-scoped children (ordering matters):
+//   `reports`, `documents`, `payments`, `coupon_redemptions` all FK to
+//   applications(id) with NO cascade. The user's own rows are cleared above by
+//   client_id, BUT `reports` has no client_id — it links to the application via
+//   application_id only. So deleting the user's applications hits
+//   reports_application_id_fkey. We therefore fetch the user's application ids
+//   and delete every application-scoped child by application_id FIRST, then the
+//   applications themselves. (`certificates` is ON DELETE CASCADE — no action.)
 // ---------------------------------------------------------------------------
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -61,7 +70,6 @@ export default async function handler(req, res) {
       ['coupon_redemptions', admin.from('coupon_redemptions').delete().eq('client_id', userId)],
       ['payments', admin.from('payments').delete().eq('client_id', userId)],
       ['documents(client)', admin.from('documents').delete().eq('client_id', userId)],
-      ['applications(client)', admin.from('applications').delete().eq('client_id', userId)],
       ['referrals(referrer)', admin.from('referrals').delete().eq('referrer_id', userId)],
       ['referrals(referred)', admin.from('referrals').delete().eq('referred_id', userId)],
     ];
@@ -75,6 +83,41 @@ export default async function handler(req, res) {
         console.warn(`[delete-user] ${label}:`, r.value.error.message);
       }
     });
+
+    // Application-scoped children must go before the applications themselves.
+    // `reports` is the one that breaks otherwise (it links via application_id,
+    // not client_id, so it isn't cleared by the client_id sweep above).
+    const { data: ownedApps } = await admin
+      .from('applications')
+      .select('id')
+      .eq('client_id', userId);
+    const appIds = (ownedApps || []).map(a => a.id);
+
+    if (appIds.length > 0) {
+      const childCleanups = [
+        ['reports(by application)', admin.from('reports').delete().in('application_id', appIds)],
+        ['documents(by application)', admin.from('documents').delete().in('application_id', appIds)],
+        ['payments(by application)', admin.from('payments').delete().in('application_id', appIds)],
+        ['coupon_redemptions(by application)', admin.from('coupon_redemptions').delete().in('application_id', appIds)],
+      ];
+      const childResults = await Promise.allSettled(childCleanups.map(([, p]) => p));
+      childResults.forEach((r, i) => {
+        const label = childCleanups[i][0];
+        if (r.status === 'rejected') {
+          console.warn(`[delete-user] ${label} threw:`, r.reason?.message || r.reason);
+        } else if (r.value?.error) {
+          console.warn(`[delete-user] ${label}:`, r.value.error.message);
+        }
+      });
+
+      // Now the applications can be removed without tripping a child FK.
+      const { error: appsError } = await admin.from('applications').delete().in('id', appIds);
+      if (appsError) {
+        return res.status(409).json({
+          error: `Could not delete applications (a record still references them): ${appsError.message}`,
+        });
+      }
+    }
 
     // Delete the profile row.
     const { error: profileError } = await admin.from('profiles').delete().eq('id', userId);

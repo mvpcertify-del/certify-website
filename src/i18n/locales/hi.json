@@ -94,7 +94,7 @@
     "users": "उपयोगकर्ता",
     "shareableLinks": "साझा करने योग्य लिंक",
     "registrations": "पंजीकरण",
-    "referrals": "रेफरल",
+    "referrals": "Referral",
     "myProfile": "मेरी प्रोफ़ाइल",
     "notifications": "सूचनाएं",
     "settings": "सेटिंग्स",
@@ -546,7 +546,14 @@
     "yourTier": "आपने पिछले 12 महीनों में {{count}} रेफरल कन्वर्ट किया है।",
     "noTierYet": "अभी तक कोई स्तर नहीं पहुंचा — कमीशन अनलॉक करने के लिए रेफर करना शुरू करें।",
     "certs": "प्रमाणपत्र",
-    "certsIn12mo": "प्रमाणपत्र / 12 माह"
+    "certsIn12mo": "प्रमाणपत्र / 12 माह",
+    "referredName": "Client Name",
+    "referredCompany": "Company",
+    "addReferral": "Add Referral",
+    "addReferralHint": "Enter the details of the client you're referring. They'll appear in your list as pending until they sign up.",
+    "referralAdded": "Referral added",
+    "noSelfReferral": "You can't refer yourself.",
+    "alreadyReferred": "You've already referred this email."
   },
   "register": {
     "invalidType": "अमान्य पंजीकरण प्रकार",
@@ -974,7 +981,8 @@
     "groupAuditors": "ऑडिटर",
     "groupBodies": "प्रमाणन निकाय",
     "groupReports": "रिपोर्ट",
-    "groupAdmin": "प्रशासन"
+    "groupAdmin": "प्रशासन",
+    "groupReferrals": "Referrals"
   },
   "userFields": {
     "title": "कस्टम उपयोगकर्ता फ़ील्ड",

@@ -353,6 +353,7 @@ export function AuthProvider({ children }) {
       [ROLES.AUDITOR]: '/auditor/dashboard',
       [ROLES.CERTIFICATION_BODY]: '/cert-body/dashboard',
       [ROLES.CLIENT]: '/client/dashboard',
+      [ROLES.REFERRAL]: '/referrals',
     };
     return map[role] || '/dashboard';
   };

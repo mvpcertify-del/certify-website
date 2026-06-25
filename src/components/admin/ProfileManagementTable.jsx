@@ -4,6 +4,7 @@ import DataTable from '../ui/DataTable';
 import StatusBadge from '../ui/StatusBadge';
 import RowActions from '../ui/RowActions';
 import Modal from '../ui/Modal';
+import DetailModal from '../ui/DetailModal';
 import { Input, Select, Button } from '../ui/FormElements';
 import { ROLES, REGIONS } from '../../utils/roles';
 import { useAuth } from '../../contexts/AuthContext';
@@ -62,6 +63,8 @@ export default function ProfileManagementTable({
   const [editForm, setEditForm] = useState({});
   const [showCreate, setShowCreate] = useState(false);
   const [createForm, setCreateForm] = useState({});
+  const [showView, setShowView] = useState(false);
+  const [viewingRow, setViewingRow] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -125,6 +128,11 @@ export default function ProfileManagementTable({
       setError(err.message);
     }
     setSaving(false);
+  };
+
+  const openView = (row) => {
+    setViewingRow(row);
+    setShowView(true);
   };
 
   const openCreate = () => {
@@ -213,6 +221,8 @@ export default function ProfileManagementTable({
         <RowActions
           isActive={row.is_active !== false}
           showEdit={editFields.length > 0}
+          showView
+          onView={() => openView(row)}
           onToggle={() => handleToggleActive(row)}
           onEdit={() => openEdit(row)}
           onDelete={() => handleDelete(row)}
@@ -359,6 +369,14 @@ export default function ProfileManagementTable({
           </div>
         </form>
       </Modal>
+
+      <DetailModal
+        isOpen={showView}
+        onClose={() => setShowView(false)}
+        title={viewingRow ? rowName(viewingRow) : t('common.view')}
+        columns={columns}
+        row={viewingRow}
+      />
     </div>
   );
 }

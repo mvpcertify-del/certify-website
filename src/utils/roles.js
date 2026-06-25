@@ -11,6 +11,9 @@ export const ROLES = {
   AUDITOR: 'auditor',
   CERTIFICATION_BODY: 'certification_body',
   CLIENT: 'client',
+  // Referral partner — an individual who refers clients and earns commission.
+  // Promoted from a `client` stakeholder_type to a first-class role in phase 14.
+  REFERRAL: 'referral',
 };
 
 export const ROLE_LABELS = {
@@ -19,6 +22,7 @@ export const ROLE_LABELS = {
   [ROLES.AUDITOR]: 'Auditor',
   [ROLES.CERTIFICATION_BODY]: 'Certification Body',
   [ROLES.CLIENT]: 'Client',
+  [ROLES.REFERRAL]: 'Referral',
 };
 
 /** Ordered by privilege level (highest first) */
@@ -28,6 +32,7 @@ export const ROLE_HIERARCHY = [
   ROLES.CERTIFICATION_BODY,
   ROLES.AUDITOR,
   ROLES.CLIENT,
+  ROLES.REFERRAL,
 ];
 
 // ---------------------------------------------------
@@ -330,6 +335,9 @@ export const PERMISSIONS = {
   VIEW_REPORTS: 'view_reports',
   EXPORT_REPORTS: 'export_reports',
 
+  // Referrals — referral partner's own dashboard (refer clients, track commission)
+  VIEW_REFERRALS: 'view_referrals',
+
   // Users & Settings
   MANAGE_USERS: 'manage_users',
   MANAGE_SETTINGS: 'manage_settings',
@@ -367,6 +375,7 @@ const ROLE_PERMISSIONS = {
     PERMISSIONS.MANAGE_REGIONS,
     PERMISSIONS.MANAGE_ROLES,
     PERMISSIONS.CREATE_ADMINS,
+    PERMISSIONS.VIEW_REFERRALS,
   ],
 
   // ---- Regional Admin ----
@@ -423,6 +432,15 @@ const ROLE_PERMISSIONS = {
     // Certifications — create requests + view status
     PERMISSIONS.CREATE_CERTIFICATION,
     PERMISSIONS.VIEW_CERTIFICATION_STATUS,
+    // Settings (own profile)
+    PERMISSIONS.MANAGE_SETTINGS,
+  ],
+
+  // ---- Referral Partner (individual) ----
+  [ROLES.REFERRAL]: [
+    PERMISSIONS.VIEW_DASHBOARD,
+    // Own referral dashboard: refer clients + track commission
+    PERMISSIONS.VIEW_REFERRALS,
     // Settings (own profile)
     PERMISSIONS.MANAGE_SETTINGS,
   ],
@@ -558,7 +576,7 @@ export function getAccessibleRoutes(role) {
  */
 export function getCreatableRoles(role) {
   const map = {
-    [ROLES.SUPER_ADMIN]: [ROLES.REGIONAL_ADMIN, ROLES.AUDITOR, ROLES.CERTIFICATION_BODY, ROLES.CLIENT],
+    [ROLES.SUPER_ADMIN]: [ROLES.REGIONAL_ADMIN, ROLES.AUDITOR, ROLES.CERTIFICATION_BODY, ROLES.CLIENT, ROLES.REFERRAL],
     [ROLES.REGIONAL_ADMIN]: [ROLES.AUDITOR, ROLES.CERTIFICATION_BODY],
   };
   return map[role] || [];

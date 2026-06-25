@@ -94,7 +94,7 @@
     "users": "Usuarios",
     "shareableLinks": "Enlaces compartibles",
     "registrations": "Registros",
-    "referrals": "Referidos",
+    "referrals": "Referral",
     "myProfile": "Mi perfil",
     "notifications": "Notificaciones",
     "settings": "Configuración",
@@ -546,7 +546,14 @@
     "yourTier": "Has convertido {{count}} referido(s) en los últimos 12 meses.",
     "noTierYet": "Aún no has alcanzado un nivel — empieza a referir para desbloquear comisiones.",
     "certs": "certs",
-    "certsIn12mo": "certs / 12 meses"
+    "certsIn12mo": "certs / 12 meses",
+    "referredName": "Client Name",
+    "referredCompany": "Company",
+    "addReferral": "Add Referral",
+    "addReferralHint": "Enter the details of the client you're referring. They'll appear in your list as pending until they sign up.",
+    "referralAdded": "Referral added",
+    "noSelfReferral": "You can't refer yourself.",
+    "alreadyReferred": "You've already referred this email."
   },
   "register": {
     "invalidType": "Tipo de registro inválido",
@@ -987,7 +994,8 @@
     "groupAuditors": "Auditores",
     "groupBodies": "Organismos de certificación",
     "groupReports": "Informes",
-    "groupAdmin": "Administración"
+    "groupAdmin": "Administración",
+    "groupReferrals": "Referrals"
   },
   "userFields": {
     "title": "Campos de usuario personalizados",

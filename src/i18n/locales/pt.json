@@ -94,7 +94,7 @@
     "users": "Usuários",
     "shareableLinks": "Links Compartilháveis",
     "registrations": "Cadastros",
-    "referrals": "Indicações",
+    "referrals": "Referral",
     "myProfile": "Meu Perfil",
     "notifications": "Notificações",
     "settings": "Configurações",
@@ -546,7 +546,14 @@
     "yourTier": "Você converteu {{count}} indicação(ões) nos últimos 12 meses.",
     "noTierYet": "Nenhuma faixa atingida ainda — comece a indicar para desbloquear comissões.",
     "certs": "certificações",
-    "certsIn12mo": "certificações / 12 meses"
+    "certsIn12mo": "certificações / 12 meses",
+    "referredName": "Client Name",
+    "referredCompany": "Company",
+    "addReferral": "Add Referral",
+    "addReferralHint": "Enter the details of the client you're referring. They'll appear in your list as pending until they sign up.",
+    "referralAdded": "Referral added",
+    "noSelfReferral": "You can't refer yourself.",
+    "alreadyReferred": "You've already referred this email."
   },
   "register": {
     "invalidType": "Tipo de Cadastro Inválido",
@@ -974,7 +981,8 @@
     "groupAuditors": "Auditores",
     "groupBodies": "Organismos de Certificação",
     "groupReports": "Relatórios",
-    "groupAdmin": "Administração"
+    "groupAdmin": "Administração",
+    "groupReferrals": "Referrals"
   },
   "userFields": {
     "title": "Campos de Usuário Personalizados",

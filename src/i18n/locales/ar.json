@@ -94,7 +94,7 @@
     "users": "المستخدمون",
     "shareableLinks": "روابط المشاركة",
     "registrations": "التسجيلات",
-    "referrals": "الإحالات",
+    "referrals": "Referral",
     "myProfile": "ملفي الشخصي",
     "notifications": "الإشعارات",
     "settings": "الإعدادات",
@@ -546,7 +546,14 @@
     "yourTier": "لقد حولت {{count}} إحالة خلال آخر 12 شهرًا.",
     "noTierYet": "لم تصل إلى أي مستوى بعد — ابدأ بالإحالة لفتح العمولات.",
     "certs": "شهادات",
-    "certsIn12mo": "شهادات / 12 شهر"
+    "certsIn12mo": "شهادات / 12 شهر",
+    "referredName": "Client Name",
+    "referredCompany": "Company",
+    "addReferral": "Add Referral",
+    "addReferralHint": "Enter the details of the client you're referring. They'll appear in your list as pending until they sign up.",
+    "referralAdded": "Referral added",
+    "noSelfReferral": "You can't refer yourself.",
+    "alreadyReferred": "You've already referred this email."
   },
   "register": {
     "invalidType": "نوع تسجيل غير صالح",
@@ -987,7 +994,8 @@
     "groupAuditors": "المدققون",
     "groupBodies": "جهات المنح",
     "groupReports": "التقارير",
-    "groupAdmin": "الإدارة"
+    "groupAdmin": "الإدارة",
+    "groupReferrals": "Referrals"
   },
   "userFields": {
     "title": "حقول المستخدم المخصصة",

@@ -51,9 +51,9 @@ export const STAKEHOLDER_TYPES = {
   },
   'referral': {
     id: 'referral',
-    title: 'Referrals Program',
-    singularTitle: 'Referral Partner',
-    role: 'client',
+    title: 'Referral',
+    singularTitle: 'Referral',
+    role: 'referral',
     icon: 'Gift',
     color: '#EC4899',
     description: 'Earn 10% commission by referring clients to CertifyCX. Referred clients get 10% off their first purchase!',

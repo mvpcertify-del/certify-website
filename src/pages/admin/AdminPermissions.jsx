@@ -55,6 +55,11 @@ const PERMISSION_GROUPS = [
     perms: [PERMISSIONS.VIEW_REPORTS, PERMISSIONS.EXPORT_REPORTS],
   },
   {
+    key: 'referrals',
+    labelKey: 'permissions.groupReferrals',
+    perms: [PERMISSIONS.VIEW_REFERRALS],
+  },
+  {
     key: 'admin',
     labelKey: 'permissions.groupAdmin',
     perms: [
@@ -73,6 +78,7 @@ const ROLE_COLUMNS = [
   ROLES.AUDITOR,
   ROLES.CERTIFICATION_BODY,
   ROLES.CLIENT,
+  ROLES.REFERRAL,
 ];
 
 export default function AdminPermissions() {

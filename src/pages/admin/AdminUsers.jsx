@@ -10,6 +10,7 @@ import { STAKEHOLDER_TYPES } from '../../utils/stakeholderTypes';
 import { supabase } from '../../lib/supabase';
 import { apiPost } from '../../lib/apiClient';
 import RowActions from '../../components/ui/RowActions';
+import DetailModal from '../../components/ui/DetailModal';
 
 // Client-role stakeholder variants an admin can pick when creating a client.
 // 'client' is the default (regular company client). The rest reuse the `client`
@@ -34,6 +35,10 @@ export default function AdminUsers() {
   // Delete User modal
   const [deletingUser, setDeletingUser] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  // View User modal (read-only)
+  const [viewingUser, setViewingUser] = useState(null);
+  const [showViewModal, setShowViewModal] = useState(false);
 
   // Create User modal
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -227,13 +232,19 @@ export default function AdminUsers() {
           setError('');
           setShowEditModal(true);
         };
-        // Super Admin gets the full action cluster: [Deactivate] [Edit] [Delete]
+        const openView = () => {
+          setViewingUser(userRow);
+          setShowViewModal(true);
+        };
+        // Super Admin gets the full action cluster: [View] [Deactivate] [Edit] [Delete]
         // (Edit opens the role editor). Destructive actions are server-enforced
         // and never offered on your own account.
         if (isSuperAdmin) {
           return (
             <RowActions
               isActive={userRow.is_active !== false}
+              showView
+              onView={openView}
               showToggle={userRow.id !== user?.id}
               showDelete={userRow.id !== user?.id}
               onToggle={() => handleToggleActive(userRow)}
@@ -246,11 +257,14 @@ export default function AdminUsers() {
             />
           );
         }
-        // Other admins (e.g. regional) keep only their existing Edit-Role action.
+        // Other admins (e.g. regional) keep View + their existing Edit-Role action.
         return (
-          <Button size="sm" variant="ghost" onClick={openEditRole}>
-            {t('admin.editRole')}
-          </Button>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <RowActions showView onView={openView} showToggle={false} showEdit={false} showDelete={false} />
+            <Button size="sm" variant="ghost" onClick={openEditRole}>
+              {t('admin.editRole')}
+            </Button>
+          </div>
         );
       }
     }
@@ -479,6 +493,15 @@ export default function AdminUsers() {
           </div>
         </form>
       </Modal>
+
+      {/* View User Modal (read-only) */}
+      <DetailModal
+        isOpen={showViewModal}
+        onClose={() => setShowViewModal(false)}
+        title={viewingUser ? (viewingUser.full_name || viewingUser.email) : t('common.view')}
+        columns={columns}
+        row={viewingUser}
+      />
     </div>
   );
 }

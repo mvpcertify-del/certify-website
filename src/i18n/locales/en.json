@@ -94,7 +94,7 @@
     "users": "Users",
     "shareableLinks": "Shareable Links",
     "registrations": "Registrations",
-    "referrals": "Referrals",
+    "referrals": "Referral",
     "myProfile": "My Profile",
     "notifications": "Notifications",
     "settings": "Settings",
@@ -546,7 +546,14 @@
     "yourTier": "You've converted {{count}} referral(s) in the last 12 months.",
     "noTierYet": "No tier reached yet — start referring to unlock commissions.",
     "certs": "certs",
-    "certsIn12mo": "certs / 12 mo"
+    "certsIn12mo": "certs / 12 mo",
+    "referredName": "Client Name",
+    "referredCompany": "Company",
+    "addReferral": "Add Referral",
+    "addReferralHint": "Enter the details of the client you're referring. They'll appear in your list as pending until they sign up.",
+    "referralAdded": "Referral added",
+    "noSelfReferral": "You can't refer yourself.",
+    "alreadyReferred": "You've already referred this email."
   },
   "register": {
     "invalidType": "Invalid Registration Type",
@@ -987,7 +994,8 @@
     "groupAuditors": "Auditors",
     "groupBodies": "Certification Bodies",
     "groupReports": "Reports",
-    "groupAdmin": "Administration"
+    "groupAdmin": "Administration",
+    "groupReferrals": "Referrals"
   },
   "userFields": {
     "title": "Custom User Fields",

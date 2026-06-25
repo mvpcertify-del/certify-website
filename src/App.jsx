@@ -309,9 +309,9 @@ function AppRoutes() {
               </ProtectedRoute>
             } />
 
-            {/* Referral Program */}
+            {/* Referral dashboard — referral partners (and super admin oversight) */}
             <Route path="/referrals" element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_REFERRALS}>
                 <Referrals />
               </ProtectedRoute>
             } />

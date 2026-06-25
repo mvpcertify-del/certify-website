@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { RefreshCw, Pencil, Trash2 } from 'lucide-react';
+import { RefreshCw, Pencil, Trash2, Eye } from 'lucide-react';
 
 // Shared row-action cluster: [Activate/Deactivate] [Edit] [Delete].
 // Mirrors the exact styling, icons and spacing first used on the Discount
@@ -14,9 +14,11 @@ export default function RowActions({
   onToggle,
   onEdit,
   onDelete,
+  onView,
   showToggle = true,
   showEdit = true,
   showDelete = true,
+  showView = false,
   disabled = false,
 }) {
   const { t } = useTranslation();
@@ -33,6 +35,17 @@ export default function RowActions({
 
   return (
     <div style={{ display: 'flex', gap: 6 }}>
+      {showView && (
+        <button
+          type="button"
+          title={t('common.view')}
+          onClick={onView}
+          disabled={disabled}
+          style={baseStyle}
+        >
+          <Eye size={14} />
+        </button>
+      )}
       {showToggle && (
         <button
           type="button"

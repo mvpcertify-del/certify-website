@@ -45,8 +45,8 @@ export default async function handler(req, res) {
     }
 
     const allowedRoles = isSelfSignup
-      ? ['client', 'auditor', 'certification_body']
-      : ['regional_admin', 'auditor', 'certification_body', 'client'];
+      ? ['client', 'auditor', 'certification_body', 'referral']
+      : ['regional_admin', 'auditor', 'certification_body', 'client', 'referral'];
 
     if (!allowedRoles.includes(assignedRole)) {
       return res.status(400).json({

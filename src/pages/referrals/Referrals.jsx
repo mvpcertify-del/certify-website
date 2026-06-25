@@ -5,7 +5,9 @@ import { supabase } from '../../lib/supabase';
 import StatCard from '../../components/ui/StatCard';
 import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
-import { Link2, Copy, Check, Users, DollarSign, UserPlus, Gift } from 'lucide-react';
+import Modal from '../../components/ui/Modal';
+import { Input, Button } from '../../components/ui/FormElements';
+import { Link2, Copy, Check, Users, DollarSign, UserPlus, Gift, Plus, AlertCircle, CheckCircle } from 'lucide-react';
 import './Referrals.css';
 
 export default function Referrals() {
@@ -15,6 +17,13 @@ export default function Referrals() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [tiers, setTiers] = useState([]);
+
+  // "Add Referral" modal — referral partner uploads a client they refer.
+  const [showAdd, setShowAdd] = useState(false);
+  const [addForm, setAddForm] = useState({ referred_name: '', referred_email: '', referred_company: '' });
+  const [saving, setSaving] = useState(false);
+  const [addError, setAddError] = useState('');
+  const [success, setSuccess] = useState('');
 
   // Referral code = first 8 chars of user ID (unique enough, short for sharing)
   const referralCode = user?.id?.slice(0, 8) || '';
@@ -52,6 +61,61 @@ export default function Referrals() {
     } catch { /* fallback */ }
   };
 
+  const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+
+  const openAdd = () => {
+    setAddForm({ referred_name: '', referred_email: '', referred_company: '' });
+    setAddError('');
+    setShowAdd(true);
+  };
+
+  const handleAddReferral = async (e) => {
+    e.preventDefault();
+    setAddError('');
+    const email = addForm.referred_email.trim().toLowerCase();
+    if (!addForm.referred_name.trim() || !email) {
+      setAddError(t('admin.fillRequired'));
+      return;
+    }
+    if (!isValidEmail(email)) {
+      setAddError(t('auth.validationEmail'));
+      return;
+    }
+    // Guard against referring yourself.
+    if (user?.email && email === user.email.toLowerCase()) {
+      setAddError(t('referrals.noSelfReferral'));
+      return;
+    }
+    // Prevent duplicate referred emails for this referrer.
+    if (referrals.some(r => (r.referred_email || '').toLowerCase() === email)) {
+      setAddError(t('referrals.alreadyReferred'));
+      return;
+    }
+
+    setSaving(true);
+    try {
+      // Insert is enforced by RLS to referrer_id = auth.uid().
+      const { data, error } = await supabase
+        .from('referrals')
+        .insert({
+          referrer_id: user.id,
+          referred_email: email,
+          referred_name: addForm.referred_name.trim(),
+          referred_company: addForm.referred_company.trim() || null,
+          status: 'pending',
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      setReferrals(prev => [data, ...prev]);
+      setSuccess(`${t('referrals.referralAdded')}: ${addForm.referred_name.trim()}`);
+      setShowAdd(false);
+    } catch (err) {
+      setAddError(err.message);
+    }
+    setSaving(false);
+  };
+
   // Stats
   const totalReferred = referrals.length;
   const signedUp = referrals.filter(r => r.status === 'signed_up' || r.status === 'converted').length;
@@ -78,8 +142,18 @@ export default function Referrals() {
 
   const columns = [
     {
+      key: 'referred_name',
+      label: t('referrals.referredName'),
+      render: (val) => val || '—',
+    },
+    {
       key: 'referred_email',
       label: t('referrals.referredEmail'),
+      render: (val) => val || '—',
+    },
+    {
+      key: 'referred_company',
+      label: t('referrals.referredCompany'),
       render: (val) => val || '—',
     },
     {
@@ -123,7 +197,17 @@ export default function Referrals() {
           <h1 className="page-title">{t('referrals.title')}</h1>
           <p className="page-subtitle">{t('referrals.subtitle')}</p>
         </div>
+        <Button variant="primary" size="md" onClick={openAdd}>
+          <Plus size={18} /> {t('referrals.addReferral')}
+        </Button>
       </div>
+
+      {success && (
+        <div className="admin-users__success">
+          <CheckCircle size={16} />
+          <span>{success}</span>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="referral-stats">
@@ -166,7 +250,7 @@ export default function Referrals() {
             <div style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)', marginBottom: 4 }}>
               {t('referrals.yourTier', { count: convertedLast12mo })}
             </div>
-            <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#059669' }}>
+            <div style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-accent)' }}>
               {currentTier
                 ? `${currentTier.label || `${currentTier.min_conversions}+`} — ${currentTier.commission_percent}%`
                 : t('referrals.noTierYet')}
@@ -178,9 +262,9 @@ export default function Referrals() {
               return (
                 <div key={tier.id} style={{
                   padding: 14,
-                  border: isCurrent ? '2px solid #10b981' : '1px solid var(--color-border)',
+                  border: isCurrent ? '2px solid var(--color-accent)' : '1px solid var(--color-border)',
                   borderRadius: 10,
-                  background: isCurrent ? 'rgba(16,185,129,0.06)' : 'transparent',
+                  background: isCurrent ? 'var(--color-bg-page)' : 'transparent',
                 }}>
                   <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     {tier.label || `${tier.min_conversions}+ ${t('referrals.certs')}`}
@@ -241,6 +325,53 @@ export default function Referrals() {
           <DataTable columns={columns} data={referrals} emptyMessage={t('referrals.noReferralsShort')} />
         )}
       </div>
+
+      {/* Add Referral Modal */}
+      <Modal isOpen={showAdd} onClose={() => setShowAdd(false)} title={t('referrals.addReferral')}>
+        <form onSubmit={handleAddReferral} className="admin-users__form">
+          {addError && (
+            <div className="auth-form__error">
+              <AlertCircle size={16} />
+              <span>{addError}</span>
+            </div>
+          )}
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem', marginTop: 0 }}>
+            {t('referrals.addReferralHint')}
+          </p>
+          <Input
+            label={t('referrals.referredName')}
+            id="ref-name"
+            name="referred_name"
+            value={addForm.referred_name}
+            onChange={(e) => setAddForm(p => ({ ...p, referred_name: e.target.value }))}
+            required
+          />
+          <Input
+            label={t('referrals.referredEmail')}
+            type="email"
+            id="ref-email"
+            name="referred_email"
+            value={addForm.referred_email}
+            onChange={(e) => setAddForm(p => ({ ...p, referred_email: e.target.value }))}
+            required
+          />
+          <Input
+            label={t('referrals.referredCompany')}
+            id="ref-company"
+            name="referred_company"
+            value={addForm.referred_company}
+            onChange={(e) => setAddForm(p => ({ ...p, referred_company: e.target.value }))}
+          />
+          <div className="admin-users__form-actions">
+            <Button type="button" variant="ghost" size="md" onClick={() => setShowAdd(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button type="submit" variant="primary" size="md" loading={saving}>
+              {t('referrals.addReferral')}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

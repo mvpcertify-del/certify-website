@@ -5,6 +5,7 @@ import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
 import RowActions from '../../components/ui/RowActions';
+import DetailModal from '../../components/ui/DetailModal';
 import { ROLES, ROLE_LABELS, REGIONS } from '../../utils/roles';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -29,6 +30,10 @@ export default function AdminCompanies() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
   const [editForm, setEditForm] = useState({ full_name: '', email: '', company_name: '', region: '' });
+
+  // View Client modal (read-only)
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewingClient, setViewingClient] = useState(null);
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -78,6 +83,12 @@ export default function AdminCompanies() {
       setError(err.message);
     }
     setSaving(false);
+  };
+
+  // --- View Client (read-only) ---
+  const openViewModal = (client) => {
+    setViewingClient(client);
+    setShowViewModal(true);
   };
 
   // --- Edit Client ---
@@ -173,6 +184,8 @@ export default function AdminCompanies() {
         key: 'actions', label: t('dashboard.action'), render: (_, row) => (
           <RowActions
             isActive={row.is_active !== false}
+            showView
+            onView={() => openViewModal(row)}
             onToggle={() => handleToggleActive(row)}
             onEdit={() => openEditModal(row)}
             onDelete={() => handleDelete(row)}
@@ -294,6 +307,15 @@ export default function AdminCompanies() {
           </div>
         </form>
       </Modal>
+
+      {/* View Client Modal (read-only) */}
+      <DetailModal
+        isOpen={showViewModal}
+        onClose={() => setShowViewModal(false)}
+        title={viewingClient ? (viewingClient.company_name || viewingClient.full_name || viewingClient.email) : t('common.view')}
+        columns={columns}
+        row={viewingClient}
+      />
     </div>
   );
 }

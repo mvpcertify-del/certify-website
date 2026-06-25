@@ -94,7 +94,7 @@
     "users": "用户",
     "shareableLinks": "可分享链接",
     "registrations": "注册申请",
-    "referrals": "推荐",
+    "referrals": "Referral",
     "myProfile": "我的资料",
     "notifications": "通知",
     "settings": "设置",
@@ -546,7 +546,14 @@
     "yourTier": "过去 12 个月内您已转化 {{count}} 个推荐。",
     "noTierYet": "尚未达到任何等级——开始推荐以解锁佣金。",
     "certs": "份认证",
-    "certsIn12mo": "份认证 / 12 个月"
+    "certsIn12mo": "份认证 / 12 个月",
+    "referredName": "Client Name",
+    "referredCompany": "Company",
+    "addReferral": "Add Referral",
+    "addReferralHint": "Enter the details of the client you're referring. They'll appear in your list as pending until they sign up.",
+    "referralAdded": "Referral added",
+    "noSelfReferral": "You can't refer yourself.",
+    "alreadyReferred": "You've already referred this email."
   },
   "register": {
     "invalidType": "无效的注册类型",
@@ -974,7 +981,8 @@
     "groupAuditors": "审核员",
     "groupBodies": "认证机构",
     "groupReports": "报告",
-    "groupAdmin": "管理"
+    "groupAdmin": "管理",
+    "groupReferrals": "Referrals"
   },
   "userFields": {
     "title": "自定义用户字段",
