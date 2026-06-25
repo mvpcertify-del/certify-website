@@ -256,7 +256,7 @@ export default function AdminPermissions() {
       {fetching ? (
         <p>{t('common.loading')}</p>
       ) : (
-        <div style={{ overflowX: 'auto', border: '1px solid var(--color-border)', borderRadius: 10 }}>
+        <div style={{ overflowX: 'auto', border: '1px solid var(--color-border)', borderRadius: 10, background: 'var(--color-bg-surface)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
             <thead>
               <tr style={{ background: 'var(--color-bg-subtle, #f9fafb)' }}>

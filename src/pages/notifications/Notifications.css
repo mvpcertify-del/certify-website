@@ -1,9 +1,9 @@
 .notifications__empty {
   text-align: center;
   padding: 60px 20px;
-  background: var(--surface-color, #fff);
+  background: var(--color-bg-surface);
   border-radius: var(--radius-lg, 12px);
-  border: 1px solid var(--border-color, #e5e7eb);
+  border: 1px solid var(--color-border);
 }
 
 .notifications__empty h3 {
