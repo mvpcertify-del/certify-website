@@ -33,6 +33,9 @@ export function AuthProvider({ children }) {
   // ---------------------------------------------------
   useEffect(() => {
     let mounted = true;
+    // Becomes true once the very first profile load resolves. After that we
+    // never flip the global `loading` flag again — see the auth listener below.
+    let initialized = false;
 
     // If the visitor took the anonymous gap analysis before signing up, the
     // score is sitting in localStorage. Persist it into their profile the first
@@ -133,6 +136,7 @@ export function AuthProvider({ children }) {
         console.error("Profile fetch error", err);
       } finally {
         if (mounted) setLoading(false);
+        initialized = true;
       }
     };
 
@@ -152,8 +156,13 @@ export function AuthProvider({ children }) {
       (_event, currentSession) => {
         if (mounted) setSession(currentSession);
         if (currentSession?.user) {
-          // If a new session comes in, ensure we are loading while fetching the profile
-          if (mounted) setLoading(true);
+          // Refresh the profile in the background. We only show the full-screen
+          // `loading` state for the FIRST resolution. Supabase fires this
+          // listener with TOKEN_REFRESHED every time the browser tab regains
+          // focus; flipping `loading` there would unmount the whole app via
+          // <ProtectedRoute> and wipe any open form (e.g. the CB add/edit modal),
+          // which looked to users like an unexpected logout / lost data.
+          if (mounted && !initialized) setLoading(true);
           fetchProfile(currentSession.user);
         } else {
           if (mounted) {

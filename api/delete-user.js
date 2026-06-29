@@ -1,4 +1,5 @@
 import { verifyAdmin, getAdmin } from './_verifyAdmin.js';
+import { notifyAdmins } from './_notifyAdmins.js';
 
 // ---------------------------------------------------------------------------
 // Why deletion failed before:
@@ -49,6 +50,14 @@ export default async function handler(req, res) {
     }
 
     const admin = getAdmin();
+
+    // Capture who we're deleting BEFORE the rows are gone, so we can alert
+    // admins afterwards with a meaningful message.
+    const { data: targetProfile } = await admin
+      .from('profiles')
+      .select('full_name, email, role, region')
+      .eq('id', userId)
+      .maybeSingle();
 
     // Run every independent cleanup concurrently. allSettled never rejects, so
     // a missing table / already-gone row can't abort the batch or crash us.
@@ -132,6 +141,14 @@ export default async function handler(req, res) {
     if (authError) {
       return res.status(400).json({ error: `Failed to delete auth user: ${authError.message}` });
     }
+
+    // Alert admins that an account was removed (best-effort, after the fact).
+    const who = targetProfile?.full_name || targetProfile?.email || 'A user';
+    await notifyAdmins(admin, {
+      title: 'User deleted',
+      message: `${who}${targetProfile?.role ? ` (${targetProfile.role})` : ''} was deleted by an admin.`,
+      region: targetProfile?.region || null,
+    });
 
     return res.status(200).json({ success: true });
   } catch (error) {

@@ -154,7 +154,8 @@
     "footerAccount": "खाता",
     "footerSignUp": "साइन अप",
     "footerResetPassword": "पासवर्ड रीसेट",
-    "footerJoinNetwork": "हमारे नेटवर्क से जुड़ें"
+    "footerJoinNetwork": "हमारे नेटवर्क से जुड़ें",
+    "footerLegal": "Legal"
   },
   "auth": {
     "welcomeBack": "वापस स्वागत है",
@@ -251,7 +252,12 @@
     "completeProfileSave": "सहेजें और जारी रखें",
     "almostThereTitle": "लगभग हो गया",
     "almostThereSubtitle": "अपनी ISO 9001 प्रमाणन प्रक्रिया पूरी करने के लिए साइन इन करें या अपना खाता बनाएं। एक मिनट से कम समय लगता है।",
-    "continueWithEmail": "ईमेल से जारी रखें"
+    "continueWithEmail": "ईमेल से जारी रखें",
+    "nextStepsTitle": "What happens next?",
+    "nextStep1": "Open the email above and click the verification link.",
+    "nextStep2": "Log in to your account.",
+    "nextStep3": "Our certification team will contact you to guide your next steps.",
+    "nextStepsContact": "Questions? Email us at"
   },
   "unauthorized": {
     "accessDenied": "पहुंच अस्वीकृत",
@@ -801,7 +807,10 @@
     "confirmDeleteDoc": "दस्तावेज़ \"{{name}}\" हटाएं?",
     "confirmDelete": "क्या आप वाकई \"{{name}}\" हटाना चाहते हैं?",
     "deleteFailed": "प्रमाणन निकाय हटाने में विफल",
-    "saveFailed": "प्रमाणन निकाय सहेजने में विफल"
+    "saveFailed": "प्रमाणन निकाय सहेजने में विफल",
+    "surveillance1": "Surveillance 1",
+    "surveillance2": "Surveillance 2",
+    "pricingRequired": "Please enter Initial, Surveillance 1 and Surveillance 2 prices for each selected standard."
   },
   "countries": {
     "title": "देश",

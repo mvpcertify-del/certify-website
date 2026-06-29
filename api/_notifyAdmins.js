@@ -6,6 +6,7 @@
 // in a signup/payment path is never blocked by a notification hiccup.
 
 import { sendViaResend } from './_resendClient.js';
+import { sendWhatsApp } from './_notifyWhatsApp.js';
 import { adminAlertEmail } from './_emailTemplates.js';
 
 const APP_PUBLIC_URL = (process.env.APP_PUBLIC_URL || '').replace(/\/$/, '');
@@ -14,7 +15,7 @@ export async function notifyAdmins(supabaseAdmin, { title, message, region = nul
   try {
     const { data: admins } = await supabaseAdmin
       .from('profiles')
-      .select('id, email, role, region')
+      .select('id, email, role, region, phone')
       .in('role', ['super_admin', 'regional_admin']);
 
     if (!admins?.length) return;
@@ -44,6 +45,14 @@ export async function notifyAdmins(supabaseAdmin, { title, message, region = nul
             console.error('notifyAdmins: email failed', a.email, e?.message)
           )
         )
+    );
+
+    // WhatsApp — best-effort, no-op until a provider is configured (see
+    // _notifyWhatsApp.js). Only admins with a stored phone number are reached.
+    await Promise.all(
+      targets
+        .filter((a) => a.phone)
+        .map((a) => sendWhatsApp({ to: a.phone, text: `${title}: ${message}` }))
     );
   } catch (err) {
     console.error('notifyAdmins error:', err?.message);

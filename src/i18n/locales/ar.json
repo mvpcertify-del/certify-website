@@ -154,7 +154,8 @@
     "footerAccount": "الحساب",
     "footerSignUp": "إنشاء حساب",
     "footerResetPassword": "إعادة تعيين كلمة المرور",
-    "footerJoinNetwork": "انضم إلى شبكتنا"
+    "footerJoinNetwork": "انضم إلى شبكتنا",
+    "footerLegal": "Legal"
   },
   "auth": {
     "welcomeBack": "مرحباً بعودتك",
@@ -251,7 +252,12 @@
     "completeProfileSave": "حفظ ومتابعة",
     "almostThereTitle": "اقتربت من الانتهاء",
     "almostThereSubtitle": "سجّل الدخول أو أنشئ حسابك لإكمال شهادة ISO 9001 الخاصة بك. تستغرق أقل من دقيقة.",
-    "continueWithEmail": "المتابعة بالبريد الإلكتروني"
+    "continueWithEmail": "المتابعة بالبريد الإلكتروني",
+    "nextStepsTitle": "What happens next?",
+    "nextStep1": "Open the email above and click the verification link.",
+    "nextStep2": "Log in to your account.",
+    "nextStep3": "Our certification team will contact you to guide your next steps.",
+    "nextStepsContact": "Questions? Email us at"
   },
   "unauthorized": {
     "accessDenied": "الوصول مرفوض",
@@ -814,7 +820,10 @@
     "matched": "{{count}} مطابقة",
     "notFound": "{{count}} غير موجود",
     "importNoName": "يرجى إدخال اسم الهيئة",
-    "importNoAB": "لا توجد هيئة اعتماد مطابقة — مطلوب واحدة على الأقل"
+    "importNoAB": "لا توجد هيئة اعتماد مطابقة — مطلوب واحدة على الأقل",
+    "surveillance1": "Surveillance 1",
+    "surveillance2": "Surveillance 2",
+    "pricingRequired": "Please enter Initial, Surveillance 1 and Surveillance 2 prices for each selected standard."
   },
   "countries": {
     "title": "الدول",

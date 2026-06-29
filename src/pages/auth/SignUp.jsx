@@ -251,6 +251,40 @@ const fetchGeoapifyOptions = async (text, type) => {
   }
 };
 
+// Shown right after an account is created (the "verify your email" screen).
+// Instead of dropping a brand-new user straight onto an empty dashboard, this
+// tells them what to do next and how to reach the team — the "further steps /
+// contact someone" the client asked for.
+function NextSteps() {
+  const { t } = useTranslation();
+  return (
+    <div
+      style={{
+        textAlign: 'left',
+        width: '100%',
+        marginBottom: '20px',
+        padding: '16px',
+        border: '1px solid var(--color-border)',
+        borderRadius: '10px',
+        background: 'var(--color-bg-subtle, #f9fafb)',
+      }}
+    >
+      <p style={{ fontWeight: 600, margin: '0 0 10px', fontSize: 'var(--font-size-sm)' }}>
+        {t('auth.nextStepsTitle')}
+      </p>
+      <ol style={{ margin: 0, paddingInlineStart: '20px', display: 'flex', flexDirection: 'column', gap: '6px', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+        <li>{t('auth.nextStep1')}</li>
+        <li>{t('auth.nextStep2')}</li>
+        <li>{t('auth.nextStep3')}</li>
+      </ol>
+      <p style={{ margin: '12px 0 0', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
+        {t('auth.nextStepsContact')}{' '}
+        <a href="mailto:support@certify.cx" className="auth-form__link">support@certify.cx</a>
+      </p>
+    </div>
+  );
+}
+
 export default function SignUp() {
   const [searchParams] = useSearchParams();
   const registrationType = searchParams.get('type') || '';
@@ -397,6 +431,7 @@ function SimpleClientSignUp() {
               </p>
             </>
           )}
+          <NextSteps />
           <Link to="/login" className="auth-form__link" style={{ fontSize: 'var(--font-size-sm)' }}>{t('auth.goToLogin')}</Link>
         </div>
       </div>
@@ -804,6 +839,7 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
               </p>
             </>
           )}
+          <NextSteps />
           <Link to="/login" className="auth-form__link" style={{ fontSize: 'var(--font-size-sm)' }}>{t('auth.goToLogin')}</Link>
         </div>
       </div>

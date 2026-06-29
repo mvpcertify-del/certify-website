@@ -154,7 +154,8 @@
     "footerAccount": "Account",
     "footerSignUp": "Sign Up",
     "footerResetPassword": "Reset Password",
-    "footerJoinNetwork": "Join Our Network"
+    "footerJoinNetwork": "Join Our Network",
+    "footerLegal": "Legal"
   },
   "auth": {
     "welcomeBack": "Welcome back",
@@ -251,7 +252,12 @@
     "completeProfileSave": "Save and continue",
     "almostThereTitle": "Almost there",
     "almostThereSubtitle": "Sign in or create your account to complete your ISO 9001 certification. Takes less than a minute.",
-    "continueWithEmail": "Continue with Email"
+    "continueWithEmail": "Continue with Email",
+    "nextStepsTitle": "What happens next?",
+    "nextStep1": "Open the email above and click the verification link.",
+    "nextStep2": "Log in to your account.",
+    "nextStep3": "Our certification team will contact you to guide your next steps.",
+    "nextStepsContact": "Questions? Email us at"
   },
   "unauthorized": {
     "accessDenied": "Access Denied",
@@ -814,7 +820,10 @@
     "matched": "{{count}} matched",
     "notFound": "{{count}} not found",
     "importNoName": "Please enter a body name",
-    "importNoAB": "No accreditation body matched — at least one is required"
+    "importNoAB": "No accreditation body matched — at least one is required",
+    "surveillance1": "Surveillance 1",
+    "surveillance2": "Surveillance 2",
+    "pricingRequired": "Please enter Initial, Surveillance 1 and Surveillance 2 prices for each selected standard."
   },
   "countries": {
     "title": "Countries",

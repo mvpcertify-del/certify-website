@@ -16,6 +16,7 @@ import {
   Users,
   LogOut,
   ChevronLeft,
+  ChevronRight,
   X,
   PlusCircle,
   User,
@@ -92,11 +93,17 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
           <button className="sidebar__close-mobile" onClick={onClose}>
             <X size={20} />
           </button>
-          {!collapsed && (
-            <button className="sidebar__collapse-btn" onClick={onToggleCollapse} title="Collapse sidebar">
-              <ChevronLeft size={18} />
-            </button>
-          )}
+          {/* Always rendered so a collapsed sidebar can be expanded again — the
+              icon/label flips with the state (was hidden when collapsed, which
+              trapped the user in the narrow rail). */}
+          <button
+            className="sidebar__collapse-btn"
+            onClick={onToggleCollapse}
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          </button>
         </div>
 
         <nav className="sidebar__nav">

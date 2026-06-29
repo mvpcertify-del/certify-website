@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { verifyAdmin } from './_verifyAdmin.js';
+import { notifyAdmins } from './_notifyAdmins.js';
+import { sendWhatsApp } from './_notifyWhatsApp.js';
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -142,6 +144,38 @@ async function setActive(req, res) {
   });
   if (authError) {
     return res.status(400).json({ error: `Status saved but login toggle failed: ${authError.message}` });
+  }
+
+  // Notify (best-effort): the affected user in-app + WhatsApp, and the admin team.
+  try {
+    const { data: target } = await supabaseAdmin
+      .from('profiles')
+      .select('full_name, email, region, phone')
+      .eq('id', userId)
+      .maybeSingle();
+
+    const who = target?.full_name || target?.email || 'A user';
+    const userTitle = isActive ? 'Account reactivated' : 'Account deactivated';
+    const userMessage = isActive
+      ? 'Your CertifyCX account has been reactivated. You can log in again.'
+      : 'Your CertifyCX account has been deactivated. Contact a CertifyCX administrator for help.';
+
+    await supabaseAdmin
+      .from('notifications')
+      .insert({ user_id: userId, type: 'system', title: userTitle, message: userMessage })
+      .then(() => {}, (e) => console.error('setActive: notification insert failed', e?.message));
+
+    if (target?.phone) {
+      await sendWhatsApp({ to: target.phone, text: `${userTitle}: ${userMessage}` });
+    }
+
+    await notifyAdmins(supabaseAdmin, {
+      title: userTitle,
+      message: `${who} was ${isActive ? 'reactivated' : 'deactivated'} by an admin.`,
+      region: target?.region || null,
+    });
+  } catch (e) {
+    console.error('setActive: notify failed', e?.message);
   }
 
   return res.status(200).json({ success: true, is_active: isActive });

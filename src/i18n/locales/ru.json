@@ -154,7 +154,8 @@
     "footerAccount": "Учётная запись",
     "footerSignUp": "Регистрация",
     "footerResetPassword": "Сбросить пароль",
-    "footerJoinNetwork": "Присоединиться к нашей сети"
+    "footerJoinNetwork": "Присоединиться к нашей сети",
+    "footerLegal": "Legal"
   },
   "auth": {
     "welcomeBack": "С возвращением",
@@ -251,7 +252,12 @@
     "completeProfileSave": "Сохранить и продолжить",
     "almostThereTitle": "Почти готово",
     "almostThereSubtitle": "Войдите или создайте учётную запись, чтобы завершить сертификацию ISO 9001. Это займёт меньше минуты.",
-    "continueWithEmail": "Продолжить с эл. почтой"
+    "continueWithEmail": "Продолжить с эл. почтой",
+    "nextStepsTitle": "What happens next?",
+    "nextStep1": "Open the email above and click the verification link.",
+    "nextStep2": "Log in to your account.",
+    "nextStep3": "Our certification team will contact you to guide your next steps.",
+    "nextStepsContact": "Questions? Email us at"
   },
   "unauthorized": {
     "accessDenied": "Доступ запрещён",
@@ -801,7 +807,10 @@
     "confirmDeleteDoc": "Удалить документ «{{name}}»?",
     "confirmDelete": "Вы уверены, что хотите удалить «{{name}}»?",
     "deleteFailed": "Не удалось удалить орган по сертификации",
-    "saveFailed": "Не удалось сохранить орган по сертификации"
+    "saveFailed": "Не удалось сохранить орган по сертификации",
+    "surveillance1": "Surveillance 1",
+    "surveillance2": "Surveillance 2",
+    "pricingRequired": "Please enter Initial, Surveillance 1 and Surveillance 2 prices for each selected standard."
   },
   "countries": {
     "title": "Страны",

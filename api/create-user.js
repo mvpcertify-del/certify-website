@@ -109,6 +109,9 @@ export default async function handler(req, res) {
           region: region || null,
           stakeholder_type: stakeholder_type || 'client',
           approval_status: approval_status || 'approved',
+          // Persist the contact number on the profile so WhatsApp notifications
+          // can reach the user (it otherwise lives only in auth metadata).
+          ...(contact_number ? { phone: contact_number } : {}),
           ...(custom_fields && typeof custom_fields === 'object' ? { custom_fields } : {}),
         }
       : {
@@ -118,6 +121,7 @@ export default async function handler(req, res) {
           role: assignedRole,
           region: region || null,
           company_name: company_name || null,
+          ...(contact_number ? { phone: contact_number } : {}),
           ...(assignedRole === 'client' && stakeholder_type
             ? { stakeholder_type }
             : {}),

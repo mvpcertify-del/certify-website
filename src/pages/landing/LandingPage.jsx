@@ -223,6 +223,11 @@ export default function LandingPage() {
               <Link to="/signup" className="landing__footer-link">{t('landing.footerSignUp')}</Link>
               <Link to="/forgot-password" className="landing__footer-link">{t('landing.footerResetPassword')}</Link>
             </div>
+            <div className="landing__footer-col">
+              <h4 className="landing__footer-heading">{t('landing.footerLegal')}</h4>
+              <Link to="/privacy" className="landing__footer-link">{t('auth.privacyLink')}</Link>
+              <Link to="/terms" className="landing__footer-link">{t('auth.termsLink')}</Link>
+            </div>
             {/* Phase 1: stakeholder registration links (auditor/CB/referral/etc.) hidden
                 until customer onboarding is perfected. The /register/:type routes still
                 resolve when accessed directly. */}

@@ -4,6 +4,8 @@ import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
 import Modal from '../../components/ui/Modal';
 import MultiSelect from '../../components/ui/MultiSelect';
+import RowActions from '../../components/ui/RowActions';
+import DetailModal from '../../components/ui/DetailModal';
 import { Button, Input, Select, Textarea } from '../../components/ui/FormElements';
 import { supabase } from '../../lib/supabase';
 import { ROLES } from '../../utils/roles';
@@ -11,7 +13,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { IAF_COUNTRIES } from '../../utils/countries';
 import { ISO_STANDARD_OPTIONS } from '../../utils/isoStandards';
 import { IAF_SECTOR_CODES } from '../../utils/iafCodes';
-import { Plus, Search, Pencil, Trash2, Upload, Download, FileText, FileUp } from 'lucide-react';
+import { Plus, Search, Trash2, Upload, Download, FileText, FileUp } from 'lucide-react';
 
 const EMPTY_FORM = {
   name: '',
@@ -47,6 +49,8 @@ export default function CertificationBodies() {
 
   const [showModal, setShowModal] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [viewingRow, setViewingRow] = useState(null);
+  const [showView, setShowView] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
@@ -172,6 +176,29 @@ export default function CertificationBodies() {
     setError('');
   };
 
+  const openView = (row) => {
+    setViewingRow(row);
+    setShowView(true);
+  };
+
+  // Activate / deactivate a CB via the read-only `status` field (active|inactive),
+  // mirroring the toggle on the Companies screen.
+  const handleToggleStatus = async (row) => {
+    if (!canEditOrDelete) return;
+    const next = row.status === 'inactive' ? 'active' : 'inactive';
+    try {
+      const { error: tErr } = await supabase
+        .from('certification_bodies')
+        .update({ status: next, updated_at: new Date().toISOString() })
+        .eq('id', row.id);
+      if (tErr) throw tErr;
+      setBodies(prev => prev.map(b => (b.id === row.id ? { ...b, status: next } : b)));
+    } catch (err) {
+      console.error('Toggle CB status error:', err);
+      alert((t('certBody.saveFailed') || 'Failed') + ': ' + err.message);
+    }
+  };
+
   // --- Write join tables ---
   const writeJoinRows = async (cbId, data) => {
     // Wipe + re-insert on edit (simple, correct, no diffing).
@@ -249,6 +276,18 @@ export default function CertificationBodies() {
     if (formData.accreditation_body_ids.length === 0) {
       setError(t('certBody.selectAtLeastOneAB'));
       return;
+    }
+
+    // Pricing is mandatory: every selected ISO standard must have all three
+    // tiers filled (Initial, Surveillance 1, Surveillance 2). The DB column
+    // `recertification_price` stores the Surveillance 2 value.
+    const priceFilled = (v) => v !== '' && v != null && !Number.isNaN(Number(v));
+    for (const std of formData.iso_standards) {
+      const p = formData.standard_pricing[std] || {};
+      if (!priceFilled(p.initial) || !priceFilled(p.surveillance) || !priceFilled(p.recertification)) {
+        setError(t('certBody.pricingRequired'));
+        return;
+      }
     }
 
     setSaving(true);
@@ -440,44 +479,17 @@ export default function CertificationBodies() {
       key: 'actions',
       label: t('common.actions') || 'Actions',
       render: (_, row) => (
-        <div style={{ display: 'flex', gap: 6 }}>
-          {canEditOrDelete && (
-            <button
-              type="button"
-              className="icon-btn"
-              title={t('common.edit') || 'Edit'}
-              onClick={() => openEdit(row)}
-              style={{
-                background: 'transparent',
-                border: '1px solid var(--color-border)',
-                borderRadius: 6,
-                padding: 6,
-                cursor: 'pointer',
-                color: 'var(--color-text-secondary)',
-              }}
-            >
-              <Pencil size={14} />
-            </button>
-          )}
-          {canEditOrDelete && (
-            <button
-              type="button"
-              className="icon-btn"
-              title={t('common.delete') || 'Delete'}
-              onClick={() => handleDelete(row)}
-              style={{
-                background: 'transparent',
-                border: '1px solid rgba(239,68,68,0.4)',
-                borderRadius: 6,
-                padding: 6,
-                cursor: 'pointer',
-                color: '#ef4444',
-              }}
-            >
-              <Trash2 size={14} />
-            </button>
-          )}
-        </div>
+        <RowActions
+          isActive={row.status !== 'inactive'}
+          showView
+          onView={() => openView(row)}
+          showToggle={canEditOrDelete}
+          onToggle={() => handleToggleStatus(row)}
+          showEdit={canEditOrDelete}
+          onEdit={() => openEdit(row)}
+          showDelete={canEditOrDelete}
+          onDelete={() => handleDelete(row)}
+        />
       ),
     });
   }
@@ -666,8 +678,8 @@ export default function CertificationBodies() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr 1fr', gap: 10, fontSize: '0.72rem', fontWeight: 600, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em', paddingLeft: 4 }}>
                   <span>{t('certBody.standard')}</span>
                   <span>{t('certBody.initial')}</span>
-                  <span>{t('certBody.surveillance')}</span>
-                  <span>{t('certBody.recertification')}</span>
+                  <span>{t('certBody.surveillance1')}</span>
+                  <span>{t('certBody.surveillance2')}</span>
                 </div>
                 {formData.iso_standards.map(std => {
                   const p = formData.standard_pricing[std] || {};
@@ -725,6 +737,14 @@ export default function CertificationBodies() {
         isoOptions={isoOptions}
         iafOptions={iafOptions}
         t={t}
+      />
+
+      <DetailModal
+        isOpen={showView}
+        onClose={() => setShowView(false)}
+        title={viewingRow?.name || t('common.view')}
+        columns={columns}
+        row={viewingRow}
       />
     </div>
   );

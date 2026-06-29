@@ -35,6 +35,12 @@
   justify-content: center;
 }
 
+/* In the narrow rail, hide the wordmark so the expand chevron sits centered
+   and is always reachable. */
+.sidebar--collapsed .sidebar__logo {
+  display: none;
+}
+
 .sidebar__logo {
   display: flex;
   align-items: center;

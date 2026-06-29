@@ -154,7 +154,8 @@
     "footerAccount": "账户",
     "footerSignUp": "注册",
     "footerResetPassword": "重置密码",
-    "footerJoinNetwork": "加入我们的网络"
+    "footerJoinNetwork": "加入我们的网络",
+    "footerLegal": "Legal"
   },
   "auth": {
     "welcomeBack": "欢迎回来",
@@ -251,7 +252,12 @@
     "completeProfileSave": "保存并继续",
     "almostThereTitle": "即将完成",
     "almostThereSubtitle": "登录或创建账户以完成您的 ISO 9001 认证。仅需不到一分钟。",
-    "continueWithEmail": "使用电子邮箱继续"
+    "continueWithEmail": "使用电子邮箱继续",
+    "nextStepsTitle": "What happens next?",
+    "nextStep1": "Open the email above and click the verification link.",
+    "nextStep2": "Log in to your account.",
+    "nextStep3": "Our certification team will contact you to guide your next steps.",
+    "nextStepsContact": "Questions? Email us at"
   },
   "unauthorized": {
     "accessDenied": "访问被拒绝",
@@ -801,7 +807,10 @@
     "confirmDeleteDoc": "删除文件“{{name}}”吗？",
     "confirmDelete": "您确定要删除“{{name}}”吗？",
     "deleteFailed": "删除认证机构失败",
-    "saveFailed": "保存认证机构失败"
+    "saveFailed": "保存认证机构失败",
+    "surveillance1": "Surveillance 1",
+    "surveillance2": "Surveillance 2",
+    "pricingRequired": "Please enter Initial, Surveillance 1 and Surveillance 2 prices for each selected standard."
   },
   "countries": {
     "title": "国家/地区",

@@ -17,6 +17,8 @@ const AuthLayout = lazy(() => import('./components/layout/AuthLayout'));
 const LandingPage = lazy(() => import('./pages/landing/LandingPage'));
 const PublicGapAnalysis = lazy(() => import('./pages/public/PublicGapAnalysis'));
 const StartCheckout = lazy(() => import('./pages/public/StartCheckout'));
+const PrivacyPolicy = lazy(() => import('./pages/legal/PrivacyPolicy'));
+const TermsOfService = lazy(() => import('./pages/legal/TermsOfService'));
 
 // Auth Pages
 const Login = lazy(() => import('./pages/auth/Login'));
@@ -97,6 +99,10 @@ function AppRoutes() {
 
           {/* ---- Public anonymous Gap Analysis quiz ---- */}
           <Route path="/gap-analysis" element={<PublicGapAnalysis />} />
+
+          {/* ---- Public legal pages (linked from signup + footer) ---- */}
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
 
           {/* ---- Auth gate before paid checkout (Google or email) ---- */}
           <Route path="/start-checkout" element={<StartCheckout />} />

@@ -21,7 +21,15 @@ const pageTitles = {
 export default function DashboardLayout() {
   const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+  // Remember the collapsed/expanded choice across reloads and pages.
+  const [collapsed, setCollapsed] = useState(() => {
+    try { return localStorage.getItem('sidebar_collapsed') === '1'; } catch { return false; }
+  });
+  const toggleCollapse = () => setCollapsed((prev) => {
+    const next = !prev;
+    try { localStorage.setItem('sidebar_collapsed', next ? '1' : '0'); } catch { /* storage blocked */ }
+    return next;
+  });
   const [profileModalDismissed, setProfileModalDismissed] = useState(false);
   const location = useLocation();
   const isClient = user?.role === ROLES.CLIENT;
@@ -55,7 +63,7 @@ export default function DashboardLayout() {
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         collapsed={collapsed}
-        onToggleCollapse={() => setCollapsed(!collapsed)}
+        onToggleCollapse={toggleCollapse}
       />
       <TopBar
         pageTitle={pageTitle}

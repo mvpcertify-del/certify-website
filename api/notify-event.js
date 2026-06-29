@@ -17,6 +17,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { sendViaResend } from './_resendClient.js';
+import { sendWhatsApp } from './_notifyWhatsApp.js';
 import { notifyAdmins } from './_notifyAdmins.js';
 import {
   paymentConfirmationEmail,
@@ -102,7 +103,7 @@ export default async function handler(req, res) {
 
     const { data: clientProfile } = await supabaseAdmin
       .from('profiles')
-      .select('id, email, full_name, name, region')
+      .select('id, email, full_name, name, region, phone, notifications_enabled')
       .eq('id', application.client_id)
       .maybeSingle();
 
@@ -147,27 +148,39 @@ export default async function handler(req, res) {
       notifTitle = 'Certificate issued';
     }
 
+    // Respect the per-user switch (Super Admin can turn a user's notifications
+    // off). Admin-side alerts further below are NOT gated by this — they target
+    // admins, not this client.
+    const clientWantsNotifs = clientProfile.notifications_enabled !== false;
+
     // ---- Send the email (report failure but don't abort the notification) ----
     let emailSent = false;
     let emailError = null;
-    try {
-      await sendViaResend({ to: clientProfile.email, subject: email.subject, html: email.html, text: email.text });
-      emailSent = true;
-    } catch (err) {
-      emailError = err.message || 'email send failed';
-      console.error(`notify-event(${event}): email failed`, emailError);
-    }
+    if (clientWantsNotifs) {
+      try {
+        await sendViaResend({ to: clientProfile.email, subject: email.subject, html: email.html, text: email.text });
+        emailSent = true;
+      } catch (err) {
+        emailError = err.message || 'email send failed';
+        console.error(`notify-event(${event}): email failed`, emailError);
+      }
 
-    // ---- In-app notification for the client (best-effort) ----
-    try {
-      await supabaseAdmin.from('notifications').insert({
-        user_id: application.client_id,
-        type: 'system',
-        title: notifTitle,
-        message: email.subject,
-      });
-    } catch (err) {
-      console.error(`notify-event(${event}): notification insert failed`, err?.message);
+      // ---- In-app notification for the client (best-effort) ----
+      try {
+        await supabaseAdmin.from('notifications').insert({
+          user_id: application.client_id,
+          type: 'system',
+          title: notifTitle,
+          message: email.subject,
+        });
+      } catch (err) {
+        console.error(`notify-event(${event}): notification insert failed`, err?.message);
+      }
+
+      // ---- WhatsApp (best-effort, no-op until a provider is configured) ----
+      if (clientProfile.phone) {
+        await sendWhatsApp({ to: clientProfile.phone, text: `${notifTitle}: ${email.subject}` });
+      }
     }
 
     // Admin-side alerts (best-effort) for the events admins care about.

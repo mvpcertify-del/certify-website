@@ -154,7 +154,8 @@
     "footerAccount": "Conta",
     "footerSignUp": "Cadastrar-se",
     "footerResetPassword": "Redefinir Senha",
-    "footerJoinNetwork": "Junte-se à Nossa Rede"
+    "footerJoinNetwork": "Junte-se à Nossa Rede",
+    "footerLegal": "Legal"
   },
   "auth": {
     "welcomeBack": "Bem-vindo de volta",
@@ -251,7 +252,12 @@
     "completeProfileSave": "Salvar e continuar",
     "almostThereTitle": "Quase lá",
     "almostThereSubtitle": "Faça login ou crie sua conta para concluir sua certificação ISO 9001. Leva menos de um minuto.",
-    "continueWithEmail": "Continuar com E-mail"
+    "continueWithEmail": "Continuar com E-mail",
+    "nextStepsTitle": "What happens next?",
+    "nextStep1": "Open the email above and click the verification link.",
+    "nextStep2": "Log in to your account.",
+    "nextStep3": "Our certification team will contact you to guide your next steps.",
+    "nextStepsContact": "Questions? Email us at"
   },
   "unauthorized": {
     "accessDenied": "Acesso Negado",
@@ -801,7 +807,10 @@
     "confirmDeleteDoc": "Excluir o documento \"{{name}}\"?",
     "confirmDelete": "Tem certeza de que deseja excluir \"{{name}}\"?",
     "deleteFailed": "Falha ao excluir o organismo de certificação",
-    "saveFailed": "Falha ao salvar o organismo de certificação"
+    "saveFailed": "Falha ao salvar o organismo de certificação",
+    "surveillance1": "Surveillance 1",
+    "surveillance2": "Surveillance 2",
+    "pricingRequired": "Please enter Initial, Surveillance 1 and Surveillance 2 prices for each selected standard."
   },
   "countries": {
     "title": "Países",
