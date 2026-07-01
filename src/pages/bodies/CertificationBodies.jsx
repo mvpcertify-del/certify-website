@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
@@ -55,35 +55,71 @@ export default function CertificationBodies() {
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  // Surfaced to the user when the registry can't be fully loaded (e.g. a
+  // pending DB migration means a column/table is missing). Previously this was
+  // swallowed into console.error, so the list just looked empty for no reason.
+  const [loadError, setLoadError] = useState('');
+  // '', 'saving', 'saved', 'error' — drives the inline auto-save indicator.
+  const [autoSaveState, setAutoSaveState] = useState('');
+  const autoSaveTimer = useRef(null);
+  const autoSaveInFlight = useRef(false);
+  // Set right after openEdit populates the form, so loading a record doesn't
+  // immediately trigger an auto-save of unchanged data.
+  const skipNextAutoSave = useRef(false);
+
+  // Full relational select. If a column/table is missing (migration pending)
+  // this errors as a whole, so we fall back to a minimal select below.
+  const RICH_SELECT = `
+    id, name, acronym, website, country, address, status,
+    initial_price, surveillance_price, recertification_price, currency,
+    created_at,
+    cb_accreditation_bodies ( accreditation_body_id,
+      accreditation_bodies ( id, name, acronym ) ),
+    cb_countries ( country_id, countries ( id, name ) ),
+    cb_iso_standards ( iso_standard ),
+    cb_iaf_codes ( iaf_code, iso_standard ),
+    cb_standard_pricing ( iso_standard, initial_price, surveillance_price, recertification_price, currency )
+  `;
+  const MIN_SELECT = 'id, name, acronym, website, country, status, created_at';
 
   // --- Fetch CB registry + AB list + countries ---
   const fetchData = async () => {
     setFetching(true);
+    setLoadError('');
     try {
-      const [cbRes, abRes, countryRes] = await Promise.all([
-        supabase
-          .from('certification_bodies')
-          .select(`
-            id, name, acronym, website, country, address, status,
-            initial_price, surveillance_price, recertification_price, currency,
-            created_at,
-            cb_accreditation_bodies ( accreditation_body_id,
-              accreditation_bodies ( id, name, acronym ) ),
-            cb_countries ( country_id, countries ( id, name ) ),
-            cb_iso_standards ( iso_standard ),
-            cb_iaf_codes ( iaf_code, iso_standard ),
-            cb_standard_pricing ( iso_standard, initial_price, surveillance_price, recertification_price, currency )
-          `)
-          .order('created_at', { ascending: false }),
+      const [abRes, countryRes] = await Promise.all([
         supabase.from('accreditation_bodies').select('id, name, acronym, is_active').order('name'),
         supabase.from('countries').select('id, name, is_active').order('name'),
       ]);
-
-      if (cbRes.data) setBodies(cbRes.data);
       if (abRes.data) setAccreditationBodies(abRes.data);
       if (countryRes.data) setDbCountries(countryRes.data);
+
+      let cbRes = await supabase
+        .from('certification_bodies')
+        .select(RICH_SELECT)
+        .order('created_at', { ascending: false });
+
+      // Graceful degradation: if the rich query fails (missing column/table),
+      // retry with only the base columns so the list still loads and the admin
+      // can at least edit name/website/status while the migration is applied.
+      if (cbRes.error) {
+        console.error('CB rich select failed, retrying minimal:', cbRes.error);
+        cbRes = await supabase
+          .from('certification_bodies')
+          .select(MIN_SELECT)
+          .order('created_at', { ascending: false });
+        if (!cbRes.error) setLoadError(t('certBody.loadPartial'));
+      }
+
+      if (cbRes.error) {
+        setBodies([]);
+        setLoadError((t('certBody.loadFailed') || 'Failed to load certification bodies') + ': ' + cbRes.error.message);
+      } else {
+        setBodies(cbRes.data || []);
+      }
     } catch (err) {
       console.error('Failed to load CB registry:', err);
+      setLoadError(err.message || (t('certBody.loadFailed') || 'Failed to load certification bodies'));
     } finally {
       setFetching(false);
     }
@@ -130,12 +166,17 @@ export default function CertificationBodies() {
     setEditingId(null);
     setFormData(EMPTY_FORM);
     setError('');
+    setAutoSaveState('');
     setShowModal(true);
   };
 
   const openEdit = (row) => {
     setEditingId(row.id);
     setError('');
+    setAutoSaveState('');
+    // The setFormData below is the record load, not a user edit — don't let it
+    // fire an auto-save.
+    skipNextAutoSave.current = true;
     const pricingMap = {};
     for (const p of row.cb_standard_pricing || []) {
       pricingMap[p.iso_standard] = {
@@ -170,10 +211,12 @@ export default function CertificationBodies() {
   };
 
   const closeModal = () => {
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     setShowModal(false);
     setEditingId(null);
     setFormData(EMPTY_FORM);
     setError('');
+    setAutoSaveState('');
   };
 
   const openView = (row) => {
@@ -265,45 +308,46 @@ export default function CertificationBodies() {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-
-    if (!formData.name.trim()) {
-      setError(t('certBody.nameRequired'));
-      return;
-    }
-    if (formData.accreditation_body_ids.length === 0) {
-      setError(t('certBody.selectAtLeastOneAB'));
-      return;
-    }
-
-    // Pricing is mandatory: every selected ISO standard must have all three
-    // tiers filled (Initial, Surveillance 1, Surveillance 2). The DB column
-    // `recertification_price` stores the Surveillance 2 value.
-    const priceFilled = (v) => v !== '' && v != null && !Number.isNaN(Number(v));
+  // Validate the current form. Returns an error message, or '' when OK.
+  // Pricing is intentionally OPTIONAL now — a CB (e.g. an imported one like
+  // ICL) must be editable/saveable before all prices are known. We only reject
+  // prices that are actually invalid (negative or non-numeric); blanks are fine.
+  const validateForm = () => {
+    if (!formData.name.trim()) return t('certBody.nameRequired');
+    if (formData.accreditation_body_ids.length === 0) return t('certBody.selectAtLeastOneAB');
     for (const std of formData.iso_standards) {
       const p = formData.standard_pricing[std] || {};
-      if (!priceFilled(p.initial) || !priceFilled(p.surveillance) || !priceFilled(p.recertification)) {
-        setError(t('certBody.pricingRequired'));
-        return;
+      for (const key of ['initial', 'surveillance', 'recertification']) {
+        const v = p[key];
+        if (v === '' || v == null) continue;
+        if (Number.isNaN(Number(v)) || Number(v) < 0) return t('certBody.pricingInvalid');
       }
     }
+    return '';
+  };
 
-    setSaving(true);
+  // Persist the form. Returns the CB id on success, or false on failure.
+  // `silent` (auto-save) suppresses the visible error banner and never closes
+  // the modal; the manual Save path handles those itself.
+  const saveCb = async ({ silent } = {}) => {
+    const validationError = validateForm();
+    if (validationError) {
+      if (!silent) setError(validationError);
+      return false;
+    }
+
+    const payload = {
+      name: formData.name.trim(),
+      acronym: formData.acronym.trim() || null,
+      website: formData.website.trim() || null,
+      country: formData.country || null,
+      address: formData.address.trim() || null,
+      status: formData.status || 'active',
+      currency: formData.currency || 'USD',
+    };
+
     try {
-      const payload = {
-        name: formData.name.trim(),
-        acronym: formData.acronym.trim() || null,
-        website: formData.website.trim() || null,
-        country: formData.country || null,
-        address: formData.address.trim() || null,
-        status: formData.status || 'active',
-        currency: formData.currency || 'USD',
-      };
-
       let cbId = editingId;
-
       if (editingId) {
         const { error: updErr } = await supabase
           .from('certification_bodies')
@@ -319,17 +363,65 @@ export default function CertificationBodies() {
         if (insErr) throw insErr;
         cbId = inserted.id;
       }
-
       await writeJoinRows(cbId, formData);
-      await fetchData();
-      closeModal();
+      return cbId;
     } catch (err) {
       console.error('Save CB error:', err);
-      setError(err.message || t('certBody.saveFailed'));
+      if (!silent) setError(err.message || t('certBody.saveFailed'));
+      throw err;
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    setSaving(true);
+    try {
+      const ok = await saveCb({ silent: false });
+      if (ok) {
+        await fetchData();
+        closeModal();
+      }
+    } catch {
+      // error already surfaced by saveCb
     } finally {
       setSaving(false);
     }
   };
+
+  // --- Auto-save (edit mode) ---------------------------------------------------
+  // The client asked that edits save automatically, without pressing Save. When
+  // editing an existing CB we debounce ~1s after the last change and persist
+  // quietly. The manual Save button still works and remains the create path.
+  useEffect(() => {
+    if (!showModal || !editingId) return;
+    // Skip the initial form population triggered by openEdit.
+    if (skipNextAutoSave.current) { skipNextAutoSave.current = false; return; }
+    // Don't auto-save an invalid form; wait until it's valid again.
+    if (validateForm()) return;
+
+    setAutoSaveState('saving');
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(async () => {
+      if (autoSaveInFlight.current) return;
+      autoSaveInFlight.current = true;
+      try {
+        const ok = await saveCb({ silent: true });
+        if (ok) {
+          setAutoSaveState('saved');
+          fetchData(); // refresh the table quietly (does not touch the form)
+        }
+      } catch {
+        setAutoSaveState('error');
+      } finally {
+        autoSaveInFlight.current = false;
+      }
+    }, 1000);
+
+    return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData, showModal, editingId]);
 
   const handleDelete = async (row) => {
     if (!canEditOrDelete) return;
@@ -526,6 +618,20 @@ export default function CertificationBodies() {
         </div>
       </div>
 
+      {loadError && (
+        <div style={{
+          padding: '10px 12px',
+          marginBottom: 'var(--spacing-md)',
+          background: 'rgba(239,68,68,0.08)',
+          border: '1px solid rgba(239,68,68,0.3)',
+          color: '#ef4444',
+          borderRadius: 6,
+          fontSize: '0.85rem',
+        }}>
+          {loadError}
+        </div>
+      )}
+
       {fetching ? (
         <p>{t('admin.loadingCertBodies')}</p>
       ) : (
@@ -717,7 +823,18 @@ export default function CertificationBodies() {
             <option value="inactive">{t('admin.inactive') || 'Inactive'}</option>
           </Select>
 
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 8 }}>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'center', marginTop: 8 }}>
+            {editingId && autoSaveState && (
+              <span style={{
+                marginRight: 'auto',
+                fontSize: '0.78rem',
+                color: autoSaveState === 'error' ? '#ef4444' : 'var(--color-text-tertiary)',
+              }}>
+                {autoSaveState === 'saving' && t('certBody.autoSaving')}
+                {autoSaveState === 'saved' && `✓ ${t('certBody.autoSaved')}`}
+                {autoSaveState === 'error' && t('certBody.autoSaveError')}
+              </span>
+            )}
             <Button type="button" variant="ghost" onClick={closeModal}>
               {t('common.cancel')}
             </Button>

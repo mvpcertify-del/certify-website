@@ -823,7 +823,13 @@
     "importNoAB": "لا توجد هيئة اعتماد مطابقة — مطلوب واحدة على الأقل",
     "surveillance1": "Surveillance 1",
     "surveillance2": "Surveillance 2",
-    "pricingRequired": "Please enter Initial, Surveillance 1 and Surveillance 2 prices for each selected standard."
+    "pricingRequired": "Please enter Initial, Surveillance 1 and Surveillance 2 prices for each selected standard.",
+    "pricingInvalid": "Prices must be valid, non-negative numbers. [DRAFT]",
+    "loadPartial": "Some certification-body details could not be loaded — a database update may be pending. Basic fields are still editable. [DRAFT]",
+    "loadFailed": "Failed to load certification bodies [DRAFT]",
+    "autoSaving": "Saving… [DRAFT]",
+    "autoSaved": "All changes saved [DRAFT]",
+    "autoSaveError": "Auto-save failed — click Save to retry. [DRAFT]"
   },
   "countries": {
     "title": "الدول",
