@@ -49,7 +49,8 @@
     "saving": "Enregistrement...",
     "submitting": "Envoi...",
     "add": "Add",
-    "create": "Create"
+    "create": "Create",
+    "clear": "Clear [DRAFT]"
   },
   "languageSuggestion": {
     "title": "Changer de langue ?",
@@ -100,7 +101,9 @@
     "settings": "Paramètres",
     "permissions": "Rôles et autorisations",
     "userFields": "Champs utilisateur personnalisés",
-    "applicationFields": "Champs de demande personnalisés"
+    "applicationFields": "Champs de demande personnalisés",
+    "mainDashboard": "Main Dashboard [DRAFT]",
+    "sales": "Sales [DRAFT]"
   },
   "landing": {
     "iafBadge": "Partenaires d'organismes de certification accrédités IAF",
@@ -769,7 +772,8 @@
     "newClientDetails": "New client details",
     "selectStandard": "Select ISO standard",
     "package": "Package",
-    "applicationCreated": "Application created"
+    "applicationCreated": "Application created",
+    "filteredBy": "Filtered by [DRAFT]"
   },
   "certBody": {
     "addBody": "Ajouter un organisme de certification",
@@ -1160,5 +1164,33 @@
       "invoiceAmount": "Montant",
       "invoiceFooter": "Ceci est une estimation générée par Certify.cx et non une facture fiscale."
     }
+  },
+  "mainDash": {
+    "title": "Main Dashboard [DRAFT]",
+    "welcome": "Welcome back, {{name}} [DRAFT]",
+    "clients": "Clients [DRAFT]",
+    "clientsDesc": "View and manage client companies [DRAFT]",
+    "certBodies": "Certification Bodies [DRAFT]",
+    "certBodiesDesc": "Manage the certification body registry [DRAFT]",
+    "auditors": "Auditors [DRAFT]",
+    "auditorsDesc": "Manage auditors [DRAFT]",
+    "consultancies": "Consultancies [DRAFT]",
+    "consultanciesDesc": "View consultancy partners [DRAFT]",
+    "referrals": "Referrals [DRAFT]",
+    "referralsDesc": "Referral partners and commissions [DRAFT]",
+    "sales": "Sales [DRAFT]",
+    "salesDesc": "Revenue and payments [DRAFT]"
+  },
+  "sales": {
+    "title": "Sales [DRAFT]",
+    "subtitle": "Revenue and recent transactions [DRAFT]",
+    "totalRevenue": "Total Revenue [DRAFT]",
+    "paidCount": "Paid Transactions [DRAFT]",
+    "pendingAmount": "Pending Amount [DRAFT]",
+    "client": "Client [DRAFT]",
+    "amount": "Amount [DRAFT]",
+    "type": "Type [DRAFT]",
+    "date": "Date [DRAFT]",
+    "noPayments": "No payments recorded yet. [DRAFT]"
   }
 }

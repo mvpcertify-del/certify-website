@@ -357,7 +357,9 @@ export function AuthProvider({ children }) {
 
   const getRoleDashboard = (role) => {
     const map = {
-      [ROLES.SUPER_ADMIN]: '/admin/dashboard',
+      // Super Admin lands on the new Main Dashboard overview first; the
+      // Certification dashboard remains one click away in the sidebar.
+      [ROLES.SUPER_ADMIN]: '/main-dashboard',
       [ROLES.REGIONAL_ADMIN]: '/admin/dashboard',
       [ROLES.AUDITOR]: '/auditor/dashboard',
       [ROLES.CERTIFICATION_BODY]: '/cert-body/dashboard',

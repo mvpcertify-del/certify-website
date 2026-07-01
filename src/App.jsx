@@ -55,6 +55,8 @@ const IsoLanding = lazy(() => import('./pages/iso/IsoLanding'));
 
 // Dashboard Pages
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'));
+const MainDashboard = lazy(() => import('./pages/dashboard/MainDashboard'));
+const Sales = lazy(() => import('./pages/admin/Sales'));
 const Settings = lazy(() => import('./pages/settings/Settings'));
 const Notifications = lazy(() => import('./pages/notifications/Notifications'));
 const ApplicationForm = lazy(() => import('./pages/client/ApplicationForm'));
@@ -129,6 +131,21 @@ function AppRoutes() {
           }>
             {/* Generic Dashboard (Fallback) */}
             <Route path="/dashboard" element={<Dashboard />} />
+
+            {/* Main Dashboard — Super Admin overview landing (category boxes).
+                The role "Certification dashboard" above is kept intact. */}
+            <Route path="/main-dashboard" element={
+              <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}>
+                <MainDashboard />
+              </ProtectedRoute>
+            } />
+
+            {/* Admin — Sales / revenue overview (Super Admin) */}
+            <Route path="/admin/sales" element={
+              <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}>
+                <Sales />
+              </ProtectedRoute>
+            } />
 
             {/* Role-Specific Dashboards */}
             <Route path="/admin/dashboard" element={

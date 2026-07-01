@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { Input, Select, Button } from '../../components/ui/FormElements';
@@ -24,6 +25,10 @@ import './AdminUsers.css';
 export default function AdminUsers() {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  // Optional stakeholder filter driven by the URL, e.g. the Main Dashboard
+  // "Consultancies" box links here with ?stakeholder=consultancy.
+  const stakeholderFilter = searchParams.get('stakeholder') || '';
   const [users, setUsers] = useState([]);
   const [fetchingUsers, setFetchingUsers] = useState(false);
 
@@ -301,13 +306,35 @@ export default function AdminUsers() {
         </div>
       )}
 
+      {/* Active URL filter chip (e.g. arriving from the Consultancies box) */}
+      {stakeholderFilter && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 'var(--spacing-md)' }}>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            padding: '4px 10px', borderRadius: 999,
+            background: 'rgba(62,207,142,0.12)', color: 'var(--color-accent, #3ECF8E)',
+            fontSize: '0.8rem', fontWeight: 600,
+          }}>
+            {t('admin.filteredBy')}: {getDisplayRoleLabel(ROLES.CLIENT, stakeholderFilter)}
+            <button
+              type="button"
+              onClick={() => setSearchParams({})}
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'inherit', fontWeight: 700, lineHeight: 1 }}
+              aria-label={t('common.clear') || 'Clear'}
+            >
+              ×
+            </button>
+          </span>
+        </div>
+      )}
+
       {/* Users Table */}
       {fetchingUsers ? (
         <p>{t('admin.loadingUsers')}</p>
       ) : (
         <DataTable
           columns={columns}
-          data={users}
+          data={stakeholderFilter ? users.filter(u => u.stakeholder_type === stakeholderFilter) : users}
           emptyMessage={t('admin.noUsersFound')}
         />
       )}

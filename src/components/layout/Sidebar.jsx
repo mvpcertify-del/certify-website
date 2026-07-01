@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { hasAnyPermission, PERMISSIONS, ROLES, getDisplayRoleLabel } from '../../utils/roles';
 import {
   LayoutDashboard,
+  LayoutGrid,
   Building2,
   FileCheck2,
   UserCheck,
@@ -27,6 +28,7 @@ import {
   Globe,
   Ticket,
   TrendingUp,
+  CircleDollarSign,
   KeyRound,
   FormInput,
   ClipboardList,
@@ -41,6 +43,9 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
   const location = useLocation();
 
   const navItems = [
+    // Super Admin overview landing — kept at the very top. The role-specific
+    // "Certification dashboard" stays available as the next item.
+    { path: '/main-dashboard', labelKey: 'nav.mainDashboard', icon: LayoutGrid, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN] },
     { path: '/dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard, permissions: [PERMISSIONS.VIEW_DASHBOARD] },
     { path: '/client/apply', labelKey: 'nav.newApplication', icon: PlusCircle, permissions: [PERMISSIONS.CREATE_CERTIFICATION] },
     { path: '/client/certificates', labelKey: 'nav.myCertificates', icon: Award, allowedRoles: [ROLES.CLIENT], permissions: [PERMISSIONS.VIEW_DASHBOARD] },
@@ -54,6 +59,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     { path: '/admin/countries', labelKey: 'nav.countries', icon: Globe, permissions: [PERMISSIONS.MANAGE_REGIONS] },
     { path: '/admin/coupons', labelKey: 'nav.coupons', icon: Ticket, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN] },
     { path: '/admin/commission-tiers', labelKey: 'nav.commissionTiers', icon: TrendingUp, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN] },
+    { path: '/admin/sales', labelKey: 'nav.sales', icon: CircleDollarSign, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN] },
     { path: '/admin/users', labelKey: 'nav.users', icon: Users, permissions: [PERMISSIONS.CREATE_ADMINS, PERMISSIONS.MANAGE_AUDITORS] },
     { path: '/admin/shareable-links', labelKey: 'nav.shareableLinks', icon: Link2, permissions: [PERMISSIONS.MANAGE_USERS] },
     { path: '/admin/registrations', labelKey: 'nav.registrations', icon: UserPlus, permissions: [PERMISSIONS.MANAGE_USERS] },

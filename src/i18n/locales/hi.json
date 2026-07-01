@@ -49,7 +49,8 @@
     "saving": "सहेजा जा रहा है...",
     "submitting": "जमा किया जा रहा है...",
     "add": "Add",
-    "create": "Create"
+    "create": "Create",
+    "clear": "Clear [DRAFT]"
   },
   "languageSuggestion": {
     "title": "भाषा बदलें?",
@@ -100,7 +101,9 @@
     "settings": "सेटिंग्स",
     "permissions": "भूमिकाएं और अनुमतियां",
     "userFields": "कस्टम उपयोगकर्ता फ़ील्ड",
-    "applicationFields": "कस्टम ऐप फ़ील्ड"
+    "applicationFields": "कस्टम ऐप फ़ील्ड",
+    "mainDashboard": "Main Dashboard [DRAFT]",
+    "sales": "Sales [DRAFT]"
   },
   "landing": {
     "iafBadge": "IAF मान्यता प्राप्त प्रमाणन निकाय भागीदार",
@@ -769,7 +772,8 @@
     "newClientDetails": "New client details",
     "selectStandard": "Select ISO standard",
     "package": "Package",
-    "applicationCreated": "Application created"
+    "applicationCreated": "Application created",
+    "filteredBy": "Filtered by [DRAFT]"
   },
   "certBody": {
     "addBody": "प्रमाणन निकाय जोड़ें",
@@ -1160,5 +1164,33 @@
       "invoiceAmount": "राशि",
       "invoiceFooter": "यह Certify.cx द्वारा बनाया गया अनुमान है और कर चालान नहीं है।"
     }
+  },
+  "mainDash": {
+    "title": "Main Dashboard [DRAFT]",
+    "welcome": "Welcome back, {{name}} [DRAFT]",
+    "clients": "Clients [DRAFT]",
+    "clientsDesc": "View and manage client companies [DRAFT]",
+    "certBodies": "Certification Bodies [DRAFT]",
+    "certBodiesDesc": "Manage the certification body registry [DRAFT]",
+    "auditors": "Auditors [DRAFT]",
+    "auditorsDesc": "Manage auditors [DRAFT]",
+    "consultancies": "Consultancies [DRAFT]",
+    "consultanciesDesc": "View consultancy partners [DRAFT]",
+    "referrals": "Referrals [DRAFT]",
+    "referralsDesc": "Referral partners and commissions [DRAFT]",
+    "sales": "Sales [DRAFT]",
+    "salesDesc": "Revenue and payments [DRAFT]"
+  },
+  "sales": {
+    "title": "Sales [DRAFT]",
+    "subtitle": "Revenue and recent transactions [DRAFT]",
+    "totalRevenue": "Total Revenue [DRAFT]",
+    "paidCount": "Paid Transactions [DRAFT]",
+    "pendingAmount": "Pending Amount [DRAFT]",
+    "client": "Client [DRAFT]",
+    "amount": "Amount [DRAFT]",
+    "type": "Type [DRAFT]",
+    "date": "Date [DRAFT]",
+    "noPayments": "No payments recorded yet. [DRAFT]"
   }
 }
