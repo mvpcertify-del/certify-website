@@ -1,10 +1,11 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Shield, ArrowRight, Award, Globe2,
   FileCheck2, Users, Building2, ChevronRight, Star,
   Zap, Lock, BarChart3, Apple, GraduationCap, Scale, Activity, Stethoscope,
-  ShieldCheck, BrainCircuit, CreditCard,
+  ShieldCheck, BrainCircuit, CreditCard, Menu, X,
 } from 'lucide-react';
 import { ISO_CATALOG_LIST } from '../../utils/isoCatalog';
 import SaraChatWidget from '../../components/sara/SaraChatWidget';
@@ -25,6 +26,8 @@ const ICON_MAP = {
 
 export default function LandingPage() {
   const { t } = useTranslation();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const closeMobile = () => setMobileOpen(false);
 
   const visibleIsos = PHASE_1_ISO_9001_ONLY
     ? ISO_CATALOG_LIST.filter(iso => iso.slug === 'iso-9001')
@@ -72,7 +75,27 @@ export default function LandingPage() {
             <Link to="/login" className="landing__nav-link landing__nav-link--login">{t('nav.login')}</Link>
             <Link to="/gap-analysis" className="landing__nav-btn">{t('nav.startGapAnalysis')}</Link>
           </div>
+          <button
+            className="landing__nav-toggle"
+            onClick={() => setMobileOpen((o) => !o)}
+            aria-label={t('nav.menu')}
+            aria-expanded={mobileOpen}
+          >
+            {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
+        {mobileOpen && (
+          <div className="landing__mobile-menu">
+            <a href="#how-it-works" className="landing__mobile-link" onClick={closeMobile}>{t('nav.howItWorks')}</a>
+            <a href="#standards" className="landing__mobile-link" onClick={closeMobile}>{t('nav.standards')}</a>
+            <a href="#benefits" className="landing__mobile-link" onClick={closeMobile}>{t('nav.benefits')}</a>
+            <div className="landing__mobile-lang">
+              <LanguageSwitcher variant="landing" />
+            </div>
+            <Link to="/login" className="landing__mobile-link landing__nav-link--login" onClick={closeMobile}>{t('nav.login')}</Link>
+            <Link to="/gap-analysis" className="landing__nav-btn landing__mobile-btn" onClick={closeMobile}>{t('nav.startGapAnalysis')}</Link>
+          </div>
+        )}
       </nav>
 
       {/* ---- Hero Section ---- */}

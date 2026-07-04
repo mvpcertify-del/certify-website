@@ -103,7 +103,8 @@
     "userFields": "Champs utilisateur personnalisés",
     "applicationFields": "Champs de demande personnalisés",
     "mainDashboard": "Main Dashboard [DRAFT]",
-    "sales": "Sales [DRAFT]"
+    "sales": "Sales [DRAFT]",
+    "menu": "[DRAFT] Menu"
   },
   "landing": {
     "iafBadge": "Partenaires d'organismes de certification accrédités IAF",

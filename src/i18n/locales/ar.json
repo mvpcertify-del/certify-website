@@ -103,7 +103,8 @@
     "userFields": "حقول المستخدم المخصصة",
     "applicationFields": "حقول الطلب المخصصة",
     "mainDashboard": "Main Dashboard [DRAFT]",
-    "sales": "Sales [DRAFT]"
+    "sales": "Sales [DRAFT]",
+    "menu": "القائمة"
   },
   "landing": {
     "iafBadge": "شركاء من هيئات منح الشهادات المعتمدة من IAF",
