@@ -120,8 +120,8 @@
     "step1Desc": "Crea una cuenta y proporciona los detalles de tu empresa para comenzar.",
     "step2Title": "Selecciona el estándar ISO",
     "step2Desc": "Elige el tipo de certificación que se ajuste a las necesidades de tu negocio.",
-    "step3Title": "Recibe la certificación",
-    "step3Desc": "Después de una auditoría exitosa, recibe tu certificado reconocido internacionalmente.",
+    "step3Title": "[DRAFT] Complete Payment",
+    "step3Desc": "[DRAFT] Pay securely for your selected certification package to begin the audit process.",
     "standardsTag": "Estándares",
     "supportedStandards": "Estándares ISO soportados",
     "supportedStandardsDesc": "Soportamos los estándares internacionales más solicitados",
@@ -158,7 +158,9 @@
     "footerSignUp": "Registrarse",
     "footerResetPassword": "Restablecer contraseña",
     "footerJoinNetwork": "Únete a nuestra red",
-    "footerLegal": "Legal"
+    "footerLegal": "Legal",
+    "step4Title": "Recibe la certificación",
+    "step4Desc": "Después de una auditoría exitosa, recibe tu certificado reconocido internacionalmente."
   },
   "auth": {
     "welcomeBack": "Bienvenido de nuevo",

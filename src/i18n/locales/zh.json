@@ -120,8 +120,8 @@
     "step1Desc": "创建账户并提供公司详细信息即可开始。",
     "step2Title": "选择 ISO 标准",
     "step2Desc": "选择符合您业务需求的认证类型。",
-    "step3Title": "获得认证",
-    "step3Desc": "审核通过后，即可领取国际认可的证书。",
+    "step3Title": "[DRAFT] Complete Payment",
+    "step3Desc": "[DRAFT] Pay securely for your selected certification package to begin the audit process.",
     "standardsTag": "标准",
     "supportedStandards": "支持的 ISO 标准",
     "supportedStandardsDesc": "我们支持最受关注的国际标准",
@@ -158,7 +158,9 @@
     "footerSignUp": "注册",
     "footerResetPassword": "重置密码",
     "footerJoinNetwork": "加入我们的网络",
-    "footerLegal": "Legal"
+    "footerLegal": "Legal",
+    "step4Title": "获得认证",
+    "step4Desc": "审核通过后，即可领取国际认可的证书。"
   },
   "auth": {
     "welcomeBack": "欢迎回来",

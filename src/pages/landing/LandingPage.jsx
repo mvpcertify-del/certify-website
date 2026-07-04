@@ -4,7 +4,7 @@ import {
   Shield, ArrowRight, Award, Globe2,
   FileCheck2, Users, Building2, ChevronRight, Star,
   Zap, Lock, BarChart3, Apple, GraduationCap, Scale, Activity, Stethoscope,
-  ShieldCheck, BrainCircuit,
+  ShieldCheck, BrainCircuit, CreditCard,
 } from 'lucide-react';
 import { ISO_CATALOG_LIST } from '../../utils/isoCatalog';
 import SaraChatWidget from '../../components/sara/SaraChatWidget';
@@ -42,7 +42,8 @@ export default function LandingPage() {
   const STEPS = [
     { step: '01', title: t('landing.step1Title'), desc: t('landing.step1Desc'), icon: Building2 },
     { step: '02', title: t('landing.step2Title'), desc: t('landing.step2Desc'), icon: FileCheck2 },
-    { step: '03', title: t('landing.step3Title'), desc: t('landing.step3Desc'), icon: Award },
+    { step: '03', title: t('landing.step3Title'), desc: t('landing.step3Desc'), icon: CreditCard },
+    { step: '04', title: t('landing.step4Title'), desc: t('landing.step4Desc'), icon: Award },
   ];
 
   const BENEFITS = [

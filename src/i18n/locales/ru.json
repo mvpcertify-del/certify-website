@@ -120,8 +120,8 @@
     "step1Desc": "Создайте учётную запись и укажите данные компании, чтобы начать.",
     "step2Title": "Выберите стандарт ISO",
     "step2Desc": "Выберите тип сертификации, подходящий для вашего бизнеса.",
-    "step3Title": "Получите сертификацию",
-    "step3Desc": "После успешного аудита получите международно признанный сертификат.",
+    "step3Title": "[DRAFT] Complete Payment",
+    "step3Desc": "[DRAFT] Pay securely for your selected certification package to begin the audit process.",
     "standardsTag": "Стандарты",
     "supportedStandards": "Поддерживаемые стандарты ISO",
     "supportedStandardsDesc": "Мы поддерживаем самые востребованные международные стандарты",
@@ -158,7 +158,9 @@
     "footerSignUp": "Регистрация",
     "footerResetPassword": "Сбросить пароль",
     "footerJoinNetwork": "Присоединиться к нашей сети",
-    "footerLegal": "Legal"
+    "footerLegal": "Legal",
+    "step4Title": "Получите сертификацию",
+    "step4Desc": "После успешного аудита получите международно признанный сертификат."
   },
   "auth": {
     "welcomeBack": "С возвращением",

@@ -120,8 +120,8 @@
     "step1Desc": "Crie uma conta e informe os dados da sua empresa para começar.",
     "step2Title": "Escolha a Norma ISO",
     "step2Desc": "Escolha o tipo de certificação que atende às necessidades do seu negócio.",
-    "step3Title": "Receba a Certificação",
-    "step3Desc": "Após uma auditoria bem-sucedida, receba seu certificado reconhecido internacionalmente.",
+    "step3Title": "[DRAFT] Complete Payment",
+    "step3Desc": "[DRAFT] Pay securely for your selected certification package to begin the audit process.",
     "standardsTag": "Normas",
     "supportedStandards": "Normas ISO Suportadas",
     "supportedStandardsDesc": "Oferecemos suporte às normas internacionais mais solicitadas",
@@ -158,7 +158,9 @@
     "footerSignUp": "Cadastrar-se",
     "footerResetPassword": "Redefinir Senha",
     "footerJoinNetwork": "Junte-se à Nossa Rede",
-    "footerLegal": "Legal"
+    "footerLegal": "Legal",
+    "step4Title": "Receba a Certificação",
+    "step4Desc": "Após uma auditoria bem-sucedida, receba seu certificado reconhecido internacionalmente."
   },
   "auth": {
     "welcomeBack": "Bem-vindo de volta",

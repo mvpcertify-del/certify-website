@@ -115,13 +115,13 @@
     "statApproval": "Approval Rate",
     "processTag": "Process",
     "howCertWorks": "How Certification Works",
-    "howCertDesc": "From registration to certification in three simple steps",
+    "howCertDesc": "From registration to certification in four simple steps",
     "step1Title": "Register Your Company",
     "step1Desc": "Create an account and provide your company details to get started.",
     "step2Title": "Select ISO Standard",
     "step2Desc": "Choose the certification type that fits your business needs.",
-    "step3Title": "Receive Certification",
-    "step3Desc": "After a successful audit, receive your internationally recognized certificate.",
+    "step3Title": "Complete Payment",
+    "step3Desc": "Pay securely for your selected certification package to begin the audit process.",
     "standardsTag": "Standards",
     "supportedStandards": "Supported ISO Standards",
     "supportedStandardsDesc": "We support the most requested international standards",
@@ -158,7 +158,9 @@
     "footerSignUp": "Sign Up",
     "footerResetPassword": "Reset Password",
     "footerJoinNetwork": "Join Our Network",
-    "footerLegal": "Legal"
+    "footerLegal": "Legal",
+    "step4Title": "Receive Certification",
+    "step4Desc": "After a successful audit, receive your internationally recognized certificate."
   },
   "auth": {
     "welcomeBack": "Welcome back",

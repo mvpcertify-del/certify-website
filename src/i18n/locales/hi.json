@@ -120,8 +120,8 @@
     "step1Desc": "शुरू करने के लिए एक खाता बनाएं और अपनी कंपनी की जानकारी दें।",
     "step2Title": "ISO मानक चुनें",
     "step2Desc": "वह प्रमाणन प्रकार चुनें जो आपकी व्यावसायिक ज़रूरतों के अनुकूल हो।",
-    "step3Title": "प्रमाणपत्र प्राप्त करें",
-    "step3Desc": "सफल ऑडिट के बाद, अपना अंतरराष्ट्रीय स्तर पर मान्यता प्राप्त प्रमाणपत्र पाएं।",
+    "step3Title": "[DRAFT] Complete Payment",
+    "step3Desc": "[DRAFT] Pay securely for your selected certification package to begin the audit process.",
     "standardsTag": "मानक",
     "supportedStandards": "समर्थित ISO मानक",
     "supportedStandardsDesc": "हम सबसे अधिक मांगे जाने वाले अंतरराष्ट्रीय मानकों का समर्थन करते हैं",
@@ -158,7 +158,9 @@
     "footerSignUp": "साइन अप",
     "footerResetPassword": "पासवर्ड रीसेट",
     "footerJoinNetwork": "हमारे नेटवर्क से जुड़ें",
-    "footerLegal": "Legal"
+    "footerLegal": "Legal",
+    "step4Title": "प्रमाणपत्र प्राप्त करें",
+    "step4Desc": "सफल ऑडिट के बाद, अपना अंतरराष्ट्रीय स्तर पर मान्यता प्राप्त प्रमाणपत्र पाएं।"
   },
   "auth": {
     "welcomeBack": "वापस स्वागत है",
