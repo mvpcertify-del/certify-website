@@ -104,7 +104,8 @@
     "applicationFields": "自定义申请字段",
     "mainDashboard": "Main Dashboard [DRAFT]",
     "sales": "Sales [DRAFT]",
-    "menu": "[DRAFT] Menu"
+    "menu": "[DRAFT] Menu",
+    "signUp": "注册"
   },
   "landing": {
     "iafBadge": "IAF 认可认证机构合作伙伴",

@@ -33,6 +33,9 @@ export default function LanguageSwitcher({ variant = 'default' }) {
   const switchLanguage = (code) => {
     i18n.changeLanguage(code);
     localStorage.setItem('certifycx-lang', code);
+    // Mark this as an explicit manual choice so the IP/region auto-detector
+    // stops overriding it on subsequent loads.
+    localStorage.setItem('certifycx-lang-manual', '1');
     document.documentElement.dir = code === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.lang = code;
     setOpen(false);
@@ -52,7 +55,8 @@ export default function LanguageSwitcher({ variant = 'default' }) {
         aria-label="Select language"
       >
         <Globe size={16} />
-        <span className="lang-switcher__label">{currentLang.flag} {currentLang.label}</span>
+        <span className="lang-switcher__flag">{currentLang.flag}</span>
+        <span className="lang-switcher__label">{currentLang.label}</span>
         <ChevronDown size={14} className={`lang-switcher__chevron ${open ? 'lang-switcher__chevron--open' : ''}`} />
       </button>
       {open && (

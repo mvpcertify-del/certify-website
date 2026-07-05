@@ -73,27 +73,29 @@ export default function LandingPage() {
             <a href="#benefits" className="landing__nav-link">{t('nav.benefits')}</a>
             <LanguageSwitcher variant="landing" />
             <Link to="/login" className="landing__nav-link landing__nav-link--login">{t('nav.login')}</Link>
-            <Link to="/gap-analysis" className="landing__nav-btn">{t('nav.startGapAnalysis')}</Link>
+            <Link to="/signup" className="landing__nav-btn">{t('nav.signUp')}</Link>
           </div>
-          <button
-            className="landing__nav-toggle"
-            onClick={() => setMobileOpen((o) => !o)}
-            aria-label={t('nav.menu')}
-            aria-expanded={mobileOpen}
-          >
-            {mobileOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          {/* Mobile bar: language switcher stays visible at the top so anyone
+              can override the country default without opening the menu. */}
+          <div className="landing__nav-mobile-actions">
+            <LanguageSwitcher variant="landing" />
+            <button
+              className="landing__nav-toggle"
+              onClick={() => setMobileOpen((o) => !o)}
+              aria-label={t('nav.menu')}
+              aria-expanded={mobileOpen}
+            >
+              {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
         {mobileOpen && (
           <div className="landing__mobile-menu">
             <a href="#how-it-works" className="landing__mobile-link" onClick={closeMobile}>{t('nav.howItWorks')}</a>
             <a href="#standards" className="landing__mobile-link" onClick={closeMobile}>{t('nav.standards')}</a>
             <a href="#benefits" className="landing__mobile-link" onClick={closeMobile}>{t('nav.benefits')}</a>
-            <div className="landing__mobile-lang">
-              <LanguageSwitcher variant="landing" />
-            </div>
             <Link to="/login" className="landing__mobile-link landing__nav-link--login" onClick={closeMobile}>{t('nav.login')}</Link>
-            <Link to="/gap-analysis" className="landing__nav-btn landing__mobile-btn" onClick={closeMobile}>{t('nav.startGapAnalysis')}</Link>
+            <Link to="/signup" className="landing__nav-btn landing__mobile-btn" onClick={closeMobile}>{t('nav.signUp')}</Link>
           </div>
         )}
       </nav>
@@ -113,8 +115,8 @@ export default function LandingPage() {
             {t('landing.heroSubtitle')}
           </p>
           <div className="landing__hero-actions">
-            <Link to="/gap-analysis" className="landing__btn landing__btn--primary">
-              {t('nav.startGapAnalysis')} <ArrowRight size={18} />
+            <Link to="/signup" className="landing__btn landing__btn--primary">
+              {t('nav.signUp')} <ArrowRight size={18} />
             </Link>
             <Link to="/login" className="landing__btn landing__btn--secondary">
               {t('nav.login')}

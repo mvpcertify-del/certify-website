@@ -14,6 +14,11 @@ import {
 } from '../utils/regionLanguage.js';
 
 const STORAGE_KEY = 'certifycx-lang';
+// Set only when the visitor picks a language themselves (switcher) or via a
+// `?lang=` deep link. i18next auto-caches the *detected* language into
+// STORAGE_KEY on init, so STORAGE_KEY alone can't tell an auto choice from a
+// manual one — this flag does, and it's what gates the IP/region override.
+const MANUAL_KEY = 'certifycx-lang-manual';
 
 // Marketing deep-link override. A campaign link like
 // `certify.cx/iso/iso-9001?lang=ar` must open directly in that language,
@@ -27,6 +32,9 @@ if (typeof window !== 'undefined') {
     const urlLang = new URLSearchParams(window.location.search).get('lang');
     if (urlLang && SUPPORTED_LANGUAGES.has(urlLang)) {
       localStorage.setItem(STORAGE_KEY, urlLang);
+      // A deep-link language is an explicit choice — pin it so IP detection
+      // doesn't override it.
+      localStorage.setItem(MANUAL_KEY, '1');
     }
   } catch {
     /* URL/localStorage unavailable; fall back to region detection */
@@ -118,14 +126,15 @@ applyDocumentDirection(i18n.language);
 
 i18n.on('languageChanged', applyDocumentDirection);
 
-// Async refinement: if the user has not made a manual choice, upgrade to the
-// IP-derived language once it lands. Skipped when localStorage already holds a
-// value, which means the user picked it themselves (or we set it on a prior
-// visit and they kept it).
-if (typeof window !== 'undefined' && !localStorage.getItem(STORAGE_KEY)) {
+// Async refinement: unless the user made an explicit manual choice, upgrade to
+// the IP-derived language (e.g. Lebanon → Arabic) once it lands. We gate on the
+// MANUAL flag rather than STORAGE_KEY because i18next auto-caches the
+// sync-detected language into STORAGE_KEY during init — which would otherwise
+// suppress the IP correction on every load.
+if (typeof window !== 'undefined' && !localStorage.getItem(MANUAL_KEY)) {
   detectLanguageFromRegion().then((lang) => {
     if (!lang || !SUPPORTED_LANGUAGES.has(lang)) return;
-    if (localStorage.getItem(STORAGE_KEY)) return;
+    if (localStorage.getItem(MANUAL_KEY)) return;
     if (i18n.language === lang) return;
     i18n.changeLanguage(lang);
   });

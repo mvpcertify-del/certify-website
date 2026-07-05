@@ -104,7 +104,8 @@
     "applicationFields": "Custom App Fields",
     "mainDashboard": "Main Dashboard",
     "sales": "Sales",
-    "menu": "Menu"
+    "menu": "Menu",
+    "signUp": "Sign Up"
   },
   "landing": {
     "iafBadge": "IAF Accredited Certification Bodies Partners",
