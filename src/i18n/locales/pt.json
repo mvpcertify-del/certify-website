@@ -104,7 +104,7 @@
     "applicationFields": "Campos de Solicitação Personalizados",
     "mainDashboard": "Main Dashboard [DRAFT]",
     "sales": "Sales [DRAFT]",
-    "menu": "[DRAFT] Menu",
+    "menu": "Menu",
     "signUp": "Cadastre-se"
   },
   "landing": {
@@ -122,8 +122,8 @@
     "step1Desc": "Crie uma conta e informe os dados da sua empresa para começar.",
     "step2Title": "Escolha a Norma ISO",
     "step2Desc": "Escolha o tipo de certificação que atende às necessidades do seu negócio.",
-    "step3Title": "[DRAFT] Complete Payment",
-    "step3Desc": "[DRAFT] Pay securely for your selected certification package to begin the audit process.",
+    "step3Title": "Concluir pagamento",
+    "step3Desc": "Pague com segurança o pacote de certificação selecionado para iniciar o processo de auditoria.",
     "standardsTag": "Normas",
     "supportedStandards": "Normas ISO Suportadas",
     "supportedStandardsDesc": "Oferecemos suporte às normas internacionais mais solicitadas",

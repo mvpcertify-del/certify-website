@@ -104,7 +104,7 @@
     "applicationFields": "Champs de demande personnalisés",
     "mainDashboard": "Main Dashboard [DRAFT]",
     "sales": "Sales [DRAFT]",
-    "menu": "[DRAFT] Menu",
+    "menu": "Menu",
     "signUp": "S'inscrire"
   },
   "landing": {
@@ -122,8 +122,8 @@
     "step1Desc": "Créez un compte et fournissez les informations de votre entreprise pour commencer.",
     "step2Title": "Choisissez une norme ISO",
     "step2Desc": "Choisissez le type de certification adapté aux besoins de votre entreprise.",
-    "step3Title": "[DRAFT] Complete Payment",
-    "step3Desc": "[DRAFT] Pay securely for your selected certification package to begin the audit process.",
+    "step3Title": "Effectuez le paiement",
+    "step3Desc": "Payez en toute sécurité le forfait de certification choisi pour lancer le processus d'audit.",
     "standardsTag": "Normes",
     "supportedStandards": "Normes ISO prises en charge",
     "supportedStandardsDesc": "Nous prenons en charge les normes internationales les plus demandées",

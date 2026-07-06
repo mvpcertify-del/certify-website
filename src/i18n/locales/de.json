@@ -104,7 +104,7 @@
     "applicationFields": "Benutzerdefinierte Antragsfelder",
     "mainDashboard": "Main Dashboard [DRAFT]",
     "sales": "Sales [DRAFT]",
-    "menu": "[DRAFT] Menu",
+    "menu": "Menü",
     "signUp": "Registrieren"
   },
   "landing": {
@@ -122,8 +122,8 @@
     "step1Desc": "Erstellen Sie ein Konto und geben Sie Ihre Unternehmensdaten an, um zu beginnen.",
     "step2Title": "ISO-Standard auswählen",
     "step2Desc": "Wählen Sie die Zertifizierungsart, die zu Ihren geschäftlichen Anforderungen passt.",
-    "step3Title": "[DRAFT] Complete Payment",
-    "step3Desc": "[DRAFT] Pay securely for your selected certification package to begin the audit process.",
+    "step3Title": "Zahlung abschließen",
+    "step3Desc": "Bezahlen Sie sicher Ihr ausgewähltes Zertifizierungspaket, um den Audit-Prozess zu starten.",
     "standardsTag": "Standards",
     "supportedStandards": "Unterstützte ISO-Standards",
     "supportedStandardsDesc": "Wir unterstützen die am häufigsten nachgefragten internationalen Standards",

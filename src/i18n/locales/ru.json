@@ -104,7 +104,7 @@
     "applicationFields": "Поля заявок",
     "mainDashboard": "Main Dashboard [DRAFT]",
     "sales": "Sales [DRAFT]",
-    "menu": "[DRAFT] Menu",
+    "menu": "Меню",
     "signUp": "Регистрация"
   },
   "landing": {
@@ -122,8 +122,8 @@
     "step1Desc": "Создайте учётную запись и укажите данные компании, чтобы начать.",
     "step2Title": "Выберите стандарт ISO",
     "step2Desc": "Выберите тип сертификации, подходящий для вашего бизнеса.",
-    "step3Title": "[DRAFT] Complete Payment",
-    "step3Desc": "[DRAFT] Pay securely for your selected certification package to begin the audit process.",
+    "step3Title": "Завершите оплату",
+    "step3Desc": "Безопасно оплатите выбранный пакет сертификации, чтобы начать процесс аудита.",
     "standardsTag": "Стандарты",
     "supportedStandards": "Поддерживаемые стандарты ISO",
     "supportedStandardsDesc": "Мы поддерживаем самые востребованные международные стандарты",

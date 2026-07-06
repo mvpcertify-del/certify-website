@@ -104,7 +104,7 @@
     "applicationFields": "कस्टम ऐप फ़ील्ड",
     "mainDashboard": "Main Dashboard [DRAFT]",
     "sales": "Sales [DRAFT]",
-    "menu": "[DRAFT] Menu",
+    "menu": "मेन्यू",
     "signUp": "साइन अप करें"
   },
   "landing": {
@@ -122,8 +122,8 @@
     "step1Desc": "शुरू करने के लिए एक खाता बनाएं और अपनी कंपनी की जानकारी दें।",
     "step2Title": "ISO मानक चुनें",
     "step2Desc": "वह प्रमाणन प्रकार चुनें जो आपकी व्यावसायिक ज़रूरतों के अनुकूल हो।",
-    "step3Title": "[DRAFT] Complete Payment",
-    "step3Desc": "[DRAFT] Pay securely for your selected certification package to begin the audit process.",
+    "step3Title": "भुगतान पूरा करें",
+    "step3Desc": "ऑडिट प्रक्रिया शुरू करने के लिए अपने चयनित प्रमाणन पैकेज के लिए सुरक्षित रूप से भुगतान करें।",
     "standardsTag": "मानक",
     "supportedStandards": "समर्थित ISO मानक",
     "supportedStandardsDesc": "हम सबसे अधिक मांगे जाने वाले अंतरराष्ट्रीय मानकों का समर्थन करते हैं",

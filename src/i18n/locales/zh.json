@@ -104,7 +104,7 @@
     "applicationFields": "自定义申请字段",
     "mainDashboard": "Main Dashboard [DRAFT]",
     "sales": "Sales [DRAFT]",
-    "menu": "[DRAFT] Menu",
+    "menu": "菜单",
     "signUp": "注册"
   },
   "landing": {
@@ -122,8 +122,8 @@
     "step1Desc": "创建账户并提供公司详细信息即可开始。",
     "step2Title": "选择 ISO 标准",
     "step2Desc": "选择符合您业务需求的认证类型。",
-    "step3Title": "[DRAFT] Complete Payment",
-    "step3Desc": "[DRAFT] Pay securely for your selected certification package to begin the audit process.",
+    "step3Title": "完成付款",
+    "step3Desc": "安全支付您所选的认证套餐，即可开始审核流程。",
     "standardsTag": "标准",
     "supportedStandards": "支持的 ISO 标准",
     "supportedStandardsDesc": "我们支持最受关注的国际标准",

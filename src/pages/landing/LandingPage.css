@@ -120,6 +120,13 @@
   margin-top: var(--spacing-sm);
 }
 
+/* In the stacked mobile menu the Login button spans full width and centres its
+   label, matching the Sign Up button directly below it. */
+.landing__mobile-menu .landing__nav-link--login {
+  text-align: center;
+  padding: 12px 20px;
+}
+
 .landing__nav-link {
   color: var(--color-text-secondary);
   text-decoration: none;
@@ -133,11 +140,26 @@
   color: var(--color-text-primary);
 }
 
+/* Login = outlined "ghost" button in brand accent — pairs with the filled
+   Sign Up button so the two read as a matched, professional set. Overrides the
+   base .landing__nav-link padding so both auth buttons share the same height. */
 .landing__nav-link--login {
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  padding: 8px 20px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.landing__nav-link--login:hover {
+  background: var(--color-accent-light);
   color: var(--color-accent);
 }
 
 .landing__nav-btn {
+  display: inline-flex;
+  align-items: center;
   background: var(--color-accent);
   color: var(--color-text-inverse);
   padding: 8px 20px;
@@ -145,6 +167,7 @@
   text-decoration: none;
   font-size: var(--font-size-sm);
   font-weight: 600;
+  line-height: 1;
   transition: all var(--transition-fast);
 }
 
@@ -254,13 +277,14 @@
 
 .landing__btn--secondary {
   background: transparent;
-  color: var(--color-text-primary);
-  border: 1px solid var(--color-border);
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
 }
 
 .landing__btn--secondary:hover {
-  background: var(--color-bg-surface);
-  border-color: var(--color-text-secondary);
+  background: var(--color-accent-light);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .landing__btn--lg {
