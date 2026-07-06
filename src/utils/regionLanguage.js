@@ -3,9 +3,13 @@
 // fr, pt, de, zh, hi. Anything outside the explicit country lists falls back to
 // English (so US, UK, Japan, etc. all default to en).
 
+// Every Arab-country visitor should land on the site in Arabic by default.
+// Covers all 22 Arab League members: the six Gulf/GCC states (SA, AE, QA, KW,
+// BH, OM) plus the wider Levant, North Africa and Horn of Africa. Comoros (KM)
+// and Western Sahara (EH) are included so the coverage is complete.
 const ARABIC_COUNTRIES = new Set([
   'SA', 'AE', 'QA', 'KW', 'BH', 'OM', 'JO', 'LB', 'IQ', 'SY', 'YE', 'PS',
-  'EG', 'LY', 'TN', 'DZ', 'MA', 'SD', 'SO', 'DJ', 'MR',
+  'EG', 'LY', 'TN', 'DZ', 'MA', 'SD', 'SO', 'DJ', 'MR', 'KM', 'EH',
 ]);
 
 const SPANISH_COUNTRIES = new Set([
@@ -54,7 +58,7 @@ const TIMEZONE_TO_COUNTRY = {
   'asia/hebron': 'PS', 'africa/cairo': 'EG', 'africa/tripoli': 'LY',
   'africa/tunis': 'TN', 'africa/algiers': 'DZ', 'africa/casablanca': 'MA',
   'africa/el_aaiun': 'MA', 'africa/khartoum': 'SD', 'africa/mogadishu': 'SO',
-  'africa/djibouti': 'DJ', 'africa/nouakchott': 'MR',
+  'africa/djibouti': 'DJ', 'africa/nouakchott': 'MR', 'indian/comoro': 'KM',
   // Spanish-speaking
   'europe/madrid': 'ES', 'atlantic/canary': 'ES',
   'america/mexico_city': 'MX', 'america/cancun': 'MX', 'america/monterrey': 'MX',
