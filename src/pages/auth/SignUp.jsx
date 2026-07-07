@@ -1,13 +1,27 @@
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { Input, Select, Button, Autocomplete } from '../../components/ui/FormElements';
 import CustomFieldRenderer, { validateCustomFields } from '../../components/CustomFieldRenderer';
 import { getStakeholderType } from '../../utils/stakeholderTypes';
 import { supabase } from '../../lib/supabase';
-import { AlertCircle, CheckCircle, Eye, EyeOff, Clock, Mail, ArrowLeft } from 'lucide-react';
+import { AlertCircle, CheckCircle, Eye, EyeOff, Clock, Mail, ArrowLeft, Building2, UserCheck, Gift, Briefcase, Award, TrendingUp, ChevronRight } from 'lucide-react';
 import './Auth.css';
+
+// Sign Up account-type options shown in the first-step picker. The visible
+// labels are what the client asked for; `slug` maps each to the category that
+// already exists in certify.cx (Affiliate → the existing "referral" programme,
+// Consultant → "consultancy"). `slug: 'client'` uses the simple email/Google
+// flow; every other slug routes into its existing stakeholder wizard.
+const SIGNUP_TYPE_OPTIONS = [
+  { slug: 'client',             labelKey: 'auth.roleClient',     descKey: 'auth.roleClientDesc',     icon: Building2,   color: '#10B981' },
+  { slug: 'auditor',            labelKey: 'auth.roleAuditor',    descKey: 'auth.roleAuditorDesc',    icon: UserCheck,   color: '#3B82F6' },
+  { slug: 'referral',           labelKey: 'auth.roleAffiliate',  descKey: 'auth.roleAffiliateDesc',  icon: Gift,        color: '#EC4899' },
+  { slug: 'consultancy',        labelKey: 'auth.roleConsultant', descKey: 'auth.roleConsultantDesc', icon: Briefcase,   color: '#F59E0B' },
+  { slug: 'certification-body', labelKey: 'auth.roleCertBody',   descKey: 'auth.roleCertBodyDesc',   icon: Award,       color: '#8B5CF6' },
+  { slug: 'investor',           labelKey: 'auth.roleInvestor',   descKey: 'auth.roleInvestorDesc',   icon: TrendingUp,  color: '#6366F1' },
+];
 
 const EMPLOYEE_RANGES = [
   '1-10', '11-50', '51-200', '201-500', '501-1000', '1000+',
@@ -289,15 +303,77 @@ export default function SignUp() {
   const [searchParams] = useSearchParams();
   const registrationType = searchParams.get('type') || '';
   const stakeholderConfig = getStakeholderType(registrationType);
+  // Set once the visitor picks "Client" in the first-step type picker — that
+  // choice keeps the simple email/Google flow (not the detailed wizard).
+  const [clientPicked, setClientPicked] = useState(false);
 
-  // Stakeholder flows (auditor, certification_body, referral, investor) keep
-  // the detailed multi-step wizard. Plain client signup (no ?type=) uses the
-  // simplified Claude-style flow below.
+  // A valid ?type= in the URL (e.g. from /register/:type landing pages or a
+  // shared link) goes straight to that stakeholder wizard — unchanged behavior.
   if (registrationType && stakeholderConfig) {
     return <StakeholderSignUpWizard stakeholderConfig={stakeholderConfig} registrationType={registrationType} />;
   }
 
+  // No type chosen yet → show the account-type picker first. "It is not always
+  // registering for certification" — the visitor tells us who they are, then
+  // continues with Gmail/email.
+  if (!registrationType && !clientPicked) {
+    return <SignUpTypePicker onPickClient={() => setClientPicked(true)} />;
+  }
+
   return <SimpleClientSignUp />;
+}
+
+// First step of Sign Up: pick the account type. "Client" continues here in the
+// simple flow; every other type navigates to /signup?type=<slug> which renders
+// that type's existing multi-step wizard.
+function SignUpTypePicker({ onPickClient }) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const refQuery = searchParams.get('ref') ? `&ref=${encodeURIComponent(searchParams.get('ref'))}` : '';
+
+  const choose = (slug) => {
+    if (slug === 'client') {
+      onPickClient();
+    } else {
+      navigate(`/signup?type=${slug}${refQuery}`);
+    }
+  };
+
+  return (
+    <div className="auth-form auth-form--simple">
+      <h2 className="auth-form__hero-title">{t('auth.chooseTypeTitle')}</h2>
+      <p className="auth-form__hero-subtitle">{t('auth.chooseTypeSubtitle')}</p>
+
+      <div className="signup-type-list">
+        {SIGNUP_TYPE_OPTIONS.map((opt) => {
+          const Icon = opt.icon;
+          return (
+            <button
+              key={opt.slug}
+              type="button"
+              className="signup-type-option"
+              onClick={() => choose(opt.slug)}
+            >
+              <span className="signup-type-option__icon" style={{ backgroundColor: opt.color }}>
+                <Icon size={20} />
+              </span>
+              <span className="signup-type-option__text">
+                <span className="signup-type-option__name">{t(opt.labelKey)}</span>
+                <span className="signup-type-option__desc">{t(opt.descKey)}</span>
+              </span>
+              <ChevronRight size={18} className="signup-type-option__chev" />
+            </button>
+          );
+        })}
+      </div>
+
+      <p className="auth-form__legal" style={{ marginTop: 'var(--spacing-lg)' }}>
+        {t('auth.alreadyHaveAccount')}{' '}
+        <Link to="/login" className="auth-form__link">{t('auth.signIn')}</Link>
+      </p>
+    </div>
+  );
 }
 
 function SimpleClientSignUp() {

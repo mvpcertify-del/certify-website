@@ -177,6 +177,20 @@
   transform: translateY(-1px);
 }
 
+/* "Start Your Free Gap Analysis" — the third header CTA. Deliberately a
+   different (blue) colour so it stands apart from the green Sign Up button. */
+.landing__nav-btn--gap {
+  background: var(--color-info);
+  color: #ffffff;
+}
+
+.landing__nav-btn--gap:hover {
+  background: var(--color-info);
+  color: #ffffff;
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
 /* ---- Hero ---- */
 .landing__hero {
   position: relative;

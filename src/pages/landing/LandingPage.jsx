@@ -74,6 +74,7 @@ export default function LandingPage() {
             <LanguageSwitcher variant="landing" />
             <Link to="/login" className="landing__nav-link landing__nav-link--login">{t('nav.login')}</Link>
             <Link to="/signup" className="landing__nav-btn">{t('nav.signUp')}</Link>
+            <Link to="/gap-analysis" className="landing__nav-btn landing__nav-btn--gap">{t('nav.startGapAnalysis')}</Link>
           </div>
           {/* Mobile bar: language switcher stays visible at the top so anyone
               can override the country default without opening the menu. */}
@@ -96,6 +97,7 @@ export default function LandingPage() {
             <a href="#benefits" className="landing__mobile-link" onClick={closeMobile}>{t('nav.benefits')}</a>
             <Link to="/login" className="landing__mobile-link landing__nav-link--login" onClick={closeMobile}>{t('nav.login')}</Link>
             <Link to="/signup" className="landing__nav-btn landing__mobile-btn" onClick={closeMobile}>{t('nav.signUp')}</Link>
+            <Link to="/gap-analysis" className="landing__nav-btn landing__nav-btn--gap landing__mobile-btn" onClick={closeMobile}>{t('nav.startGapAnalysis')}</Link>
           </div>
         )}
       </nav>

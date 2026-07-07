@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy as _reactLazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -6,6 +6,25 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import LanguageSuggestionPopup from './components/LanguageSuggestionPopup';
 import { ROLES, PERMISSIONS } from './utils/roles';
+
+// Wrap React.lazy so a failed dynamic import (a stale chunk after a redeploy —
+// "Failed to fetch dynamically imported module") triggers ONE hard reload that
+// pulls the fresh index.html + new chunk filenames. Shares the one-shot guard
+// key with main.jsx's vite:preloadError handler so we never reload-loop. Every
+// `lazy(() => import(...))` below routes through this automatically.
+const RELOAD_GUARD_KEY = 'certifycx-chunk-reloaded';
+function lazy(factory) {
+  return _reactLazy(() =>
+    factory().catch((err) => {
+      if (!sessionStorage.getItem(RELOAD_GUARD_KEY)) {
+        sessionStorage.setItem(RELOAD_GUARD_KEY, '1');
+        window.location.reload();
+        return new Promise(() => {}); // stall render until the reload happens
+      }
+      throw err; // already retried once — let the ErrorBoundary show the error
+    })
+  );
+}
 
 // Layouts and pages are code-split with React.lazy so the initial download is
 // just the shell + the one route the visitor actually landed on. Without this,

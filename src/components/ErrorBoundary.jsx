@@ -16,7 +16,19 @@ export default class ErrorBoundary extends Component {
     console.error('ErrorBoundary caught:', error, errorInfo);
   }
 
+  // A stale-chunk error can't be recovered by re-rendering the same lazy
+  // component — the chunk file is gone from the server. Only a full reload
+  // (which re-fetches the fresh index.html + new chunk names) fixes it.
+  isChunkError() {
+    const msg = this.state.error?.message || '';
+    return /dynamically imported module|Importing a module script failed|ChunkLoadError|Failed to fetch/i.test(msg);
+  }
+
   handleReset = () => {
+    if (this.isChunkError()) {
+      window.location.reload();
+      return;
+    }
     this.setState({ hasError: false, error: null });
   };
 
