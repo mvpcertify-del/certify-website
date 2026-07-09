@@ -1,12 +1,14 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Shield, ArrowRight, Award, Globe2,
   FileCheck2, Users, Building2, ChevronRight, Star,
   Zap, Lock, BarChart3, Apple, GraduationCap, Scale, Activity, Stethoscope,
   ShieldCheck, BrainCircuit, CreditCard, Menu, X,
+  User, LogOut, LayoutDashboard, ChevronDown,
 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 import { ISO_CATALOG_LIST } from '../../utils/isoCatalog';
 import SaraChatWidget from '../../components/sara/SaraChatWidget';
 import LanguageSwitcher from '../../components/LanguageSwitcher';
@@ -26,8 +28,34 @@ const ICON_MAP = {
 
 export default function LandingPage() {
   const { t } = useTranslation();
+  const { user, loading, logout, getRoleDashboard } = useAuth();
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const closeMobile = () => setMobileOpen(false);
+
+  // Once a visitor has verified their email / logged in, the header shows a
+  // profile menu instead of the Log In + Sign Up buttons. Gate on !loading so
+  // we don't flash the logged-out buttons before the session resolves.
+  const isLoggedIn = !loading && !!user;
+  const userInitial = (user?.full_name || user?.name || user?.email || 'U').charAt(0).toUpperCase();
+  const userDisplayName = user?.full_name || user?.name || user?.email?.split('@')[0];
+  const dashboardPath = user ? getRoleDashboard(user.role) : '/login';
+
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef(null);
+  useEffect(() => {
+    const handler = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) setProfileOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const handleLogout = async () => {
+    setProfileOpen(false);
+    await logout();
+    navigate('/');
+  };
 
   const visibleIsos = PHASE_1_ISO_9001_ONLY
     ? ISO_CATALOG_LIST.filter(iso => iso.slug === 'iso-9001')
@@ -72,8 +100,52 @@ export default function LandingPage() {
             <a href="#standards" className="landing__nav-link">{t('nav.standards')}</a>
             <a href="#benefits" className="landing__nav-link">{t('nav.benefits')}</a>
             <LanguageSwitcher variant="landing" />
-            <Link to="/login" className="landing__nav-link landing__nav-link--login">{t('nav.login')}</Link>
-            <Link to="/signup" className="landing__nav-btn">{t('nav.signUp')}</Link>
+            {isLoggedIn ? (
+              <div className="landing__profile" ref={profileRef}>
+                <button
+                  type="button"
+                  className="landing__profile-trigger"
+                  onClick={() => setProfileOpen((o) => !o)}
+                  aria-haspopup="true"
+                  aria-expanded={profileOpen}
+                  aria-label={userDisplayName}
+                >
+                  <span className="landing__avatar">{userInitial}</span>
+                  <ChevronDown
+                    size={14}
+                    className={`landing__profile-chevron ${profileOpen ? 'landing__profile-chevron--open' : ''}`}
+                  />
+                </button>
+                {profileOpen && (
+                  <div className="landing__profile-menu">
+                    <div className="landing__profile-info">
+                      <span className="landing__profile-name">{userDisplayName}</span>
+                      <span className="landing__profile-email">{user?.email}</span>
+                    </div>
+                    <div className="landing__profile-divider" />
+                    <Link to={dashboardPath} className="landing__profile-item" onClick={() => setProfileOpen(false)}>
+                      <LayoutDashboard size={16} /> {t('common.dashboard')}
+                    </Link>
+                    <Link to="/profile" className="landing__profile-item" onClick={() => setProfileOpen(false)}>
+                      <User size={16} /> {t('common.profile')}
+                    </Link>
+                    <div className="landing__profile-divider" />
+                    <button
+                      type="button"
+                      className="landing__profile-item landing__profile-item--danger"
+                      onClick={handleLogout}
+                    >
+                      <LogOut size={16} /> {t('common.signOut')}
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <Link to="/login" className="landing__nav-link landing__nav-link--login">{t('nav.login')}</Link>
+                <Link to="/signup" className="landing__nav-btn">{t('nav.signUp')}</Link>
+              </>
+            )}
             <Link to="/gap-analysis" className="landing__nav-btn landing__nav-btn--gap">{t('nav.startGapAnalysis')}</Link>
           </div>
           {/* Mobile bar: language switcher stays visible at the top so anyone
@@ -95,8 +167,28 @@ export default function LandingPage() {
             <a href="#how-it-works" className="landing__mobile-link" onClick={closeMobile}>{t('nav.howItWorks')}</a>
             <a href="#standards" className="landing__mobile-link" onClick={closeMobile}>{t('nav.standards')}</a>
             <a href="#benefits" className="landing__mobile-link" onClick={closeMobile}>{t('nav.benefits')}</a>
-            <Link to="/login" className="landing__mobile-link landing__nav-link--login" onClick={closeMobile}>{t('nav.login')}</Link>
-            <Link to="/signup" className="landing__nav-btn landing__mobile-btn" onClick={closeMobile}>{t('nav.signUp')}</Link>
+            {isLoggedIn ? (
+              <>
+                <div className="landing__mobile-profile">
+                  <span className="landing__avatar">{userInitial}</span>
+                  <span className="landing__mobile-profile-name">{userDisplayName}</span>
+                </div>
+                <Link to={dashboardPath} className="landing__mobile-link" onClick={closeMobile}>{t('common.dashboard')}</Link>
+                <Link to="/profile" className="landing__mobile-link" onClick={closeMobile}>{t('common.profile')}</Link>
+                <button
+                  type="button"
+                  className="landing__nav-btn landing__mobile-btn"
+                  onClick={() => { closeMobile(); handleLogout(); }}
+                >
+                  {t('common.signOut')}
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="landing__mobile-link landing__nav-link--login" onClick={closeMobile}>{t('nav.login')}</Link>
+                <Link to="/signup" className="landing__nav-btn landing__mobile-btn" onClick={closeMobile}>{t('nav.signUp')}</Link>
+              </>
+            )}
             <Link to="/gap-analysis" className="landing__nav-btn landing__nav-btn--gap landing__mobile-btn" onClick={closeMobile}>{t('nav.startGapAnalysis')}</Link>
           </div>
         )}
