@@ -1,13 +1,8 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Check, ArrowRight, Award, Star, Crown, Users, MapPin } from 'lucide-react';
+import { Check, ArrowRight, Award, Star, Crown } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import {
-  computeTotal,
-  employeeBandsFromCount,
-  INCLUDED_EMPLOYEES,
-} from '../../utils/pricing';
+import { computeTotal } from '../../utils/pricing';
 import { ROLES } from '../../utils/roles';
 import './PricingTiers.css';
 
@@ -18,44 +13,24 @@ import './PricingTiers.css';
 // Prices come from the per-standard pricing map (base + add-ons) in
 // utils/pricing.js so the cards and checkout always agree.
 //
-// A shared Extra Staff / Extra Locations control sits above the three cards.
-// It uses the SAME surcharge model as the checkout page (computeTotal), so the
-// price shown on every card updates live and matches what the buyer is charged.
-// The chosen counts are carried into checkout via ?staff= & ?locations= query
-// params so the final payment page pre-fills them.
+// The extra-employees / extra-locations org-size control and the pricing
+// calculator were removed at the client's request — the packages show a single
+// clean base price and the buyer just picks one. (The surcharge model still
+// exists in pricing.js and api/checkout.js for logged-in / admin flows.)
 export default function PricingTiers({ variant = 'full', standardSlug = 'iso-9001' }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user } = useAuth();
 
-  // Ask the buyer for their real organization size — a plain headcount and a
-  // plain number of sites (not abstract "bands"). We convert the headcount to
-  // surcharge bands internally so the shared computeTotal model (and the
-  // server) stay unchanged. Defaults = what the base price already includes.
-  const [employeeCount, setEmployeeCount] = useState(INCLUDED_EMPLOYEES);
-  const [locationCount, setLocationCount] = useState(1);
-
-  // Derived surcharge inputs for the pricing model.
-  const employeeBands = employeeBandsFromCount(employeeCount);
-  const additionalLocations = Math.max(0, Math.floor(Number(locationCount) || 0) - 1);
-
-  const priceFor = (tier) =>
-    computeTotal({ standardSlug, tier, employeeBands, locations: additionalLocations }).subtotal;
+  // Base package price only (organization up to 10 employees at 1 location).
+  const priceFor = (tier) => computeTotal({ standardSlug, tier }).subtotal;
 
   const bronzePrice = priceFor('bronze');
   const silverPrice = priceFor('silver');
   const goldPrice   = priceFor('gold');
 
-  const clampInt = (v, min) => {
-    const n = Math.floor(Number(v));
-    if (!Number.isFinite(n) || n < min) return min;
-    return n;
-  };
-
   const startCheckout = (tier) => {
     const params = new URLSearchParams({ tier, iso: standardSlug });
-    if (employeeBands > 0) params.set('staff', String(employeeBands));
-    if (additionalLocations > 0) params.set('locations', String(additionalLocations));
     const qs = params.toString();
     if (user?.role === ROLES.CLIENT) {
       // Logged-in clients keep the existing bootstrap → Stripe path.
@@ -126,53 +101,6 @@ export default function PricingTiers({ variant = 'full', standardSlug = 'iso-900
           <button className="pricing-tier__cta pricing-tier__cta--secondary" onClick={() => startCheckout('gold')}>
             {t('pricing.tierGoldCta')} <ArrowRight size={16} />
           </button>
-        </div>
-      </div>
-
-      <p className="pricing-tiers__disclaimer">{t('pricing.disclaimer')}</p>
-
-      {/* SHARED ORG-SIZE CONTROL — one simple input for the buyer's real
-          organization size. Adjusts every package price live. */}
-      <div className="pricing-tiers__orgsize">
-        <span className="pricing-tiers__orgsize-title">{t('pricing.orgSizeQuestion')}</span>
-        <div className="pricing-tiers__orgsize-grid">
-          <div className="pricing-tiers__orgsize-row">
-            <label className="pricing-tiers__orgsize-label" htmlFor="pt-employees">
-              <Users size={18} />
-              <div>
-                <p className="pricing-tiers__orgsize-name">{t('pricing.employeesLabel')}</p>
-                <p className="pricing-tiers__orgsize-hint">{t('pricing.employeesIncludedHint', { count: INCLUDED_EMPLOYEES })}</p>
-              </div>
-            </label>
-            <input
-              id="pt-employees"
-              type="number"
-              min={1}
-              className="pricing-tiers__orgsize-input"
-              value={employeeCount}
-              onChange={(e) => setEmployeeCount(e.target.value)}
-              onBlur={(e) => setEmployeeCount(clampInt(e.target.value, 1))}
-            />
-          </div>
-
-          <div className="pricing-tiers__orgsize-row">
-            <label className="pricing-tiers__orgsize-label" htmlFor="pt-locations">
-              <MapPin size={18} />
-              <div>
-                <p className="pricing-tiers__orgsize-name">{t('pricing.locationsLabel')}</p>
-                <p className="pricing-tiers__orgsize-hint">{t('pricing.locationsIncludedHint', { count: 1 })}</p>
-              </div>
-            </label>
-            <input
-              id="pt-locations"
-              type="number"
-              min={1}
-              className="pricing-tiers__orgsize-input"
-              value={locationCount}
-              onChange={(e) => setLocationCount(e.target.value)}
-              onBlur={(e) => setLocationCount(clampInt(e.target.value, 1))}
-            />
-          </div>
         </div>
       </div>
     </section>
