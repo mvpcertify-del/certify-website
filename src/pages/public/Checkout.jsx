@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { Link, useSearchParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Shield, CreditCard, Banknote, Landmark, Lock, CheckCircle2, Copy,
@@ -27,15 +27,17 @@ const METHOD_ICONS = { CreditCard, Banknote, Landmark };
 //   /checkout?tier=&iso=&staff=&locations=   → the form
 //   /checkout/success?app=&session_id=       → post-Stripe confirmation
 // -------------------------------------------------------
+// Dispatcher: /checkout renders the form, /checkout/success the confirmation.
+// Kept as its own component so neither path calls hooks conditionally.
 export default function Checkout() {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
   const location = useLocation();
+  if (location.pathname.endsWith('/success')) return <CheckoutSuccess />;
+  return <CheckoutForm />;
+}
+
+function CheckoutForm() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
-
-  const isSuccess = location.pathname.endsWith('/success');
-
-  if (isSuccess) return <CheckoutSuccess />;
 
   const tier = (searchParams.get('tier') || 'silver').toLowerCase();
   const isoSlug = searchParams.get('iso') || 'iso-9001';
