@@ -456,7 +456,10 @@
     "moneygramReceiver": "Name des Empfängers",
     "moneygramCountry": "Land",
     "continueToRegistration": "Weiter zur Registrierung",
-    "awaitingVerificationNote": "Wir verifizieren Ihre Überweisung und senden Ihnen eine E-Mail, sobald sie bestätigt ist. Sie können Ihre Unternehmensregistrierung jetzt abschließen."
+    "awaitingVerificationNote": "Wir verifizieren Ihre Überweisung und senden Ihnen eine E-Mail, sobald sie bestätigt ist. Sie können Ihre Unternehmensregistrierung jetzt abschließen.",
+    "methodCash": "Bargeld",
+    "methodCashDesc": "Zahlen Sie bar — unser Team organisiert die Abholung.",
+    "serverUnavailable": "Der Zahlungsserver ist vorübergehend nicht verfügbar. Bitte versuchen Sie es gleich noch einmal."
   },
   "settings": {
     "title": "Einstellungen",
@@ -1167,7 +1170,12 @@
       "invoiceItem": "Position",
       "invoiceAmount": "Betrag",
       "invoiceFooter": "Dies ist eine von Certify.cx erstellte Schätzung und keine Steuerrechnung."
-    }
+    },
+    "orgSizeQuestion": "Wie groß ist Ihr Unternehmen?",
+    "employeesLabel": "Anzahl der Mitarbeiter",
+    "employeesIncludedHint": "Die ersten {{count}} im Grundpreis enthalten",
+    "locationsLabel": "Anzahl der Standorte",
+    "locationsIncludedHint": "Der erste {{count}} im Grundpreis enthalten"
   },
   "mainDash": {
     "title": "Main Dashboard [DRAFT]",
@@ -1196,5 +1204,39 @@
     "type": "Type [DRAFT]",
     "date": "Date [DRAFT]",
     "noPayments": "No payments recorded yet. [DRAFT]"
+  },
+  "checkout": {
+    "title": "Kauf abschließen",
+    "subtitle": "Zahlen Sie sicher und erhalten Sie sofortigen Zugang zu Ihrem Dashboard.",
+    "orderSummary": "Bestellübersicht",
+    "package": "Paket",
+    "extraEmployees": "Zusätzliche Mitarbeiter",
+    "extraLocations": "Zusätzliche Standorte",
+    "contactTitle": "Ihre Angaben",
+    "fullName": "Vollständiger Name",
+    "email": "Geschäftliche E-Mail",
+    "emailHint": "Wir senden Ihren Dashboard-Zugangslink an diese Adresse.",
+    "company": "Firmenname",
+    "phone": "Telefon (optional)",
+    "country": "Land",
+    "offlineHint": "Ihr Konto wird jetzt erstellt; wir senden Ihnen den Dashboard-Link, sobald wir Ihre Zahlung bestätigt haben.",
+    "payButton": "Bezahlen & Zugang erhalten",
+    "placeOrderButton": "Bestellung aufgeben",
+    "errName": "Bitte geben Sie Ihren vollständigen Namen ein.",
+    "errEmail": "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
+    "errGeneric": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+    "errTitle": "Wir konnten Ihre Zahlung nicht bestätigen",
+    "offlineTitle": "Bestellung erhalten",
+    "offlineDesc": "Sobald wir Ihre Zahlung bestätigt haben, senden wir Ihnen einen sicheren Link zu Ihrem Dashboard.",
+    "cashInstructions": "Unser Team wird Sie kontaktieren, um Ihre Barzahlung zu vereinbaren.",
+    "cashPayee": "Zahlungsempfänger",
+    "cashContact": "Kontakt",
+    "backHome": "Zurück zur Startseite",
+    "confirming": "Ihre Zahlung wird bestätigt...",
+    "confirmingDesc": "Bitte warten Sie einen Moment, während wir Ihre Zahlung überprüfen.",
+    "successTitle": "Zahlung erfolgreich!",
+    "successDesc": "Prüfen Sie Ihre E-Mails — wir haben Ihnen einen sicheren Link zu Ihrem Dashboard gesendet.",
+    "emailSentTo": "Gesendet an {{email}}",
+    "cancelledNote": "Ihre Zahlung wurde abgebrochen. Sie können es unten erneut versuchen."
   }
 }

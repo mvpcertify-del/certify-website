@@ -19,7 +19,7 @@ This report covers the 7 July client remarks and the follow-up email investigati
 | 2 | Add 3rd header button "Start Your Free Gap Analysis" (different colour) + reword "Simplify your ISO certification" → "Register by your Gmail or Email" | ✅ Done |
 | 3 | Login error "Failed to fetch dynamically imported module" must be resolved | ✅ Done |
 | 4 | ISO 22000 FSMS — food-chain codes A–K with short descriptions; check if in certify.cx | ✅ Done (were missing — now added) |
-| 5 | Verification email not arriving | 🔴 Root cause found — **domain verification pending (client/admin action)** |
+| 5 | Verification email not arriving | ✅ **Solved on 9 July** — see [TASK_REPORT_2026-07-09.md](TASK_REPORT_2026-07-09.md) *(cause was a wrong API key, not the domain)* |
 
 ---
 
@@ -109,7 +109,13 @@ database column added (to be run in Supabase) plus a form field — a follow-up 
 
 ---
 
-## 5. Verification email not arriving 🔴 *(root cause found — action pending)*
+## 5. Verification email not arriving ⚠️ *(superseded — see 9 July report)*
+
+> **Correction (9 July):** the conclusion below turned out to be **wrong**. The domain
+> `mail.certify.cx` **was** fully verified. The real cause was that the `RESEND_API_KEY` belonged
+> to a different Resend account. This is now solved — see
+> [TASK_REPORT_2026-07-09.md](TASK_REPORT_2026-07-09.md). The original text is kept below for
+> the record.
 
 **Reported:** A new user (`auditor@wca-global.com`, and others) did not receive the
 verification email. The app itself shows: *"Your account is created, but we couldn't

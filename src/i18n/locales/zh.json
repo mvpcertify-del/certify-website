@@ -456,7 +456,10 @@
     "moneygramReceiver": "收款人姓名",
     "moneygramCountry": "国家",
     "continueToRegistration": "继续注册",
-    "awaitingVerificationNote": "我们将验证您的转账，并在确认后给您发送邮件。您现在即可完成公司注册。"
+    "awaitingVerificationNote": "我们将验证您的转账，并在确认后给您发送邮件。您现在即可完成公司注册。",
+    "methodCash": "现金",
+    "methodCashDesc": "现金支付——我们的团队将安排收款。",
+    "serverUnavailable": "结账服务器暂时不可用。请稍后再试。"
   },
   "settings": {
     "title": "设置",
@@ -1167,7 +1170,12 @@
       "invoiceItem": "项目",
       "invoiceAmount": "金额",
       "invoiceFooter": "这是由 Certify.cx 生成的估算，并非税务发票。"
-    }
+    },
+    "orgSizeQuestion": "您的组织规模有多大？",
+    "employeesLabel": "员工人数",
+    "employeesIncludedHint": "基础价格已包含前 {{count}} 名",
+    "locationsLabel": "地点数量",
+    "locationsIncludedHint": "基础价格已包含第一个 {{count}}"
   },
   "mainDash": {
     "title": "Main Dashboard [DRAFT]",
@@ -1196,5 +1204,39 @@
     "type": "Type [DRAFT]",
     "date": "Date [DRAFT]",
     "noPayments": "No payments recorded yet. [DRAFT]"
+  },
+  "checkout": {
+    "title": "完成购买",
+    "subtitle": "安全付款，立即访问您的仪表板。",
+    "orderSummary": "订单摘要",
+    "package": "套餐",
+    "extraEmployees": "额外员工",
+    "extraLocations": "额外地点",
+    "contactTitle": "您的信息",
+    "fullName": "全名",
+    "email": "工作邮箱",
+    "emailHint": "我们会将仪表板访问链接发送到此邮箱。",
+    "company": "公司名称",
+    "phone": "电话（可选）",
+    "country": "国家/地区",
+    "offlineHint": "您的账户现已创建；一旦确认付款，我们将通过邮件发送仪表板链接。",
+    "payButton": "付款并获取访问权限",
+    "placeOrderButton": "提交订单",
+    "errName": "请输入您的全名。",
+    "errEmail": "请输入有效的电子邮箱地址。",
+    "errGeneric": "出了点问题。请重试。",
+    "errTitle": "我们无法确认您的付款",
+    "offlineTitle": "订单已收到",
+    "offlineDesc": "一旦确认您的付款，我们将通过邮件向您发送访问仪表板的安全链接。",
+    "cashInstructions": "我们的团队将与您联系以安排现金付款。",
+    "cashPayee": "收款人",
+    "cashContact": "联系方式",
+    "backHome": "返回首页",
+    "confirming": "正在确认您的付款……",
+    "confirmingDesc": "请稍候，我们正在核实您的付款。",
+    "successTitle": "付款成功！",
+    "successDesc": "请查收邮件——我们已发送访问仪表板的安全链接。",
+    "emailSentTo": "已发送至 {{email}}",
+    "cancelledNote": "您的付款已取消。您可以在下方重试。"
   }
 }

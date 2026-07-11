@@ -14,15 +14,15 @@ import {
   PAYMENT_METHODS,
   isOfflineMethod,
   BANK_TRANSFER_DETAILS,
-  MONEYGRAM_DETAILS,
+  CASH_DETAILS,
 } from '../../config/paymentMethods';
 import {
-  Lock, Shield, CreditCard, Wallet, Send, Landmark, CheckCircle2,
+  Lock, Shield, CreditCard, Banknote, Landmark, CheckCircle2,
   Sparkles, Tag, Plus, Minus, Users, MapPin, Copy, ArrowRight,
 } from 'lucide-react';
 
 // Maps the icon name stored in paymentMethods config to a lucide component.
-const METHOD_ICONS = { CreditCard, Wallet, Send, Landmark };
+const METHOD_ICONS = { CreditCard, Banknote, Landmark };
 
 export default function PaymentPlaceholder() {
   const { applicationId } = useParams();
@@ -284,8 +284,8 @@ export default function PaymentPlaceholder() {
           { label: t('payment.bankSwift'), value: BANK_TRANSFER_DETAILS.swift, copy: true },
         ]
       : [
-          { label: t('payment.moneygramReceiver'), value: MONEYGRAM_DETAILS.receiverName },
-          { label: t('payment.moneygramCountry'), value: MONEYGRAM_DETAILS.country },
+          { label: t('checkout.cashPayee'), value: CASH_DETAILS.payee },
+          { label: t('checkout.cashContact'), value: CASH_DETAILS.contact, copy: true },
         ];
 
     return (

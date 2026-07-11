@@ -500,7 +500,7 @@ export default function ApplicationDetails() {
               <div className="detail-item"><CreditCard size={16} className="detail-icon" /><div>
                 <label>{t('admin.paymentMethod')}</label>
                 <p>
-                  {{ card: t('payment.methodCard'), paypal: t('payment.methodPaypal'), moneygram: t('payment.methodMoneygram'), bank_transfer: t('payment.methodBankTransfer') }[application.payment_method] || application.payment_method}
+                  {{ card: t('payment.methodCard'), cash: t('payment.methodCash'), paypal: t('payment.methodPaypal'), moneygram: t('payment.methodMoneygram'), bank_transfer: t('payment.methodBankTransfer') }[application.payment_method] || application.payment_method}
                   {application.payment_status && (
                     <span style={{ marginLeft: 8, fontSize: '0.72rem', fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: application.payment_status === 'verified' ? '#dcfce7' : application.payment_status === 'awaiting_verification' ? '#fef3c7' : '#e2e8f0', color: application.payment_status === 'verified' ? '#166534' : application.payment_status === 'awaiting_verification' ? '#92400e' : '#475569' }}>
                       {t(`admin.paymentStatus_${application.payment_status}`)}

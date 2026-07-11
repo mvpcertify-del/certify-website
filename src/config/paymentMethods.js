@@ -1,19 +1,20 @@
 // -------------------------------------------------------
 // Certify.cx — Payment Methods
 //
-// The four payment methods offered at checkout. Two are processed online
-// through Stripe (card, PayPal); two are offline/manual (MoneyGram, bank
-// transfer) where the buyer transfers funds out-of-band and an admin
-// verifies receipt before the application proceeds.
+// The three payment methods offered at checkout. One is processed online
+// through Stripe (card); two are offline/manual (cash, bank transfer) where
+// the buyer pays out-of-band and an admin verifies receipt before the
+// certification proceeds and the buyer is granted dashboard access.
 //
 //   online  → api/checkout.js creates a Stripe Checkout session whose
 //             payment_method_types is set from `stripeMethod`.
 //   offline → no Stripe session; the order is persisted with
 //             payment_status='awaiting_verification' and the buyer is shown
-//             the transfer instructions below.
+//             the instructions below. Dashboard access (the magic-link email)
+//             is issued only once an admin confirms the payment.
 //
 // Labels/descriptions are i18n keys resolved with t() in the UI — the raw
-// account details (IBAN, MoneyGram receiver) are NOT translated.
+// account details (IBAN, cash office) are NOT translated.
 // -------------------------------------------------------
 
 export const PAYMENT_METHODS = [
@@ -26,19 +27,11 @@ export const PAYMENT_METHODS = [
     descKey: 'payment.methodCardDesc',
   },
   {
-    id: 'paypal',
-    type: 'online',
-    stripeMethod: 'paypal',
-    icon: 'Wallet',
-    labelKey: 'payment.methodPaypal',
-    descKey: 'payment.methodPaypalDesc',
-  },
-  {
-    id: 'moneygram',
+    id: 'cash',
     type: 'offline',
-    icon: 'Send',
-    labelKey: 'payment.methodMoneygram',
-    descKey: 'payment.methodMoneygramDesc',
+    icon: 'Banknote',
+    labelKey: 'payment.methodCash',
+    descKey: 'payment.methodCashDesc',
   },
   {
     id: 'bank_transfer',
@@ -48,6 +41,10 @@ export const PAYMENT_METHODS = [
     descKey: 'payment.methodBankTransferDesc',
   },
 ];
+
+// Canonical list of accepted method ids — used by api/checkout.js to reject
+// anything unrecognized before it reaches the DB or Stripe.
+export const PAYMENT_METHOD_IDS = PAYMENT_METHODS.map(m => m.id);
 
 export const ONLINE_METHOD_IDS = PAYMENT_METHODS.filter(m => m.type === 'online').map(m => m.id);
 export const OFFLINE_METHOD_IDS = PAYMENT_METHODS.filter(m => m.type === 'offline').map(m => m.id);
@@ -68,11 +65,11 @@ export function stripeMethodTypesFor(id) {
 }
 
 // -------------------------------------------------------
-// Offline transfer details shown to the buyer.
+// Offline payment details shown to the buyer.
 //
 // TODO(client): replace these placeholders with the real beneficiary
-// account details before going live. The IBAN and MoneyGram receiver name
-// were not provided yet (client wrote "IBAN xxxxxxxxxxxxxxxxx").
+// account details before going live. The IBAN and cash-office contact were
+// not provided yet (client wrote "IBAN xxxxxxxxxxxxxxxxx").
 // -------------------------------------------------------
 export const BANK_TRANSFER_DETAILS = {
   beneficiary: 'Certify CX FZ-LLC',          // TODO: confirm legal beneficiary name
@@ -82,8 +79,8 @@ export const BANK_TRANSFER_DETAILS = {
   currency: 'USD',
 };
 
-export const MONEYGRAM_DETAILS = {
-  receiverName: 'Certify CX FZ-LLC',          // TODO: confirm receiver name
-  country: 'United Arab Emirates',            // TODO
-  reference: 'Use your Order ID as the transfer reference',
+export const CASH_DETAILS = {
+  payee: 'Certify CX FZ-LLC',                 // TODO: confirm payee name
+  contact: 'support@certify.cx',              // TODO: cash-payment coordinator contact
+  note: 'Our team will contact you to arrange cash collection.',
 };

@@ -1,7 +1,12 @@
+import crypto from 'node:crypto';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { computeTotal } from '../src/utils/pricing.js';
-import { isOfflineMethod, stripeMethodTypesFor } from '../src/config/paymentMethods.js';
+import { getIsoBySlug } from '../src/utils/isoCatalog.js';
+import { isOfflineMethod, stripeMethodTypesFor, PAYMENT_METHOD_IDS } from '../src/config/paymentMethods.js';
+import { getRegionFromCountry } from '../src/utils/roles.js';
+import { sendVerificationEmail } from './_sendVerificationEmail.js';
+import { notifyAdmins } from './_notifyAdmins.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2023-10-16',
@@ -106,16 +111,277 @@ async function validateCouponHandler(req, res) {
   });
 }
 
+// -------------------------------------------------------
+// Pay-first (guest) checkout helpers
+// -------------------------------------------------------
+const PACKAGE_LABELS = { bronze: 'Bronze', silver: 'Silver', gold: 'Gold', standard: 'Silver', premium: 'Gold' };
+
+function randomPassword() {
+  // The buyer never uses this — access is granted via a magic link. It only
+  // needs to be strong enough that nobody can guess it before the account is
+  // (a) approved and (b) reachable by password at all.
+  return crypto.randomBytes(18).toString('base64url') + 'Aa1!';
+}
+
+function isValidEmail(email) {
+  return typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+}
+
+// Look up an active, non-expired, non-exhausted coupon by code. Returns the
+// row or null. Shared by the guest and logged-in paths.
+async function resolveCoupon(couponCode) {
+  if (!couponCode) return null;
+  const { data: c } = await supabaseAdmin
+    .from('discount_coupons')
+    .select('*')
+    .ilike('code', String(couponCode).trim())
+    .maybeSingle();
+  if (c && c.is_active) {
+    const exp = c.expires_at ? new Date(c.expires_at) : null;
+    const capped = c.max_redemptions != null && (c.redemption_count || 0) >= c.max_redemptions;
+    if (!capped && (!exp || exp > new Date())) return c;
+  }
+  return null;
+}
+
+// ---- Anonymous "pay first, register after" checkout ----
+// Creates (or reuses) the buyer's client account AT the payment step, records
+// the order, then either opens Stripe (card) or returns offline instructions
+// (cash / bank). No signup gate and no pre-purchase email verification — the
+// account is held at approval_status='pending' until payment is confirmed.
+async function guestCheckoutHandler(req, res) {
+  try {
+    const {
+      isoName, // ISO slug (e.g. 'iso-9001')
+      tier = 'bronze',
+      employeeBands = 0,
+      additionalLocations = 0,
+      paymentMethod = 'card',
+      couponCode,
+      contact = {},
+    } = req.body || {};
+
+    if (!PAYMENT_METHOD_IDS.includes(paymentMethod)) {
+      return res.status(400).json({ error: 'Invalid payment method' });
+    }
+
+    const name = String(contact.name || '').trim();
+    const email = String(contact.email || '').trim().toLowerCase();
+    if (!name) return res.status(400).json({ error: 'Please enter your full name.' });
+    if (!isValidEmail(email)) return res.status(400).json({ error: 'Please enter a valid email address.' });
+
+    const company_name = contact.company ? String(contact.company).trim() : null;
+    const phone = contact.phone ? String(contact.phone).trim() : null;
+    const country = contact.country ? String(contact.country).trim() : null;
+    const region = country ? (getRegionFromCountry(country) || null) : null;
+
+    // ---- Price (recomputed server-side; never trust the client) ----
+    const totals = computeTotal({ standardSlug: isoName, tier, employeeBands, locations: additionalLocations });
+    const coupon = await resolveCoupon(couponCode);
+    const couponPct = coupon ? Number(coupon.discount_percent) : 0;
+    const finalPrice = Math.round(totals.subtotal * (1 - couponPct / 100) * 100) / 100;
+
+    // ---- 1. Create or reuse the client account ----
+    // New buyers are created approval_status='pending' so nobody can log in
+    // (password OR reset-password) until payment is confirmed. Confirmation
+    // flips them to 'approved' and emails a one-click dashboard magic link.
+    // email_confirm:true suppresses Supabase's own verify email — this flow
+    // never sends a pre-purchase verification email.
+    let userId = null;
+    let isNewUser = false;
+    const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password: randomPassword(),
+      email_confirm: true,
+      user_metadata: {
+        name, role: 'client', company_name, country, region,
+        stakeholder_type: 'client', approval_status: 'pending',
+      },
+    });
+    if (created?.user) {
+      userId = created.user.id;
+      isNewUser = true;
+    } else {
+      // Email already registered → reuse the existing account (a returning
+      // buyer purchasing another certification). Look the id up via profiles.
+      const { data: existing } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .ilike('email', email)
+        .maybeSingle();
+      if (existing?.id) {
+        userId = existing.id;
+      } else {
+        console.error('guest-checkout createUser failed:', createErr);
+        return res.status(400).json({ error: createErr?.message || 'Could not create your account. Please try logging in instead.' });
+      }
+    }
+
+    // ---- 2. Upsert profile (do NOT downgrade an already-approved returning client) ----
+    const profileRow = {
+      id: userId,
+      email,
+      full_name: name,
+      role: 'client',
+      company_name,
+      region,
+      stakeholder_type: 'client',
+      ...(phone ? { phone } : {}),
+      ...(isNewUser ? { approval_status: 'pending' } : {}),
+    };
+    await supabaseAdmin.from('profiles').upsert(profileRow, { onConflict: 'id' });
+
+    // ---- 3. Create the application (company registration completed post-payment) ----
+    const selectedPackage = PACKAGE_LABELS[String(tier).toLowerCase()] || 'Bronze';
+    const recommendedIso = getIsoBySlug(isoName)?.code || isoName || 'ISO 9001:2015';
+    const offline = isOfflineMethod(paymentMethod);
+    const { data: appRow, error: appErr } = await supabaseAdmin
+      .from('applications')
+      .insert({
+        client_id: userId,
+        status: 'awaiting_registration',
+        selected_package: selectedPackage,
+        recommended_iso: recommendedIso,
+        additional_employee_bands: Math.max(0, Math.floor(Number(employeeBands) || 0)),
+        additional_locations: Math.max(0, Math.floor(Number(additionalLocations) || 0)),
+        total_amount: finalPrice,
+        payment_method: paymentMethod,
+        payment_status: offline ? 'awaiting_verification' : 'pending',
+        ...(coupon ? { coupon_code: coupon.code } : {}),
+      })
+      .select('id')
+      .single();
+    if (appErr || !appRow?.id) {
+      console.error('guest-checkout application insert failed:', appErr);
+      return res.status(500).json({ error: 'Could not record your order. Please try again.' });
+    }
+    const applicationId = appRow.id;
+
+    // Alert admins to the new order/lead (best-effort).
+    notifyAdmins(supabaseAdmin, {
+      title: offline ? 'New order (awaiting payment)' : 'New order (card checkout)',
+      message: `${name} (${email})${company_name ? ` — ${company_name}` : ''} started ${selectedPackage} · ${recommendedIso} · $${finalPrice}.`,
+      region: region || null,
+    }).catch(() => {});
+
+    // ---- 4a. Offline (cash / bank) → no Stripe. Access is issued only after
+    // an admin verifies the payment, so we do NOT email a magic link here. ----
+    if (offline) {
+      return res.status(200).json({ offline: true, paymentMethod, amount: finalPrice, applicationId });
+    }
+
+    // ---- 4b. Card → Stripe Checkout session ----
+    const baseUrl = process.env.VITE_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://certify.cx');
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: stripeMethodTypesFor(paymentMethod),
+      line_items: [{
+        price_data: {
+          currency: 'usd',
+          product_data: { name: `${recommendedIso} - ${selectedPackage} Package`, description: 'One-Time Payment' },
+          unit_amount: Math.round(finalPrice * 100),
+        },
+        quantity: 1,
+      }],
+      mode: 'payment',
+      customer_email: email,
+      allow_promotion_codes: true,
+      // {CHECKOUT_SESSION_ID} is verified server-side on the success page before
+      // we unlock the account, so this redirect cannot be forged.
+      success_url: `${baseUrl}/checkout/success?app=${applicationId}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/checkout?tier=${encodeURIComponent(tier)}&iso=${encodeURIComponent(isoName)}&cancelled=1`,
+      metadata: { applicationId, clientId: userId, guest: 'true', paymentMethod, couponCode: coupon?.code || '', discountPct: String(couponPct) },
+    });
+
+    return res.status(200).json({ url: session.url });
+  } catch (error) {
+    console.error('guest-checkout error:', error);
+    return res.status(500).json({ error: error.message || 'Internal Server Error' });
+  }
+}
+
+// ---- Confirm a guest card payment (called by the public success page) ----
+// Unauthenticated by necessity (the buyer has no session yet), so it is made
+// safe by verifying the Stripe session server-side: only a session Stripe
+// reports as paid AND whose metadata points at this application can unlock it.
+async function confirmGuestPaymentHandler(req, res) {
+  try {
+    const { applicationId, sessionId } = req.body || {};
+    if (!applicationId || !sessionId) {
+      return res.status(400).json({ error: 'Missing order or session reference' });
+    }
+
+    let session;
+    try {
+      session = await stripe.checkout.sessions.retrieve(sessionId);
+    } catch {
+      return res.status(400).json({ error: 'Invalid payment session' });
+    }
+    if (!session || session.payment_status !== 'paid' || session.metadata?.applicationId !== String(applicationId)) {
+      return res.status(402).json({ error: 'Payment not confirmed' });
+    }
+
+    const { data: app } = await supabaseAdmin
+      .from('applications')
+      .select('id, client_id, payment_status')
+      .eq('id', applicationId)
+      .maybeSingle();
+    if (!app) return res.status(404).json({ error: 'Order not found' });
+
+    const alreadyPaid = app.payment_status === 'paid' || app.payment_status === 'verified';
+
+    if (!alreadyPaid) {
+      await supabaseAdmin.from('applications').update({ payment_status: 'paid' }).eq('id', applicationId);
+    }
+    await supabaseAdmin.from('profiles').update({ approval_status: 'approved' }).eq('id', app.client_id);
+
+    // Look up the buyer's email/name for the magic-link email.
+    let email = null, name = null;
+    const { data: prof } = await supabaseAdmin
+      .from('profiles').select('email, full_name').eq('id', app.client_id).maybeSingle();
+    email = prof?.email || null;
+    name = prof?.full_name || null;
+    if (!email) {
+      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(app.client_id);
+      email = authUser?.user?.email || null;
+    }
+
+    // Email the one-click dashboard magic link only on the first confirmation.
+    let emailSent = false;
+    if (email && !alreadyPaid) {
+      const r = await sendVerificationEmail({
+        supabaseAdmin, email, name, linkType: 'magiclink', redirectPath: '/client/dashboard',
+      });
+      emailSent = !!r.ok;
+      if (!r.ok) console.error('confirm-guest-payment: magic link email failed', r);
+    }
+
+    return res.status(200).json({ ok: true, emailSent, email });
+  } catch (error) {
+    console.error('confirm-guest-payment error:', error);
+    return res.status(500).json({ error: error.message || 'Internal Server Error' });
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  // Route on the `action` field. The validate-coupon path used to live in
-  // its own api/ file but was merged here to stay under the Vercel Hobby
-  // 12-function limit.
+  // Route on the `action` field. These sub-routes used to warrant their own
+  // api/ files but are merged here to stay under the Vercel Hobby 12-function
+  // limit.
   if (req.body?.action === 'validate-coupon') {
     return validateCouponHandler(req, res);
+  }
+  // Pay-first flow: an anonymous buyer creates their account AT the payment
+  // step (no signup gate, no pre-purchase email verification).
+  if (req.body?.action === 'guest-checkout') {
+    return guestCheckoutHandler(req, res);
+  }
+  // Called by the public /checkout success page after Stripe redirects back.
+  // Verifies the Stripe session server-side, then unlocks the account.
+  if (req.body?.action === 'confirm-guest-payment') {
+    return confirmGuestPaymentHandler(req, res);
   }
 
   try {
@@ -133,8 +399,7 @@ export default async function handler(req, res) {
     // Reject unknown payment methods before they reach the DB or Stripe. The
     // config helpers fail safe (unknown → online/card), so without this an
     // arbitrary string would be persisted into applications.payment_method.
-    const VALID_PAYMENT_METHODS = ['card', 'paypal', 'moneygram', 'bank_transfer'];
-    if (!VALID_PAYMENT_METHODS.includes(paymentMethod)) {
+    if (!PAYMENT_METHOD_IDS.includes(paymentMethod)) {
       return res.status(400).json({ error: 'Invalid payment method' });
     }
 

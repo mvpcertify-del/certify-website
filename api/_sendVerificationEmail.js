@@ -25,19 +25,23 @@ const APP_PUBLIC_URL = process.env.APP_PUBLIC_URL || '';
  * @param {'signup'|'magiclink'} [args.linkType]  Defaults to 'signup' if a
  *   password is supplied, 'magiclink' otherwise. Use 'magiclink' for resend
  *   on an already-created (but unconfirmed) user.
+ * @param {string} [args.redirectPath]  Path the verify link lands on after it
+ *   confirms + signs the user in. Defaults to '/login'. Pass '/client/dashboard'
+ *   for the pay-first flow so a paid buyer goes straight to their dashboard.
  * @returns {Promise<{ ok: true } | { ok: false, reason: string, detail?: string }>}
  */
-export async function sendVerificationEmail({ supabaseAdmin, email, password, name, linkType }) {
+export async function sendVerificationEmail({ supabaseAdmin, email, password, name, linkType, redirectPath }) {
   if (!RESEND_API_KEY || !RESEND_FROM_EMAIL) {
     return { ok: false, reason: 'config', detail: 'RESEND_API_KEY or RESEND_FROM_EMAIL not set' };
   }
 
   const type = linkType || (password ? 'signup' : 'magiclink');
+  const safePath = `/${String(redirectPath || 'login').replace(/^\/+/, '')}`;
   const linkOpts = {
     type,
     email,
     options: {
-      redirectTo: `${APP_PUBLIC_URL.replace(/\/$/, '')}/login`,
+      redirectTo: `${APP_PUBLIC_URL.replace(/\/$/, '')}${safePath}`,
     },
   };
   if (type === 'signup') {

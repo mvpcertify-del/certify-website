@@ -35,7 +35,10 @@ const AuthLayout = lazy(() => import('./components/layout/AuthLayout'));
 // Public Pages
 const LandingPage = lazy(() => import('./pages/landing/LandingPage'));
 const PublicGapAnalysis = lazy(() => import('./pages/public/PublicGapAnalysis'));
-const StartCheckout = lazy(() => import('./pages/public/StartCheckout'));
+// Public pay-first checkout (no signup gate). Replaces the old /start-checkout
+// auth gate — buyers create their account AT payment. /start-checkout is kept
+// as an alias so older shared links keep working.
+const Checkout = lazy(() => import('./pages/public/Checkout'));
 const PrivacyPolicy = lazy(() => import('./pages/legal/PrivacyPolicy'));
 const TermsOfService = lazy(() => import('./pages/legal/TermsOfService'));
 
@@ -125,8 +128,12 @@ function AppRoutes() {
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />
 
-          {/* ---- Auth gate before paid checkout (Google or email) ---- */}
-          <Route path="/start-checkout" element={<StartCheckout />} />
+          {/* ---- Public pay-first checkout (no signup gate) ---- */}
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/checkout/success" element={<Checkout />} />
+          {/* Alias: old links that pointed at the removed auth gate now land on
+              the new frictionless checkout. */}
+          <Route path="/start-checkout" element={<Checkout />} />
 
           {/* ---- Auth Routes ---- */}
           <Route element={<AuthLayout />}>

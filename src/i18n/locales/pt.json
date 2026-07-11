@@ -456,7 +456,10 @@
     "moneygramReceiver": "Nome do destinatário",
     "moneygramCountry": "País",
     "continueToRegistration": "Continuar para o Cadastro",
-    "awaitingVerificationNote": "Verificaremos sua transferência e enviaremos um e-mail assim que ela for confirmada. Você já pode concluir o cadastro da sua empresa agora."
+    "awaitingVerificationNote": "Verificaremos sua transferência e enviaremos um e-mail assim que ela for confirmada. Você já pode concluir o cadastro da sua empresa agora.",
+    "methodCash": "Dinheiro",
+    "methodCashDesc": "Pague em dinheiro — nossa equipe combinará a coleta.",
+    "serverUnavailable": "O servidor de pagamento está temporariamente indisponível. Tente novamente em instantes."
   },
   "settings": {
     "title": "Configurações",
@@ -1167,7 +1170,12 @@
       "invoiceItem": "Item",
       "invoiceAmount": "Valor",
       "invoiceFooter": "Esta é uma estimativa gerada pela Certify.cx e não é uma fatura fiscal."
-    }
+    },
+    "orgSizeQuestion": "Qual é o tamanho da sua organização?",
+    "employeesLabel": "Número de funcionários",
+    "employeesIncludedHint": "Os primeiros {{count}} incluídos no preço base",
+    "locationsLabel": "Número de locais",
+    "locationsIncludedHint": "O primeiro {{count}} incluído no preço base"
   },
   "mainDash": {
     "title": "Main Dashboard [DRAFT]",
@@ -1196,5 +1204,39 @@
     "type": "Type [DRAFT]",
     "date": "Date [DRAFT]",
     "noPayments": "No payments recorded yet. [DRAFT]"
+  },
+  "checkout": {
+    "title": "Conclua sua compra",
+    "subtitle": "Pague com segurança e tenha acesso imediato ao seu painel.",
+    "orderSummary": "Resumo do pedido",
+    "package": "pacote",
+    "extraEmployees": "Funcionários adicionais",
+    "extraLocations": "Locais adicionais",
+    "contactTitle": "Seus dados",
+    "fullName": "Nome completo",
+    "email": "E-mail comercial",
+    "emailHint": "Enviaremos o link de acesso ao seu painel para este e-mail.",
+    "company": "Nome da empresa",
+    "phone": "Telefone (opcional)",
+    "country": "País",
+    "offlineHint": "Sua conta é criada agora; enviaremos o link do seu painel assim que confirmarmos seu pagamento.",
+    "payButton": "Pagar e acessar",
+    "placeOrderButton": "Fazer pedido",
+    "errName": "Insira seu nome completo.",
+    "errEmail": "Insira um endereço de e-mail válido.",
+    "errGeneric": "Algo deu errado. Tente novamente.",
+    "errTitle": "Não conseguimos confirmar seu pagamento",
+    "offlineTitle": "Pedido recebido",
+    "offlineDesc": "Assim que confirmarmos seu pagamento, enviaremos um link seguro para acessar seu painel.",
+    "cashInstructions": "Nossa equipe entrará em contato para combinar o pagamento em dinheiro.",
+    "cashPayee": "Beneficiário",
+    "cashContact": "Contato",
+    "backHome": "Voltar ao início",
+    "confirming": "Confirmando seu pagamento...",
+    "confirmingDesc": "Aguarde um momento enquanto verificamos seu pagamento.",
+    "successTitle": "Pagamento realizado com sucesso!",
+    "successDesc": "Verifique seu e-mail — enviamos um link seguro para acessar seu painel.",
+    "emailSentTo": "Enviado para {{email}}",
+    "cancelledNote": "Seu pagamento foi cancelado. Você pode tentar novamente abaixo."
   }
 }

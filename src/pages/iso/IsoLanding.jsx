@@ -11,7 +11,6 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROLES } from '../../utils/roles';
 import PricingTiers from '../../components/pricing/PricingTiers';
-import PricingCalculator from '../../components/pricing/PricingCalculator';
 import LanguageSwitcher from '../../components/LanguageSwitcher';
 import './IsoLanding.css';
 
@@ -73,13 +72,12 @@ export default function IsoLanding() {
     // Logged-in client: jump straight into the payment-bootstrap route
     // (stub application + Stripe checkout). Detailed registration happens
     // AFTER payment via /client/apply/:applicationId.
-    // Anyone else: send through the lightweight /start-checkout auth gate so
-    // they can pick Google/email at the moment they decide to pay.
+    // Anyone else: go straight to the public pay-first checkout — no signup
+    // gate before payment.
     if (user?.role === ROLES.CLIENT) {
       navigate(`/client/start-payment?tier=silver&iso=${encodeURIComponent(config.slug)}`);
     } else {
-      try { localStorage.setItem('certifycx.preselectedIso', config.code); } catch { /* ignore */ }
-      navigate(`/start-checkout?tier=silver&iso=${encodeURIComponent(config.slug)}`);
+      navigate(`/checkout?tier=silver&iso=${encodeURIComponent(config.slug)}`);
     }
   };
 
@@ -168,18 +166,11 @@ export default function IsoLanding() {
           </div>
         </section>
 
-        {/* Pricing Tiers — Free / Standard / Premium (priced per standard). */}
+        {/* Pricing Tiers — Bronze / Silver / Gold (priced per standard), with a
+            single real-headcount org-size input. The separate, redundant
+            Pricing Calculator was removed to end the "two prices" confusion. */}
         <section className="iso-landing__section">
           <PricingTiers standardSlug={config.slug} />
-        </section>
-
-        {/* Pricing Calculator — employee/location surcharges + invoice. */}
-        <section className="iso-landing__section">
-          <PricingCalculator
-            standardSlug={config.slug}
-            standardCode={config.code}
-            accent={config.color}
-          />
         </section>
 
         {/* Payment Info */}

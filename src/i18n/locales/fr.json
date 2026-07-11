@@ -456,7 +456,10 @@
     "moneygramReceiver": "Nom du destinataire",
     "moneygramCountry": "Pays",
     "continueToRegistration": "Continuer vers l'inscription",
-    "awaitingVerificationNote": "Nous vérifierons votre virement et vous enverrons un e-mail une fois confirmé. Vous pouvez compléter l'inscription de votre entreprise dès maintenant."
+    "awaitingVerificationNote": "Nous vérifierons votre virement et vous enverrons un e-mail une fois confirmé. Vous pouvez compléter l'inscription de votre entreprise dès maintenant.",
+    "methodCash": "Espèces",
+    "methodCashDesc": "Payez en espèces — notre équipe organisera l’encaissement.",
+    "serverUnavailable": "Le serveur de paiement est temporairement indisponible. Veuillez réessayer dans un instant."
   },
   "settings": {
     "title": "Paramètres",
@@ -1167,7 +1170,12 @@
       "invoiceItem": "Article",
       "invoiceAmount": "Montant",
       "invoiceFooter": "Ceci est une estimation générée par Certify.cx et non une facture fiscale."
-    }
+    },
+    "orgSizeQuestion": "Quelle est la taille de votre organisation ?",
+    "employeesLabel": "Nombre d’employés",
+    "employeesIncludedHint": "Les {{count}} premiers inclus dans le prix de base",
+    "locationsLabel": "Nombre de sites",
+    "locationsIncludedHint": "Le premier {{count}} inclus dans le prix de base"
   },
   "mainDash": {
     "title": "Main Dashboard [DRAFT]",
@@ -1196,5 +1204,39 @@
     "type": "Type [DRAFT]",
     "date": "Date [DRAFT]",
     "noPayments": "No payments recorded yet. [DRAFT]"
+  },
+  "checkout": {
+    "title": "Finalisez votre achat",
+    "subtitle": "Payez en toute sécurité et accédez immédiatement à votre tableau de bord.",
+    "orderSummary": "Récapitulatif de la commande",
+    "package": "forfait",
+    "extraEmployees": "Employés supplémentaires",
+    "extraLocations": "Sites supplémentaires",
+    "contactTitle": "Vos coordonnées",
+    "fullName": "Nom complet",
+    "email": "E-mail professionnel",
+    "emailHint": "Nous vous enverrons ici le lien d’accès à votre tableau de bord.",
+    "company": "Nom de l’entreprise",
+    "phone": "Téléphone (facultatif)",
+    "country": "Pays",
+    "offlineHint": "Votre compte est créé maintenant ; nous vous enverrons le lien vers votre tableau de bord dès confirmation de votre paiement.",
+    "payButton": "Payer et accéder",
+    "placeOrderButton": "Passer la commande",
+    "errName": "Veuillez saisir votre nom complet.",
+    "errEmail": "Veuillez saisir une adresse e-mail valide.",
+    "errGeneric": "Une erreur s’est produite. Veuillez réessayer.",
+    "errTitle": "Nous n’avons pas pu confirmer votre paiement",
+    "offlineTitle": "Commande reçue",
+    "offlineDesc": "Dès confirmation de votre paiement, nous vous enverrons un lien sécurisé pour accéder à votre tableau de bord.",
+    "cashInstructions": "Notre équipe vous contactera pour organiser votre paiement en espèces.",
+    "cashPayee": "Bénéficiaire",
+    "cashContact": "Contact",
+    "backHome": "Retour à l’accueil",
+    "confirming": "Confirmation de votre paiement...",
+    "confirmingDesc": "Veuillez patienter un instant pendant que nous vérifions votre paiement.",
+    "successTitle": "Paiement réussi !",
+    "successDesc": "Consultez votre e-mail : nous vous avons envoyé un lien sécurisé pour accéder à votre tableau de bord.",
+    "emailSentTo": "Envoyé à {{email}}",
+    "cancelledNote": "Votre paiement a été annulé. Vous pouvez réessayer ci-dessous."
   }
 }

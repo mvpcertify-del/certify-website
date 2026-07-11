@@ -137,6 +137,26 @@
   color: var(--color-text-primary);
 }
 
+/* Real-headcount org-size inputs (replaced the abstract band steppers). */
+.pricing-tiers__orgsize-input {
+  width: 96px;
+  flex-shrink: 0;
+  padding: 9px 12px;
+  border-radius: var(--radius-base);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: center;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.pricing-tiers__orgsize-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-light);
+}
+
 .pricing-tiers__grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

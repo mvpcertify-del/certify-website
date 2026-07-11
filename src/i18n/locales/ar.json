@@ -470,7 +470,10 @@
     "moneygramReceiver": "اسم المستلم",
     "moneygramCountry": "الدولة",
     "continueToRegistration": "المتابعة إلى التسجيل",
-    "awaitingVerificationNote": "سنتحقق من تحويلك ونرسل لك بريداً إلكترونياً بمجرد تأكيده. يمكنك إكمال تسجيل شركتك الآن."
+    "awaitingVerificationNote": "سنتحقق من تحويلك ونرسل لك بريداً إلكترونياً بمجرد تأكيده. يمكنك إكمال تسجيل شركتك الآن.",
+    "methodCash": "نقداً",
+    "methodCashDesc": "ادفع نقداً — سيقوم فريقنا بترتيب الاستلام.",
+    "serverUnavailable": "خادم الدفع غير متاح مؤقتاً. يرجى المحاولة مرة أخرى بعد قليل."
   },
   "settings": {
     "title": "الإعدادات",
@@ -1194,7 +1197,12 @@
       "invoiceItem": "البند",
       "invoiceAmount": "المبلغ",
       "invoiceFooter": "هذا تقدير تم إنشاؤه بواسطة Certify.cx وليس فاتورة ضريبية."
-    }
+    },
+    "orgSizeQuestion": "ما حجم مؤسستك؟",
+    "employeesLabel": "عدد الموظفين",
+    "employeesIncludedHint": "أول {{count}} مشمولون في السعر الأساسي",
+    "locationsLabel": "عدد المواقع",
+    "locationsIncludedHint": "أول {{count}} مشمول في السعر الأساسي"
   },
   "mainDash": {
     "title": "Main Dashboard [DRAFT]",
@@ -1223,5 +1231,39 @@
     "type": "Type [DRAFT]",
     "date": "Date [DRAFT]",
     "noPayments": "No payments recorded yet. [DRAFT]"
+  },
+  "checkout": {
+    "title": "أكمل عملية الشراء",
+    "subtitle": "ادفع بأمان واحصل على وصول فوري إلى لوحة التحكم.",
+    "orderSummary": "ملخص الطلب",
+    "package": "الباقة",
+    "extraEmployees": "موظفون إضافيون",
+    "extraLocations": "مواقع إضافية",
+    "contactTitle": "بياناتك",
+    "fullName": "الاسم الكامل",
+    "email": "البريد الإلكتروني للعمل",
+    "emailHint": "سنرسل رابط الوصول إلى لوحة التحكم إلى هذا البريد.",
+    "company": "اسم الشركة",
+    "phone": "الهاتف (اختياري)",
+    "country": "الدولة",
+    "offlineHint": "يتم إنشاء حسابك الآن؛ وسنرسل لك رابط لوحة التحكم بمجرد تأكيد دفعتك.",
+    "payButton": "ادفع واحصل على الوصول",
+    "placeOrderButton": "تأكيد الطلب",
+    "errName": "يرجى إدخال اسمك الكامل.",
+    "errEmail": "يرجى إدخال عنوان بريد إلكتروني صالح.",
+    "errGeneric": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+    "errTitle": "تعذّر تأكيد دفعتك",
+    "offlineTitle": "تم استلام الطلب",
+    "offlineDesc": "بمجرد تأكيد دفعتك، سنرسل لك رابطاً آمناً للوصول إلى لوحة التحكم.",
+    "cashInstructions": "سيتواصل معك فريقنا لترتيب الدفع النقدي.",
+    "cashPayee": "المستفيد",
+    "cashContact": "جهة الاتصال",
+    "backHome": "العودة إلى الصفحة الرئيسية",
+    "confirming": "جارٍ تأكيد دفعتك...",
+    "confirmingDesc": "يرجى الانتظار قليلاً بينما نتحقق من دفعتك.",
+    "successTitle": "تم الدفع بنجاح!",
+    "successDesc": "تحقق من بريدك الإلكتروني — لقد أرسلنا رابطاً آمناً للوصول إلى لوحة التحكم.",
+    "emailSentTo": "أُرسل إلى {{email}}",
+    "cancelledNote": "تم إلغاء دفعتك. يمكنك المحاولة مرة أخرى أدناه."
   }
 }
