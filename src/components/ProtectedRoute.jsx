@@ -1,6 +1,7 @@
+import { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { canAccessRoute, hasPermission, hasAnyPermission, PERMISSIONS } from '../utils/roles';
+import { canAccessRoute, hasPermission, hasAnyPermission, PERMISSIONS, ROLES } from '../utils/roles';
 import { Loader2, ShieldX } from 'lucide-react';
 import './ProtectedRoute.css';
 
@@ -24,8 +25,22 @@ export default function ProtectedRoute({
   requiredPermissions,
   requireAll = false,
 }) {
-  const { isAuthenticated, user, loading } = useAuth();
+  const { isAuthenticated, user, loading, logout } = useAuth();
   const location = useLocation();
+
+  // A client whose account is explicitly pending/rejected must never reach a
+  // dashboard, even if they somehow hold a transient session (e.g. the
+  // password-recovery window on a pay-first account that hasn't paid yet).
+  // Approval is otherwise enforced only inside login(); this closes that gap
+  // at the route layer. null/undefined/'approved' → allowed, so existing
+  // clients are unaffected.
+  const blockedClient =
+    isAuthenticated && user?.role === ROLES.CLIENT &&
+    (user?.approval_status === 'pending' || user?.approval_status === 'rejected');
+
+  useEffect(() => {
+    if (blockedClient) logout();
+  }, [blockedClient, logout]);
 
   // ---- Loading state ----
   if (loading) {
@@ -40,6 +55,12 @@ export default function ProtectedRoute({
   // ---- Not authenticated → redirect to login ----
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+  }
+
+  // ---- Pending/rejected client → bounced to login (logout fired above) ----
+  if (blockedClient) {
+    const flag = user?.approval_status === 'rejected' ? 'rejected' : 'pending';
+    return <Navigate to={`/login?${flag}=1`} replace />;
   }
 
   // ---- Role gate ----

@@ -7,6 +7,7 @@ import { isOfflineMethod, stripeMethodTypesFor, PAYMENT_METHOD_IDS } from '../sr
 import { getRegionFromCountry } from '../src/utils/roles.js';
 import { sendVerificationEmail } from './_sendVerificationEmail.js';
 import { notifyAdmins } from './_notifyAdmins.js';
+import { verifyAdmin } from './_verifyAdmin.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2023-10-16',
@@ -127,6 +128,40 @@ function isValidEmail(email) {
   return typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
+// Record a coupon redemption and increment its counter. Called ONLY after a
+// payment is actually confirmed (card success / admin offline verify) so an
+// abandoned checkout never burns a single-use code. Best-effort + idempotent
+// per order (callers gate on the first confirmation).
+async function burnCoupon(couponCode, { clientId, applicationId, finalAmount }) {
+  if (!couponCode) return;
+  try {
+    const { data: c } = await supabaseAdmin
+      .from('discount_coupons')
+      .select('id, discount_percent, redemption_count')
+      .ilike('code', String(couponCode).trim())
+      .maybeSingle();
+    if (!c) return;
+    // Increment first — this is the anti-abuse guarantee (single-use / cap).
+    await supabaseAdmin
+      .from('discount_coupons')
+      .update({ redemption_count: (c.redemption_count || 0) + 1 })
+      .eq('id', c.id);
+    try {
+      await supabaseAdmin.from('coupon_redemptions').insert({
+        coupon_id: c.id,
+        client_id: clientId || null,
+        application_id: applicationId || null,
+        discount_percent: Number(c.discount_percent),
+        discounted_amount: finalAmount ?? null,
+      });
+    } catch (e) {
+      console.error('coupon redemption record failed (non-blocking):', e);
+    }
+  } catch (e) {
+    console.error('burnCoupon error (non-blocking):', e);
+  }
+}
+
 // Look up an active, non-expired, non-exhausted coupon by code. Returns the
 // row or null. Shared by the guest and logged-in paths.
 async function resolveCoupon(couponCode) {
@@ -145,10 +180,10 @@ async function resolveCoupon(couponCode) {
 }
 
 // ---- Anonymous "pay first, register after" checkout ----
-// Creates (or reuses) the buyer's client account AT the payment step, records
-// the order, then either opens Stripe (card) or returns offline instructions
-// (cash / bank). No signup gate and no pre-purchase email verification — the
-// account is held at approval_status='pending' until payment is confirmed.
+// Creates the buyer's client account AT the payment step, records the order,
+// then either opens Stripe (card) or returns offline instructions (cash /
+// bank). No signup gate and no pre-purchase email verification — the account
+// is held at approval_status='pending' until payment is confirmed.
 async function guestCheckoutHandler(req, res) {
   try {
     const {
@@ -181,14 +216,18 @@ async function guestCheckoutHandler(req, res) {
     const couponPct = coupon ? Number(coupon.discount_percent) : 0;
     const finalPrice = Math.round(totals.subtotal * (1 - couponPct / 100) * 100) / 100;
 
-    // ---- 1. Create or reuse the client account ----
+    // ---- 1. Create the client account ----
     // New buyers are created approval_status='pending' so nobody can log in
     // (password OR reset-password) until payment is confirmed. Confirmation
     // flips them to 'approved' and emails a one-click dashboard magic link.
     // email_confirm:true suppresses Supabase's own verify email — this flow
     // never sends a pre-purchase verification email.
-    let userId = null;
-    let isNewUser = false;
+    //
+    // SECURITY: if the email already exists we deliberately DO NOT reuse or
+    // mutate that account. This endpoint is unauthenticated; reusing an
+    // existing row would let anyone overwrite another user's profile (even an
+    // admin's) just by knowing their email. Returning customers must log in and
+    // purchase from their dashboard instead.
     const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
       email,
       password: randomPassword(),
@@ -198,27 +237,25 @@ async function guestCheckoutHandler(req, res) {
         stakeholder_type: 'client', approval_status: 'pending',
       },
     });
-    if (created?.user) {
-      userId = created.user.id;
-      isNewUser = true;
-    } else {
-      // Email already registered → reuse the existing account (a returning
-      // buyer purchasing another certification). Look the id up via profiles.
-      const { data: existing } = await supabaseAdmin
-        .from('profiles')
-        .select('id')
-        .ilike('email', email)
-        .maybeSingle();
-      if (existing?.id) {
-        userId = existing.id;
-      } else {
-        console.error('guest-checkout createUser failed:', createErr);
-        return res.status(400).json({ error: createErr?.message || 'Could not create your account. Please try logging in instead.' });
+    if (!created?.user) {
+      const msg = String(createErr?.message || '').toLowerCase();
+      const emailTaken =
+        createErr?.code === 'email_exists' ||
+        createErr?.status === 422 ||
+        msg.includes('already') || msg.includes('registered') || msg.includes('exists');
+      if (emailTaken) {
+        return res.status(409).json({
+          code: 'account_exists',
+          error: 'An account with this email already exists. Please log in to complete your purchase.',
+        });
       }
+      console.error('guest-checkout createUser failed:', createErr);
+      return res.status(400).json({ error: createErr?.message || 'Could not create your account. Please try again.' });
     }
+    const userId = created.user.id;
 
-    // ---- 2. Upsert profile (do NOT downgrade an already-approved returning client) ----
-    const profileRow = {
+    // ---- 2. Upsert the fresh profile ----
+    await supabaseAdmin.from('profiles').upsert({
       id: userId,
       email,
       full_name: name,
@@ -226,10 +263,9 @@ async function guestCheckoutHandler(req, res) {
       company_name,
       region,
       stakeholder_type: 'client',
+      approval_status: 'pending',
       ...(phone ? { phone } : {}),
-      ...(isNewUser ? { approval_status: 'pending' } : {}),
-    };
-    await supabaseAdmin.from('profiles').upsert(profileRow, { onConflict: 'id' });
+    }, { onConflict: 'id' });
 
     // ---- 3. Create the application (company registration completed post-payment) ----
     const selectedPackage = PACKAGE_LABELS[String(tier).toLowerCase()] || 'Bronze';
@@ -247,6 +283,7 @@ async function guestCheckoutHandler(req, res) {
         total_amount: finalPrice,
         payment_method: paymentMethod,
         payment_status: offline ? 'awaiting_verification' : 'pending',
+        ...(company_name ? { company_name } : {}),
         ...(coupon ? { coupon_code: coupon.code } : {}),
       })
       .select('id')
@@ -322,7 +359,7 @@ async function confirmGuestPaymentHandler(req, res) {
 
     const { data: app } = await supabaseAdmin
       .from('applications')
-      .select('id, client_id, payment_status')
+      .select('id, client_id, payment_status, coupon_code, total_amount')
       .eq('id', applicationId)
       .maybeSingle();
     if (!app) return res.status(404).json({ error: 'Order not found' });
@@ -331,6 +368,10 @@ async function confirmGuestPaymentHandler(req, res) {
 
     if (!alreadyPaid) {
       await supabaseAdmin.from('applications').update({ payment_status: 'paid' }).eq('id', applicationId);
+      // Burn the coupon now that money has actually arrived (first confirm only).
+      await burnCoupon(app.coupon_code, {
+        clientId: app.client_id, applicationId, finalAmount: app.total_amount,
+      });
     }
     await supabaseAdmin.from('profiles').update({ approval_status: 'approved' }).eq('id', app.client_id);
 
@@ -349,7 +390,7 @@ async function confirmGuestPaymentHandler(req, res) {
     let emailSent = false;
     if (email && !alreadyPaid) {
       const r = await sendVerificationEmail({
-        supabaseAdmin, email, name, linkType: 'magiclink', redirectPath: '/client/dashboard',
+        supabaseAdmin, email, name, linkType: 'magiclink', redirectPath: '/auth/callback',
       });
       emailSent = !!r.ok;
       if (!r.ok) console.error('confirm-guest-payment: magic link email failed', r);
@@ -358,6 +399,62 @@ async function confirmGuestPaymentHandler(req, res) {
     return res.status(200).json({ ok: true, emailSent, email });
   } catch (error) {
     console.error('confirm-guest-payment error:', error);
+    return res.status(500).json({ error: error.message || 'Internal Server Error' });
+  }
+}
+
+// ---- Admin: verify an offline (cash / bank) payment ----
+// Admin-gated (Bearer JWT). Marks the order verified, approves the client, and
+// emails the one-click dashboard magic link — the moment an offline buyer
+// actually gains access. Replaces the old client-side status flip so the
+// approval + access email happen atomically with verification.
+async function verifyOfflinePaymentHandler(req, res) {
+  const auth = await verifyAdmin(req);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+
+  try {
+    const { applicationId } = req.body || {};
+    if (!applicationId) return res.status(400).json({ error: 'Missing application reference' });
+
+    const { data: app } = await supabaseAdmin
+      .from('applications')
+      .select('id, client_id, payment_status, coupon_code, total_amount')
+      .eq('id', applicationId)
+      .maybeSingle();
+    if (!app) return res.status(404).json({ error: 'Order not found' });
+
+    const alreadyVerified = app.payment_status === 'verified' || app.payment_status === 'paid';
+
+    await supabaseAdmin.from('applications').update({ payment_status: 'verified' }).eq('id', applicationId);
+    await supabaseAdmin.from('profiles').update({ approval_status: 'approved' }).eq('id', app.client_id);
+    if (!alreadyVerified) {
+      await burnCoupon(app.coupon_code, {
+        clientId: app.client_id, applicationId, finalAmount: app.total_amount,
+      });
+    }
+
+    // Email the buyer their dashboard access link (only on first verification).
+    let email = null, name = null;
+    const { data: prof } = await supabaseAdmin
+      .from('profiles').select('email, full_name').eq('id', app.client_id).maybeSingle();
+    email = prof?.email || null;
+    name = prof?.full_name || null;
+    if (!email) {
+      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(app.client_id);
+      email = authUser?.user?.email || null;
+    }
+    let emailSent = false;
+    if (email && !alreadyVerified) {
+      const r = await sendVerificationEmail({
+        supabaseAdmin, email, name, linkType: 'magiclink', redirectPath: '/auth/callback',
+      });
+      emailSent = !!r.ok;
+      if (!r.ok) console.error('verify-offline-payment: magic link email failed', r);
+    }
+
+    return res.status(200).json({ ok: true, emailSent });
+  } catch (error) {
+    console.error('verify-offline-payment error:', error);
     return res.status(500).json({ error: error.message || 'Internal Server Error' });
   }
 }
@@ -382,6 +479,11 @@ export default async function handler(req, res) {
   // Verifies the Stripe session server-side, then unlocks the account.
   if (req.body?.action === 'confirm-guest-payment') {
     return confirmGuestPaymentHandler(req, res);
+  }
+  // Admin confirms receipt of an offline (cash / bank) payment: marks the order
+  // verified, approves the client, and emails their dashboard magic link.
+  if (req.body?.action === 'verify-offline-payment') {
+    return verifyOfflinePaymentHandler(req, res);
   }
 
   try {

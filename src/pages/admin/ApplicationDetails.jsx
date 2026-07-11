@@ -218,22 +218,19 @@ export default function ApplicationDetails() {
     } finally { setSaving(false); }
   };
 
-  // Manually confirm receipt of an offline payment (MoneyGram / bank transfer).
-  // Only super/regional admins; flips payment_status from
-  // 'awaiting_verification' to 'verified'.
+  // Manually confirm receipt of an offline payment (cash / bank transfer).
+  // Routed through the service-role endpoint (admin-gated) so it also approves
+  // the client and emails their one-click dashboard access link — the moment a
+  // pay-first offline buyer actually gains access.
   const handleVerifyPayment = async () => {
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('applications')
-        .update({ payment_status: 'verified' })
-        .eq('id', id);
-      if (error) throw error;
+      await apiPost('/api/checkout', { action: 'verify-offline-payment', applicationId: id });
       setApplication(prev => ({ ...prev, payment_status: 'verified' }));
       showToast(t('admin.paymentVerified'));
     } catch (err) {
       console.error('Error verifying payment', err);
-      alert(t('admin.failedUpdateApp'));
+      alert(err.message || t('admin.failedUpdateApp'));
     } finally { setSaving(false); }
   };
 
