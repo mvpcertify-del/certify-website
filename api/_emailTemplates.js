@@ -86,6 +86,17 @@ const layout = ({ title, bodyHtml, preheader }) => `<!DOCTYPE html>
 </body>
 </html>`;
 
+// Escape user-supplied text before interpolating it into email HTML. Used for
+// anything that can originate from an untrusted/unauthenticated request (e.g.
+// the public consultation form and guest-checkout contact details feeding the
+// admin alert), to prevent HTML/link injection into admin inboxes.
+const escapeHtml = (v) => String(v == null ? '' : v)
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+
 const button = (href, label) => `<a href="${href}" class="ccx-btn" style="display:inline-block;box-sizing:border-box;background:${ACCENT};color:#0a1f17;text-decoration:none;padding:13px 26px;border-radius:10px;font-weight:600;font-size:15px;letter-spacing:0.01em;border:1px solid ${ACCENT_HOVER};">${label}</a>`;
 
 const linkFallback = (href) => `
@@ -224,11 +235,13 @@ export function renewalReminderEmail({ name, companyName, isoStandard, certifica
 // request. Plain, no-frills, links straight to the dashboard.
 export function adminAlertEmail({ title, message, actionUrl }) {
   const subject = `[${BRAND_TEXT}] ${title}`;
+  // title/message can carry user-supplied text (consultation form, guest
+  // contact details) — escape before embedding in HTML.
   const html = layout({
     title: subject,
     bodyHtml: `
-      ${heading(title)}
-      ${body(message)}
+      ${heading(escapeHtml(title))}
+      ${body(escapeHtml(message))}
       ${actionUrl ? `<p style="margin:0 0 28px;">${button(actionUrl, 'Open dashboard')}</p>` : ''}
       ${muted(`You're receiving this because you're an administrator on ${BRAND_TEXT}.`)}`,
   });

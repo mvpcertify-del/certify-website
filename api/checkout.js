@@ -456,6 +456,31 @@ async function verifyOfflinePaymentHandler(req, res) {
   }
 }
 
+// Best-effort in-memory throttle for the unauthenticated consultation form.
+// Keyed by client IP + email; bounded to a few requests per window. NOTE: this
+// only protects within a single warm serverless instance — a robust limit needs
+// a shared store (Upstash/Redis) or a captcha, which is the real follow-up.
+const CONSULT_WINDOW_MS = 10 * 60 * 1000;
+const CONSULT_MAX = 3;
+const consultHits = new Map(); // key -> number[] (timestamps)
+
+function consultThrottled(key, nowMs) {
+  const recent = (consultHits.get(key) || []).filter((t) => nowMs - t < CONSULT_WINDOW_MS);
+  if (recent.length >= CONSULT_MAX) {
+    consultHits.set(key, recent);
+    return true;
+  }
+  recent.push(nowMs);
+  consultHits.set(key, recent);
+  // Opportunistic prune so the Map can't grow unbounded on a long-lived instance.
+  if (consultHits.size > 5000) {
+    for (const [k, arr] of consultHits) {
+      if (!arr.some((t) => nowMs - t < CONSULT_WINDOW_MS)) consultHits.delete(k);
+    }
+  }
+  return false;
+}
+
 // Public consultation-request handler. Unauthenticated by design (the buyer
 // hasn't signed up yet). It ONLY alerts admins; it never emails the requester
 // and never accepts a recipient address, so it can't be turned into a mailer.
@@ -474,6 +499,13 @@ async function bookConsultationHandler(req, res) {
 
     if (!name) return res.status(400).json({ error: 'Please enter your name.' });
     if (!isValidEmail(email)) return res.status(400).json({ error: 'Please enter a valid email address.' });
+
+    // Best-effort flood guard (per warm instance). Silently succeeds so a bot
+    // gets no signal, but we skip the admin fan-out once over the limit.
+    const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
+    if (consultThrottled(`${ip}|${email}`, Date.now())) {
+      return res.status(200).json({ success: true });
+    }
 
     const region = null; // no country captured on the consultation form
     const lines = [
