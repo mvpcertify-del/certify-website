@@ -162,7 +162,9 @@
     "footerJoinNetwork": "انضم إلى شبكتنا",
     "footerLegal": "Legal",
     "step4Title": "استلم الشهادة",
-    "step4Desc": "بعد تدقيق ناجح، استلم شهادتك المعترف بها دولياً."
+    "step4Desc": "بعد تدقيق ناجح، استلم شهادتك المعترف بها دولياً.",
+    "getCertifiedNow": "احصل على الشهادة الآن",
+    "freeGapAnalysis": "تحليل الفجوة المجاني"
   },
   "auth": {
     "welcomeBack": "مرحباً بعودتك",

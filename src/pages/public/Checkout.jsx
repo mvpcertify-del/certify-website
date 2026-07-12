@@ -3,7 +3,7 @@ import { Link, useSearchParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Shield, CreditCard, Banknote, Landmark, Lock, CheckCircle2, Copy,
-  ArrowRight, Mail, AlertCircle, MailCheck,
+  ArrowRight, Mail, AlertCircle, MailCheck, Ticket, X, ChevronDown,
 } from 'lucide-react';
 import { computeTotal, PACKAGE_LABEL } from '../../utils/pricing';
 import { getIsoBySlug } from '../../utils/isoCatalog';
@@ -59,6 +59,56 @@ function CheckoutForm() {
   const [error, setError] = useState('');
   const [offlineOrder, setOfflineOrder] = useState(null);
 
+  // Discount code (collapsed by default). Applied client-side for the displayed
+  // total; the server re-validates and re-applies the code authoritatively.
+  const [couponOpen, setCouponOpen] = useState(false);
+  const [couponInput, setCouponInput] = useState('');
+  const [coupon, setCoupon] = useState(null);
+  const [couponError, setCouponError] = useState('');
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
+
+  const discountAmount = coupon ? Math.round(totals.subtotal * coupon.discount_percent) / 100 : 0;
+  const finalTotal = Math.max(0, totals.subtotal - discountAmount);
+  const money = (n) => n.toLocaleString(undefined, { maximumFractionDigits: 2 });
+
+  const validateCoupon = async () => {
+    const code = couponInput.trim();
+    if (!code) return;
+    setValidatingCoupon(true);
+    setCouponError('');
+    try {
+      const r = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'validate-coupon', code }),
+      });
+      const data = await r.json();
+      if (data.valid) {
+        setCoupon(data.coupon);
+        setCouponInput(data.coupon.code);
+      } else {
+        setCoupon(null);
+        setCouponError(
+          data.reason === 'expired' ? t('coupons.expiredCoupon')
+          : data.reason === 'exhausted' ? t('coupons.exhaustedCoupon')
+          : data.reason === 'inactive' ? t('coupons.inactiveCoupon')
+          : t('coupons.invalidCoupon')
+        );
+      }
+    } catch {
+      setCoupon(null);
+      setCouponError(t('coupons.invalidCoupon'));
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  const clearCoupon = () => {
+    setCoupon(null);
+    setCouponInput('');
+    setCouponError('');
+  };
+
   const offlineSelected = isOfflineMethod(paymentMethod);
   const setField = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -79,6 +129,7 @@ function CheckoutForm() {
           employeeBands: staff,
           additionalLocations: locations,
           paymentMethod,
+          couponCode: coupon?.code || null,
           contact: {
             name: form.name.trim(),
             email: form.email.trim(),
@@ -211,10 +262,55 @@ function CheckoutForm() {
                 <span>+${totals.locationSurchargeTotal.toLocaleString()}</span>
               </div>
             )}
+            {coupon && (
+              <div className="checkout__line checkout__line--discount">
+                <span>{t('coupons.discount')} ({coupon.discount_percent}%)</span>
+                <span>−${money(discountAmount)}</span>
+              </div>
+            )}
           </div>
+
+          {/* Discount code — collapsed by default so it never distracts checkout */}
+          <div className="checkout__coupon">
+            {coupon ? (
+              <div className="checkout__coupon-applied">
+                <Ticket size={15} />
+                <span className="checkout__coupon-code">{coupon.code}</span>
+                <span className="checkout__coupon-off">−{coupon.discount_percent}%</span>
+                <button type="button" className="checkout__coupon-remove" onClick={clearCoupon} aria-label={t('common.remove')}>
+                  <X size={15} />
+                </button>
+              </div>
+            ) : couponOpen ? (
+              <div className="checkout__coupon-entry">
+                <input
+                  type="text"
+                  className="checkout__coupon-input"
+                  value={couponInput}
+                  onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                  placeholder={t('coupons.enterCode')}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); validateCoupon(); } }}
+                />
+                <button
+                  type="button"
+                  className="checkout__coupon-apply"
+                  onClick={validateCoupon}
+                  disabled={!couponInput.trim() || validatingCoupon}
+                >
+                  {validatingCoupon ? t('common.processing') : t('coupons.applyCode')}
+                </button>
+              </div>
+            ) : (
+              <button type="button" className="checkout__coupon-toggle" onClick={() => setCouponOpen(true)}>
+                <Ticket size={15} /> {t('coupons.haveCoupon')} <ChevronDown size={15} />
+              </button>
+            )}
+            {couponError && <p className="checkout__coupon-error">{couponError}</p>}
+          </div>
+
           <div className="checkout__total">
             <span>{t('payment.totalAmount')}</span>
-            <strong>${totals.subtotal.toLocaleString()}</strong>
+            <strong>${money(finalTotal)}</strong>
           </div>
           <p className="checkout__summary-note">{t('pricing.disclaimer')}</p>
         </aside>

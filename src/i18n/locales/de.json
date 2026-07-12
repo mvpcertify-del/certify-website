@@ -162,7 +162,9 @@
     "footerJoinNetwork": "Unserem Netzwerk beitreten",
     "footerLegal": "Legal",
     "step4Title": "Zertifizierung erhalten",
-    "step4Desc": "Nach einem erfolgreichen Audit erhalten Sie Ihr international anerkanntes Zertifikat."
+    "step4Desc": "Nach einem erfolgreichen Audit erhalten Sie Ihr international anerkanntes Zertifikat.",
+    "getCertifiedNow": "Get Certified Now",
+    "freeGapAnalysis": "Free Gap Analysis"
   },
   "auth": {
     "welcomeBack": "Willkommen zurück",

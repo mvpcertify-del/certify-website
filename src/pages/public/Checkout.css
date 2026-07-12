@@ -108,6 +108,38 @@
 .checkout__total strong { font-size: 1.7rem; font-weight: 800; color: #0f172a; }
 .checkout__summary-note { margin: 14px 0 0; font-size: 0.72rem; color: #94a3b8; line-height: 1.5; }
 
+/* Discount code — collapsed by default, matches the light summary card. */
+.checkout__line--discount { color: #059669; font-weight: 600; }
+.checkout__coupon { margin-top: 12px; }
+.checkout__coupon-toggle {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: none; border: none; padding: 4px 0; cursor: pointer;
+  font-size: 0.82rem; font-weight: 600; color: #2563eb; font-family: inherit;
+}
+.checkout__coupon-entry { display: flex; gap: 8px; }
+.checkout__coupon-input {
+  flex: 1; min-width: 0; padding: 8px 11px; border: 1px solid #e2e8f0;
+  border-radius: 8px; font-family: monospace; font-size: 0.85rem;
+  text-transform: uppercase; color: #0f172a; background: #fff;
+}
+.checkout__coupon-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
+.checkout__coupon-apply {
+  padding: 8px 14px; background: #2563eb; color: #fff; border: none;
+  border-radius: 8px; cursor: pointer; font-size: 0.82rem; font-weight: 600; font-family: inherit;
+}
+.checkout__coupon-apply:disabled { opacity: 0.5; cursor: not-allowed; }
+.checkout__coupon-applied {
+  display: flex; align-items: center; gap: 8px; padding: 8px 11px;
+  background: #ecfdf5; border: 1px solid #86efac; border-radius: 8px; color: #065f46;
+}
+.checkout__coupon-code { font-family: monospace; font-weight: 700; }
+.checkout__coupon-off { font-size: 0.8rem; font-weight: 700; }
+.checkout__coupon-remove {
+  margin-inline-start: auto; display: inline-flex; background: none; border: none;
+  cursor: pointer; color: #065f46; padding: 2px;
+}
+.checkout__coupon-error { margin: 8px 0 0; font-size: 0.78rem; color: #dc2626; }
+
 /* ---- Form ---- */
 .checkout__form {
   background: #fff;

@@ -162,7 +162,9 @@
     "footerJoinNetwork": "Junte-se à Nossa Rede",
     "footerLegal": "Legal",
     "step4Title": "Receba a Certificação",
-    "step4Desc": "Após uma auditoria bem-sucedida, receba seu certificado reconhecido internacionalmente."
+    "step4Desc": "Após uma auditoria bem-sucedida, receba seu certificado reconhecido internacionalmente.",
+    "getCertifiedNow": "Get Certified Now",
+    "freeGapAnalysis": "Free Gap Analysis"
   },
   "auth": {
     "welcomeBack": "Bem-vindo de volta",

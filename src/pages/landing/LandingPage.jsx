@@ -209,11 +209,11 @@ export default function LandingPage() {
             {t('landing.heroSubtitle')}
           </p>
           <div className="landing__hero-actions">
-            <Link to="/signup" className="landing__btn landing__btn--primary">
-              {t('nav.signUp')} <ArrowRight size={18} />
+            <Link to="/certifications" className="landing__btn landing__btn--primary">
+              {t('landing.getCertifiedNow')} <ArrowRight size={18} />
             </Link>
-            <Link to="/login" className="landing__btn landing__btn--secondary">
-              {t('nav.login')}
+            <Link to="/gap-analysis" className="landing__btn landing__btn--secondary">
+              {t('landing.freeGapAnalysis')}
             </Link>
           </div>
           <div className="landing__hero-stats">
@@ -335,7 +335,7 @@ export default function LandingPage() {
               <a href="#how-it-works" className="landing__footer-link">{t('nav.howItWorks')}</a>
               <a href="#standards" className="landing__footer-link">{t('landing.footerISOStandards')}</a>
               <a href="#benefits" className="landing__footer-link">{t('nav.benefits')}</a>
-              <Link to="/gap-analysis" className="landing__footer-link">{t('landing.footerGetCertified')}</Link>
+              <Link to="/certifications" className="landing__footer-link">{t('landing.footerGetCertified')}</Link>
             </div>
             <div className="landing__footer-col">
               <h4 className="landing__footer-heading">{t('landing.footerAccount')}</h4>

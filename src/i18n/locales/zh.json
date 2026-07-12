@@ -162,7 +162,9 @@
     "footerJoinNetwork": "加入我们的网络",
     "footerLegal": "Legal",
     "step4Title": "获得认证",
-    "step4Desc": "审核通过后，即可领取国际认可的证书。"
+    "step4Desc": "审核通过后，即可领取国际认可的证书。",
+    "getCertifiedNow": "Get Certified Now",
+    "freeGapAnalysis": "Free Gap Analysis"
   },
   "auth": {
     "welcomeBack": "欢迎回来",

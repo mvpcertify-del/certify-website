@@ -162,7 +162,9 @@
     "footerJoinNetwork": "Присоединиться к нашей сети",
     "footerLegal": "Legal",
     "step4Title": "Получите сертификацию",
-    "step4Desc": "После успешного аудита получите международно признанный сертификат."
+    "step4Desc": "После успешного аудита получите международно признанный сертификат.",
+    "getCertifiedNow": "Get Certified Now",
+    "freeGapAnalysis": "Free Gap Analysis"
   },
   "auth": {
     "welcomeBack": "С возвращением",

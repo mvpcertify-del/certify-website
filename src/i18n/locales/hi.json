@@ -162,7 +162,9 @@
     "footerJoinNetwork": "हमारे नेटवर्क से जुड़ें",
     "footerLegal": "Legal",
     "step4Title": "प्रमाणपत्र प्राप्त करें",
-    "step4Desc": "सफल ऑडिट के बाद, अपना अंतरराष्ट्रीय स्तर पर मान्यता प्राप्त प्रमाणपत्र पाएं।"
+    "step4Desc": "सफल ऑडिट के बाद, अपना अंतरराष्ट्रीय स्तर पर मान्यता प्राप्त प्रमाणपत्र पाएं।",
+    "getCertifiedNow": "Get Certified Now",
+    "freeGapAnalysis": "Free Gap Analysis"
   },
   "auth": {
     "welcomeBack": "वापस स्वागत है",
