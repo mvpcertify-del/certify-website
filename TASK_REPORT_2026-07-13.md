@@ -60,6 +60,15 @@ ChatGPT recommended a collapsed "Have a discount code?" field before payment, wi
 
 ---
 
+## Batch D — Landing navbar UI fix
+
+The top navigation bar's "Start Your Free Gap Analysis" button looked off (wrong colour, oversized).
+- ✅ **Colour fixed:** the button was **blue**, clashing with the green brand — it's now an on-brand **green outline** button, matching the hero's "Free Gap Analysis" and sitting as a clear secondary next to the green "Get Certified Now".
+- ✅ **Size fixed:** shortened the label to **"Free Gap Analysis"** (it was the long "Start Your Free Gap Analysis", which made the button too wide) and matched its width/height/padding to the other header buttons so the whole bar lines up.
+- ✅ **Navbar polish:** all header buttons (Log In / Sign Up / Gap Analysis) now share the same height, and the menu links are separated a little from the language/account/CTA cluster for a cleaner look.
+
+---
+
 ## Notes / still needed from client
 - **Multi-certification cart:** the client mentioned "select one **or more**." Today a client picks certifications **one at a time** (choose → pay → can come back for another). A true multi-select cart (pay for several at once) is a larger feature — tell us if you want that built next.
 - **Bank/cash details** are still placeholders from the previous round (unchanged) — needed to make Cash / Bank Transfer live. Card works already.

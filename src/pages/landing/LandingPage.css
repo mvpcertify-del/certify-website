@@ -52,6 +52,12 @@
   gap: var(--spacing-md);
 }
 
+/* Separate the section links (How It Works / Standards / Benefits) from the
+   action cluster (language, account, CTA) with a little extra breathing room. */
+.landing__nav-links > .lang-switcher--landing {
+  margin-left: var(--spacing-sm);
+}
+
 /* Mobile-only bar cluster: visible language switcher + hamburger toggle.
    Hidden on desktop (the desktop nav-links already hold a switcher). */
 .landing__nav-mobile-actions {
@@ -147,9 +153,10 @@
   color: var(--color-accent);
   border: 1px solid var(--color-accent);
   border-radius: var(--radius-md);
-  padding: 8px 20px;
+  padding: 8px 18px;
   font-weight: 600;
   line-height: 1;
+  white-space: nowrap;
 }
 
 .landing__nav-link--login:hover {
@@ -162,12 +169,16 @@
   align-items: center;
   background: var(--color-accent);
   color: var(--color-text-inverse);
-  padding: 8px 20px;
+  /* transparent border keeps filled and outlined header buttons the same box
+     height so the whole action cluster lines up. */
+  border: 1px solid transparent;
+  padding: 8px 18px;
   border-radius: var(--radius-md);
   text-decoration: none;
   font-size: var(--font-size-sm);
   font-weight: 600;
   line-height: 1;
+  white-space: nowrap;
   transition: all var(--transition-fast);
 }
 
@@ -177,17 +188,22 @@
   transform: translateY(-1px);
 }
 
-/* "Start Your Free Gap Analysis" — the third header CTA. Deliberately a
-   different (blue) colour so it stands apart from the green Sign Up button. */
+/* "Free Gap Analysis" — the secondary header CTA. On-brand green outline
+   (ghost) so it reads as secondary next to the filled green Sign Up / the
+   hero's "Get Certified Now", and matches the hero's Free Gap Analysis button.
+   Sized to line up with the other header buttons. */
 .landing__nav-btn--gap {
-  background: var(--color-info);
-  color: #ffffff;
+  background: transparent;
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  padding: 8px 18px;
+  white-space: nowrap;
 }
 
 .landing__nav-btn--gap:hover {
-  background: var(--color-info);
-  color: #ffffff;
-  filter: brightness(1.08);
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+  filter: none;
   transform: translateY(-1px);
 }
 
