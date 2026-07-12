@@ -14,7 +14,8 @@ import { Plus, AlertCircle, CheckCircle } from 'lucide-react';
 
 const NEW_CLIENT = '__new__';
 
-const PACKAGES = ['Bronze', 'Silver', 'Gold'];
+// Single-package model (the old Bronze/Silver/Gold tiers were removed).
+const PACKAGES = ['Standard'];
 
 const STATUS_OPTIONS = [
   'pending', 'awaiting_payment', 'in_review',
@@ -44,7 +45,7 @@ export default function AdminApplications() {
     clientId: '',
     new_full_name: '', new_email: '', new_password: '', new_region: '',
     company_name: '', industry: '', scope: '',
-    recommended_iso: '', selected_package: 'Bronze',
+    recommended_iso: '', selected_package: 'Standard',
     employee_count: '', locations_count: '',
     status: 'in_review',
   };

@@ -1,36 +1,25 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Check, ArrowRight, Award, Star, Crown } from 'lucide-react';
+import { Check, ArrowRight, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { computeTotal } from '../../utils/pricing';
 import { ROLES } from '../../utils/roles';
 import './PricingTiers.css';
 
-// Three-package pricing card: Bronze, Silver (most popular), Gold.
-//   Bronze = base certification
-//   Silver = Bronze + 12 months online support       (featured / most popular)
-//   Gold   = Silver + 12 months system internal audit
-// Prices come from the per-standard pricing map (base + add-ons) in
-// utils/pricing.js so the cards and checkout always agree.
-//
-// The extra-employees / extra-locations org-size control and the pricing
-// calculator were removed at the client's request — the packages show a single
-// clean base price and the buyer just picks one. (The surcharge model still
-// exists in pricing.js and api/checkout.js for logged-in / admin flows.)
+// Single-package pricing card. The client dropped the Bronze / Silver / Gold
+// three-tier model and the 12-month add-ons: every standard is now offered as
+// ONE all-inclusive "Standard" certification package at a single price
+// (organization up to 10 employees at 1 location). The surcharge model still
+// exists in pricing.js / api/checkout.js for larger organizations.
 export default function PricingTiers({ variant = 'full', standardSlug = 'iso-9001' }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user } = useAuth();
 
-  // Base package price only (organization up to 10 employees at 1 location).
-  const priceFor = (tier) => computeTotal({ standardSlug, tier }).subtotal;
+  const price = computeTotal({ standardSlug }).subtotal;
 
-  const bronzePrice = priceFor('bronze');
-  const silverPrice = priceFor('silver');
-  const goldPrice   = priceFor('gold');
-
-  const startCheckout = (tier) => {
-    const params = new URLSearchParams({ tier, iso: standardSlug });
+  const startCheckout = () => {
+    const params = new URLSearchParams({ iso: standardSlug });
     const qs = params.toString();
     if (user?.role === ROLES.CLIENT) {
       // Logged-in clients keep the existing bootstrap → Stripe path.
@@ -50,56 +39,21 @@ export default function PricingTiers({ variant = 'full', standardSlug = 'iso-900
         <p className="pricing-tiers__desc">{t('pricing.sectionDesc')}</p>
       </div>
 
-      <div className="pricing-tiers__grid">
-        {/* Bronze — base certification */}
-        <div className="pricing-tier pricing-tier--bronze">
-          <div className="pricing-tier__icon"><Award size={20} /></div>
-          <h3 className="pricing-tier__name">{t('pricing.tierBronzeTitle')}</h3>
-          <div className="pricing-tier__price">${bronzePrice.toLocaleString()}</div>
-          <div className="pricing-tier__price-note">{t('pricing.tierBronzePriceNote')}</div>
-          <p className="pricing-tier__desc">{t('pricing.tierBronzeDesc')}</p>
+      <div className="pricing-tiers__grid pricing-tiers__grid--single">
+        <div className="pricing-tier pricing-tier--featured pricing-tier--single">
+          <div className="pricing-tier__icon pricing-tier__icon--accent"><ShieldCheck size={20} /></div>
+          <h3 className="pricing-tier__name">{t('pricing.packageTitle')}</h3>
+          <div className="pricing-tier__price">${price.toLocaleString()}</div>
+          <div className="pricing-tier__price-note">{t('pricing.packagePriceNote')}</div>
+          <p className="pricing-tier__desc">{t('pricing.packageDesc')}</p>
           <ul className="pricing-tier__features">
-            <li><Check size={16} /> {t('pricing.tierBronzeFeature1')}</li>
-            <li><Check size={16} /> {t('pricing.tierBronzeFeature2')}</li>
-            <li><Check size={16} /> {t('pricing.tierBronzeFeature3')}</li>
+            <li><Check size={16} /> {t('pricing.packageFeature1')}</li>
+            <li><Check size={16} /> {t('pricing.packageFeature2')}</li>
+            <li><Check size={16} /> {t('pricing.packageFeature3')}</li>
+            <li><Check size={16} /> {t('pricing.packageFeature4')}</li>
           </ul>
-          <button className="pricing-tier__cta pricing-tier__cta--secondary" onClick={() => startCheckout('bronze')}>
-            {t('pricing.tierBronzeCta')} <ArrowRight size={16} />
-          </button>
-        </div>
-
-        {/* Silver — most popular */}
-        <div className="pricing-tier pricing-tier--silver pricing-tier--featured">
-          <span className="pricing-tier__badge">{t('pricing.mostPopular')}</span>
-          <div className="pricing-tier__icon pricing-tier__icon--accent"><Star size={20} /></div>
-          <h3 className="pricing-tier__name">{t('pricing.tierSilverTitle')}</h3>
-          <div className="pricing-tier__price">${silverPrice.toLocaleString()}</div>
-          <div className="pricing-tier__price-note">{t('pricing.tierSilverPriceNote')}</div>
-          <p className="pricing-tier__desc">{t('pricing.tierSilverDesc')}</p>
-          <ul className="pricing-tier__features">
-            <li><Check size={16} /> {t('pricing.tierSilverFeature1')}</li>
-            <li><Check size={16} /> {t('pricing.tierSilverFeature2')}</li>
-            <li><Check size={16} /> {t('pricing.tierSilverFeature3')}</li>
-          </ul>
-          <button className="pricing-tier__cta pricing-tier__cta--primary" onClick={() => startCheckout('silver')}>
-            {t('pricing.tierSilverCta')} <ArrowRight size={16} />
-          </button>
-        </div>
-
-        {/* Gold — everything + internal audit */}
-        <div className="pricing-tier pricing-tier--gold">
-          <div className="pricing-tier__icon"><Crown size={20} /></div>
-          <h3 className="pricing-tier__name">{t('pricing.tierGoldTitle')}</h3>
-          <div className="pricing-tier__price">${goldPrice.toLocaleString()}</div>
-          <div className="pricing-tier__price-note">{t('pricing.tierGoldPriceNote')}</div>
-          <p className="pricing-tier__desc">{t('pricing.tierGoldDesc')}</p>
-          <ul className="pricing-tier__features">
-            <li><Check size={16} /> {t('pricing.tierGoldFeature1')}</li>
-            <li><Check size={16} /> {t('pricing.tierGoldFeature2')}</li>
-            <li><Check size={16} /> {t('pricing.tierGoldFeature3')}</li>
-          </ul>
-          <button className="pricing-tier__cta pricing-tier__cta--secondary" onClick={() => startCheckout('gold')}>
-            {t('pricing.tierGoldCta')} <ArrowRight size={16} />
+          <button className="pricing-tier__cta pricing-tier__cta--primary" onClick={startCheckout}>
+            {t('pricing.packageCta')} <ArrowRight size={16} />
           </button>
         </div>
       </div>

@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
-import { computeTotal } from '../src/utils/pricing.js';
+import { computeTotal, PACKAGE_LABEL } from '../src/utils/pricing.js';
 import { getIsoBySlug } from '../src/utils/isoCatalog.js';
 import { isOfflineMethod, stripeMethodTypesFor, PAYMENT_METHOD_IDS } from '../src/config/paymentMethods.js';
 import { getRegionFromCountry } from '../src/utils/roles.js';
@@ -115,8 +115,6 @@ async function validateCouponHandler(req, res) {
 // -------------------------------------------------------
 // Pay-first (guest) checkout helpers
 // -------------------------------------------------------
-const PACKAGE_LABELS = { bronze: 'Bronze', silver: 'Silver', gold: 'Gold', standard: 'Silver', premium: 'Gold' };
-
 function randomPassword() {
   // The buyer never uses this — access is granted via a magic link. It only
   // needs to be strong enough that nobody can guess it before the account is
@@ -188,7 +186,6 @@ async function guestCheckoutHandler(req, res) {
   try {
     const {
       isoName, // ISO slug (e.g. 'iso-9001')
-      tier = 'bronze',
       employeeBands = 0,
       additionalLocations = 0,
       paymentMethod = 'card',
@@ -211,7 +208,7 @@ async function guestCheckoutHandler(req, res) {
     const region = country ? (getRegionFromCountry(country) || null) : null;
 
     // ---- Price (recomputed server-side; never trust the client) ----
-    const totals = computeTotal({ standardSlug: isoName, tier, employeeBands, locations: additionalLocations });
+    const totals = computeTotal({ standardSlug: isoName, employeeBands, locations: additionalLocations });
     const coupon = await resolveCoupon(couponCode);
     const couponPct = coupon ? Number(coupon.discount_percent) : 0;
     const finalPrice = Math.round(totals.subtotal * (1 - couponPct / 100) * 100) / 100;
@@ -268,7 +265,7 @@ async function guestCheckoutHandler(req, res) {
     }, { onConflict: 'id' });
 
     // ---- 3. Create the application (company registration completed post-payment) ----
-    const selectedPackage = PACKAGE_LABELS[String(tier).toLowerCase()] || 'Bronze';
+    const selectedPackage = PACKAGE_LABEL;
     const recommendedIso = getIsoBySlug(isoName)?.code || isoName || 'ISO 9001:2015';
     const offline = isOfflineMethod(paymentMethod);
     const { data: appRow, error: appErr } = await supabaseAdmin
@@ -325,7 +322,7 @@ async function guestCheckoutHandler(req, res) {
       // {CHECKOUT_SESSION_ID} is verified server-side on the success page before
       // we unlock the account, so this redirect cannot be forged.
       success_url: `${baseUrl}/checkout/success?app=${applicationId}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/checkout?tier=${encodeURIComponent(tier)}&iso=${encodeURIComponent(isoName)}&cancelled=1`,
+      cancel_url: `${baseUrl}/checkout?iso=${encodeURIComponent(isoName)}&cancelled=1`,
       metadata: { applicationId, clientId: userId, guest: 'true', paymentMethod, couponCode: coupon?.code || '', discountPct: String(couponPct) },
     });
 
@@ -459,6 +456,48 @@ async function verifyOfflinePaymentHandler(req, res) {
   }
 }
 
+// Public consultation-request handler. Unauthenticated by design (the buyer
+// hasn't signed up yet). It ONLY alerts admins; it never emails the requester
+// and never accepts a recipient address, so it can't be turned into a mailer.
+// Inputs are length-capped to keep the alert (and any spam) bounded.
+async function bookConsultationHandler(req, res) {
+  try {
+    const c = req.body?.contact || {};
+    const cap = (v, n) => String(v || '').trim().slice(0, n);
+    const name = cap(c.name, 120);
+    const email = cap(c.email, 200).toLowerCase();
+    const phone = cap(c.phone, 40);
+    const company = cap(c.company, 160);
+    const preferredTime = cap(c.preferredTime, 120);
+    const message = cap(c.message, 1000);
+    const isoInterest = cap(c.isoInterest, 120);
+
+    if (!name) return res.status(400).json({ error: 'Please enter your name.' });
+    if (!isValidEmail(email)) return res.status(400).json({ error: 'Please enter a valid email address.' });
+
+    const region = null; // no country captured on the consultation form
+    const lines = [
+      `${name} (${email})`,
+      phone ? `Phone: ${phone}` : null,
+      company ? `Company: ${company}` : null,
+      isoInterest ? `Interested in: ${isoInterest}` : null,
+      preferredTime ? `Preferred time: ${preferredTime}` : null,
+      message ? `Message: ${message}` : null,
+    ].filter(Boolean);
+
+    await notifyAdmins(supabaseAdmin, {
+      title: 'New consultation request',
+      message: lines.join(' · '),
+      region,
+    }).catch(() => {});
+
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('book-consultation error:', error);
+    return res.status(500).json({ error: 'Could not submit your request. Please try again.' });
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
@@ -485,11 +524,16 @@ export default async function handler(req, res) {
   if (req.body?.action === 'verify-offline-payment') {
     return verifyOfflinePaymentHandler(req, res);
   }
+  // Public: a visitor requests a consultation (e.g. from the gap-analysis
+  // results popup). Notifies admins only — recipients are derived server-side,
+  // never from the request, so this cannot be used to email arbitrary inboxes.
+  if (req.body?.action === 'book-consultation') {
+    return bookConsultationHandler(req, res);
+  }
 
   try {
     const {
       isoName,
-      tier,
       applicationId,
       clientId,
       couponCode,
@@ -510,7 +554,6 @@ export default async function handler(req, res) {
     // displayed amount and the charge always agree. Full payment only.
     const totals = computeTotal({
       standardSlug: isoName,
-      tier,
       employeeBands,
       locations: additionalLocations,
     });
@@ -613,7 +656,7 @@ export default async function handler(req, res) {
       price_data: {
         currency: 'usd',
         product_data: {
-          name: `${isoName} - ${tier} Package`,
+          name: `${isoName} - ${PACKAGE_LABEL} Package`,
           description: 'One-Time Payment',
         },
         unit_amount: Math.round(finalPrice * 100),

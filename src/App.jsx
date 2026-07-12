@@ -39,6 +39,7 @@ const PublicGapAnalysis = lazy(() => import('./pages/public/PublicGapAnalysis'))
 // auth gate — buyers create their account AT payment. /start-checkout is kept
 // as an alias so older shared links keep working.
 const Checkout = lazy(() => import('./pages/public/Checkout'));
+const Certifications = lazy(() => import('./pages/public/Certifications'));
 const PrivacyPolicy = lazy(() => import('./pages/legal/PrivacyPolicy'));
 const TermsOfService = lazy(() => import('./pages/legal/TermsOfService'));
 
@@ -123,6 +124,9 @@ function AppRoutes() {
 
           {/* ---- Public anonymous Gap Analysis quiz ---- */}
           <Route path="/gap-analysis" element={<PublicGapAnalysis />} />
+
+          {/* ---- Public "all certifications" listing (gap-analysis → proceed) ---- */}
+          <Route path="/certifications" element={<Certifications />} />
 
           {/* ---- Public legal pages (linked from signup + footer) ---- */}
           <Route path="/privacy" element={<PrivacyPolicy />} />

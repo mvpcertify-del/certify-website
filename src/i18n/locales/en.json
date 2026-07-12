@@ -413,7 +413,8 @@
     "startCertNow": "Start Your Certification Now",
     "browsePackages": "Browse Certification Packages",
     "lowScoreUpsell": "You can still get certified — our team will guide you through the foundations first.",
-    "highScoreUpsell": "Great news — you're ready to begin certification. Pick a package below to get started."
+    "highScoreUpsell": "Great news — you're ready to begin certification. Pick a package below to get started.",
+    "proceedToCert": "Proceed to Certification"
   },
   "payment": {
     "loadingOrder": "Loading your order...",
@@ -1130,30 +1131,8 @@
   },
   "pricing": {
     "sectionTag": "Choose your path",
-    "sectionTitle": "Pick the package that fits your needs",
-    "sectionDesc": "Three packages, one-time payment, no hidden fees. Upgrade for ongoing support and internal audits.",
-    "mostPopular": "Most Popular",
-    "tierBronzeTitle": "Bronze",
-    "tierBronzePriceNote": "One-time certification",
-    "tierBronzeDesc": "Everything you need to become ISO certified, end-to-end.",
-    "tierBronzeFeature1": "Full ISO certification audit",
-    "tierBronzeFeature2": "Expert auditor matched to your industry",
-    "tierBronzeFeature3": "Internationally recognized certificate",
-    "tierBronzeCta": "Get Certified",
-    "tierSilverTitle": "Silver",
-    "tierSilverPriceNote": "Certification + 12-month support",
-    "tierSilverDesc": "Everything in Bronze, plus a full year of online support.",
-    "tierSilverFeature1": "Everything in Bronze",
-    "tierSilverFeature2": "12 months of online support",
-    "tierSilverFeature3": "Priority email response",
-    "tierSilverCta": "Choose Silver",
-    "tierGoldTitle": "Gold",
-    "tierGoldPriceNote": "Everything + internal audit",
-    "tierGoldDesc": "Everything in Silver, plus 12 months of system internal audits.",
-    "tierGoldFeature1": "Everything in Silver",
-    "tierGoldFeature2": "12 months of system internal audit",
-    "tierGoldFeature3": "Audit-readiness reviews",
-    "tierGoldCta": "Choose Gold",
+    "sectionTitle": "One simple certification package",
+    "sectionDesc": "Everything you need to get certified — one all-inclusive package, one-time payment, no hidden fees.",
     "disclaimer": "Prices are based on organizations with up to 10 employees at 1 location. Additional employees and locations can be added below.",
     "orgSize": "Organization size",
     "additionalEmployees": "Additional employees",
@@ -1202,7 +1181,15 @@
     "employeesLabel": "Number of employees",
     "employeesIncludedHint": "First {{count}} included in the base price",
     "locationsLabel": "Number of locations",
-    "locationsIncludedHint": "First {{count}} included in the base price"
+    "locationsIncludedHint": "First {{count}} included in the base price",
+    "packageTitle": "Standard Certification Package",
+    "packagePriceNote": "One-time payment · organization up to 10 employees",
+    "packageDesc": "Your complete path to ISO certification, handled end to end by our team.",
+    "packageFeature1": "Full certification process managed for you",
+    "packageFeature2": "Accredited certification body assigned",
+    "packageFeature3": "Digital certificate on approval",
+    "packageFeature4": "Dedicated support throughout",
+    "packageCta": "Get Certified"
   },
   "mainDash": {
     "title": "Main Dashboard",
@@ -1265,5 +1252,29 @@
     "successDesc": "Check your email — we've sent a secure link to access your dashboard.",
     "emailSentTo": "Sent to {{email}}",
     "cancelledNote": "Your payment was cancelled. You can try again below."
+  },
+  "consultation": {
+    "title": "Book a Consultation",
+    "subtitle": "Tell us a bit about you and our team will reach out to schedule your free consultation.",
+    "book": "Book a Consultation",
+    "name": "Full name",
+    "email": "Email address",
+    "phone": "Phone (optional)",
+    "company": "Company (optional)",
+    "preferredTime": "Preferred time (optional)",
+    "preferredTimePlaceholder": "e.g. Weekday mornings",
+    "message": "Anything you'd like us to know? (optional)",
+    "submit": "Request Consultation",
+    "successTitle": "Request received",
+    "successBody": "Thanks! Our team will contact you shortly to schedule your consultation.",
+    "errName": "Please enter your name.",
+    "errEmail": "Please enter a valid email address.",
+    "errGeneric": "Could not submit your request. Please try again."
+  },
+  "certifications": {
+    "tag": "Certifications",
+    "title": "Choose your certification",
+    "subtitle": "Select a standard to see details, pricing, and get started. You can certify to more than one.",
+    "select": "Select"
   }
 }

@@ -20,7 +20,6 @@ export default function StartCheckout() {
   const [searchParams] = useSearchParams();
   const { user, signInWithGoogle, loading } = useAuth();
 
-  const tier = searchParams.get('tier') || 'silver';
   const iso = searchParams.get('iso') || 'iso-9001';
   // Extra-staff bands / extra-locations chosen on the pricing cards, carried
   // through to the payment page so the price stays consistent.
@@ -30,7 +29,7 @@ export default function StartCheckout() {
 
   // Build the query string for the next hop, dropping empty surcharge params.
   const forwardParams = () => {
-    const p = new URLSearchParams({ tier, iso });
+    const p = new URLSearchParams({ iso });
     if (staff) p.set('staff', staff);
     if (locations) p.set('locations', locations);
     return p;
@@ -42,9 +41,9 @@ export default function StartCheckout() {
   // Persist the intent so it survives the OAuth round-trip.
   useEffect(() => {
     try {
-      sessionStorage.setItem(PENDING_CHECKOUT_KEY, JSON.stringify({ tier, iso, staff, locations }));
+      sessionStorage.setItem(PENDING_CHECKOUT_KEY, JSON.stringify({ iso, staff, locations }));
     } catch { /* ignore */ }
-  }, [tier, iso, staff, locations]);
+  }, [iso, staff, locations]);
 
   // If a client is already signed in, jump straight to the payment-bootstrap
   // route, which creates a stub application and forwards to Stripe checkout.
@@ -56,7 +55,7 @@ export default function StartCheckout() {
       navigate(`/client/start-payment?${forwardParams().toString()}`, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, user, navigate, tier, iso, staff, locations]);
+  }, [loading, user, navigate, iso, staff, locations]);
 
   const handleGoogle = async () => {
     setGoogleLoading(true);
@@ -71,7 +70,7 @@ export default function StartCheckout() {
   const handleEmail = () => {
     // Email signup also keeps the pending checkout in sessionStorage; after
     // verification + login, AuthContext / AuthCallback resolves it.
-    navigate(`/signup?tier=${encodeURIComponent(tier)}&iso=${encodeURIComponent(iso)}`);
+    navigate(`/signup?iso=${encodeURIComponent(iso)}`);
   };
 
   return (

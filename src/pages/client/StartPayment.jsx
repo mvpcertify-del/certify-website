@@ -5,6 +5,7 @@ import { Shield, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { getIsoBySlug } from '../../utils/isoCatalog';
+import { PACKAGE_LABEL } from '../../utils/pricing';
 import './StartPayment.css';
 
 // Payment-first onboarding bootstrap. Creates a stub `applications` row
@@ -14,8 +15,8 @@ import './StartPayment.css';
 // /client/apply/:applicationId.
 //
 // Inputs:
-//   ?tier=bronze|silver|gold  (defaults to 'silver', the most-popular package)
 //   ?iso=<iso-slug>           (defaults to 'iso-9001')
+//   (the old ?tier param is ignored — there is a single "Standard" package)
 //   sessionStorage[PENDING_CHECKOUT_KEY] is read as a fallback for the
 //   OAuth round-trip case, even though AuthCallback/Login normally clear
 //   it and pass the values via query params.
@@ -27,7 +28,6 @@ export default function StartPayment() {
   const [error, setError] = useState(null);
   const ranRef = useRef(false);
 
-  const tier = (searchParams.get('tier') || 'silver').toLowerCase();
   const isoSlug = searchParams.get('iso') || 'iso-9001';
   // Extra-staff bands / extra-locations chosen on the pricing cards, forwarded
   // to the payment page so its steppers pre-fill and the price matches.
@@ -35,10 +35,8 @@ export default function StartPayment() {
   const locations = searchParams.get('locations') || '';
   const isoConfig = getIsoBySlug(isoSlug);
   const recommendedIso = isoConfig?.code || 'ISO 9001:2015';
-  // Map the tier to the stored package label. Legacy standard/premium values
-  // collapse onto silver/gold so older links keep working.
-  const PACKAGE_LABELS = { bronze: 'Bronze', silver: 'Silver', gold: 'Gold', standard: 'Silver', premium: 'Gold' };
-  const selectedPackage = PACKAGE_LABELS[tier] || 'Bronze';
+  // Single-package model: everyone gets the one "Standard" package.
+  const selectedPackage = PACKAGE_LABEL;
 
   useEffect(() => {
     if (loading || !user?.id || ranRef.current) return;

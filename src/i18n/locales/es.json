@@ -413,7 +413,8 @@
     "startCertNow": "Comienza tu certificación ahora",
     "browsePackages": "Ver paquetes de certificación",
     "lowScoreUpsell": "Aún puedes certificarte: nuestro equipo te guiará primero por las bases.",
-    "highScoreUpsell": "Buenas noticias: estás listo para empezar la certificación. Elige un paquete a continuación."
+    "highScoreUpsell": "Buenas noticias: estás listo para empezar la certificación. Elige un paquete a continuación.",
+    "proceedToCert": "Continuar a la certificación"
   },
   "payment": {
     "loadingOrder": "Cargando tu pedido...",
@@ -1130,30 +1131,8 @@
   },
   "pricing": {
     "sectionTag": "Elige tu camino",
-    "sectionTitle": "Elige el paquete que se adapta a tus necesidades",
-    "sectionDesc": "Tres paquetes, pago único, sin tarifas ocultas. Mejora tu plan para obtener soporte continuo y auditorías internas.",
-    "mostPopular": "Más popular",
-    "tierBronzeTitle": "Bronze",
-    "tierBronzePriceNote": "Certificación de pago único",
-    "tierBronzeDesc": "Todo lo que necesitas para obtener la certificación ISO, de principio a fin.",
-    "tierBronzeFeature1": "Auditoría completa de certificación ISO",
-    "tierBronzeFeature2": "Auditor experto adaptado a tu sector",
-    "tierBronzeFeature3": "Certificado reconocido internacionalmente",
-    "tierBronzeCta": "Obtener certificación",
-    "tierSilverTitle": "Silver",
-    "tierSilverPriceNote": "Certificación + 12 meses de soporte",
-    "tierSilverDesc": "Todo lo del paquete Bronze, más un año completo de soporte en línea.",
-    "tierSilverFeature1": "Todo lo del paquete Bronze",
-    "tierSilverFeature2": "12 meses de soporte en línea",
-    "tierSilverFeature3": "Respuesta prioritaria por correo electrónico",
-    "tierSilverCta": "Elegir Silver",
-    "tierGoldTitle": "Gold",
-    "tierGoldPriceNote": "Todo + auditoría interna",
-    "tierGoldDesc": "Todo lo del paquete Silver, más 12 meses de auditorías internas del sistema.",
-    "tierGoldFeature1": "Todo lo del paquete Silver",
-    "tierGoldFeature2": "12 meses de auditoría interna del sistema",
-    "tierGoldFeature3": "Revisiones de preparación para auditorías",
-    "tierGoldCta": "Elegir Gold",
+    "sectionTitle": "Un paquete de certificación simple",
+    "sectionDesc": "Todo lo que necesitas para certificarte: un paquete todo incluido, pago único, sin cargos ocultos.",
     "disclaimer": "Los precios se basan en organizaciones con hasta 10 empleados en 1 ubicación. Se pueden agregar empleados y ubicaciones adicionales a continuación.",
     "orgSize": "Tamaño de la organización",
     "additionalEmployees": "Empleados adicionales",
@@ -1202,7 +1181,15 @@
     "employeesLabel": "Número de empleados",
     "employeesIncludedHint": "Los primeros {{count}} incluidos en el precio base",
     "locationsLabel": "Número de ubicaciones",
-    "locationsIncludedHint": "La primera {{count}} incluida en el precio base"
+    "locationsIncludedHint": "La primera {{count}} incluida en el precio base",
+    "packageTitle": "Paquete de Certificación Estándar",
+    "packagePriceNote": "Pago único · organización de hasta 10 empleados",
+    "packageDesc": "Tu camino completo hacia la certificación ISO, gestionado de principio a fin por nuestro equipo.",
+    "packageFeature1": "Proceso de certificación gestionado por completo",
+    "packageFeature2": "Organismo de certificación acreditado asignado",
+    "packageFeature3": "Certificado digital al aprobarse",
+    "packageFeature4": "Soporte dedicado durante todo el proceso",
+    "packageCta": "Certifícate"
   },
   "mainDash": {
     "title": "Main Dashboard [DRAFT]",
@@ -1265,5 +1252,29 @@
     "successDesc": "Revisa tu correo: te hemos enviado un enlace seguro para acceder a tu panel.",
     "emailSentTo": "Enviado a {{email}}",
     "cancelledNote": "Tu pago fue cancelado. Puedes intentarlo de nuevo abajo."
+  },
+  "consultation": {
+    "title": "Reservar una consulta",
+    "subtitle": "Cuéntanos un poco sobre ti y nuestro equipo se comunicará para agendar tu consulta gratuita.",
+    "book": "Reservar una consulta",
+    "name": "Nombre completo",
+    "email": "Correo electrónico",
+    "phone": "Teléfono (opcional)",
+    "company": "Empresa (opcional)",
+    "preferredTime": "Horario preferido (opcional)",
+    "preferredTimePlaceholder": "p. ej. Mañanas entre semana",
+    "message": "¿Algo que quieras que sepamos? (opcional)",
+    "submit": "Solicitar consulta",
+    "successTitle": "Solicitud recibida",
+    "successBody": "¡Gracias! Nuestro equipo te contactará pronto para agendar tu consulta.",
+    "errName": "Introduce tu nombre.",
+    "errEmail": "Introduce un correo electrónico válido.",
+    "errGeneric": "No se pudo enviar tu solicitud. Inténtalo de nuevo."
+  },
+  "certifications": {
+    "tag": "Certificaciones",
+    "title": "Elige tu certificación",
+    "subtitle": "Selecciona una norma para ver detalles, precios y comenzar. Puedes certificar más de una.",
+    "select": "Seleccionar"
   }
 }

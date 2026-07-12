@@ -15,9 +15,8 @@ function consumePendingCheckout() {
     const raw = sessionStorage.getItem(PENDING_CHECKOUT_KEY);
     if (!raw) return null;
     sessionStorage.removeItem(PENDING_CHECKOUT_KEY);
-    const { tier, iso, staff, locations } = JSON.parse(raw);
+    const { iso, staff, locations } = JSON.parse(raw);
     const params = new URLSearchParams({
-      tier: tier || 'silver',
       iso: iso || 'iso-9001',
     });
     // Carry the extra-staff / extra-locations selection through the login hop.

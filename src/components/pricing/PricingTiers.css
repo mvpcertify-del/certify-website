@@ -164,6 +164,21 @@
   align-items: stretch;
 }
 
+/* Single-package layout: one centered card instead of the 3-tier grid. */
+.pricing-tiers__grid--single {
+  grid-template-columns: minmax(0, 440px);
+  justify-content: center;
+}
+
+.pricing-tier--single {
+  /* Don't lift the lone card the way the old featured middle card did. */
+  transform: none;
+}
+
+.pricing-tier--single .pricing-tier__desc {
+  min-height: 0;
+}
+
 .pricing-tier {
   position: relative;
   display: flex;

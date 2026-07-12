@@ -75,9 +75,9 @@ export default function IsoLanding() {
     // Anyone else: go straight to the public pay-first checkout — no signup
     // gate before payment.
     if (user?.role === ROLES.CLIENT) {
-      navigate(`/client/start-payment?tier=silver&iso=${encodeURIComponent(config.slug)}`);
+      navigate(`/client/start-payment?iso=${encodeURIComponent(config.slug)}`);
     } else {
-      navigate(`/checkout?tier=silver&iso=${encodeURIComponent(config.slug)}`);
+      navigate(`/checkout?iso=${encodeURIComponent(config.slug)}`);
     }
   };
 
@@ -166,9 +166,9 @@ export default function IsoLanding() {
           </div>
         </section>
 
-        {/* Pricing Tiers — Bronze / Silver / Gold (priced per standard), with a
-            single real-headcount org-size input. The separate, redundant
-            Pricing Calculator was removed to end the "two prices" confusion. */}
+        {/* Single "Standard" certification package (one price per standard).
+            The 3-tier Bronze/Silver/Gold model and the separate Pricing
+            Calculator were removed at the client's request. */}
         <section className="iso-landing__section">
           <PricingTiers standardSlug={config.slug} />
         </section>

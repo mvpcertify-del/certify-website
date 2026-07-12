@@ -77,6 +77,23 @@
   width: 100%;
 }
 
+.public-gap__result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--spacing-base);
+  margin-top: var(--spacing-xl);
+}
+
+@media (max-width: 480px) {
+  .public-gap__result-actions {
+    flex-direction: column;
+  }
+  .public-gap__result-actions > button {
+    width: 100%;
+  }
+}
+
 @media (max-width: 600px) {
   .public-gap {
     padding: var(--spacing-base);

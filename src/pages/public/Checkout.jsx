@@ -5,7 +5,7 @@ import {
   Shield, CreditCard, Banknote, Landmark, Lock, CheckCircle2, Copy,
   ArrowRight, Mail, AlertCircle, MailCheck,
 } from 'lucide-react';
-import { computeTotal } from '../../utils/pricing';
+import { computeTotal, PACKAGE_LABEL } from '../../utils/pricing';
 import { getIsoBySlug } from '../../utils/isoCatalog';
 import {
   PAYMENT_METHODS, isOfflineMethod, BANK_TRANSFER_DETAILS, CASH_DETAILS,
@@ -39,7 +39,6 @@ function CheckoutForm() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
 
-  const tier = (searchParams.get('tier') || 'silver').toLowerCase();
   const isoSlug = searchParams.get('iso') || 'iso-9001';
   const staff = Math.max(0, Math.floor(Number(searchParams.get('staff')) || 0));
   const locations = Math.max(0, Math.floor(Number(searchParams.get('locations')) || 0));
@@ -47,12 +46,11 @@ function CheckoutForm() {
 
   const isoConfig = getIsoBySlug(isoSlug);
   const isoCode = isoConfig?.code || 'ISO 9001';
-  const PACKAGE_LABELS = { bronze: 'Bronze', silver: 'Silver', gold: 'Gold' };
-  const packageLabel = PACKAGE_LABELS[tier] || 'Bronze';
+  const packageLabel = PACKAGE_LABEL;
 
   const totals = useMemo(
-    () => computeTotal({ standardSlug: isoSlug, tier, employeeBands: staff, locations }),
-    [isoSlug, tier, staff, locations]
+    () => computeTotal({ standardSlug: isoSlug, employeeBands: staff, locations }),
+    [isoSlug, staff, locations]
   );
 
   const [form, setForm] = useState({ name: '', email: '', company: '', phone: '', country: '' });
@@ -78,7 +76,6 @@ function CheckoutForm() {
         body: JSON.stringify({
           action: 'guest-checkout',
           isoName: isoSlug,
-          tier,
           employeeBands: staff,
           additionalLocations: locations,
           paymentMethod,

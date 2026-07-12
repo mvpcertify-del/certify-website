@@ -8,6 +8,7 @@ import { apiPost } from '../../lib/apiClient';
 import { Input, Select, Textarea, Button } from '../../components/ui/FormElements';
 import { ROLES } from '../../utils/roles';
 import { getIsoBySlug } from '../../utils/isoCatalog';
+import { PACKAGE_LABEL } from '../../utils/pricing';
 import './ApplicationForm.css';
 
 const INDUSTRIES = [
@@ -44,16 +45,11 @@ export default function ApplicationForm() {
   const isUpdateMode = Boolean(applicationId);
   const paymentJustSucceeded = searchParams.get('payment') === 'success';
 
-  // Tier + ISO can arrive from either router state (in-app navigation),
-  // query params (legacy OAuth round-trip), or the stub row when in UPDATE mode.
-  const queryTier = searchParams.get('tier');
+  // ISO can arrive from either router state (in-app navigation), a query param
+  // (legacy OAuth round-trip), or the stub row when in UPDATE mode. There is a
+  // single "Standard" package now, so the package label is fixed.
   const queryIso = searchParams.get('iso');
-  // Map a tier slug (bronze/silver/gold, or legacy standard/premium) to the
-  // stored package label.
-  const PACKAGE_LABELS = { bronze: 'Bronze', silver: 'Silver', gold: 'Gold', standard: 'Silver', premium: 'Gold' };
-  const stateSelectedPackage = location.state?.package
-    || (queryTier ? (PACKAGE_LABELS[queryTier.toLowerCase()] || queryTier) : null)
-    || null;
+  const stateSelectedPackage = location.state?.package || PACKAGE_LABEL;
   const stateRecommendedIso = location.state?.recommendedIso
     || (queryIso ? getIsoBySlug(queryIso)?.code : null)
     || null;
@@ -219,7 +215,7 @@ export default function ApplicationForm() {
           employee_count: parseInt(formData.employeeCount, 10),
           locations_count: parseInt(formData.locationsCount, 10),
           status: 'pending',
-          selected_package: selectedPackage || 'Bronze',
+          selected_package: selectedPackage || PACKAGE_LABEL,
         };
         if (recommendedIso) {
           insertPayload.recommended_iso = recommendedIso;

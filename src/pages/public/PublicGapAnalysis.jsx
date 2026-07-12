@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Shield, ArrowRight, CheckCircle2, AlertCircle, X } from 'lucide-react';
+import { Shield, ArrowRight, CheckCircle2, AlertCircle, X, CalendarClock } from 'lucide-react';
 import { Button } from '../../components/ui/FormElements';
-import PricingTiers from '../../components/pricing/PricingTiers';
+import ConsultationModal from '../../components/ConsultationModal';
 import LanguageSwitcher from '../../components/LanguageSwitcher';
 import '../client/GapAnalysis.css';
 import './PublicGapAnalysis.css';
@@ -16,10 +16,22 @@ const ANON_STORAGE_KEY = 'gap_analysis_score_anon';
 
 export default function PublicGapAnalysis() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   const [answers, setAnswers] = useState(Array(QUESTION_KEYS.length).fill(null));
   const [currentIdx, setCurrentIdx] = useState(0);
   const [score, setScore] = useState(null);
+  const [consultOpen, setConsultOpen] = useState(false);
+
+  // After the test is taken, gently prompt the visitor to book a consultation
+  // once (they can reopen it from the button below the results).
+  const autoPromptedRef = useRef(false);
+  useEffect(() => {
+    if (score !== null && !autoPromptedRef.current) {
+      autoPromptedRef.current = true;
+      setConsultOpen(true);
+    }
+  }, [score]);
 
   const handleAnswer = (val) => {
     const newAnswers = [...answers];
@@ -70,12 +82,20 @@ export default function PublicGapAnalysis() {
             <p style={{ textAlign: 'center', color: 'var(--color-text-secondary)', maxWidth: 520, margin: '0 auto 8px' }}>
               {isReady ? t('gapAnalysis.highScoreUpsell') : t('gapAnalysis.lowScoreUpsell')}
             </p>
-          </div>
 
-          <div className="public-gap__pricing-wrap">
-            <PricingTiers variant="compact" />
+            <div className="public-gap__result-actions">
+              <Button variant="primary" size="lg" onClick={() => navigate('/certifications')}>
+                {t('gapAnalysis.proceedToCert')} <ArrowRight size={16} style={{ marginLeft: 8 }} />
+              </Button>
+              <Button variant="secondary" size="lg" onClick={() => setConsultOpen(true)}>
+                <CalendarClock size={16} style={{ marginRight: 8 }} />
+                {t('consultation.book')}
+              </Button>
+            </div>
           </div>
         </div>
+
+        <ConsultationModal isOpen={consultOpen} onClose={() => setConsultOpen(false)} />
       </div>
     );
   }

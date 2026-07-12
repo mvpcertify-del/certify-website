@@ -399,7 +399,8 @@
     "startCertNow": "Начните сертификацию сейчас",
     "browsePackages": "Просмотреть пакеты сертификации",
     "lowScoreUpsell": "Вы всё равно можете получить сертификат — наша команда сначала проведёт вас через основы.",
-    "highScoreUpsell": "Отличные новости — вы готовы начать сертификацию. Выберите пакет ниже, чтобы начать."
+    "highScoreUpsell": "Отличные новости — вы готовы начать сертификацию. Выберите пакет ниже, чтобы начать.",
+    "proceedToCert": "Proceed to Certification"
   },
   "payment": {
     "loadingOrder": "Загрузка вашего заказа...",
@@ -1103,30 +1104,8 @@
   },
   "pricing": {
     "sectionTag": "Выберите свой путь",
-    "sectionTitle": "Выберите пакет, соответствующий вашим потребностям",
-    "sectionDesc": "Три пакета, единовременная оплата, без скрытых платежей. Перейдите на более высокий пакет для постоянной поддержки и внутренних аудитов.",
-    "mostPopular": "Самый популярный",
-    "tierBronzeTitle": "Bronze",
-    "tierBronzePriceNote": "Единовременная сертификация",
-    "tierBronzeDesc": "Всё необходимое, чтобы получить сертификат ISO, от начала до конца.",
-    "tierBronzeFeature1": "Полный аудит сертификации ISO",
-    "tierBronzeFeature2": "Опытный аудитор, подобранный под вашу отрасль",
-    "tierBronzeFeature3": "Международно признанный сертификат",
-    "tierBronzeCta": "Получить сертификат",
-    "tierSilverTitle": "Silver",
-    "tierSilverPriceNote": "Сертификация + 12 месяцев поддержки",
-    "tierSilverDesc": "Всё, что входит в Bronze, плюс целый год онлайн-поддержки.",
-    "tierSilverFeature1": "Всё, что входит в Bronze",
-    "tierSilverFeature2": "12 месяцев онлайн-поддержки",
-    "tierSilverFeature3": "Приоритетный ответ по эл. почте",
-    "tierSilverCta": "Выбрать Silver",
-    "tierGoldTitle": "Gold",
-    "tierGoldPriceNote": "Всё + внутренний аудит",
-    "tierGoldDesc": "Всё, что входит в Silver, плюс 12 месяцев внутренних аудитов системы.",
-    "tierGoldFeature1": "Всё, что входит в Silver",
-    "tierGoldFeature2": "12 месяцев внутреннего аудита системы",
-    "tierGoldFeature3": "Проверки готовности к аудиту",
-    "tierGoldCta": "Выбрать Gold",
+    "sectionTitle": "One simple certification package",
+    "sectionDesc": "Everything you need to get certified — one all-inclusive package, one-time payment, no hidden fees.",
     "disclaimer": "Цены рассчитаны для организаций с числом до 10 сотрудников на 1 площадке. Дополнительных сотрудников и площадки можно добавить ниже.",
     "orgSize": "Размер организации",
     "additionalEmployees": "Дополнительные сотрудники",
@@ -1175,7 +1154,15 @@
     "employeesLabel": "Количество сотрудников",
     "employeesIncludedHint": "Первые {{count}} включены в базовую цену",
     "locationsLabel": "Количество площадок",
-    "locationsIncludedHint": "Первая {{count}} включена в базовую цену"
+    "locationsIncludedHint": "Первая {{count}} включена в базовую цену",
+    "packageTitle": "Standard Certification Package",
+    "packagePriceNote": "One-time payment · organization up to 10 employees",
+    "packageDesc": "Your complete path to ISO certification, handled end to end by our team.",
+    "packageFeature1": "Full certification process managed for you",
+    "packageFeature2": "Accredited certification body assigned",
+    "packageFeature3": "Digital certificate on approval",
+    "packageFeature4": "Dedicated support throughout",
+    "packageCta": "Get Certified"
   },
   "mainDash": {
     "title": "Main Dashboard [DRAFT]",
@@ -1238,5 +1225,29 @@
     "successDesc": "Проверьте свою почту — мы отправили безопасную ссылку для доступа к панели.",
     "emailSentTo": "Отправлено на {{email}}",
     "cancelledNote": "Ваша оплата была отменена. Вы можете повторить попытку ниже."
+  },
+  "consultation": {
+    "title": "Book a Consultation",
+    "subtitle": "Tell us a bit about you and our team will reach out to schedule your free consultation.",
+    "book": "Book a Consultation",
+    "name": "Full name",
+    "email": "Email address",
+    "phone": "Phone (optional)",
+    "company": "Company (optional)",
+    "preferredTime": "Preferred time (optional)",
+    "preferredTimePlaceholder": "e.g. Weekday mornings",
+    "message": "Anything you'd like us to know? (optional)",
+    "submit": "Request Consultation",
+    "successTitle": "Request received",
+    "successBody": "Thanks! Our team will contact you shortly to schedule your consultation.",
+    "errName": "Please enter your name.",
+    "errEmail": "Please enter a valid email address.",
+    "errGeneric": "Could not submit your request. Please try again."
+  },
+  "certifications": {
+    "tag": "Certifications",
+    "title": "Choose your certification",
+    "subtitle": "Select a standard to see details, pricing, and get started. You can certify to more than one.",
+    "select": "Select"
   }
 }

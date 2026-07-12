@@ -399,7 +399,8 @@
     "startCertNow": "अभी अपना प्रमाणन शुरू करें",
     "browsePackages": "प्रमाणन पैकेज देखें",
     "lowScoreUpsell": "आप अभी भी प्रमाणित हो सकते हैं — हमारी टीम पहले आपको बुनियादी बातों के माध्यम से मार्गदर्शन करेगी।",
-    "highScoreUpsell": "बढ़िया खबर — आप प्रमाणन शुरू करने के लिए तैयार हैं। शुरू करने के लिए नीचे एक पैकेज चुनें।"
+    "highScoreUpsell": "बढ़िया खबर — आप प्रमाणन शुरू करने के लिए तैयार हैं। शुरू करने के लिए नीचे एक पैकेज चुनें।",
+    "proceedToCert": "Proceed to Certification"
   },
   "payment": {
     "loadingOrder": "आपका ऑर्डर लोड हो रहा है...",
@@ -1103,30 +1104,8 @@
   },
   "pricing": {
     "sectionTag": "अपना रास्ता चुनें",
-    "sectionTitle": "वह पैकेज चुनें जो आपकी ज़रूरतों के अनुकूल हो",
-    "sectionDesc": "तीन पैकेज, एकमुश्त भुगतान, कोई छिपी फीस नहीं। निरंतर सहायता और आंतरिक ऑडिट के लिए अपग्रेड करें।",
-    "mostPopular": "सबसे लोकप्रिय",
-    "tierBronzeTitle": "Bronze (कांस्य)",
-    "tierBronzePriceNote": "एकमुश्त प्रमाणन",
-    "tierBronzeDesc": "ISO प्रमाणित होने के लिए शुरू से अंत तक आपकी ज़रूरत की हर चीज़।",
-    "tierBronzeFeature1": "पूर्ण ISO प्रमाणन ऑडिट",
-    "tierBronzeFeature2": "आपके उद्योग से मिलान किया गया विशेषज्ञ ऑडिटर",
-    "tierBronzeFeature3": "अंतरराष्ट्रीय स्तर पर मान्यता प्राप्त प्रमाणपत्र",
-    "tierBronzeCta": "प्रमाणित हों",
-    "tierSilverTitle": "Silver (रजत)",
-    "tierSilverPriceNote": "प्रमाणन + 12-माह सहायता",
-    "tierSilverDesc": "Bronze में सब कुछ, साथ ही पूरे एक साल की ऑनलाइन सहायता।",
-    "tierSilverFeature1": "Bronze में सब कुछ",
-    "tierSilverFeature2": "12 महीने की ऑनलाइन सहायता",
-    "tierSilverFeature3": "प्राथमिकता ईमेल प्रतिक्रिया",
-    "tierSilverCta": "Silver चुनें",
-    "tierGoldTitle": "Gold (स्वर्ण)",
-    "tierGoldPriceNote": "सब कुछ + आंतरिक ऑडिट",
-    "tierGoldDesc": "Silver में सब कुछ, साथ ही 12 महीने की सिस्टम आंतरिक ऑडिट।",
-    "tierGoldFeature1": "Silver में सब कुछ",
-    "tierGoldFeature2": "12 महीने की सिस्टम आंतरिक ऑडिट",
-    "tierGoldFeature3": "ऑडिट-तत्परता समीक्षाएं",
-    "tierGoldCta": "Gold चुनें",
+    "sectionTitle": "One simple certification package",
+    "sectionDesc": "Everything you need to get certified — one all-inclusive package, one-time payment, no hidden fees.",
     "disclaimer": "मूल्य 1 स्थान पर 10 कर्मचारियों तक के संगठनों पर आधारित हैं। अतिरिक्त कर्मचारी और स्थान नीचे जोड़े जा सकते हैं।",
     "orgSize": "संगठन का आकार",
     "additionalEmployees": "अतिरिक्त कर्मचारी",
@@ -1175,7 +1154,15 @@
     "employeesLabel": "कर्मचारियों की संख्या",
     "employeesIncludedHint": "पहले {{count}} आधार मूल्य में शामिल हैं",
     "locationsLabel": "स्थानों की संख्या",
-    "locationsIncludedHint": "पहला {{count}} आधार मूल्य में शामिल है"
+    "locationsIncludedHint": "पहला {{count}} आधार मूल्य में शामिल है",
+    "packageTitle": "Standard Certification Package",
+    "packagePriceNote": "One-time payment · organization up to 10 employees",
+    "packageDesc": "Your complete path to ISO certification, handled end to end by our team.",
+    "packageFeature1": "Full certification process managed for you",
+    "packageFeature2": "Accredited certification body assigned",
+    "packageFeature3": "Digital certificate on approval",
+    "packageFeature4": "Dedicated support throughout",
+    "packageCta": "Get Certified"
   },
   "mainDash": {
     "title": "Main Dashboard [DRAFT]",
@@ -1238,5 +1225,29 @@
     "successDesc": "अपना ईमेल जांचें — हमने आपके डैशबोर्ड तक पहुँचने के लिए एक सुरक्षित लिंक भेजा है।",
     "emailSentTo": "{{email}} पर भेजा गया",
     "cancelledNote": "आपका भुगतान रद्द कर दिया गया। आप नीचे फिर से प्रयास कर सकते हैं।"
+  },
+  "consultation": {
+    "title": "Book a Consultation",
+    "subtitle": "Tell us a bit about you and our team will reach out to schedule your free consultation.",
+    "book": "Book a Consultation",
+    "name": "Full name",
+    "email": "Email address",
+    "phone": "Phone (optional)",
+    "company": "Company (optional)",
+    "preferredTime": "Preferred time (optional)",
+    "preferredTimePlaceholder": "e.g. Weekday mornings",
+    "message": "Anything you'd like us to know? (optional)",
+    "submit": "Request Consultation",
+    "successTitle": "Request received",
+    "successBody": "Thanks! Our team will contact you shortly to schedule your consultation.",
+    "errName": "Please enter your name.",
+    "errEmail": "Please enter a valid email address.",
+    "errGeneric": "Could not submit your request. Please try again."
+  },
+  "certifications": {
+    "tag": "Certifications",
+    "title": "Choose your certification",
+    "subtitle": "Select a standard to see details, pricing, and get started. You can certify to more than one.",
+    "select": "Select"
   }
 }

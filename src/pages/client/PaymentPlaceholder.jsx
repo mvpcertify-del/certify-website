@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   computeTotal,
+  PACKAGE_LABEL,
   SURCHARGE_PER_EMPLOYEE_BAND,
   SURCHARGE_PER_LOCATION,
   INCLUDED_EMPLOYEES,
@@ -165,13 +166,13 @@ export default function PaymentPlaceholder() {
   };
 
   const isoName = application?.recommended_iso || 'ISO 9001:2015';
-  const tier = application?.selected_package || 'Bronze';
+  const packageLabel = application?.selected_package || PACKAGE_LABEL;
 
   // Full (one-time) payment only — computeTotal is the same helper used by
-  // api/checkout.js so client and server stay aligned.
+  // api/checkout.js so client and server stay aligned. Single-package model,
+  // so no tier is passed.
   const totals = computeTotal({
     standardSlug: isoName,
-    tier,
     employeeBands,
     locations: additionalLocations,
   });
@@ -205,7 +206,6 @@ export default function PaymentPlaceholder() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           isoName,
-          tier,
           applicationId,
           clientId: user?.id,
           couponCode: coupon?.code || null,
@@ -449,7 +449,7 @@ export default function PaymentPlaceholder() {
               </div>
               <div>
                 <p style={{ margin: '0 0 2px 0', fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('payment.certStandard')}</p>
-                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'white' }}>{isoName} · {tier}</h3>
+                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'white' }}>{isoName} · {packageLabel}</h3>
               </div>
             </div>
           </div>

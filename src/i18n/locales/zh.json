@@ -399,7 +399,8 @@
     "startCertNow": "立即开始认证",
     "browsePackages": "浏览认证套餐",
     "lowScoreUpsell": "您仍然可以获得认证——我们的团队将首先指导您夯实基础。",
-    "highScoreUpsell": "好消息——您已准备好开始认证。请在下方选择一个套餐即可开始。"
+    "highScoreUpsell": "好消息——您已准备好开始认证。请在下方选择一个套餐即可开始。",
+    "proceedToCert": "Proceed to Certification"
   },
   "payment": {
     "loadingOrder": "正在加载您的订单…",
@@ -1103,30 +1104,8 @@
   },
   "pricing": {
     "sectionTag": "选择您的路径",
-    "sectionTitle": "选择适合您需求的套餐",
-    "sectionDesc": "三种套餐，一次性付款，无隐藏费用。升级以获得持续支持和内部审核。",
-    "mostPopular": "最受欢迎",
-    "tierBronzeTitle": "Bronze（青铜）",
-    "tierBronzePriceNote": "一次性认证",
-    "tierBronzeDesc": "获得 ISO 认证所需的一切，端到端全程服务。",
-    "tierBronzeFeature1": "完整的 ISO 认证审核",
-    "tierBronzeFeature2": "匹配您所在行业的专业审核员",
-    "tierBronzeFeature3": "国际认可的证书",
-    "tierBronzeCta": "获得认证",
-    "tierSilverTitle": "Silver（白银）",
-    "tierSilverPriceNote": "认证 + 12 个月支持",
-    "tierSilverDesc": "包含 Bronze 的全部内容，外加全年在线支持。",
-    "tierSilverFeature1": "Bronze 的全部内容",
-    "tierSilverFeature2": "12 个月在线支持",
-    "tierSilverFeature3": "优先邮件响应",
-    "tierSilverCta": "选择 Silver",
-    "tierGoldTitle": "Gold（黄金）",
-    "tierGoldPriceNote": "全部内容 + 内部审核",
-    "tierGoldDesc": "包含 Silver 的全部内容，外加 12 个月的系统内部审核。",
-    "tierGoldFeature1": "Silver 的全部内容",
-    "tierGoldFeature2": "12 个月系统内部审核",
-    "tierGoldFeature3": "审核就绪度评审",
-    "tierGoldCta": "选择 Gold",
+    "sectionTitle": "One simple certification package",
+    "sectionDesc": "Everything you need to get certified — one all-inclusive package, one-time payment, no hidden fees.",
     "disclaimer": "价格基于不超过 10 名员工、1 处经营场所的组织。可在下方添加额外的员工和经营场所。",
     "orgSize": "组织规模",
     "additionalEmployees": "额外员工",
@@ -1175,7 +1154,15 @@
     "employeesLabel": "员工人数",
     "employeesIncludedHint": "基础价格已包含前 {{count}} 名",
     "locationsLabel": "地点数量",
-    "locationsIncludedHint": "基础价格已包含第一个 {{count}}"
+    "locationsIncludedHint": "基础价格已包含第一个 {{count}}",
+    "packageTitle": "Standard Certification Package",
+    "packagePriceNote": "One-time payment · organization up to 10 employees",
+    "packageDesc": "Your complete path to ISO certification, handled end to end by our team.",
+    "packageFeature1": "Full certification process managed for you",
+    "packageFeature2": "Accredited certification body assigned",
+    "packageFeature3": "Digital certificate on approval",
+    "packageFeature4": "Dedicated support throughout",
+    "packageCta": "Get Certified"
   },
   "mainDash": {
     "title": "Main Dashboard [DRAFT]",
@@ -1238,5 +1225,29 @@
     "successDesc": "请查收邮件——我们已发送访问仪表板的安全链接。",
     "emailSentTo": "已发送至 {{email}}",
     "cancelledNote": "您的付款已取消。您可以在下方重试。"
+  },
+  "consultation": {
+    "title": "Book a Consultation",
+    "subtitle": "Tell us a bit about you and our team will reach out to schedule your free consultation.",
+    "book": "Book a Consultation",
+    "name": "Full name",
+    "email": "Email address",
+    "phone": "Phone (optional)",
+    "company": "Company (optional)",
+    "preferredTime": "Preferred time (optional)",
+    "preferredTimePlaceholder": "e.g. Weekday mornings",
+    "message": "Anything you'd like us to know? (optional)",
+    "submit": "Request Consultation",
+    "successTitle": "Request received",
+    "successBody": "Thanks! Our team will contact you shortly to schedule your consultation.",
+    "errName": "Please enter your name.",
+    "errEmail": "Please enter a valid email address.",
+    "errGeneric": "Could not submit your request. Please try again."
+  },
+  "certifications": {
+    "tag": "Certifications",
+    "title": "Choose your certification",
+    "subtitle": "Select a standard to see details, pricing, and get started. You can certify to more than one.",
+    "select": "Select"
   }
 }
