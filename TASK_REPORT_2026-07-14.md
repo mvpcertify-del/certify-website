@@ -103,7 +103,8 @@ The client asked to **remove "Region" and replace it with "Country"** for **all 
 - Every admin list — **Companies, Users, Auditors, Certification Bodies, Regional Admins, Applications** — now shows a **Country** column instead of Region.
 - Every **create/edit form** now captures **Country** instead of Region.
 - The list filters are now **"filter by country"** search boxes; the old top-bar "All Regions" selector (which did nothing) was removed.
-- **Under the hood:** the system still derives an internal region from the country automatically, so **regional-admin access limits keep working exactly as before** — a regional admin still only sees their own area. This was verified so nothing about who-can-see-what changed.
+- **The role itself is now called "Country Admin"** everywhere it appears (sidebar, page titles, the user list, the role picker, the profile menu). Its behaviour and access are unchanged — only the name changed, so nothing in the database or permissions was disturbed.
+- **Under the hood:** the system still derives an internal region from the country automatically, so **the Country Admin's access limits keep working exactly as before** — they still only see their own area. This was verified so nothing about who-can-see-what changed.
 - **Note:** `Country` is a new field on the client/user record. Existing users' countries are **backfilled** by the same `phase17` migration (from data captured at signup). Users created before that had no country stored will show "—" until edited. New users capture it going forward.
 
 ## Still to do from today's list
@@ -118,7 +119,7 @@ Everything on today's list is now built. Remaining blockers are **data/decisions
 
 1. **Run the migration** (`phase17`) — checkout is dead until then, and it also creates the Country field + backfills it. This is the only blocker on revenue.
 2. **Logo:** all-white ™, or grey ™? And please send the **vector** version.
-3. **Region → Country:** built as a **field/column swap** (the role stays internally named "Regional Admin" and keeps governing an area; only the visible label changed to Country). If the client instead wants the **role itself renamed** to "Country Admin", tell us — that's a deeper change to permissions and database rules.
+3. **Region → Country:** done — including renaming the **role to "Country Admin"** everywhere it's shown. (The rename is display-only; the internal role identifier is unchanged so no database rules or permissions were touched.)
 4. **Bank/cash details** are still placeholders (`XXXX`) — the popup is built but shows placeholder details until the real IBAN/beneficiary are provided.
 5. **ISO page:** keep the small standard-code label, or remove that too?
 

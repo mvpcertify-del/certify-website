@@ -18,7 +18,11 @@ export const ROLES = {
 
 export const ROLE_LABELS = {
   [ROLES.SUPER_ADMIN]: 'Super Admin',
-  [ROLES.REGIONAL_ADMIN]: 'Regional Admin',
+  // Displayed as "Country Admin" per the client (Region → Country rename). The
+  // internal identifier stays `regional_admin` so DB CHECK constraints, RLS
+  // policies and the /admin/regional-admins route are untouched — only the
+  // user-visible name changed.
+  [ROLES.REGIONAL_ADMIN]: 'Country Admin',
   [ROLES.AUDITOR]: 'Auditor',
   [ROLES.CERTIFICATION_BODY]: 'Certification Body',
   [ROLES.CLIENT]: 'Client',

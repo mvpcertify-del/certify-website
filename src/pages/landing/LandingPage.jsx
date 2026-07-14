@@ -67,9 +67,6 @@ export default function LandingPage() {
       <section className="landing__hero">
         <div className="landing__hero-bg" />
         <div className="landing__hero-content">
-          <div className="landing__hero-badge">
-            <Shield size={14} /> {t('landing.iafBadge')}
-          </div>
           <h1 className="landing__hero-title">
             {t('landing.heroTitle')}<br />
             <span className="landing__hero-accent">{t('landing.heroAccent')}</span>
