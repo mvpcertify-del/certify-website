@@ -50,7 +50,8 @@
     "submitting": "提交中…",
     "add": "Add",
     "create": "Create",
-    "clear": "Clear [DRAFT]"
+    "clear": "Clear [DRAFT]",
+    "gotIt": "Got it"
   },
   "languageSuggestion": {
     "title": "切换语言？",
@@ -462,7 +463,14 @@
     "awaitingVerificationNote": "我们将验证您的转账，并在确认后给您发送邮件。您现在即可完成公司注册。",
     "methodCash": "现金",
     "methodCashDesc": "现金支付——我们的团队将安排收款。",
-    "serverUnavailable": "结账服务器暂时不可用。请稍后再试。"
+    "serverUnavailable": "结账服务器暂时不可用。请稍后再试。",
+    "viewBankDetails": "View bank details",
+    "viewCashDetails": "View cash details",
+    "bankDetailsTitle": "Bank transfer details",
+    "cashDetailsTitle": "Cash payment details",
+    "bankDetailsIntro": "Transfer the total to the account below. Add your order reference so we can match your payment.",
+    "cashDetailsIntro": "Our team will contact you to arrange cash collection using the details below.",
+    "offlineAfterOrderNote": "Place your order first — we’ll email your dashboard access once your payment is confirmed."
   },
   "settings": {
     "title": "设置",
@@ -783,7 +791,13 @@
     "selectStandard": "Select ISO standard",
     "package": "Package",
     "applicationCreated": "Application created",
-    "filteredBy": "Filtered by [DRAFT]"
+    "filteredBy": "Filtered by [DRAFT]",
+    "clientApproved": "Client approved — access link sent",
+    "approveClientAccess": "Approve & grant dashboard access",
+    "clientAwaitingApproval": "This client has paid and is awaiting your approval.",
+    "countryOptional": "Country (optional)",
+    "countryPlaceholder": "e.g. United Arab Emirates",
+    "filterByCountry": "Filter by country…"
   },
   "certBody": {
     "addBody": "添加认证机构",
@@ -1226,7 +1240,10 @@
     "successTitle": "付款成功！",
     "successDesc": "请查收邮件——我们已发送访问仪表板的安全链接。",
     "emailSentTo": "已发送至 {{email}}",
-    "cancelledNote": "您的付款已取消。您可以在下方重试。"
+    "cancelledNote": "您的付款已取消。您可以在下方重试。",
+    "paidPendingTitle": "Payment received",
+    "paidPendingDesc": "Thank you — your payment is confirmed. Your account will be activated once our team reviews and approves it. We'll email you your dashboard access link then.",
+    "approvalEmailTo": "We'll send your access link to {{email}} after approval"
   },
   "consultation": {
     "title": "Book a Consultation",

@@ -123,7 +123,7 @@ export default function ApplicationDetails() {
 
         const { data: appData, error: appError } = await supabase
           .from('applications')
-          .select('*, client:profiles!client_id(full_name, email, region, company_name)')
+          .select('*, client:profiles!client_id(full_name, email, region, country, company_name, approval_status)')
           .eq('id', id)
           .single();
 
@@ -230,6 +230,25 @@ export default function ApplicationDetails() {
       showToast(t('admin.paymentVerified'));
     } catch (err) {
       console.error('Error verifying payment', err);
+      alert(err.message || t('admin.failedUpdateApp'));
+    } finally { setSaving(false); }
+  };
+
+  // Approve a paid client and grant dashboard access. The client asked that a
+  // client account be activated ONLY AFTER admin approval — card payers land
+  // here as approval_status='pending' until this runs, which also emails their
+  // one-click dashboard link.
+  const handleApproveClient = async () => {
+    setSaving(true);
+    try {
+      await apiPost('/api/checkout', { action: 'approve-client-access', applicationId: id });
+      setApplication(prev => ({
+        ...prev,
+        client: { ...prev.client, approval_status: 'approved' },
+      }));
+      showToast(t('admin.clientApproved'));
+    } catch (err) {
+      console.error('Error approving client', err);
       alert(err.message || t('admin.failedUpdateApp'));
     } finally { setSaving(false); }
   };
@@ -490,7 +509,7 @@ export default function ApplicationDetails() {
             <div className="detail-item"><Building size={16} className="detail-icon" /><div><label>{t('dashboard.industry')}</label><p>{application.industry || '—'}</p></div></div>
             <div className="detail-item"><Target size={16} className="detail-icon" /><div><label>{t('dashboard.scope')}</label><p>{application.scope || '—'}</p></div></div>
             <div className="detail-item"><Users size={16} className="detail-icon" /><div><label>{t('admin.employees')}</label><p>{application.employee_count || '—'}</p></div></div>
-            <div className="detail-item"><Globe size={16} className="detail-icon" /><div><label>{t('admin.region')}</label><p>{getRegionLabel(application.client?.region)}</p></div></div>
+            <div className="detail-item"><Globe size={16} className="detail-icon" /><div><label>{t('admin.country')}</label><p>{application.client?.country || '—'}</p></div></div>
             <div className="detail-item"><Activity size={16} className="detail-icon" /><div><label>{t('admin.recommendedISO')}</label><p>{application.recommended_iso || '—'}</p></div></div>
             <div className="detail-item"><FileText size={16} className="detail-icon" /><div><label>{t('admin.selectedPackage')}</label><p>{application.selected_package ? application.selected_package.replace(/_/g, ' ') : '—'}</p></div></div>
             {application.payment_method && (
@@ -515,6 +534,26 @@ export default function ApplicationDetails() {
             >
               <CheckCircle2 size={16} /> {t('admin.verifyPayment')}
             </button>
+          )}
+          {/* Card payers are paid but stay pending until an admin grants access.
+              Only show once payment has actually landed (paid) — an abandoned,
+              unpaid order must not be approvable. Offline payers go through
+              Verify Payment above instead. */}
+          {canAssign
+            && application.client?.approval_status === 'pending'
+            && application.payment_status === 'paid' && (
+            <div style={{ marginTop: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.8rem', color: '#92400e', background: '#fef3c7', padding: '8px 12px', borderRadius: 10, marginBottom: 8 }}>
+                <AlertCircle size={15} /> {t('admin.clientAwaitingApproval')}
+              </div>
+              <button
+                onClick={handleApproveClient}
+                disabled={saving}
+                style={{ width: '100%', padding: '10px 16px', background: '#059669', color: 'white', border: 'none', borderRadius: 10, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+              >
+                <CheckCircle2 size={16} /> {t('admin.approveClientAccess')}
+              </button>
+            </div>
           )}
           <div className="contact-info">
             <h4>{t('admin.contactInfo')}</h4>

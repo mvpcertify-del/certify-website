@@ -5,8 +5,7 @@ import {
   Activity, Stethoscope, ShieldCheck, BrainCircuit, ArrowRight,
 } from 'lucide-react';
 import { ISO_CATALOG_LIST } from '../../utils/isoCatalog';
-import LanguageSwitcher from '../../components/LanguageSwitcher';
-import BrandLogo from '../../components/ui/BrandLogo';
+import PublicNav from '../../components/layout/PublicNav';
 import BackButton from '../../components/ui/BackButton';
 import './Certifications.css';
 
@@ -23,10 +22,8 @@ export default function Certifications() {
 
   return (
     <div className="certs">
-      <header className="certs__header">
-        <BrandLogo size={26} />
-        <LanguageSwitcher variant="landing" />
-      </header>
+      <PublicNav />
+      <div className="pubnav-offset" />
 
       <BackButton />
 

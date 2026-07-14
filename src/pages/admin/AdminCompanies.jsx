@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Input, Select, Button } from '../../components/ui/FormElements';
+import { Input, Button } from '../../components/ui/FormElements';
 import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
 import RowActions from '../../components/ui/RowActions';
 import DetailModal from '../../components/ui/DetailModal';
-import { ROLES, ROLE_LABELS, REGIONS } from '../../utils/roles';
+import { ROLES } from '../../utils/roles';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { apiPost } from '../../lib/apiClient';
@@ -20,16 +20,18 @@ export default function AdminCompanies() {
 
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [regionFilter, setRegionFilter] = useState(isRegionalAdmin ? (user.region || '') : '');
+  // Country search (replaces the Region filter). Regional admins stay scoped to
+  // their region server-side in fetchCompanies; region is derived from country.
+  const [countryFilter, setCountryFilter] = useState('');
 
   // Create Client modal
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createForm, setCreateForm] = useState({ full_name: '', email: '', password: '', company_name: '', region: '' });
+  const [createForm, setCreateForm] = useState({ full_name: '', email: '', password: '', company_name: '', country: '' });
 
   // Edit Client modal
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
-  const [editForm, setEditForm] = useState({ full_name: '', email: '', company_name: '', region: '' });
+  const [editForm, setEditForm] = useState({ full_name: '', email: '', company_name: '', country: '' });
 
   // View Client modal (read-only)
   const [showViewModal, setShowViewModal] = useState(false);
@@ -46,21 +48,22 @@ export default function AdminCompanies() {
   const fetchCompanies = async () => {
     setLoading(true);
     let query = supabase.from('profiles').select('*').eq('role', ROLES.CLIENT);
-    if (isRegionalAdmin && user.region) query = query.eq('region', user.region);
+    // Fail-closed: regional admin with no resolved region sees no clients.
+    if (isRegionalAdmin) query = query.eq('region', user?.region || '__no_region__');
     const { data } = await query.order('created_at', { ascending: false });
     if (data) setCompanies(data);
     setLoading(false);
   };
 
-  const filtered = regionFilter && !isRegionalAdmin
-    ? companies.filter(c => c.region === regionFilter)
+  const filtered = countryFilter.trim() && !isRegionalAdmin
+    ? companies.filter(c => (c.country || '').toLowerCase().includes(countryFilter.trim().toLowerCase()))
     : companies;
 
   // --- Create Client ---
   const handleCreateClient = async (e) => {
     e.preventDefault();
     setError('');
-    const { full_name, email, password, company_name, region } = createForm;
+    const { full_name, email, password, company_name, country } = createForm;
 
     if (!full_name || !email || !password || !company_name) {
       setError(t('admin.fillRequired'));
@@ -73,11 +76,11 @@ export default function AdminCompanies() {
 
     setSaving(true);
     try {
-      await apiPost('/api/create-user', { email, password, full_name, role: 'client', region, company_name });
+      await apiPost('/api/create-user', { email, password, full_name, role: 'client', country, company_name });
 
       setSuccess(`${t('admin.clientCreated')} ${company_name}`);
       setShowCreateModal(false);
-      setCreateForm({ full_name: '', email: '', password: '', company_name: '', region: '' });
+      setCreateForm({ full_name: '', email: '', password: '', company_name: '', country: '' });
       fetchCompanies();
     } catch (err) {
       setError(err.message);
@@ -98,7 +101,7 @@ export default function AdminCompanies() {
       full_name: client.full_name || '',
       email: client.email || '',
       company_name: client.company_name || '',
-      region: client.region || '',
+      country: client.country || '',
     });
     setError('');
     setShowEditModal(true);
@@ -120,7 +123,7 @@ export default function AdminCompanies() {
         full_name: editForm.full_name,
         email: editForm.email,
         company_name: editForm.company_name,
-        region: editForm.region || null,
+        country: editForm.country || null,
       });
 
       setSuccess(`${t('admin.clientUpdated')} ${editForm.company_name}`);
@@ -165,11 +168,7 @@ export default function AdminCompanies() {
     { key: 'company_name', label: t('admin.companyName'), render: (val) => val || '—' },
     { key: 'full_name', label: t('admin.contactPerson'), render: (val) => val || '—' },
     { key: 'email', label: t('auth.email') },
-    { key: 'region', label: t('admin.region'), render: (val) => {
-      if (!val) return '—';
-      const r = REGIONS.find(reg => reg.id === val);
-      return r ? r.label : val;
-    }},
+    { key: 'country', label: t('admin.country'), render: (val) => val || '—' },
     { key: 'created_at', label: t('admin.joined'), render: (val) => val ? new Date(val).toLocaleDateString() : '—' },
     ...(isSuperAdmin ? [
       {
@@ -204,23 +203,19 @@ export default function AdminCompanies() {
         </div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           {!isRegionalAdmin && (
-            <Select
-              id="filter-region"
-              name="region"
-              value={regionFilter}
-              onChange={(e) => setRegionFilter(e.target.value)}
+            <Input
+              id="filter-country"
+              name="country"
+              value={countryFilter}
+              onChange={(e) => setCountryFilter(e.target.value)}
+              placeholder={t('admin.filterByCountry')}
               style={{ width: '180px' }}
-            >
-              <option value="">{t('common.allRegions')}</option>
-              {REGIONS.map(r => (
-                <option key={r.id} value={r.id}>{r.label}</option>
-              ))}
-            </Select>
+            />
           )}
           {isSuperAdmin && (
             <Button variant="primary" size="md" onClick={() => {
               setError('');
-              setCreateForm({ full_name: '', email: '', password: '', company_name: '', region: '' });
+              setCreateForm({ full_name: '', email: '', password: '', company_name: '', country: '' });
               setShowCreateModal(true);
             }}>
               <UserPlus size={18} /> {t('admin.addClient')}
@@ -267,12 +262,9 @@ export default function AdminCompanies() {
           <Input label="Password *" type="password" id="create-client-password" name="password"
             placeholder="Min 6 characters" value={createForm.password}
             onChange={(e) => setCreateForm(p => ({ ...p, password: e.target.value }))} required />
-          <Select label="Region" id="create-client-region" name="region"
-            value={createForm.region}
-            onChange={(e) => setCreateForm(p => ({ ...p, region: e.target.value }))}>
-            <option value="">Select a region (optional)</option>
-            {REGIONS.map(r => <option key={r.id} value={r.id}>{r.label}</option>)}
-          </Select>
+          <Input label={t('admin.country')} id="create-client-country" name="country"
+            placeholder={t('admin.countryPlaceholder')} value={createForm.country}
+            onChange={(e) => setCreateForm(p => ({ ...p, country: e.target.value }))} />
           <div className="admin-users__form-actions">
             <Button type="button" variant="ghost" size="md" onClick={() => setShowCreateModal(false)}>{t('common.cancel')}</Button>
             <Button type="submit" variant="primary" size="md" loading={saving}>{t('admin.createClient')}</Button>
@@ -295,12 +287,9 @@ export default function AdminCompanies() {
           <Input label="Email *" type="email" id="edit-client-email" name="email"
             placeholder="client@company.com" value={editForm.email}
             onChange={(e) => setEditForm(p => ({ ...p, email: e.target.value }))} required />
-          <Select label="Region" id="edit-client-region" name="region"
-            value={editForm.region}
-            onChange={(e) => setEditForm(p => ({ ...p, region: e.target.value }))}>
-            <option value="">Select a region</option>
-            {REGIONS.map(r => <option key={r.id} value={r.id}>{r.label}</option>)}
-          </Select>
+          <Input label={t('admin.country')} id="edit-client-country" name="country"
+            placeholder={t('admin.countryPlaceholder')} value={editForm.country}
+            onChange={(e) => setEditForm(p => ({ ...p, country: e.target.value }))} />
           <div className="admin-users__form-actions">
             <Button type="button" variant="ghost" size="md" onClick={() => setShowEditModal(false)}>{t('common.cancel')}</Button>
             <Button type="submit" variant="primary" size="md" loading={saving}>{t('common.save')}</Button>

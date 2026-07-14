@@ -54,9 +54,10 @@ export default function ProfileManagementTable({
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [regionFilter, setRegionFilter] = useState(
-    scopeToRegion && isRegionalAdmin ? (user?.region || '') : ''
-  );
+  // Country search (replaces the old Region filter). Regional admins are still
+  // scoped to their region server-side in fetchItems; this is a display filter
+  // for super admins across the full list.
+  const [countryFilter, setCountryFilter] = useState('');
 
   const [showEdit, setShowEdit] = useState(false);
   const [editingRow, setEditingRow] = useState(null);
@@ -74,8 +75,10 @@ export default function ProfileManagementTable({
   const fetchItems = async () => {
     setLoading(true);
     let query = supabase.from('profiles').select('*').eq('role', role);
-    if (scopeToRegion && isRegionalAdmin && user?.region) {
-      query = query.eq('region', user.region);
+    if (scopeToRegion && isRegionalAdmin) {
+      // Fail-closed: a regional admin with no region resolved must see nothing,
+      // never the full unscoped list.
+      query = query.eq('region', user?.region || '__no_region__');
     }
     const { data } = await query.order('created_at', { ascending: false });
     if (data) setItems(data);
@@ -87,8 +90,8 @@ export default function ProfileManagementTable({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, role]);
 
-  const filtered = regionFilter && !isRegionalAdmin
-    ? items.filter(i => i.region === regionFilter)
+  const filtered = countryFilter.trim()
+    ? items.filter(i => (i.country || '').toLowerCase().includes(countryFilter.trim().toLowerCase()))
     : items;
 
   const rowName = (row) => row.full_name || row.company_name || row.email || '';
@@ -240,18 +243,14 @@ export default function ProfileManagementTable({
         </div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           {!isRegionalAdmin && (
-            <Select
-              id="filter-region"
-              name="region"
-              value={regionFilter}
-              onChange={(e) => setRegionFilter(e.target.value)}
+            <Input
+              id="filter-country"
+              name="country"
+              value={countryFilter}
+              onChange={(e) => setCountryFilter(e.target.value)}
+              placeholder={t('admin.filterByCountry')}
               style={{ width: '200px' }}
-            >
-              <option value="">{t('common.allRegions')}</option>
-              {REGIONS.map(r => (
-                <option key={r.id} value={r.id}>{r.label}</option>
-              ))}
-            </Select>
+            />
           )}
           {canCreate && (
             <Button variant="primary" size="md" onClick={openCreate}>

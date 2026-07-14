@@ -50,7 +50,8 @@
     "submitting": "Wird übermittelt...",
     "add": "Add",
     "create": "Create",
-    "clear": "Clear [DRAFT]"
+    "clear": "Clear [DRAFT]",
+    "gotIt": "Got it"
   },
   "languageSuggestion": {
     "title": "Sprache ändern?",
@@ -462,7 +463,14 @@
     "awaitingVerificationNote": "Wir verifizieren Ihre Überweisung und senden Ihnen eine E-Mail, sobald sie bestätigt ist. Sie können Ihre Unternehmensregistrierung jetzt abschließen.",
     "methodCash": "Bargeld",
     "methodCashDesc": "Zahlen Sie bar — unser Team organisiert die Abholung.",
-    "serverUnavailable": "Der Zahlungsserver ist vorübergehend nicht verfügbar. Bitte versuchen Sie es gleich noch einmal."
+    "serverUnavailable": "Der Zahlungsserver ist vorübergehend nicht verfügbar. Bitte versuchen Sie es gleich noch einmal.",
+    "viewBankDetails": "View bank details",
+    "viewCashDetails": "View cash details",
+    "bankDetailsTitle": "Bank transfer details",
+    "cashDetailsTitle": "Cash payment details",
+    "bankDetailsIntro": "Transfer the total to the account below. Add your order reference so we can match your payment.",
+    "cashDetailsIntro": "Our team will contact you to arrange cash collection using the details below.",
+    "offlineAfterOrderNote": "Place your order first — we’ll email your dashboard access once your payment is confirmed."
   },
   "settings": {
     "title": "Einstellungen",
@@ -783,7 +791,13 @@
     "selectStandard": "Select ISO standard",
     "package": "Package",
     "applicationCreated": "Application created",
-    "filteredBy": "Filtered by [DRAFT]"
+    "filteredBy": "Filtered by [DRAFT]",
+    "clientApproved": "Client approved — access link sent",
+    "approveClientAccess": "Approve & grant dashboard access",
+    "clientAwaitingApproval": "This client has paid and is awaiting your approval.",
+    "countryOptional": "Country (optional)",
+    "countryPlaceholder": "e.g. United Arab Emirates",
+    "filterByCountry": "Filter by country…"
   },
   "certBody": {
     "addBody": "Zertifizierungsstelle hinzufügen",
@@ -1226,7 +1240,10 @@
     "successTitle": "Zahlung erfolgreich!",
     "successDesc": "Prüfen Sie Ihre E-Mails — wir haben Ihnen einen sicheren Link zu Ihrem Dashboard gesendet.",
     "emailSentTo": "Gesendet an {{email}}",
-    "cancelledNote": "Ihre Zahlung wurde abgebrochen. Sie können es unten erneut versuchen."
+    "cancelledNote": "Ihre Zahlung wurde abgebrochen. Sie können es unten erneut versuchen.",
+    "paidPendingTitle": "Payment received",
+    "paidPendingDesc": "Thank you — your payment is confirmed. Your account will be activated once our team reviews and approves it. We'll email you your dashboard access link then.",
+    "approvalEmailTo": "We'll send your access link to {{email}} after approval"
   },
   "consultation": {
     "title": "Book a Consultation",

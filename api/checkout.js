@@ -337,6 +337,27 @@ async function guestCheckoutHandler(req, res) {
 // Unauthenticated by necessity (the buyer has no session yet), so it is made
 // safe by verifying the Stripe session server-side: only a session Stripe
 // reports as paid AND whose metadata points at this application can unlock it.
+// Resolve a client's email/name and send the one-click dashboard magic link.
+// Shared by the offline-verify and the Super-Admin approve actions so the
+// "grant access" step is identical wherever it happens.
+async function emailDashboardLink(clientId) {
+  let email = null, name = null;
+  const { data: prof } = await supabaseAdmin
+    .from('profiles').select('email, full_name').eq('id', clientId).maybeSingle();
+  email = prof?.email || null;
+  name = prof?.full_name || null;
+  if (!email) {
+    const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(clientId);
+    email = authUser?.user?.email || null;
+  }
+  if (!email) return { ok: false, email: null };
+  const r = await sendVerificationEmail({
+    supabaseAdmin, email, name, linkType: 'magiclink', redirectPath: '/auth/callback',
+  });
+  if (!r.ok) console.error('emailDashboardLink: magic link email failed', r);
+  return { ok: !!r.ok, email };
+}
+
 async function confirmGuestPaymentHandler(req, res) {
   try {
     const { applicationId, sessionId } = req.body || {};
@@ -363,39 +384,90 @@ async function confirmGuestPaymentHandler(req, res) {
 
     const alreadyPaid = app.payment_status === 'paid' || app.payment_status === 'verified';
 
+    // Look up the buyer for the admin alert + the "we'll email you" message.
+    const { data: prof } = await supabaseAdmin
+      .from('profiles')
+      .select('email, full_name, company_name, region, approval_status')
+      .eq('id', app.client_id).maybeSingle();
+    const email = prof?.email || null;
+
     if (!alreadyPaid) {
       await supabaseAdmin.from('applications').update({ payment_status: 'paid' }).eq('id', applicationId);
       // Burn the coupon now that money has actually arrived (first confirm only).
       await burnCoupon(app.coupon_code, {
         clientId: app.client_id, applicationId, finalAmount: app.total_amount,
       });
-    }
-    await supabaseAdmin.from('profiles').update({ approval_status: 'approved' }).eq('id', app.client_id);
-
-    // Look up the buyer's email/name for the magic-link email.
-    let email = null, name = null;
-    const { data: prof } = await supabaseAdmin
-      .from('profiles').select('email, full_name').eq('id', app.client_id).maybeSingle();
-    email = prof?.email || null;
-    name = prof?.full_name || null;
-    if (!email) {
-      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(app.client_id);
-      email = authUser?.user?.email || null;
+      // The client asked that a client account be activated in the dashboard
+      // ONLY AFTER a Super Admin approves. So payment no longer auto-approves:
+      // the buyer stays 'pending' and we alert the admins that a paid client is
+      // waiting. Access (the magic link) is issued by the approve-client-access
+      // action, not here.
+      await notifyAdmins(supabaseAdmin, {
+        title: 'New paid client awaiting approval',
+        message: `${prof?.full_name || email || 'A client'}${prof?.company_name ? ` (${prof.company_name})` : ''} has paid and is awaiting dashboard approval.`,
+        region: prof?.region || null,
+      }).catch(() => {});
     }
 
-    // Email the one-click dashboard magic link only on the first confirmation.
-    let emailSent = false;
-    if (email && !alreadyPaid) {
-      const r = await sendVerificationEmail({
-        supabaseAdmin, email, name, linkType: 'magiclink', redirectPath: '/auth/callback',
-      });
-      emailSent = !!r.ok;
-      if (!r.ok) console.error('confirm-guest-payment: magic link email failed', r);
-    }
+    // Never downgrade an already-approved client (idempotent re-confirm).
+    const pendingApproval = prof?.approval_status !== 'approved';
 
-    return res.status(200).json({ ok: true, emailSent, email });
+    return res.status(200).json({ ok: true, pendingApproval, email });
   } catch (error) {
     console.error('confirm-guest-payment error:', error);
+    return res.status(500).json({ error: error.message || 'Internal Server Error' });
+  }
+}
+
+// ---- Super Admin: approve a paid client and grant dashboard access ----
+// Admin-gated (Bearer JWT). Flips approval_status→approved and emails the
+// one-click dashboard magic link. This is the gate the client asked for: a paid
+// client is only activated once an admin approves. Used for card payers (whose
+// payment is auto-verified by Stripe); offline payers are approved by the
+// verify-offline-payment action instead.
+async function approveClientAccessHandler(req, res) {
+  const auth = await verifyAdmin(req);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+
+  try {
+    const { applicationId, clientId } = req.body || {};
+    let targetClientId = clientId || null;
+    if (applicationId) {
+      // Enforce the payment gate server-side: only a paid/verified order may be
+      // approved for dashboard access. This stops an abandoned, unpaid card
+      // order from being granted access even if the UI offered it.
+      const { data: app } = await supabaseAdmin
+        .from('applications').select('client_id, payment_status').eq('id', applicationId).maybeSingle();
+      if (!app) return res.status(404).json({ error: 'Order not found' });
+      if (app.payment_status !== 'paid' && app.payment_status !== 'verified') {
+        return res.status(409).json({ error: 'This order has not been paid yet.' });
+      }
+      targetClientId = targetClientId || app.client_id || null;
+    }
+    if (!targetClientId) return res.status(400).json({ error: 'Missing client reference' });
+
+    const { data: prof } = await supabaseAdmin
+      .from('profiles').select('approval_status').eq('id', targetClientId).maybeSingle();
+    if (!prof) return res.status(404).json({ error: 'Client not found' });
+    const alreadyApproved = prof.approval_status === 'approved';
+
+    // Idempotent: don't re-stamp approved_by/approved_at (or re-email) if the
+    // client is already approved.
+    if (alreadyApproved) {
+      return res.status(200).json({ ok: true, emailSent: false, alreadyApproved: true });
+    }
+
+    await supabaseAdmin.from('profiles').update({
+      approval_status: 'approved',
+      approved_by: auth.caller.id,
+      approved_at: new Date().toISOString(),
+    }).eq('id', targetClientId);
+
+    const r = await emailDashboardLink(targetClientId);
+
+    return res.status(200).json({ ok: true, emailSent: r.ok, email: r.email, alreadyApproved: false });
+  } catch (error) {
+    console.error('approve-client-access error:', error);
     return res.status(500).json({ error: error.message || 'Internal Server Error' });
   }
 }
@@ -431,22 +503,10 @@ async function verifyOfflinePaymentHandler(req, res) {
     }
 
     // Email the buyer their dashboard access link (only on first verification).
-    let email = null, name = null;
-    const { data: prof } = await supabaseAdmin
-      .from('profiles').select('email, full_name').eq('id', app.client_id).maybeSingle();
-    email = prof?.email || null;
-    name = prof?.full_name || null;
-    if (!email) {
-      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(app.client_id);
-      email = authUser?.user?.email || null;
-    }
     let emailSent = false;
-    if (email && !alreadyVerified) {
-      const r = await sendVerificationEmail({
-        supabaseAdmin, email, name, linkType: 'magiclink', redirectPath: '/auth/callback',
-      });
-      emailSent = !!r.ok;
-      if (!r.ok) console.error('verify-offline-payment: magic link email failed', r);
+    if (!alreadyVerified) {
+      const r = await emailDashboardLink(app.client_id);
+      emailSent = r.ok;
     }
 
     return res.status(200).json({ ok: true, emailSent });
@@ -555,6 +615,11 @@ export default async function handler(req, res) {
   // verified, approves the client, and emails their dashboard magic link.
   if (req.body?.action === 'verify-offline-payment') {
     return verifyOfflinePaymentHandler(req, res);
+  }
+  // Admin approves a paid client and grants dashboard access (magic link).
+  // The client-account activation gate: card payers are only let in after this.
+  if (req.body?.action === 'approve-client-access') {
+    return approveClientAccessHandler(req, res);
   }
   // Public: a visitor requests a consultation (e.g. from the gap-analysis
   // results popup). Notifies admins only — recipients are derived server-side,

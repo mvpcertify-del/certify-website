@@ -50,7 +50,8 @@
     "submitting": "Submitting...",
     "add": "Add",
     "create": "Create",
-    "clear": "Clear"
+    "clear": "Clear",
+    "gotIt": "Got it"
   },
   "languageSuggestion": {
     "title": "Change Language?",
@@ -476,7 +477,14 @@
     "awaitingVerificationNote": "We'll verify your transfer and email you once it's confirmed. You can complete your company registration now.",
     "methodCash": "Cash",
     "methodCashDesc": "Pay in cash — our team will arrange collection.",
-    "serverUnavailable": "The checkout server is temporarily unavailable. Please try again in a moment."
+    "serverUnavailable": "The checkout server is temporarily unavailable. Please try again in a moment.",
+    "viewBankDetails": "View bank details",
+    "viewCashDetails": "View cash details",
+    "bankDetailsTitle": "Bank transfer details",
+    "cashDetailsTitle": "Cash payment details",
+    "bankDetailsIntro": "Transfer the total to the account below. Add your order reference so we can match your payment.",
+    "cashDetailsIntro": "Our team will contact you to arrange cash collection using the details below.",
+    "offlineAfterOrderNote": "Place your order first — we’ll email your dashboard access once your payment is confirmed."
   },
   "settings": {
     "title": "Settings",
@@ -797,7 +805,13 @@
     "selectStandard": "Select ISO standard",
     "package": "Package",
     "applicationCreated": "Application created",
-    "filteredBy": "Filtered by"
+    "filteredBy": "Filtered by",
+    "clientApproved": "Client approved — access link sent",
+    "approveClientAccess": "Approve & grant dashboard access",
+    "clientAwaitingApproval": "This client has paid and is awaiting your approval.",
+    "countryOptional": "Country (optional)",
+    "countryPlaceholder": "e.g. United Arab Emirates",
+    "filterByCountry": "Filter by country…"
   },
   "certBody": {
     "addBody": "Add Certification Body",
@@ -1253,7 +1267,10 @@
     "successTitle": "Payment successful!",
     "successDesc": "Check your email — we've sent a secure link to access your dashboard.",
     "emailSentTo": "Sent to {{email}}",
-    "cancelledNote": "Your payment was cancelled. You can try again below."
+    "cancelledNote": "Your payment was cancelled. You can try again below.",
+    "paidPendingTitle": "Payment received",
+    "paidPendingDesc": "Thank you — your payment is confirmed. Your account will be activated once our team reviews and approves it. We'll email you your dashboard access link then.",
+    "approvalEmailTo": "We'll send your access link to {{email}} after approval"
   },
   "consultation": {
     "title": "Book a Consultation",

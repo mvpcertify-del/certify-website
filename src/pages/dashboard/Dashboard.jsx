@@ -105,9 +105,10 @@ export default function Dashboard() {
             cb_name: cbMap[app.assigned_cb_id] || 'Unassigned',
             client_region: app.client?.region || null,
           }));
-          // Regional Admin: only show applications from their region
-          if (user.role === ROLES.REGIONAL_ADMIN && user.region) {
-            flattened = flattened.filter(app => app.client_region === user.region);
+          // Regional Admin: only show applications from their region.
+          // Fail-closed — a null region shows nothing, not every region.
+          if (user.role === ROLES.REGIONAL_ADMIN) {
+            flattened = user.region ? flattened.filter(app => app.client_region === user.region) : [];
           }
           setAdminApplications(flattened);
         }

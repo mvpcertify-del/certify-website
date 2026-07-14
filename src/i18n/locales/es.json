@@ -50,7 +50,8 @@
     "submitting": "Enviando...",
     "add": "Add",
     "create": "Create",
-    "clear": "Clear [DRAFT]"
+    "clear": "Clear [DRAFT]",
+    "gotIt": "Entendido"
   },
   "languageSuggestion": {
     "title": "¿Cambiar idioma?",
@@ -476,7 +477,14 @@
     "awaitingVerificationNote": "Verificaremos tu transferencia y te enviaremos un correo una vez confirmada. Puedes completar el registro de tu empresa ahora.",
     "methodCash": "Efectivo",
     "methodCashDesc": "Paga en efectivo: nuestro equipo coordinará el cobro.",
-    "serverUnavailable": "El servidor de pago no está disponible temporalmente. Inténtalo de nuevo en un momento."
+    "serverUnavailable": "El servidor de pago no está disponible temporalmente. Inténtalo de nuevo en un momento.",
+    "viewBankDetails": "Ver datos bancarios",
+    "viewCashDetails": "Ver datos de pago en efectivo",
+    "bankDetailsTitle": "Datos de transferencia bancaria",
+    "cashDetailsTitle": "Datos de pago en efectivo",
+    "bankDetailsIntro": "Transfiera el total a la cuenta indicada. Incluya su referencia de pedido para poder identificar su pago.",
+    "cashDetailsIntro": "Nuestro equipo se pondrá en contacto con usted para coordinar la recogida del efectivo con los datos siguientes.",
+    "offlineAfterOrderNote": "Realice primero su pedido; le enviaremos por correo el acceso al panel una vez confirmado el pago."
   },
   "settings": {
     "title": "Configuración",
@@ -797,7 +805,13 @@
     "selectStandard": "Select ISO standard",
     "package": "Package",
     "applicationCreated": "Application created",
-    "filteredBy": "Filtered by [DRAFT]"
+    "filteredBy": "Filtered by [DRAFT]",
+    "clientApproved": "Cliente aprobado: enlace de acceso enviado",
+    "approveClientAccess": "Aprobar y conceder acceso al panel",
+    "clientAwaitingApproval": "Este cliente ha pagado y está esperando su aprobación.",
+    "countryOptional": "País (opcional)",
+    "countryPlaceholder": "p. ej. Emiratos Árabes Unidos",
+    "filterByCountry": "Filtrar por país…"
   },
   "certBody": {
     "addBody": "Añadir Organismo de Certificación",
@@ -1253,7 +1267,10 @@
     "successTitle": "¡Pago realizado con éxito!",
     "successDesc": "Revisa tu correo: te hemos enviado un enlace seguro para acceder a tu panel.",
     "emailSentTo": "Enviado a {{email}}",
-    "cancelledNote": "Tu pago fue cancelado. Puedes intentarlo de nuevo abajo."
+    "cancelledNote": "Tu pago fue cancelado. Puedes intentarlo de nuevo abajo.",
+    "paidPendingTitle": "Pago recibido",
+    "paidPendingDesc": "Gracias: su pago está confirmado. Su cuenta se activará una vez que nuestro equipo la revise y apruebe. Entonces le enviaremos por correo el enlace de acceso a su panel.",
+    "approvalEmailTo": "Enviaremos su enlace de acceso a {{email}} tras la aprobación"
   },
   "consultation": {
     "title": "Reservar una consulta",

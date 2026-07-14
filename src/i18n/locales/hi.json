@@ -50,7 +50,8 @@
     "submitting": "जमा किया जा रहा है...",
     "add": "Add",
     "create": "Create",
-    "clear": "Clear [DRAFT]"
+    "clear": "Clear [DRAFT]",
+    "gotIt": "Got it"
   },
   "languageSuggestion": {
     "title": "भाषा बदलें?",
@@ -462,7 +463,14 @@
     "awaitingVerificationNote": "हम आपके ट्रांसफर को सत्यापित करेंगे और पुष्टि होने पर आपको ईमेल करेंगे। आप अभी अपनी कंपनी का पंजीकरण पूरा कर सकते हैं।",
     "methodCash": "नकद",
     "methodCashDesc": "नकद भुगतान करें — हमारी टीम कलेक्शन की व्यवस्था करेगी।",
-    "serverUnavailable": "चेकआउट सर्वर अस्थायी रूप से अनुपलब्ध है। कृपया कुछ देर में फिर से प्रयास करें।"
+    "serverUnavailable": "चेकआउट सर्वर अस्थायी रूप से अनुपलब्ध है। कृपया कुछ देर में फिर से प्रयास करें।",
+    "viewBankDetails": "View bank details",
+    "viewCashDetails": "View cash details",
+    "bankDetailsTitle": "Bank transfer details",
+    "cashDetailsTitle": "Cash payment details",
+    "bankDetailsIntro": "Transfer the total to the account below. Add your order reference so we can match your payment.",
+    "cashDetailsIntro": "Our team will contact you to arrange cash collection using the details below.",
+    "offlineAfterOrderNote": "Place your order first — we’ll email your dashboard access once your payment is confirmed."
   },
   "settings": {
     "title": "सेटिंग्स",
@@ -783,7 +791,13 @@
     "selectStandard": "Select ISO standard",
     "package": "Package",
     "applicationCreated": "Application created",
-    "filteredBy": "Filtered by [DRAFT]"
+    "filteredBy": "Filtered by [DRAFT]",
+    "clientApproved": "Client approved — access link sent",
+    "approveClientAccess": "Approve & grant dashboard access",
+    "clientAwaitingApproval": "This client has paid and is awaiting your approval.",
+    "countryOptional": "Country (optional)",
+    "countryPlaceholder": "e.g. United Arab Emirates",
+    "filterByCountry": "Filter by country…"
   },
   "certBody": {
     "addBody": "प्रमाणन निकाय जोड़ें",
@@ -1226,7 +1240,10 @@
     "successTitle": "भुगतान सफल!",
     "successDesc": "अपना ईमेल जांचें — हमने आपके डैशबोर्ड तक पहुँचने के लिए एक सुरक्षित लिंक भेजा है।",
     "emailSentTo": "{{email}} पर भेजा गया",
-    "cancelledNote": "आपका भुगतान रद्द कर दिया गया। आप नीचे फिर से प्रयास कर सकते हैं।"
+    "cancelledNote": "आपका भुगतान रद्द कर दिया गया। आप नीचे फिर से प्रयास कर सकते हैं।",
+    "paidPendingTitle": "Payment received",
+    "paidPendingDesc": "Thank you — your payment is confirmed. Your account will be activated once our team reviews and approves it. We'll email you your dashboard access link then.",
+    "approvalEmailTo": "We'll send your access link to {{email}} after approval"
   },
   "consultation": {
     "title": "Book a Consultation",

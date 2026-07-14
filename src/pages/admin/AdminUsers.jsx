@@ -6,7 +6,7 @@ import { Input, Select, Button } from '../../components/ui/FormElements';
 import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
-import { ROLES, ROLE_LABELS, REGIONS, hasPermission, PERMISSIONS, getCreatableRoles, getDisplayRoleLabel } from '../../utils/roles';
+import { ROLES, ROLE_LABELS, getCreatableRoles, getDisplayRoleLabel } from '../../utils/roles';
 import { STAKEHOLDER_TYPES } from '../../utils/stakeholderTypes';
 import { supabase } from '../../lib/supabase';
 import { apiPost } from '../../lib/apiClient';
@@ -52,7 +52,7 @@ export default function AdminUsers() {
     email: '',
     password: '',
     role: '',
-    region: '',
+    country: '',
     stakeholder_type: '',
   });
 
@@ -72,9 +72,10 @@ export default function AdminUsers() {
   const fetchUsers = async () => {
     setFetchingUsers(true);
     let query = supabase.from('profiles').select('*');
-    // Regional Admin: only see users in their region
-    if (isRegionalAdmin && user?.region) {
-      query = query.eq('region', user.region);
+    // Regional Admin: only see users in their region. Fail-closed — a regional
+    // admin with no resolved region sees nothing, never the full list.
+    if (isRegionalAdmin) {
+      query = query.eq('region', user?.region || '__no_region__');
     }
     const { data } = await query.order('created_at', { ascending: false });
     if (data) setUsers(data);
@@ -97,8 +98,7 @@ export default function AdminUsers() {
     setError('');
     setSuccess('');
 
-    const { full_name, email, password, role, stakeholder_type } = createForm;
-    const region = isRegionalAdmin ? (user?.region || createForm.region) : createForm.region;
+    const { full_name, email, password, role, stakeholder_type, country } = createForm;
 
     if (!full_name || !email || !password || !role) {
       setError(t('admin.fillRequired'));
@@ -129,13 +129,17 @@ export default function AdminUsers() {
         password,
         full_name,
         role,
-        region,
+        country,
+        // A regional admin can only create users inside their own region, so we
+        // force it here regardless of the country typed (the server prefers an
+        // explicit region over the country-derived one).
+        ...(isRegionalAdmin && user?.region ? { region: user.region } : {}),
         ...(resolvedStakeholderType ? { stakeholder_type: resolvedStakeholderType } : {}),
       });
 
       setSuccess(`${t('admin.successCreated')} ${ROLE_LABELS[role]}: ${full_name}`);
       setShowCreateModal(false);
-      setCreateForm({ full_name: '', email: '', password: '', role: '', region: '', stakeholder_type: '' });
+      setCreateForm({ full_name: '', email: '', password: '', role: '', country: '', stakeholder_type: '' });
       fetchUsers();
     } catch (err) {
       setError(err.message);
@@ -215,11 +219,7 @@ export default function AdminUsers() {
       const label = getDisplayRoleLabel(val, row?.stakeholder_type);
       return <StatusBadge status={val} label={label} />;
     }},
-    { key: 'region', label: t('admin.region'), render: (val) => {
-      if (!val) return '—';
-      const r = REGIONS.find(reg => reg.id === val);
-      return r ? r.label : val;
-    }},
+    { key: 'country', label: t('admin.country'), render: (val) => val || '—' },
     { key: 'created_at', label: t('admin.joined'), render: (val) => val ? new Date(val).toLocaleDateString() : '—' },
     {
       key: 'is_active', label: t('dashboard.status'), render: (val) => (
@@ -284,7 +284,7 @@ export default function AdminUsers() {
         </div>
         <Button variant="primary" size="md" onClick={() => {
           setError('');
-          setCreateForm({ full_name: '', email: '', password: '', role: '', region: '', stakeholder_type: '' });
+          setCreateForm({ full_name: '', email: '', password: '', role: '', country: '', stakeholder_type: '' });
           setShowCreateModal(true);
         }}>
           <UserPlus size={18} /> {t('admin.createUser')}
@@ -414,19 +414,17 @@ export default function AdminUsers() {
             </Select>
           )}
 
-          <Select
-            label={isRegionalAdmin ? t('admin.region') : t('admin.regionOptional')}
-            id="create-user-region"
-            name="region"
-            value={isRegionalAdmin ? (user?.region || createForm.region) : createForm.region}
+          {/* Country replaces Region in the UI; the user's region is derived
+              from it server-side. Regional admins create only within their own
+              region (forced on submit), so this is display/record only. */}
+          <Input
+            label={isRegionalAdmin ? t('admin.country') : t('admin.countryOptional')}
+            id="create-user-country"
+            name="country"
+            placeholder={t('admin.countryPlaceholder')}
+            value={createForm.country}
             onChange={handleCreateChange}
-            disabled={isRegionalAdmin}
-          >
-            <option value="">{t('admin.selectRegion')}</option>
-            {REGIONS.map(r => (
-              <option key={r.id} value={r.id}>{r.label}</option>
-            ))}
-          </Select>
+          />
 
           <div className="admin-users__form-actions">
             <Button type="button" variant="ghost" size="md" onClick={() => setShowCreateModal(false)}>

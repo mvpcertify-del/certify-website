@@ -5,7 +5,7 @@ import { Input, Select, Button } from '../../components/ui/FormElements';
 import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
-import { ROLES, REGIONS } from '../../utils/roles';
+import { ROLES } from '../../utils/roles';
 import { ISO_CATALOG_LIST } from '../../utils/isoCatalog';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -32,7 +32,9 @@ export default function AdminApplications() {
 
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [regionFilter, setRegionFilter] = useState(isRegionalAdmin ? (user.region || '') : '');
+  // Super admins search by country; regional admins are hard-scoped to their
+  // region below (region is still the RBAC key, derived from country).
+  const [countryFilter, setCountryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || '');
 
   // --- Add Application (Super Admin) ---
@@ -43,7 +45,7 @@ export default function AdminApplications() {
   const [success, setSuccess] = useState('');
   const blankForm = {
     clientId: '',
-    new_full_name: '', new_email: '', new_password: '', new_region: '',
+    new_full_name: '', new_email: '', new_password: '', new_country: '',
     company_name: '', industry: '', scope: '',
     recommended_iso: '', selected_package: 'Standard',
     employee_count: '', locations_count: '',
@@ -55,7 +57,7 @@ export default function AdminApplications() {
     setLoading(true);
     const { data } = await supabase
       .from('applications')
-      .select('*, auditor:profiles!assigned_auditor_id(full_name), client:profiles!client_id(region)')
+      .select('*, auditor:profiles!assigned_auditor_id(full_name), client:profiles!client_id(region, country)')
       .order('created_at', { ascending: false });
 
     if (data) {
@@ -74,6 +76,7 @@ export default function AdminApplications() {
         auditor_name: app.auditor?.full_name || 'Unassigned',
         cb_name: cbMap[app.assigned_cb_id] || 'Unassigned',
         region: app.client?.region || null,
+        country: app.client?.country || null,
       })));
     }
     setLoading(false);
@@ -97,7 +100,11 @@ export default function AdminApplications() {
   }, [isSuperAdmin]);
 
   let filtered = applications;
-  if (regionFilter) filtered = filtered.filter(a => a.region === regionFilter);
+  // Regional admins stay locked to their own region (RBAC), regardless of the
+  // country search box which only super admins see. Fail-closed: no resolved
+  // region means no applications, never the full unscoped list.
+  if (isRegionalAdmin) filtered = user?.region ? filtered.filter(a => a.region === user.region) : [];
+  if (countryFilter.trim()) filtered = filtered.filter(a => (a.country || '').toLowerCase().includes(countryFilter.trim().toLowerCase()));
   if (statusFilter) filtered = filtered.filter(a => a.status === statusFilter);
 
   const openCreate = () => {
@@ -146,7 +153,7 @@ export default function AdminApplications() {
           full_name: form.new_full_name,
           email: form.new_email,
           password: form.new_password,
-          region: form.new_region || null,
+          country: form.new_country || null,
           company_name: form.company_name || null,
         });
         clientId = res?.user?.id;
@@ -188,11 +195,7 @@ export default function AdminApplications() {
     { key: 'recommended_iso', label: t('dashboard.certificate') },
     { key: 'auditor_name', label: t('dashboard.assignedAuditor') },
     { key: 'cb_name', label: t('dashboard.assignedCB') },
-    { key: 'region', label: t('admin.region'), render: (val) => {
-      if (!val) return '—';
-      const r = REGIONS.find(reg => reg.id === val);
-      return r ? r.label : val;
-    }},
+    { key: 'country', label: t('admin.country'), render: (val) => val || '—' },
     { key: 'status', label: t('dashboard.status'), render: (val) => <StatusBadge status={val} /> },
     { key: 'action', label: t('dashboard.action'), render: (_, row) => (
       <Button size="sm" variant="outline" onClick={() => navigate(`/admin/applications/${row.id}`)}>{t('common.manage')}</Button>
@@ -234,18 +237,14 @@ export default function AdminApplications() {
             <option value="rejected">{t('admin.rejected')}</option>
           </Select>
           {!isRegionalAdmin && (
-            <Select
-              id="filter-region"
-              name="region"
-              value={regionFilter}
-              onChange={(e) => setRegionFilter(e.target.value)}
+            <Input
+              id="filter-country"
+              name="country"
+              value={countryFilter}
+              onChange={(e) => setCountryFilter(e.target.value)}
+              placeholder={t('admin.filterByCountry')}
               style={{ width: '200px' }}
-            >
-              <option value="">{t('common.allRegions')}</option>
-              {REGIONS.map(r => (
-                <option key={r.id} value={r.id}>{r.label}</option>
-              ))}
-            </Select>
+            />
           )}
           {isSuperAdmin && (
             <Button variant="primary" size="md" onClick={openCreate}>
@@ -313,12 +312,9 @@ export default function AdminApplications() {
               <Input label={t('auth.password')} type="password" id="app-new-password" name="new_password"
                 placeholder={t('admin.passwordMinLength')} value={form.new_password}
                 onChange={(e) => setForm(p => ({ ...p, new_password: e.target.value }))} required />
-              <Select label={t('admin.region')} id="app-new-region" name="new_region"
-                value={form.new_region}
-                onChange={(e) => setForm(p => ({ ...p, new_region: e.target.value }))}>
-                <option value="">{t('admin.selectRegion')}</option>
-                {REGIONS.map(r => <option key={r.id} value={r.id}>{r.label}</option>)}
-              </Select>
+              <Input label={t('admin.country')} id="app-new-country" name="new_country"
+                placeholder={t('admin.countryPlaceholder')} value={form.new_country}
+                onChange={(e) => setForm(p => ({ ...p, new_country: e.target.value }))} />
             </>
           )}
 

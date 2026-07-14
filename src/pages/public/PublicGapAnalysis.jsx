@@ -4,8 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowRight, CheckCircle2, AlertCircle, X, CalendarClock } from 'lucide-react';
 import { Button } from '../../components/ui/FormElements';
 import ConsultationModal from '../../components/ConsultationModal';
-import LanguageSwitcher from '../../components/LanguageSwitcher';
-import BrandLogo from '../../components/ui/BrandLogo';
+import PublicNav from '../../components/layout/PublicNav';
 import BackButton from '../../components/ui/BackButton';
 import '../client/GapAnalysis.css';
 import './PublicGapAnalysis.css';
@@ -56,10 +55,8 @@ export default function PublicGapAnalysis() {
     const isReady = score >= 60;
     return (
       <div className="public-gap">
-        <header className="public-gap__header">
-          <BrandLogo size={26} />
-          <LanguageSwitcher variant="landing" />
-        </header>
+        <PublicNav />
+        <div className="pubnav-offset" />
 
         <BackButton />
 
@@ -104,10 +101,8 @@ export default function PublicGapAnalysis() {
   // Quiz view (anonymous)
   return (
     <div className="public-gap">
-      <header className="public-gap__header">
-        <BrandLogo size={26} />
-        <LanguageSwitcher variant="landing" />
-      </header>
+      <PublicNav />
+      <div className="pubnav-offset" />
 
       <BackButton />
 

@@ -50,7 +50,8 @@
     "submitting": "جاري الإرسال...",
     "add": "Add",
     "create": "Create",
-    "clear": "Clear [DRAFT]"
+    "clear": "Clear [DRAFT]",
+    "gotIt": "حسنًا"
   },
   "languageSuggestion": {
     "title": "تغيير اللغة؟",
@@ -476,7 +477,14 @@
     "awaitingVerificationNote": "سنتحقق من تحويلك ونرسل لك بريداً إلكترونياً بمجرد تأكيده. يمكنك إكمال تسجيل شركتك الآن.",
     "methodCash": "نقداً",
     "methodCashDesc": "ادفع نقداً — سيقوم فريقنا بترتيب الاستلام.",
-    "serverUnavailable": "خادم الدفع غير متاح مؤقتاً. يرجى المحاولة مرة أخرى بعد قليل."
+    "serverUnavailable": "خادم الدفع غير متاح مؤقتاً. يرجى المحاولة مرة أخرى بعد قليل.",
+    "viewBankDetails": "عرض تفاصيل الحساب البنكي",
+    "viewCashDetails": "عرض تفاصيل الدفع النقدي",
+    "bankDetailsTitle": "تفاصيل التحويل البنكي",
+    "cashDetailsTitle": "تفاصيل الدفع النقدي",
+    "bankDetailsIntro": "حوّل المبلغ الإجمالي إلى الحساب أدناه. أضف رقم طلبك حتى نتمكن من مطابقة دفعتك.",
+    "cashDetailsIntro": "سيتواصل معك فريقنا لترتيب استلام المبلغ نقدًا باستخدام التفاصيل أدناه.",
+    "offlineAfterOrderNote": "قدّم طلبك أولاً — وسنرسل إليك رابط الوصول إلى لوحة التحكم عبر البريد بمجرد تأكيد دفعتك."
   },
   "settings": {
     "title": "الإعدادات",
@@ -797,7 +805,13 @@
     "selectStandard": "Select ISO standard",
     "package": "Package",
     "applicationCreated": "Application created",
-    "filteredBy": "Filtered by [DRAFT]"
+    "filteredBy": "Filtered by [DRAFT]",
+    "clientApproved": "تمت الموافقة على العميل — تم إرسال رابط الوصول",
+    "approveClientAccess": "الموافقة ومنح الوصول إلى لوحة التحكم",
+    "clientAwaitingApproval": "دفع هذا العميل وهو في انتظار موافقتك.",
+    "countryOptional": "الدولة (اختياري)",
+    "countryPlaceholder": "مثال: الإمارات العربية المتحدة",
+    "filterByCountry": "تصفية حسب الدولة…"
   },
   "certBody": {
     "addBody": "إضافة هيئة تصديق",
@@ -1253,7 +1267,10 @@
     "successTitle": "تم الدفع بنجاح!",
     "successDesc": "تحقق من بريدك الإلكتروني — لقد أرسلنا رابطاً آمناً للوصول إلى لوحة التحكم.",
     "emailSentTo": "أُرسل إلى {{email}}",
-    "cancelledNote": "تم إلغاء دفعتك. يمكنك المحاولة مرة أخرى أدناه."
+    "cancelledNote": "تم إلغاء دفعتك. يمكنك المحاولة مرة أخرى أدناه.",
+    "paidPendingTitle": "تم استلام الدفعة",
+    "paidPendingDesc": "شكرًا لك — تم تأكيد دفعتك. سيتم تفعيل حسابك بمجرد مراجعته والموافقة عليه من قِبل فريقنا. وسنرسل إليك حينها رابط الوصول إلى لوحة التحكم عبر البريد الإلكتروني.",
+    "approvalEmailTo": "سنرسل رابط الوصول إلى {{email}} بعد الموافقة"
   },
   "consultation": {
     "title": "احجز استشارة",

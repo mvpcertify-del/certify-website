@@ -363,6 +363,78 @@
 }
 .checkout__ghost-btn:hover { background: rgba(16, 185, 129, 0.06); }
 
+/* ---- Inline link (e.g. "view bank details" inside the offline hint) ---- */
+.checkout__inline-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  color: #2563eb;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ---- Bank/cash details popup (checkout-local, always light) ---- */
+.checkout__modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.15s ease;
+}
+.checkout__modal {
+  background: #ffffff;
+  color: #0f172a;
+  border-radius: 16px;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.28);
+  width: 100%;
+  max-width: 420px;
+  padding: 22px;
+  box-sizing: border-box;
+}
+.checkout__modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.checkout__modal-head h2 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  margin: 0;
+  color: #0f172a;
+}
+.checkout__modal-close {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 2px;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.checkout__modal-close:hover { color: #475569; }
+.checkout__modal-intro {
+  font-size: 0.86rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0 0 14px;
+}
+.checkout__submit--modal { margin-top: 4px; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+@media (max-width: 520px) {
+  .checkout__modal-overlay { align-items: flex-end; padding: 0; }
+  .checkout__modal { max-width: 100%; border-radius: 16px 16px 0 0; }
+}
+
 /* ---- Spinner ---- */
 .checkout__spinner {
   width: 17px;

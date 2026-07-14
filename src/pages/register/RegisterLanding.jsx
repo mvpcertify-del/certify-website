@@ -5,7 +5,7 @@ import {
   Award, Briefcase, Gift, Building2, UserCheck, TrendingUp,
   CheckCircle, BookOpen, ArrowRight,
 } from 'lucide-react';
-import BrandLogo from '../../components/ui/BrandLogo';
+import PublicNav from '../../components/layout/PublicNav';
 import BackButton from '../../components/ui/BackButton';
 import './RegisterLanding.css';
 
@@ -22,10 +22,8 @@ export default function RegisterLanding() {
   if (!config) {
     return (
       <div className="reg-landing">
-        <div className="reg-landing__container">
-          <div className="reg-landing__header">
-            <BrandLogo size={26} />
-          </div>
+        <PublicNav />
+        <div className="reg-landing__container pubnav-offset">
           <div className="reg-landing__not-found">
             <h2>{t('register.invalidType')}</h2>
             <p>{t('register.typeNotRecognized', { type })}</p>
@@ -40,12 +38,8 @@ export default function RegisterLanding() {
 
   return (
     <div className="reg-landing">
-      <div className="reg-landing__container">
-        {/* Header */}
-        <div className="reg-landing__header">
-          <BrandLogo size={26} />
-        </div>
-
+      <PublicNav />
+      <div className="reg-landing__container pubnav-offset">
         <BackButton />
 
         {/* Hero */}

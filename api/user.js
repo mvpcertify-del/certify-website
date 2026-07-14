@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { verifyAdmin } from './_verifyAdmin.js';
 import { notifyAdmins } from './_notifyAdmins.js';
 import { sendWhatsApp } from './_notifyWhatsApp.js';
+import { getRegionFromCountry } from '../src/utils/roles.js';
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -54,6 +55,19 @@ async function updateProfile(req, res) {
   if (stakeholder_type !== undefined) updates.stakeholder_type = stakeholder_type;
   if (approval_status !== undefined) updates.approval_status = approval_status;
   if (custom_fields && typeof custom_fields === 'object') updates.custom_fields = custom_fields;
+  // Country is now the primary geo field shown across the admin UI. Persist it,
+  // and keep `region` in sync under the hood (RBAC scoping still runs on region)
+  // by deriving it from the country whenever the caller didn't set region itself.
+  // Only overwrite region when the country actually resolves to one — otherwise
+  // an edit to an unmapped country would NULL a valid region and fail the
+  // regional-admin scoping open.
+  if (country !== undefined) {
+    updates.country = country;
+    if (region === undefined) {
+      const derived = getRegionFromCountry(country);
+      if (derived) updates.region = derived;
+    }
+  }
 
   const { error } = await supabaseAdmin
     .from('profiles')

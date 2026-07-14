@@ -1,0 +1,330 @@
+/* ============================================
+   Public site header — Certify.cx
+   Lifted out of LandingPage.css so every public page can share it.
+   ============================================ */
+
+.pubnav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: rgba(17, 18, 23, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.pubnav__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pubnav__logo {
+  font-size: var(--font-size-lg);
+}
+
+.pubnav__links {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+/* Separate the section links (How It Works / Standards / Benefits) from the
+   action cluster (language, account, CTA) with a little extra breathing room. */
+.pubnav__links > .lang-switcher--landing {
+  margin-left: var(--spacing-sm);
+}
+
+/* Mobile-only bar cluster: visible language switcher + hamburger toggle.
+   Hidden on desktop (the desktop links already hold a switcher). */
+.pubnav__mobile-actions {
+  display: none;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.pubnav__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast, 150ms ease);
+  flex-shrink: 0;
+}
+
+.pubnav__toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Mobile dropdown menu (rendered only when open) */
+.pubnav__mobile-menu {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-lg) var(--spacing-lg);
+  background: rgba(17, 18, 23, 0.98);
+  border-top: 1px solid var(--color-border);
+}
+
+.pubnav__mobile-link {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.pubnav__mobile-link:hover {
+  color: var(--color-text-primary);
+}
+
+/* Compact switcher inside the mobile top bar */
+.pubnav__mobile-actions .lang-switcher__trigger {
+  padding: 6px 10px;
+}
+
+/* On very narrow phones drop the language name, keep the flag as a compact
+   indicator so the logo + switcher + hamburger never overflow the bar. */
+@media (max-width: 420px) {
+  .pubnav__mobile-actions .lang-switcher__label {
+    display: none;
+  }
+}
+
+.pubnav__mobile-btn {
+  text-align: center;
+  margin-top: var(--spacing-sm);
+  justify-content: center;
+}
+
+/* In the stacked mobile menu the Login button spans full width and centres its
+   label, matching the Sign Up button directly below it. */
+.pubnav__mobile-menu .pubnav__link--login {
+  text-align: center;
+  padding: 12px 20px;
+}
+
+.pubnav__link {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  transition: color var(--transition-fast);
+  padding: 6px 0;
+}
+
+.pubnav__link:hover {
+  color: var(--color-text-primary);
+}
+
+/* Login = outlined "ghost" button in brand accent — pairs with the filled
+   Sign Up button so the two read as a matched, professional set. Overrides the
+   base .pubnav__link padding so both auth buttons share the same height. */
+.pubnav__link--login {
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  padding: 8px 18px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.pubnav__link--login:hover {
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+}
+
+.pubnav__btn {
+  display: inline-flex;
+  align-items: center;
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+  /* transparent border keeps filled and outlined header buttons the same box
+     height so the whole action cluster lines up. */
+  border: 1px solid transparent;
+  padding: 8px 18px;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.pubnav__btn:hover {
+  background: var(--color-accent-hover);
+  color: var(--color-text-inverse);
+  transform: translateY(-1px);
+}
+
+/* "Free Gap Analysis" — the secondary header CTA. On-brand green outline
+   (ghost) so it reads as secondary next to the filled green Sign Up / the
+   hero's "Get Certified Now", and matches the hero's Free Gap Analysis button.
+   Sized to line up with the other header buttons. */
+.pubnav__btn--gap {
+  background: transparent;
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  padding: 8px 18px;
+  white-space: nowrap;
+}
+
+.pubnav__btn--gap:hover {
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+  filter: none;
+  transform: translateY(-1px);
+}
+
+/* ---- Logged-in profile menu (replaces Log In / Sign Up in the header) ---- */
+.pubnav__profile {
+  position: relative;
+}
+
+.pubnav__profile-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+}
+
+.pubnav__avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  flex: 0 0 auto;
+}
+
+.pubnav__profile-chevron {
+  transition: transform var(--transition-fast);
+}
+
+.pubnav__profile-chevron--open {
+  transform: rotate(180deg);
+}
+
+.pubnav__profile-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  inset-inline-end: 0;
+  min-width: 220px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+  padding: var(--spacing-sm);
+  z-index: 100;
+}
+
+.pubnav__profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--spacing-sm) var(--spacing-base);
+}
+
+.pubnav__profile-name {
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+}
+
+.pubnav__profile-email {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pubnav__profile-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: var(--spacing-xs) 0;
+}
+
+.pubnav__profile-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  padding: 10px var(--spacing-base);
+  border: none;
+  background: none;
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  text-align: start;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.pubnav__profile-item:hover {
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+}
+
+.pubnav__profile-item--danger {
+  color: var(--color-danger);
+}
+
+.pubnav__profile-item--danger:hover {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+/* Mobile menu: logged-in header block */
+.pubnav__mobile-profile {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) 0;
+}
+
+.pubnav__mobile-profile-name {
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+}
+
+/* Pages other than the landing page have no full-bleed hero to sit under the
+   fixed bar, so they need to be pushed clear of it. */
+.pubnav-offset {
+  padding-top: 64px;
+}
+
+@media (max-width: 768px) {
+  .pubnav__links {
+    display: none;
+  }
+  .pubnav__mobile-actions {
+    display: flex;
+  }
+}

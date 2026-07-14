@@ -114,6 +114,32 @@ function CheckoutForm() {
   const offlineSelected = isOfflineMethod(paymentMethod);
   const setField = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
+  // Bank/cash beneficiary details, shown both in the on-select popup and on the
+  // post-order confirmation screen. Single source so the two never drift.
+  const offlineRows = (method) =>
+    method === 'bank_transfer'
+      ? [
+          { label: t('payment.bankBeneficiary'), value: BANK_TRANSFER_DETAILS.beneficiary },
+          { label: t('payment.bankName'), value: BANK_TRANSFER_DETAILS.bankName },
+          { label: t('payment.bankIban'), value: BANK_TRANSFER_DETAILS.iban, copy: true },
+          { label: t('payment.bankSwift'), value: BANK_TRANSFER_DETAILS.swift, copy: true },
+        ]
+      : [
+          { label: t('checkout.cashPayee'), value: CASH_DETAILS.payee },
+          { label: t('checkout.cashContact'), value: CASH_DETAILS.contact, copy: true },
+        ];
+
+  // The client asked for a popup with the bank details the moment Bank Transfer
+  // (or Cash) is chosen. `detailsFor` holds the method whose details are shown;
+  // it auto-opens on switching TO an offline method, and can be reopened from
+  // the "view details" link so re-renders don't nag the buyer.
+  const [detailsFor, setDetailsFor] = useState(null);
+  const selectMethod = (id) => {
+    setPaymentMethod(id);
+    if (isOfflineMethod(id)) setDetailsFor(id);
+    else setDetailsFor(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -170,17 +196,7 @@ function CheckoutForm() {
   // -------- OFFLINE INSTRUCTIONS (order received, access after admin verify) --------
   if (offlineOrder) {
     const isBank = offlineOrder.method === 'bank_transfer';
-    const rows = isBank
-      ? [
-          { label: t('payment.bankBeneficiary'), value: BANK_TRANSFER_DETAILS.beneficiary },
-          { label: t('payment.bankName'), value: BANK_TRANSFER_DETAILS.bankName },
-          { label: t('payment.bankIban'), value: BANK_TRANSFER_DETAILS.iban, copy: true },
-          { label: t('payment.bankSwift'), value: BANK_TRANSFER_DETAILS.swift, copy: true },
-        ]
-      : [
-          { label: t('checkout.cashPayee'), value: CASH_DETAILS.payee },
-          { label: t('checkout.cashContact'), value: CASH_DETAILS.contact, copy: true },
-        ];
+    const rows = offlineRows(offlineOrder.method);
 
     return (
       <div className="checkout">
@@ -364,7 +380,7 @@ function CheckoutForm() {
                   key={m.id}
                   type="button"
                   className={`checkout__method ${active ? 'checkout__method--active' : ''}`}
-                  onClick={() => setPaymentMethod(m.id)}
+                  onClick={() => selectMethod(m.id)}
                 >
                   <span className="checkout__method-icon"><Icon size={18} /></span>
                   <span className="checkout__method-text">
@@ -379,7 +395,17 @@ function CheckoutForm() {
 
           {offlineSelected && (
             <div className="checkout__alert checkout__alert--info">
-              <AlertCircle size={16} /> {t('checkout.offlineHint')}
+              <AlertCircle size={16} />
+              <span>
+                {t('checkout.offlineHint')}{' '}
+                <button
+                  type="button"
+                  className="checkout__inline-link"
+                  onClick={() => setDetailsFor(paymentMethod)}
+                >
+                  {paymentMethod === 'bank_transfer' ? t('payment.viewBankDetails') : t('payment.viewCashDetails')}
+                </button>
+              </span>
             </div>
           )}
 
@@ -408,6 +434,44 @@ function CheckoutForm() {
           </p>
         </form>
       </div>
+
+      {/* Bank/cash details popup — opens on selecting an offline method. Kept
+          checkout-local (not the shared themed Modal) so it stays light like
+          the rest of this always-light page. */}
+      {detailsFor && (
+        <div className="checkout__modal-overlay" onClick={() => setDetailsFor(null)}>
+          <div className="checkout__modal" onClick={(e) => e.stopPropagation()}>
+            <div className="checkout__modal-head">
+              <h2>{detailsFor === 'bank_transfer' ? t('payment.bankDetailsTitle') : t('payment.cashDetailsTitle')}</h2>
+              <button type="button" className="checkout__modal-close" onClick={() => setDetailsFor(null)} aria-label={t('common.close')}>
+                <X size={18} />
+              </button>
+            </div>
+            <p className="checkout__modal-intro">
+              {detailsFor === 'bank_transfer' ? t('payment.bankDetailsIntro') : t('payment.cashDetailsIntro')}
+            </p>
+            <div className="checkout__detail-box">
+              {offlineRows(detailsFor).map((row) => (
+                <div key={row.label} className="checkout__detail-row">
+                  <span>{row.label}</span>
+                  <span className={row.copy ? 'checkout__mono' : ''}>
+                    {row.value}
+                    {row.copy && (
+                      <button type="button" onClick={() => copy(row.value)} aria-label={t('common.copy')} className="checkout__copy">
+                        <Copy size={14} />
+                      </button>
+                    )}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className="checkout__note">{t('payment.offlineAfterOrderNote')}</p>
+            <button type="button" className="checkout__submit checkout__submit--modal" onClick={() => setDetailsFor(null)}>
+              {t('common.gotIt')}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -424,6 +488,9 @@ function CheckoutSuccess() {
   const [state, setState] = useState('confirming'); // confirming | done | error
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
+  // Card payment no longer grants instant access — a Super Admin must approve
+  // the account first. `pendingApproval` switches the success copy accordingly.
+  const [pendingApproval, setPendingApproval] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -439,6 +506,7 @@ function CheckoutSuccess() {
         if (cancelled) return;
         if (!res.ok) { setState('error'); setMessage(data.error || t('checkout.errGeneric')); return; }
         setEmail(data.email || '');
+        setPendingApproval(data.pendingApproval !== false);
         setState('done');
       } catch {
         if (!cancelled) { setState('error'); setMessage(t('checkout.errGeneric')); }
@@ -458,19 +526,23 @@ function CheckoutSuccess() {
           </div>
           <h1>
             {state === 'confirming' && t('checkout.confirming')}
-            {state === 'done' && t('checkout.successTitle')}
+            {state === 'done' && (pendingApproval ? t('checkout.paidPendingTitle') : t('checkout.successTitle'))}
             {state === 'error' && t('checkout.errTitle')}
           </h1>
           <p>
             {state === 'confirming' && t('checkout.confirmingDesc')}
-            {state === 'done' && t('checkout.successDesc')}
+            {state === 'done' && (pendingApproval ? t('checkout.paidPendingDesc') : t('checkout.successDesc'))}
             {state === 'error' && (message || t('checkout.errGeneric'))}
           </p>
         </div>
         {state === 'done' && (
           <div className="checkout__result-body">
-            {email && <p className="checkout__sent-to"><Mail size={14} /> {t('checkout.emailSentTo', { email })}</p>}
-            <Link to="/login" className="checkout__ghost-btn">{t('auth.signIn')}</Link>
+            {email && (
+              <p className="checkout__sent-to">
+                <Mail size={14} /> {pendingApproval ? t('checkout.approvalEmailTo', { email }) : t('checkout.emailSentTo', { email })}
+              </p>
+            )}
+            <Link to="/" className="checkout__ghost-btn">{t('checkout.backHome')}</Link>
           </div>
         )}
         {state === 'error' && (

@@ -50,7 +50,8 @@
     "submitting": "Enviando...",
     "add": "Add",
     "create": "Create",
-    "clear": "Clear [DRAFT]"
+    "clear": "Clear [DRAFT]",
+    "gotIt": "Got it"
   },
   "languageSuggestion": {
     "title": "Mudar de idioma?",
@@ -462,7 +463,14 @@
     "awaitingVerificationNote": "Verificaremos sua transferência e enviaremos um e-mail assim que ela for confirmada. Você já pode concluir o cadastro da sua empresa agora.",
     "methodCash": "Dinheiro",
     "methodCashDesc": "Pague em dinheiro — nossa equipe combinará a coleta.",
-    "serverUnavailable": "O servidor de pagamento está temporariamente indisponível. Tente novamente em instantes."
+    "serverUnavailable": "O servidor de pagamento está temporariamente indisponível. Tente novamente em instantes.",
+    "viewBankDetails": "View bank details",
+    "viewCashDetails": "View cash details",
+    "bankDetailsTitle": "Bank transfer details",
+    "cashDetailsTitle": "Cash payment details",
+    "bankDetailsIntro": "Transfer the total to the account below. Add your order reference so we can match your payment.",
+    "cashDetailsIntro": "Our team will contact you to arrange cash collection using the details below.",
+    "offlineAfterOrderNote": "Place your order first — we’ll email your dashboard access once your payment is confirmed."
   },
   "settings": {
     "title": "Configurações",
@@ -783,7 +791,13 @@
     "selectStandard": "Select ISO standard",
     "package": "Package",
     "applicationCreated": "Application created",
-    "filteredBy": "Filtered by [DRAFT]"
+    "filteredBy": "Filtered by [DRAFT]",
+    "clientApproved": "Client approved — access link sent",
+    "approveClientAccess": "Approve & grant dashboard access",
+    "clientAwaitingApproval": "This client has paid and is awaiting your approval.",
+    "countryOptional": "Country (optional)",
+    "countryPlaceholder": "e.g. United Arab Emirates",
+    "filterByCountry": "Filter by country…"
   },
   "certBody": {
     "addBody": "Adicionar Organismo de Certificação",
@@ -1226,7 +1240,10 @@
     "successTitle": "Pagamento realizado com sucesso!",
     "successDesc": "Verifique seu e-mail — enviamos um link seguro para acessar seu painel.",
     "emailSentTo": "Enviado para {{email}}",
-    "cancelledNote": "Seu pagamento foi cancelado. Você pode tentar novamente abaixo."
+    "cancelledNote": "Seu pagamento foi cancelado. Você pode tentar novamente abaixo.",
+    "paidPendingTitle": "Payment received",
+    "paidPendingDesc": "Thank you — your payment is confirmed. Your account will be activated once our team reviews and approves it. We'll email you your dashboard access link then.",
+    "approvalEmailTo": "We'll send your access link to {{email}} after approval"
   },
   "consultation": {
     "title": "Book a Consultation",

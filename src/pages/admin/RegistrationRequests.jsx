@@ -37,9 +37,10 @@ export default function RegistrationRequests() {
       .not('stakeholder_type', 'eq', 'client')
       .order('created_at', { ascending: false });
 
-    // Regional admins only see registrations from their region
-    if (user.role === ROLES.REGIONAL_ADMIN && user.region) {
-      query = query.eq('region', user.region);
+    // Regional admins only see registrations from their region. Fail-closed —
+    // a null region scopes to nothing, not the full list.
+    if (user.role === ROLES.REGIONAL_ADMIN) {
+      query = query.eq('region', user.region || '__no_region__');
     }
 
     const { data, error } = await query;

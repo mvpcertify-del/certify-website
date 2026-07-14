@@ -50,7 +50,8 @@
     "submitting": "Отправка...",
     "add": "Add",
     "create": "Create",
-    "clear": "Clear [DRAFT]"
+    "clear": "Clear [DRAFT]",
+    "gotIt": "Got it"
   },
   "languageSuggestion": {
     "title": "Сменить язык?",
@@ -462,7 +463,14 @@
     "awaitingVerificationNote": "Мы проверим ваш перевод и отправим вам письмо после его подтверждения. Вы можете завершить регистрацию своей компании уже сейчас.",
     "methodCash": "Наличные",
     "methodCashDesc": "Оплатите наличными — наша команда организует получение.",
-    "serverUnavailable": "Сервер оплаты временно недоступен. Пожалуйста, повторите попытку через минуту."
+    "serverUnavailable": "Сервер оплаты временно недоступен. Пожалуйста, повторите попытку через минуту.",
+    "viewBankDetails": "View bank details",
+    "viewCashDetails": "View cash details",
+    "bankDetailsTitle": "Bank transfer details",
+    "cashDetailsTitle": "Cash payment details",
+    "bankDetailsIntro": "Transfer the total to the account below. Add your order reference so we can match your payment.",
+    "cashDetailsIntro": "Our team will contact you to arrange cash collection using the details below.",
+    "offlineAfterOrderNote": "Place your order first — we’ll email your dashboard access once your payment is confirmed."
   },
   "settings": {
     "title": "Настройки",
@@ -783,7 +791,13 @@
     "selectStandard": "Select ISO standard",
     "package": "Package",
     "applicationCreated": "Application created",
-    "filteredBy": "Filtered by [DRAFT]"
+    "filteredBy": "Filtered by [DRAFT]",
+    "clientApproved": "Client approved — access link sent",
+    "approveClientAccess": "Approve & grant dashboard access",
+    "clientAwaitingApproval": "This client has paid and is awaiting your approval.",
+    "countryOptional": "Country (optional)",
+    "countryPlaceholder": "e.g. United Arab Emirates",
+    "filterByCountry": "Filter by country…"
   },
   "certBody": {
     "addBody": "Добавить орган по сертификации",
@@ -1226,7 +1240,10 @@
     "successTitle": "Оплата прошла успешно!",
     "successDesc": "Проверьте свою почту — мы отправили безопасную ссылку для доступа к панели.",
     "emailSentTo": "Отправлено на {{email}}",
-    "cancelledNote": "Ваша оплата была отменена. Вы можете повторить попытку ниже."
+    "cancelledNote": "Ваша оплата была отменена. Вы можете повторить попытку ниже.",
+    "paidPendingTitle": "Payment received",
+    "paidPendingDesc": "Thank you — your payment is confirmed. Your account will be activated once our team reviews and approves it. We'll email you your dashboard access link then.",
+    "approvalEmailTo": "We'll send your access link to {{email}} after approval"
   },
   "consultation": {
     "title": "Book a Consultation",

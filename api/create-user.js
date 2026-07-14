@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { sendVerificationEmail } from './_sendVerificationEmail.js';
 import { notifyAdmins } from './_notifyAdmins.js';
+import { getRegionFromCountry } from '../src/utils/roles.js';
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -40,6 +41,19 @@ export default async function handler(req, res) {
     const isSelfSignup = !!selfSignup;
     const assignedRole = role || (isSelfSignup ? 'client' : null);
 
+    // Country is the geo field captured across the admin UI now; derive the
+    // region from it for RBAC scoping when the caller didn't pass a region.
+    const resolvedRegion = region || (country ? getRegionFromCountry(country) : null) || null;
+
+    // A regional admin's whole access model is region scoping. If we couldn't
+    // resolve a region (unmapped / misspelled country), refuse rather than
+    // create an admin with a null region who would see EVERY region.
+    if (assignedRole === 'regional_admin' && !resolvedRegion) {
+      return res.status(400).json({
+        error: 'Could not determine a region from that country. Please enter a recognized country for a Regional Admin.',
+      });
+    }
+
     if (!assignedRole) {
       return res.status(400).json({ error: 'Missing required field: role' });
     }
@@ -66,7 +80,7 @@ export default async function handler(req, res) {
           website: website || null,
           city: city || null,
           country: country || null,
-          region: region || null,
+          region: resolvedRegion,
           contact_number: contact_number || null,
           contact_role: contact_role || null,
           stakeholder_type: stakeholder_type || 'client',
@@ -76,7 +90,8 @@ export default async function handler(req, res) {
           name: displayName,
           role: assignedRole,
           company_name: company_name || null,
-          region: region || null,
+          country: country || null,
+          region: resolvedRegion,
           // Admin-created clients may be a stakeholder variant (referral /
           // investor / consultancy). Only attach when creating a client.
           ...(assignedRole === 'client' && stakeholder_type
@@ -106,7 +121,8 @@ export default async function handler(req, res) {
           full_name: displayName,
           role: assignedRole,
           company_name: company_name || null,
-          region: region || null,
+          country: country || null,
+          region: resolvedRegion,
           stakeholder_type: stakeholder_type || 'client',
           approval_status: approval_status || 'approved',
           // Persist the contact number on the profile so WhatsApp notifications
@@ -119,7 +135,8 @@ export default async function handler(req, res) {
           email,
           full_name: displayName,
           role: assignedRole,
-          region: region || null,
+          country: country || null,
+          region: resolvedRegion,
           company_name: company_name || null,
           ...(contact_number ? { phone: contact_number } : {}),
           ...(assignedRole === 'client' && stakeholder_type
@@ -166,7 +183,7 @@ export default async function handler(req, res) {
       await notifyAdmins(supabaseAdmin, {
         title: 'New registration',
         message: `${displayName} (${email})${company_name ? ` — ${company_name}` : ''} just registered.`,
-        region: region || null,
+        region: resolvedRegion,
       });
     }
 
@@ -178,7 +195,8 @@ export default async function handler(req, res) {
         email,
         full_name: displayName,
         role: assignedRole,
-        region: region || null,
+        country: country || null,
+        region: resolvedRegion,
         company_name: company_name || null,
         ...(assignedRole === 'client' && stakeholder_type ? { stakeholder_type } : {}),
       },

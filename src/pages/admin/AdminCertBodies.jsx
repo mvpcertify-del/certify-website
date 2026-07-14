@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import StatusBadge from '../../components/ui/StatusBadge';
 import ProfileManagementTable from '../../components/admin/ProfileManagementTable';
-import { ROLES, ROLE_LABELS, REGIONS } from '../../utils/roles';
+import { ROLES, ROLE_LABELS } from '../../utils/roles';
 
 export default function AdminCertBodies() {
   const { t } = useTranslation();
@@ -9,11 +9,7 @@ export default function AdminCertBodies() {
   const columns = [
     { key: 'full_name', label: t('admin.name'), render: (val) => val || '—' },
     { key: 'email', label: t('auth.email') },
-    { key: 'region', label: t('admin.region'), render: (val) => {
-      if (!val) return '—';
-      const r = REGIONS.find(reg => reg.id === val);
-      return r ? r.label : val;
-    }},
+    { key: 'country', label: t('admin.country'), render: (val) => val || '—' },
     { key: 'company_name', label: t('admin.organization'), render: (val) => val || '—' },
     { key: 'role', label: t('settings.role'), render: (val) => <StatusBadge status={val} label={ROLE_LABELS[val] || val} /> },
     { key: 'created_at', label: t('admin.joined'), render: (val) => val ? new Date(val).toLocaleDateString() : '—' },
@@ -23,7 +19,7 @@ export default function AdminCertBodies() {
     { key: 'full_name', label: t('admin.fullName'), required: true },
     { key: 'email', label: t('auth.email'), type: 'email', required: true },
     { key: 'company_name', label: t('admin.organization') },
-    { key: 'region', label: t('admin.region'), type: 'region' },
+    { key: 'country', label: t('admin.country') },
   ];
 
   return (

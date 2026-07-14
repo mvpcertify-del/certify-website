@@ -5,8 +5,7 @@ import { AlertCircle } from 'lucide-react';
 import { getIsoBySlug } from '../../utils/isoCatalog';
 import { supabase } from '../../lib/supabase';
 import PricingTiers from '../../components/pricing/PricingTiers';
-import LanguageSwitcher from '../../components/LanguageSwitcher';
-import BrandLogo from '../../components/ui/BrandLogo';
+import PublicNav from '../../components/layout/PublicNav';
 import BackButton from '../../components/ui/BackButton';
 import './IsoLanding.css';
 
@@ -41,7 +40,8 @@ export default function IsoLanding() {
   if (!config) {
     return (
       <div className="iso-landing">
-        <div className="iso-landing__container">
+        <PublicNav />
+        <div className="iso-landing__container pubnav-offset">
           <div className="iso-landing__notfound">
             <AlertCircle size={48} />
             <h2>{t('register.invalidType')}</h2>
@@ -58,10 +58,8 @@ export default function IsoLanding() {
   if (checkedActive && !isActive) {
     return (
       <div className="iso-landing">
-        <div className="iso-landing__container">
-          <div className="iso-landing__header">
-            <BrandLogo size={26} />
-          </div>
+        <PublicNav />
+        <div className="iso-landing__container pubnav-offset">
           <div className="iso-landing__notfound">
             <AlertCircle size={48} />
             <h2>{t('iso.linkInactiveTitle')}</h2>
@@ -77,13 +75,8 @@ export default function IsoLanding() {
 
   return (
     <div className="iso-landing">
-      <div className="iso-landing__container">
-        {/* Header */}
-        <div className="iso-landing__header">
-          <BrandLogo size={26} />
-          <LanguageSwitcher variant="landing" />
-        </div>
-
+      <PublicNav />
+      <div className="iso-landing__container pubnav-offset">
         <BackButton />
 
         {/* The hero, the "What you get" benefits, the flexible-payment bar and
