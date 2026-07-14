@@ -12,7 +12,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { ISO_CATALOG_LIST } from '../../utils/isoCatalog';
 import SaraChatWidget from '../../components/sara/SaraChatWidget';
 import LanguageSwitcher from '../../components/LanguageSwitcher';
-import BrandShield from '../../components/ui/BrandShield';
+import BrandLogo from '../../components/ui/BrandLogo';
 import './LandingPage.css';
 
 // Phase 1 (retired): we originally featured ISO 9001 only and hid the rest of
@@ -91,10 +91,7 @@ export default function LandingPage() {
       {/* ---- Navbar ---- */}
       <nav className="landing__nav">
         <div className="landing__nav-inner">
-          <Link to="/" className="landing__logo">
-            <div className="landing__logo-icon"><BrandShield size={28} /></div>
-            <span><span className="brand-c">C</span>ertify<span className="brand-cx">.cx</span><sup className="brand-tm">™</sup></span>
-          </Link>
+          <BrandLogo size={28} className="landing__logo" />
           <div className="landing__nav-links">
             <a href="#how-it-works" className="landing__nav-link">{t('nav.howItWorks')}</a>
             <a href="#standards" className="landing__nav-link">{t('nav.standards')}</a>
@@ -324,10 +321,7 @@ export default function LandingPage() {
         <div className="landing__footer-inner">
           <div className="landing__footer-cols">
             <div className="landing__footer-col landing__footer-col--brand">
-              <div className="landing__footer-logo">
-                <div className="landing__logo-icon landing__logo-icon--sm"><BrandShield size={20} /></div>
-                <span><span className="brand-c">C</span>ertify<span className="brand-cx">.cx</span><sup className="brand-tm">™</sup></span>
-              </div>
+              <BrandLogo size={22} className="landing__footer-logo" />
               <p className="landing__footer-tagline">{t('landing.footerTagline')}</p>
             </div>
             <div className="landing__footer-col">

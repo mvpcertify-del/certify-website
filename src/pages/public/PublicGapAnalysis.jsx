@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Shield, ArrowRight, CheckCircle2, AlertCircle, X, CalendarClock } from 'lucide-react';
+import { ArrowRight, CheckCircle2, AlertCircle, X, CalendarClock } from 'lucide-react';
 import { Button } from '../../components/ui/FormElements';
 import ConsultationModal from '../../components/ConsultationModal';
 import LanguageSwitcher from '../../components/LanguageSwitcher';
+import BrandLogo from '../../components/ui/BrandLogo';
+import BackButton from '../../components/ui/BackButton';
 import '../client/GapAnalysis.css';
 import './PublicGapAnalysis.css';
 
@@ -55,12 +57,11 @@ export default function PublicGapAnalysis() {
     return (
       <div className="public-gap">
         <header className="public-gap__header">
-          <Link to="/" className="public-gap__logo">
-            <div className="public-gap__logo-icon"><Shield size={20} /></div>
-            <span>Certify.cx<sup className="brand-tm">&trade;</sup></span>
-          </Link>
+          <BrandLogo size={26} />
           <LanguageSwitcher variant="landing" />
         </header>
+
+        <BackButton />
 
         <div className="public-gap__results">
           <div className="public-gap__results-card">
@@ -104,12 +105,11 @@ export default function PublicGapAnalysis() {
   return (
     <div className="public-gap">
       <header className="public-gap__header">
-        <Link to="/" className="public-gap__logo">
-          <div className="public-gap__logo-icon"><Shield size={20} /></div>
-          <span>Certify.cx<sup className="brand-tm">&trade;</sup></span>
-        </Link>
+        <BrandLogo size={26} />
         <LanguageSwitcher variant="landing" />
       </header>
+
+      <BackButton />
 
       <div className="public-gap__hero">
         <h1>{t('gapAnalysis.publicHeroTitle')}</h1>

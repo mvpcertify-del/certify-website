@@ -1,29 +1,18 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import {
-  Shield, Award, Globe2, Lock, Apple, GraduationCap, Zap, Scale,
-  Activity, Stethoscope, ShieldCheck, BrainCircuit,
-  ArrowRight, CheckCircle2, CreditCard, AlertCircle,
-} from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { getIsoBySlug } from '../../utils/isoCatalog';
 import { supabase } from '../../lib/supabase';
-import { useAuth } from '../../contexts/AuthContext';
-import { ROLES } from '../../utils/roles';
 import PricingTiers from '../../components/pricing/PricingTiers';
 import LanguageSwitcher from '../../components/LanguageSwitcher';
+import BrandLogo from '../../components/ui/BrandLogo';
+import BackButton from '../../components/ui/BackButton';
 import './IsoLanding.css';
-
-const ICON_MAP = {
-  Award, Globe2, Shield, Lock, Apple, GraduationCap, Zap, Scale, Activity, Stethoscope,
-  ShieldCheck, BrainCircuit,
-};
 
 export default function IsoLanding() {
   const { slug } = useParams();
-  const navigate = useNavigate();
   const { t } = useTranslation();
-  const { user } = useAuth();
 
   const config = getIsoBySlug(slug);
 
@@ -66,30 +55,12 @@ export default function IsoLanding() {
     );
   }
 
-  const IconComponent = ICON_MAP[config.icon] || Award;
-
-  const handleApply = () => {
-    // Logged-in client: jump straight into the payment-bootstrap route
-    // (stub application + Stripe checkout). Detailed registration happens
-    // AFTER payment via /client/apply/:applicationId.
-    // Anyone else: go straight to the public pay-first checkout — no signup
-    // gate before payment.
-    if (user?.role === ROLES.CLIENT) {
-      navigate(`/client/start-payment?iso=${encodeURIComponent(config.slug)}`);
-    } else {
-      navigate(`/checkout?iso=${encodeURIComponent(config.slug)}`);
-    }
-  };
-
   if (checkedActive && !isActive) {
     return (
       <div className="iso-landing">
         <div className="iso-landing__container">
           <div className="iso-landing__header">
-            <Link to="/" className="iso-landing__logo">
-              <div className="iso-landing__logo-icon"><Shield size={22} /></div>
-              <span className="iso-landing__logo-text">Certify.cx<sup className="brand-tm">&trade;</sup></span>
-            </Link>
+            <BrandLogo size={26} />
           </div>
           <div className="iso-landing__notfound">
             <AlertCircle size={48} />
@@ -104,105 +75,25 @@ export default function IsoLanding() {
     );
   }
 
-  const benefits = [
-    t('iso.benefit1'),
-    t('iso.benefit2'),
-    t('iso.benefit3'),
-    t('iso.benefit4'),
-  ];
-
   return (
     <div className="iso-landing">
       <div className="iso-landing__container">
         {/* Header */}
         <div className="iso-landing__header">
-          <Link to="/" className="iso-landing__logo">
-            <div className="iso-landing__logo-icon"><Shield size={22} /></div>
-            <span className="iso-landing__logo-text">Certify.cx<sup className="brand-tm">&trade;</sup></span>
-          </Link>
+          <BrandLogo size={26} />
           <LanguageSwitcher variant="landing" />
         </div>
 
-        {/* Hero */}
-        <div className="iso-landing__hero">
-          <div
-            className="iso-landing__hero-icon"
-            style={{ background: `${config.color}18`, color: config.color }}
-          >
-            <IconComponent size={44} />
-          </div>
-          <span className="iso-landing__hero-code" style={{ color: config.color }}>
-            {config.code}
-          </span>
-          <h1 className="iso-landing__hero-title">{t(config.titleKey)}</h1>
-          <p className="iso-landing__hero-tagline">
-            {t('iso.publicTagline', { code: config.code })}
-          </p>
-          <p className="iso-landing__hero-desc">{t(config.descKey)}</p>
-          <button
-            className="iso-landing__btn iso-landing__btn--primary iso-landing__btn--lg"
-            onClick={handleApply}
-            style={{ '--btn-accent': config.color }}
-          >
-            {t('iso.applyNow')} <ArrowRight size={18} />
-          </button>
-        </div>
+        <BackButton />
 
-        {/* Benefits */}
+        {/* The hero, the "What you get" benefits, the flexible-payment bar and
+            the bottom sign-in CTA were all removed at the client's request —
+            buyers register on the checkout page, so the page goes straight to
+            the price. PricingTiers carries the standard's code so the page
+            still identifies which certification it is selling. */}
         <section className="iso-landing__section">
-          <h2 className="iso-landing__section-title">
-            <CheckCircle2 size={20} className="iso-landing__section-icon iso-landing__section-icon--green" />
-            {t('iso.viewBenefits')}
-          </h2>
-          <div className="iso-landing__cards">
-            {benefits.map((benefit, i) => (
-              <div key={i} className="iso-landing__card">
-                <div className="iso-landing__card-num" style={{ color: config.color }}>
-                  {String(i + 1).padStart(2, '0')}
-                </div>
-                <p className="iso-landing__card-text">{benefit}</p>
-              </div>
-            ))}
-          </div>
+          <PricingTiers standardSlug={config.slug} standardCode={config.code} />
         </section>
-
-        {/* Single "Standard" certification package (one price per standard).
-            The 3-tier Bronze/Silver/Gold model and the separate Pricing
-            Calculator were removed at the client's request. */}
-        <section className="iso-landing__section">
-          <PricingTiers standardSlug={config.slug} />
-        </section>
-
-        {/* Payment Info */}
-        <section className="iso-landing__payment">
-          <div className="iso-landing__payment-icon" style={{ background: `${config.color}18`, color: config.color }}>
-            <CreditCard size={24} />
-          </div>
-          <div className="iso-landing__payment-text">
-            <h3>{t('iso.flexiblePayment')}</h3>
-            <p>{t('payment.choosePayment')}</p>
-          </div>
-        </section>
-
-        {/* CTA */}
-        <div className="iso-landing__cta">
-          <h3 className="iso-landing__cta-title">{t('register.readyToStart')}</h3>
-          <p className="iso-landing__cta-desc">
-            {t('iso.publicTagline', { code: config.code })}
-          </p>
-          <div className="iso-landing__cta-actions">
-            <button
-              className="iso-landing__btn iso-landing__btn--primary iso-landing__btn--lg"
-              onClick={handleApply}
-              style={{ '--btn-accent': config.color }}
-            >
-              {t('iso.applyNow')} <ArrowRight size={18} />
-            </button>
-            <Link to="/login" className="iso-landing__btn iso-landing__btn--secondary">
-              {t('register.alreadyHaveAccount')}
-            </Link>
-          </div>
-        </div>
 
         <div className="iso-landing__footer">
           <p>{t('common.allRightsReserved')}</p>

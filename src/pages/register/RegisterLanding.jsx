@@ -2,9 +2,11 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getStakeholderType, getStakeholderSlugs } from '../../utils/stakeholderTypes';
 import {
-  Shield, Award, Briefcase, Gift, Building2, UserCheck, TrendingUp,
-  CheckCircle, BookOpen, ArrowRight, ArrowLeft,
+  Award, Briefcase, Gift, Building2, UserCheck, TrendingUp,
+  CheckCircle, BookOpen, ArrowRight,
 } from 'lucide-react';
+import BrandLogo from '../../components/ui/BrandLogo';
+import BackButton from '../../components/ui/BackButton';
 import './RegisterLanding.css';
 
 const ICON_MAP = {
@@ -22,10 +24,7 @@ export default function RegisterLanding() {
       <div className="reg-landing">
         <div className="reg-landing__container">
           <div className="reg-landing__header">
-            <Link to="/" className="reg-landing__logo">
-              <div className="reg-landing__logo-icon"><Shield size={22} /></div>
-              <span className="reg-landing__logo-text">Certify.cx<sup className="brand-tm">&trade;</sup></span>
-            </Link>
+            <BrandLogo size={26} />
           </div>
           <div className="reg-landing__not-found">
             <h2>{t('register.invalidType')}</h2>
@@ -44,11 +43,10 @@ export default function RegisterLanding() {
       <div className="reg-landing__container">
         {/* Header */}
         <div className="reg-landing__header">
-          <Link to="/" className="reg-landing__logo">
-            <div className="reg-landing__logo-icon"><Shield size={22} /></div>
-            <span className="reg-landing__logo-text">Certify.cx<sup className="brand-tm">&trade;</sup></span>
-          </Link>
+          <BrandLogo size={26} />
         </div>
+
+        <BackButton />
 
         {/* Hero */}
         <div className="reg-landing__hero">

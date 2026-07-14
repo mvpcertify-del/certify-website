@@ -9,9 +9,14 @@ import './PricingTiers.css';
 // Single-package pricing card. The client dropped the Bronze / Silver / Gold
 // three-tier model and the 12-month add-ons: every standard is now offered as
 // ONE all-inclusive "Standard" certification package at a single price
-// (organization up to 10 employees at 1 location). The surcharge model still
+// (organization up to 50 employees at 1 location). The surcharge model still
 // exists in pricing.js / api/checkout.js for larger organizations.
-export default function PricingTiers({ variant = 'full', standardSlug = 'iso-9001' }) {
+//
+// `standardCode` ('ISO 9001') is shown in place of the generic section tag. The
+// ISO landing page has no hero any more, so this card is the only thing naming
+// the standard the buyer is about to pay for — without it every /iso/:slug page
+// renders identically.
+export default function PricingTiers({ variant = 'full', standardSlug = 'iso-9001', standardCode = null }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -34,7 +39,7 @@ export default function PricingTiers({ variant = 'full', standardSlug = 'iso-900
   return (
     <section className={`pricing-tiers ${variant === 'compact' ? 'pricing-tiers--compact' : ''}`}>
       <div className="pricing-tiers__header">
-        <span className="pricing-tiers__tag">{t('pricing.sectionTag')}</span>
+        <span className="pricing-tiers__tag">{standardCode || t('pricing.sectionTag')}</span>
         <h2 className="pricing-tiers__title">{t('pricing.sectionTitle')}</h2>
         <p className="pricing-tiers__desc">{t('pricing.sectionDesc')}</p>
       </div>

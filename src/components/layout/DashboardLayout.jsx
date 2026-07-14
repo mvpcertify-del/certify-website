@@ -6,7 +6,12 @@ import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 import SaraChatWidget from '../sara/SaraChatWidget';
 import ProfileCompletionModal from '../ProfileCompletionModal';
+import BackButton from '../ui/BackButton';
 import './DashboardLayout.css';
+
+// Landing surfaces for each role — there is nothing meaningful to go "back" to
+// from these, so the arrow is suppressed rather than dangling.
+const ROOT_PATHS = new Set(['/dashboard', '/main-dashboard']);
 
 const pageTitles = {
   '/dashboard': 'Dashboard',
@@ -71,6 +76,7 @@ export default function DashboardLayout() {
         collapsed={collapsed}
       />
       <main className="dashboard-layout__content">
+        {!ROOT_PATHS.has(location.pathname) && <BackButton fallback="/dashboard" />}
         <Outlet />
       </main>
       {isClient && <SaraChatWidget user={user} />}

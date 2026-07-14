@@ -1,0 +1,97 @@
+/* Certify.cx™ lockup — single colour, always.
+   Dark surface -> white mark + white wordmark.
+   Light surface -> black mark + black wordmark.
+   No gradients, no accent chips, no drop-shadow glows. */
+.brand-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  text-decoration: none;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* The supplied artwork is a teal gradient. brightness(0) crushes every opaque
+   pixel to black while preserving the alpha edges; invert(1) then lifts it to
+   white. This is what makes one asset serve both surfaces. */
+.brand-logo__mark {
+  display: block;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.brand-logo__text {
+  color: inherit;
+}
+
+.brand-logo__tm {
+  font-size: 0.55em;
+  vertical-align: super;
+  margin-left: 1px;
+  font-weight: 500;
+}
+
+/* ---- Dark theme (default): white ---- */
+.brand-logo {
+  color: #ffffff;
+}
+.brand-logo .brand-logo__mark {
+  filter: brightness(0) invert(1);
+}
+/* Default: ™ steps back in grey while the wordmark stays mono. */
+.brand-logo[data-tm='grey'] .brand-logo__tm {
+  color: #9ca3af;
+}
+/* Fully monochrome: ™ matches the wordmark exactly. */
+.brand-logo[data-tm='mono'] .brand-logo__tm {
+  color: inherit;
+  opacity: 0.7;
+}
+
+/* ---- Light theme: black ---- */
+:root[data-theme='light'] .brand-logo {
+  color: #000000;
+}
+:root[data-theme='light'] .brand-logo .brand-logo__mark {
+  filter: brightness(0);
+}
+:root[data-theme='light'] .brand-logo[data-tm='grey'] .brand-logo__tm {
+  color: #6b7280;
+}
+
+/* ---- Forced surfaces ----
+   For panels whose background is fixed regardless of the active theme (the
+   light checkout card on a dark page, a dark hero in light theme). These must
+   beat the :root[data-theme] rules above, hence the doubled class. */
+.brand-logo.brand-logo--on-dark,
+:root[data-theme='light'] .brand-logo.brand-logo--on-dark {
+  color: #ffffff;
+}
+.brand-logo.brand-logo--on-dark .brand-logo__mark,
+:root[data-theme='light'] .brand-logo.brand-logo--on-dark .brand-logo__mark {
+  filter: brightness(0) invert(1);
+}
+.brand-logo.brand-logo--on-dark[data-tm='grey'] .brand-logo__tm,
+:root[data-theme='light'] .brand-logo.brand-logo--on-dark[data-tm='grey'] .brand-logo__tm {
+  color: #9ca3af;
+}
+
+.brand-logo.brand-logo--on-light,
+:root[data-theme='light'] .brand-logo.brand-logo--on-light {
+  color: #000000;
+}
+.brand-logo.brand-logo--on-light .brand-logo__mark,
+:root[data-theme='light'] .brand-logo.brand-logo--on-light .brand-logo__mark {
+  filter: brightness(0);
+}
+.brand-logo.brand-logo--on-light[data-tm='grey'] .brand-logo__tm,
+:root[data-theme='light'] .brand-logo.brand-logo--on-light[data-tm='grey'] .brand-logo__tm {
+  color: #6b7280;
+}
+
+[dir='rtl'] .brand-logo__tm {
+  margin-left: 0;
+  margin-right: 1px;
+}

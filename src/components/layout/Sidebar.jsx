@@ -33,7 +33,7 @@ import {
   FormInput,
   ClipboardList,
 } from 'lucide-react';
-import BrandShield from '../ui/BrandShield';
+import BrandLogo from '../ui/BrandLogo';
 import LanguageSwitcher from '../LanguageSwitcher';
 import './Sidebar.css';
 
@@ -86,16 +86,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
 
       <aside className={`sidebar ${isOpen ? 'sidebar--open' : ''} ${collapsed ? 'sidebar--collapsed' : ''}`}>
         <div className="sidebar__header">
-          <div className="sidebar__logo">
-            <div className="sidebar__logo-icon">
-              <BrandShield size={28} />
-            </div>
-            {!collapsed && (
-              <span className="sidebar__logo-text">
-                <span className="brand-c">C</span>ertify<span className="brand-cx">.cx</span><sup className="brand-tm">™</sup>
-              </span>
-            )}
-          </div>
+          <BrandLogo size={28} to={null} showText={!collapsed} className="sidebar__logo" />
           <button className="sidebar__close-mobile" onClick={onClose}>
             <X size={20} />
           </button>

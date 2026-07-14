@@ -321,19 +321,17 @@ input, button, textarea, select {
   .page-header { flex-direction: column; align-items: flex-start; }
 }
 
-/* ---- Branding ---- */
+/* ---- Branding ----
+   Brand rule: the Certify.cx™ lockup is ONE colour, never multi-colour. The
+   old .brand-c / .brand-cx rules that painted "C" and ".cx" green are gone;
+   the lockup now lives in components/ui/BrandLogo and inherits currentColor.
+   This rule only covers the few bare "Certify.cx™" text labels outside it. */
 sup.brand-tm {
   font-size: 0.6em;
   vertical-align: super;
   margin-left: 1px;
   font-weight: 500;
-  color: var(--color-accent);
-  opacity: 0.75;
-}
-
-.brand-c,
-.brand-cx {
-  color: var(--color-accent);
+  color: var(--color-text-tertiary);
 }
 
 /* ============================================

@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Shield, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { getIsoBySlug } from '../../utils/isoCatalog';
 import { PACKAGE_LABEL } from '../../utils/pricing';
+import BrandLogo from '../../components/ui/BrandLogo';
 import './StartPayment.css';
 
 // Payment-first onboarding bootstrap. Creates a stub `applications` row
@@ -74,10 +75,7 @@ export default function StartPayment() {
   return (
     <div className="start-payment">
       <header className="start-payment__header">
-        <Link to="/" className="start-payment__logo">
-          <div className="start-payment__logo-icon"><Shield size={20} /></div>
-          <span>Certify.cx<sup className="brand-tm">&trade;</sup></span>
-        </Link>
+        <BrandLogo size={26} />
       </header>
 
       <div className="start-payment__card">

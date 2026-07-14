@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import BrandLogo from '../../components/ui/BrandLogo';
 import {
   computeTotal,
   PACKAGE_LABEL,
@@ -361,13 +362,9 @@ export default function PaymentPlaceholder() {
 
         {/* RETURN-TO-LANDING HEADER */}
         <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '20px' }}>
-          <Link
-            to="/"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#0f172a', textDecoration: 'none', fontWeight: 600, fontSize: '0.95rem' }}
-          >
-            <Shield size={18} />
-            <span>Certify.cx<sup className="brand-tm">&trade;</sup></span>
-          </Link>
+          {/* Light card surface — the brand renders black here, per the
+              single-colour rule. */}
+          <BrandLogo size={24} className="brand-logo--on-light" />
         </div>
 
         {/* HEADER */}

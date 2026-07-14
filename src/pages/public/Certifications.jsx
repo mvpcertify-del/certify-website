@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import { ISO_CATALOG_LIST } from '../../utils/isoCatalog';
 import LanguageSwitcher from '../../components/LanguageSwitcher';
+import BrandLogo from '../../components/ui/BrandLogo';
+import BackButton from '../../components/ui/BackButton';
 import './Certifications.css';
 
 const ICON_MAP = {
@@ -22,12 +24,11 @@ export default function Certifications() {
   return (
     <div className="certs">
       <header className="certs__header">
-        <Link to="/" className="certs__logo">
-          <div className="certs__logo-icon"><Shield size={20} /></div>
-          <span>Certify.cx<sup className="brand-tm">&trade;</sup></span>
-        </Link>
+        <BrandLogo size={26} />
         <LanguageSwitcher variant="landing" />
       </header>
+
+      <BackButton />
 
       <div className="certs__hero">
         <span className="certs__tag">{t('certifications.tag')}</span>

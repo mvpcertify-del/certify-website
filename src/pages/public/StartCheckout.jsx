@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Shield, ArrowRight, Mail } from 'lucide-react';
+import { ArrowRight, Mail } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROLES } from '../../utils/roles';
 import { Button } from '../../components/ui/FormElements';
 import LanguageSwitcher from '../../components/LanguageSwitcher';
+import BrandLogo from '../../components/ui/BrandLogo';
+import BackButton from '../../components/ui/BackButton';
 import { getIsoBySlug } from '../../utils/isoCatalog';
 import './StartCheckout.css';
 
@@ -76,12 +78,11 @@ export default function StartCheckout() {
   return (
     <div className="start-checkout">
       <header className="start-checkout__header">
-        <Link to="/" className="start-checkout__logo">
-          <div className="start-checkout__logo-icon"><Shield size={20} /></div>
-          <span>Certify.cx<sup className="brand-tm">&trade;</sup></span>
-        </Link>
+        <BrandLogo size={26} />
         <LanguageSwitcher variant="landing" />
       </header>
+
+      <BackButton />
 
       <div className="start-checkout__card">
         <h1 className="start-checkout__title">{t('auth.almostThereTitle')}</h1>

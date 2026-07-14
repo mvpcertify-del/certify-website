@@ -1,0 +1,33 @@
+/* Shared back control — renders as either a <button> (history pop) or an
+   <a> (deep-link fallback), so both element types are styled together. */
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: var(--spacing-lg);
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.back-button:hover {
+  color: var(--color-accent);
+}
+
+.back-button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* The arrow is directional: in RTL it must point the other way. */
+[dir='rtl'] .back-button svg {
+  transform: scaleX(-1);
+}

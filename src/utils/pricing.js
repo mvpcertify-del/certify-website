@@ -1,13 +1,14 @@
 // -------------------------------------------------------
 // Certify.cx — Pricing
 //
-// SINGLE-PACKAGE model. Every catalog standard is offered as ONE all-inclusive
-// "Standard" certification package at a single price (the client dropped the
-// old Bronze / Silver / Gold three-tier model and the 12-month support/audit
-// add-ons). The per-band base price differs:
-//   ISO 9001 / 14001 / 45001 → $799; every other standard → $999.
+// SINGLE-PACKAGE, SINGLE-PRICE model. Every catalog standard is offered as ONE
+// all-inclusive "Standard" certification package at the SAME price — $999.
+// (The client dropped the old Bronze / Silver / Gold three-tier model and the
+// 12-month support/audit add-ons, then flattened the last remaining price
+// split: ISO 9001 / 14001 / 45001 used to be $799 and are now $999 like the
+// rest.)
 //
-// The buyer's headline price assumes an organization with up to 10
+// The buyer's headline price covers an organization with up to 50
 // employees at 1 location. Additional 50-employee bands and additional
 // locations each add a flat surcharge. Payment is full (one-time) only —
 // installment/monthly plans were removed.
@@ -22,14 +23,8 @@
 // -------------------------------------------------------
 import { ISO_CATALOG, getIsoBySlug, getIsoByCode } from './isoCatalog.js';
 
-// Standards in the lower pricing band.
-const LOWER_BAND_SLUGS = new Set(['iso-9001', 'iso-14001', 'iso-45001']);
-
-// Base certification price per band (USD, one-time) — the single package price.
-const PRICING = {
-  lower:  { base: 799 },
-  higher: { base: 999 },
-};
+// Base certification price (USD, one-time). One price for every standard.
+const BASE_PRICE = 999;
 
 // The one package everyone buys. Stored on applications.selected_package and
 // shown wherever a package name is displayed.
@@ -40,7 +35,7 @@ export const SURCHARGE_PER_EMPLOYEE_BAND = 200;
 // Each additional physical site adds this.
 export const SURCHARGE_PER_LOCATION = 200;
 // Headcount included in the base price.
-export const INCLUDED_EMPLOYEES = 10;
+export const INCLUDED_EMPLOYEES = 50;
 // Locations included in the base price.
 export const INCLUDED_LOCATIONS = 1;
 // Each surcharge band covers this many employees.
@@ -56,20 +51,15 @@ export function resolveStandardSlug(input) {
   return getIsoByCode(codeOnly)?.slug || null;
 }
 
-function bandFor(slug) {
-  const s = resolveStandardSlug(slug);
-  return s && LOWER_BAND_SLUGS.has(s) ? PRICING.lower : PRICING.higher;
-}
-
-// One-time price for a standard. Tier-agnostic: the `tier` argument is
-// accepted for backward-compatibility with older call sites and stored rows
-// but ignored — there is a single package price per standard.
-export function getPriceForStandard(slug, _tier) {
-  return bandFor(slug).base;
+// One-time price for a standard. Tier-agnostic AND standard-agnostic: both
+// arguments are accepted for backward-compatibility with older call sites and
+// stored rows, but every standard is the same single package price.
+export function getPriceForStandard(_slug, _tier) {
+  return BASE_PRICE;
 }
 
 // Convert a buyer-entered headcount into a count of cumulative 50-employee
-// surcharge bands above the included 10. 10 → 0 bands; 50 → 1; 100 → 2; …
+// surcharge bands above the included 50. 50 → 0 bands; 100 → 1; 150 → 2; …
 export function employeeBandsFromCount(employeeCount) {
   const n = Math.max(0, Math.floor(Number(employeeCount) || 0));
   if (n <= INCLUDED_EMPLOYEES) return 0;

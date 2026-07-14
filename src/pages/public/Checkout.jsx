@@ -11,6 +11,8 @@ import {
   PAYMENT_METHODS, isOfflineMethod, BANK_TRANSFER_DETAILS, CASH_DETAILS,
 } from '../../config/paymentMethods';
 import LanguageSwitcher from '../../components/LanguageSwitcher';
+import BrandLogo from '../../components/ui/BrandLogo';
+import BackButton from '../../components/ui/BackButton';
 import './Checkout.css';
 
 const METHOD_ICONS = { CreditCard, Banknote, Landmark };
@@ -230,12 +232,11 @@ function CheckoutForm() {
   return (
     <div className="checkout">
       <header className="checkout__topbar">
-        <Link to="/" className="checkout__logo">
-          <div className="checkout__logo-icon"><Shield size={18} /></div>
-          <span>Certify.cx<sup className="brand-tm">&trade;</sup></span>
-        </Link>
+        <BrandLogo size={26} />
         <LanguageSwitcher variant="landing" />
       </header>
+
+      <BackButton />
 
       <div className="checkout__grid">
         {/* ORDER SUMMARY */}
