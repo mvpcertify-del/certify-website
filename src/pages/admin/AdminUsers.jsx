@@ -124,7 +124,7 @@ export default function AdminUsers() {
     setLoading(true);
 
     try {
-      await apiPost('/api/create-user', {
+      const result = await apiPost('/api/create-user', {
         email,
         password,
         full_name,
@@ -137,6 +137,13 @@ export default function AdminUsers() {
         ...(resolvedStakeholderType ? { stakeholder_type: resolvedStakeholderType } : {}),
       });
 
+      // The account exists but cannot be used until the user clicks the link in
+      // the verification email, so a silent send failure has to be visible here
+      // — otherwise the admin sees "Active" and the user simply can't log in.
+      if (result?.emailSendFailed) {
+        setError(t('admin.createdButEmailFailed'));
+      }
+
       setSuccess(`${t('admin.successCreated')} ${ROLE_LABELS[role]}: ${full_name}`);
       setShowCreateModal(false);
       setCreateForm({ full_name: '', email: '', password: '', role: '', country: '', stakeholder_type: '' });
@@ -146,6 +153,21 @@ export default function AdminUsers() {
     }
 
     setLoading(false);
+  };
+
+  // --- Resend verification ---
+  // An account is unusable until its email is confirmed, and nothing in the
+  // user list reveals that state. This gives an admin a way to re-send the link
+  // (e.g. the first send failed, or the user lost the email) without a deploy.
+  const handleResendVerification = async (userRow) => {
+    setError('');
+    setSuccess('');
+    try {
+      await apiPost('/api/resend-verification', { email: userRow.email });
+      setSuccess(`${t('admin.verificationResent')} ${userRow.email}`);
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   // --- Edit Role ---
@@ -250,6 +272,8 @@ export default function AdminUsers() {
               isActive={userRow.is_active !== false}
               showView
               onView={openView}
+              showResend={userRow.id !== user?.id}
+              onResend={() => handleResendVerification(userRow)}
               showToggle={userRow.id !== user?.id}
               showDelete={userRow.id !== user?.id}
               onToggle={() => handleToggleActive(userRow)}
@@ -265,7 +289,15 @@ export default function AdminUsers() {
         // Other admins (e.g. regional) keep View + their existing Edit-Role action.
         return (
           <div style={{ display: 'flex', gap: 6 }}>
-            <RowActions showView onView={openView} showToggle={false} showEdit={false} showDelete={false} />
+            <RowActions
+              showView
+              onView={openView}
+              showResend
+              onResend={() => handleResendVerification(userRow)}
+              showToggle={false}
+              showEdit={false}
+              showDelete={false}
+            />
             <Button size="sm" variant="ghost" onClick={openEditRole}>
               {t('admin.editRole')}
             </Button>

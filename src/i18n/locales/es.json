@@ -642,6 +642,8 @@
     "passwordMinLength": "La contraseña debe tener al menos 6 caracteres",
     "noPermissionCreate": "No tienes permiso para crear este rol",
     "successCreated": "Creado exitosamente",
+    "createdButEmailFailed": "[DRAFT] Cuenta creada, pero no se pudo enviar el correo de verificación. Usa Reenviar verificación para que el usuario pueda iniciar sesión.",
+    "verificationResent": "[DRAFT] Correo de verificación enviado a",
     "noPermissionAssign": "No tienes permiso para asignar este rol",
     "roleUpdated": "Rol de {{name}} actualizado a {{role}}",
     "failedDelete": "Error al eliminar usuario",

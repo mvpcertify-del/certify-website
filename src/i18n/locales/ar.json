@@ -642,6 +642,8 @@
     "passwordMinLength": "يجب أن تكون كلمة المرور 6 أحرف على الأقل",
     "noPermissionCreate": "ليس لديك إذن لإنشاء هذا الدور",
     "successCreated": "تم الإنشاء بنجاح",
+    "createdButEmailFailed": "[DRAFT] تم إنشاء الحساب، لكن تعذّر إرسال بريد التحقق. استخدم إعادة إرسال التحقق حتى يتمكن المستخدم من تسجيل الدخول.",
+    "verificationResent": "[DRAFT] تم إرسال بريد التحقق إلى",
     "noPermissionAssign": "ليس لديك إذن لتعيين هذا الدور",
     "roleUpdated": "تم تحديث دور {{name}} إلى {{role}}",
     "failedDelete": "فشل حذف المستخدم",

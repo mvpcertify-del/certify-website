@@ -39,13 +39,20 @@ export default function DashboardLayout() {
   const location = useLocation();
   const isClient = user?.role === ROLES.CLIENT;
 
+  // Referrals/affiliates and investors run on the `client` role but represent a
+  // person, not an organisation — they have no company to give, their
+  // registration deliberately never asks for one, and the profile page has no
+  // company field to satisfy this with. Prompting them for a Company Name would
+  // be an unclearable popup, so the modal is for real (company) clients only.
+  const isPureIndividual = user?.stakeholder_type === 'referral' || user?.stakeholder_type === 'investor';
+
   // Show profile-completion modal for clients missing essential company info
   // (typical after Google OAuth or the simplified email signup). Dismissals
   // via Skip are remembered per-session so the user isn't nagged repeatedly.
   const skipKey = user?.id ? `profile_completion_skipped_${user.id}` : null;
   const skippedInSession = skipKey ? sessionStorage.getItem(skipKey) === '1' : false;
   const needsProfileCompletion = Boolean(
-    isClient && user && !user.company_name && !skippedInSession && !profileModalDismissed
+    isClient && !isPureIndividual && user && !user.company_name && !skippedInSession && !profileModalDismissed
   );
 
   const handleProfileComplete = () => {

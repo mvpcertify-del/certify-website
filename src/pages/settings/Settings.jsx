@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { Input, Button, Select } from '../../components/ui/FormElements';
 import { REGIONS, ROLES, ROLE_LABELS, PERMISSIONS, getRolePermissions, hasPermission, getDisplayRoleLabel } from '../../utils/roles';
+import { COUNTRY_DIAL_CODES } from '../../utils/dialCodes';
 import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
 import CustomFieldRenderer from '../../components/CustomFieldRenderer';
@@ -15,7 +16,7 @@ const allTabs = [
   { id: 'payouts', label: 'Payouts', icon: DollarSign, superAdminOnly: true },
   { id: 'regions', label: 'Regions', icon: Globe, adminOnly: true },
   { id: 'roles', label: 'Roles & Permissions', icon: Shield, adminOnly: true },
-  { id: 'general', label: 'General', icon: SettingsIcon, adminOnly: false },
+  { id: 'general', label: 'General', icon: SettingsIcon, adminOnly: true },
 ];
 
 export default function Settings() {
@@ -69,10 +70,29 @@ export default function Settings() {
 function ProfileTab({ user }) {
   const { updatePassword, supabase } = useAuth();
 
+  // Split a stored phone string ("+971 50 123 4567") back into dial code +
+  // number so the two-part control can round-trip it. Longest code wins so
+  // "+1-268" doesn't get mistaken for "+1".
+  const splitPhone = (raw) => {
+    if (!raw) return { code: '+971', number: '' };
+    const match = [...COUNTRY_DIAL_CODES]
+      .sort((a, b) => b.code.length - a.code.length)
+      .find(c => raw.startsWith(c.code));
+    if (match) return { code: match.code, number: raw.slice(match.code.length).trim() };
+    return { code: '+971', number: raw };
+  };
+  const initialPhone = splitPhone(user?.phone || user?.contact_number || '');
+
   const [formData, setFormData] = useState({
     full_name: user?.full_name || user?.name || '',
-    company_name: user?.company_name || '',
+    phone_code: initialPhone.code,
+    phone_number: initialPhone.number,
+    city: user?.city || '',
+    country: user?.country || '',
   });
+
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || '');
+  const [avatarUploading, setAvatarUploading] = useState(false);
 
   const [customFields, setCustomFields] = useState([]);
   const [customValues, setCustomValues] = useState(user?.custom_fields || {});
@@ -98,15 +118,47 @@ function ProfileTab({ user }) {
       .then(({ data }) => setCustomFields(data || []));
   }, [user?.role]);
 
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setMessage({ type: 'error', text: 'Please choose an image file.' });
+      return;
+    }
+    setAvatarUploading(true);
+    setMessage(null);
+    try {
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from('avatars')
+        .upload(path, file, { upsert: true, cacheControl: '3600' });
+      if (upErr) throw upErr;
+      const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+      setAvatarUrl(data.publicUrl);
+      setMessage({ type: 'success', text: 'Picture uploaded — click Save Changes to keep it.' });
+    } catch (err) {
+      setMessage({ type: 'error', text: err.message || 'Failed to upload picture' });
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
   const handleProfileUpdate = async () => {
     setProfileLoading(true);
     setMessage(null);
     try {
+      const phone = formData.phone_number.trim()
+        ? `${formData.phone_code} ${formData.phone_number.trim()}`
+        : null;
       const { error } = await supabase
         .from('profiles')
         .update({
           full_name: formData.full_name,
-          company_name: formData.company_name,
+          phone,
+          city: formData.city,
+          country: formData.country,
+          avatar_url: avatarUrl || null,
           custom_fields: customValues,
         })
         .eq('id', user.id);
@@ -167,12 +219,28 @@ function ProfileTab({ user }) {
 
       <div className="settings__form" style={{ marginBottom: '40px' }}>
         <div className="settings__avatar-section">
-          <div className="settings__avatar-large">
-            {(user?.full_name || user?.name || 'U').charAt(0)}
+          <div className="settings__avatar-large" style={avatarUrl ? { padding: 0, overflow: 'hidden' } : undefined}>
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              (user?.full_name || user?.name || 'U').charAt(0)
+            )}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontWeight: 600, fontSize: '1.2rem', marginBottom: '4px' }}>{user?.full_name || user?.name || 'User'}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <span style={{ fontWeight: 600, fontSize: '1.2rem' }}>{user?.full_name || user?.name || 'User'}</span>
             <span style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>{getDisplayRoleLabel(user?.role, user?.stakeholder_type) || 'Role'}</span>
+            <label className="settings__avatar-upload" style={{ cursor: avatarUploading ? 'wait' : 'pointer' }}>
+              <span className="auth-form__link" style={{ fontSize: '0.85rem' }}>
+                {avatarUploading ? 'Uploading…' : (avatarUrl ? 'Change picture' : 'Add profile picture')}
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                disabled={avatarUploading}
+                style={{ display: 'none' }}
+              />
+            </label>
           </div>
         </div>
         <div className="settings__form-grid">
@@ -189,12 +257,43 @@ function ProfileTab({ user }) {
             value={user?.email || ''}
             disabled
           />
+          <div className="form-group">
+            <label className="form-label" htmlFor="settings-phone">Contact Number</label>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <select
+                className="form-select"
+                style={{ flex: '1 1 120px', minWidth: '120px' }}
+                value={formData.phone_code}
+                onChange={(e) => setFormData({ ...formData, phone_code: e.target.value })}
+              >
+                {COUNTRY_DIAL_CODES.map(c => (
+                  <option key={`${c.code}-${c.label}`} value={c.code}>{c.label}</option>
+                ))}
+              </select>
+              <div style={{ flex: 1 }}>
+                <input
+                  className="form-input"
+                  id="settings-phone"
+                  placeholder="50 123 4567"
+                  value={formData.phone_number}
+                  onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                />
+              </div>
+            </div>
+          </div>
           <Input
-            label="Company"
-            id="settings-company"
-            value={formData.company_name}
-            onChange={(e) => setFormData({...formData, company_name: e.target.value})}
-            placeholder="Your company"
+            label="City"
+            id="settings-city"
+            value={formData.city}
+            onChange={(e) => setFormData({...formData, city: e.target.value})}
+            placeholder="City where you live"
+          />
+          <Input
+            label="Country"
+            id="settings-country"
+            value={formData.country}
+            onChange={(e) => setFormData({...formData, country: e.target.value})}
+            placeholder="Country where you live"
           />
           <Input
             label="Role"
@@ -220,7 +319,16 @@ function ProfileTab({ user }) {
 
         <div className="settings__form-actions">
           <Button variant="primary" size="md" onClick={handleProfileUpdate} loading={profileLoading}>Save Changes</Button>
-          <Button variant="ghost" size="md" onClick={() => setFormData({ full_name: user?.full_name || user?.name || '', company_name: user?.company_name || '' })}>Cancel</Button>
+          <Button variant="ghost" size="md" onClick={() => {
+            setFormData({
+              full_name: user?.full_name || user?.name || '',
+              phone_code: initialPhone.code,
+              phone_number: initialPhone.number,
+              city: user?.city || '',
+              country: user?.country || '',
+            });
+            setAvatarUrl(user?.avatar_url || '');
+          }}>Cancel</Button>
         </div>
       </div>
 

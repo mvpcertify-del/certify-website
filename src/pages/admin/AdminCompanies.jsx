@@ -76,7 +76,10 @@ export default function AdminCompanies() {
 
     setSaving(true);
     try {
-      await apiPost('/api/create-user', { email, password, full_name, role: 'client', country, company_name });
+      const result = await apiPost('/api/create-user', { email, password, full_name, role: 'client', country, company_name });
+      // The account is unusable until the user clicks the verification link, so
+      // a failed send has to be visible here rather than showing a plain success.
+      if (result?.emailSendFailed) setError(t('admin.createdButEmailFailed'));
 
       setSuccess(`${t('admin.clientCreated')} ${company_name}`);
       setShowCreateModal(false);
@@ -179,8 +182,13 @@ export default function AdminCompanies() {
           />
         )
       },
-      {
-        key: 'actions', label: t('dashboard.action'), render: (_, row) => (
+    ] : []),
+    // The read-only View action is available to every admin who can reach this
+    // list (client request: View enabled for all categories of users). Only the
+    // Super Admin gets the destructive/edit actions alongside it.
+    {
+      key: 'actions', label: t('dashboard.action'), render: (_, row) => (
+        isSuperAdmin ? (
           <RowActions
             isActive={row.is_active !== false}
             showView
@@ -189,9 +197,17 @@ export default function AdminCompanies() {
             onEdit={() => openEditModal(row)}
             onDelete={() => handleDelete(row)}
           />
+        ) : (
+          <RowActions
+            showView
+            onView={() => openViewModal(row)}
+            showToggle={false}
+            showEdit={false}
+            showDelete={false}
+          />
         )
-      },
-    ] : []),
+      )
+    },
   ];
 
   return (

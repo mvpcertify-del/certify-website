@@ -91,9 +91,10 @@ export function AuthProvider({ children }) {
             pendingType = sessionStorage.getItem('pendingStakeholderType');
           } catch { /* sessionStorage may be unavailable */ }
           const stakeholderType = pendingType || profile.stakeholder_type || 'client';
-          // Non-client stakeholder signups require admin approval, matching email signup
+          // All self-registered users (clients and stakeholders alike) are
+          // approved on sign-up — email confirmation is the only login gate.
           const approvalStatus = needsRoleBootstrap
-            ? (stakeholderType !== 'client' ? 'pending' : 'approved')
+            ? 'approved'
             : profile.approval_status;
           const payload = {
             action: 'update-profile',
@@ -271,13 +272,16 @@ export function AuthProvider({ children }) {
   }) => {
     const region = await getRegionFromCountryAsync(country, supabase);
     const assignedRole = role || ROLES.CLIENT;
-    // Stakeholder registrations (via shareable links / landing page) require admin approval
-    const needsApproval = !!stakeholder_type && stakeholder_type !== 'client';
-    const approvalStatus = needsApproval ? 'pending' : 'approved';
+    // Client rule: auditors, affiliates/referrals, CBs and consultancies can log
+    // in as soon as they finish registering and confirm their email — there is
+    // no separate admin-approval gate. Email verification (email_confirm:false
+    // on the created user) is the only barrier to first login.
+    const needsApproval = false;
+    const approvalStatus = 'approved';
 
-    // Route signup through the service-role API. The user is created with
-    // email_confirm: false so Supabase sends a verification email via SMTP.
-    // Users must confirm their email before they can log in.
+    // Route signup through the service-role API. The user is created unconfirmed
+    // and that endpoint emails the verification link itself (generateLink +
+    // Resend). Users must confirm their email before they can log in.
     const signupRes = await fetch('/api/create-user', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

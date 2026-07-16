@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { RefreshCw, Pencil, Trash2, Eye } from 'lucide-react';
+import { RefreshCw, Pencil, Trash2, Eye, Mail } from 'lucide-react';
 
-// Shared row-action cluster: [Activate/Deactivate] [Edit] [Delete].
+// Shared row-action cluster: [View] [Resend] [Activate/Deactivate] [Edit] [Delete].
 // Mirrors the exact styling, icons and spacing first used on the Discount
 // Coupons screen (the reference implementation), so every admin management
 // module renders an identical action section with dark/light theme support
@@ -15,10 +15,12 @@ export default function RowActions({
   onEdit,
   onDelete,
   onView,
+  onResend,
   showToggle = true,
   showEdit = true,
   showDelete = true,
   showView = false,
+  showResend = false,
   disabled = false,
 }) {
   const { t } = useTranslation();
@@ -44,6 +46,17 @@ export default function RowActions({
           style={baseStyle}
         >
           <Eye size={14} />
+        </button>
+      )}
+      {showResend && (
+        <button
+          type="button"
+          title={t('auth.resendVerification')}
+          onClick={onResend}
+          disabled={disabled}
+          style={baseStyle}
+        >
+          <Mail size={14} />
         </button>
       )}
       {showToggle && (

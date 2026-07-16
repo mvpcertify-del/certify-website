@@ -628,6 +628,8 @@
     "passwordMinLength": "密码长度至少为 6 个字符",
     "noPermissionCreate": "您无权创建此角色",
     "successCreated": "成功创建",
+    "createdButEmailFailed": "[DRAFT] 账户已创建，但验证邮件发送失败。请使用“重新发送验证邮件”，以便用户登录。",
+    "verificationResent": "[DRAFT] 验证邮件已发送至",
     "noPermissionAssign": "您无权分配此角色",
     "roleUpdated": "已将 {{name}} 的角色更新为 {{role}}",
     "failedDelete": "删除用户失败",

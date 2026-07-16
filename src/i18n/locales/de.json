@@ -628,6 +628,8 @@
     "passwordMinLength": "Das Passwort muss mindestens 6 Zeichen lang sein",
     "noPermissionCreate": "Sie haben keine Berechtigung, diese Rolle zu erstellen",
     "successCreated": "Erfolgreich erstellt",
+    "createdButEmailFailed": "[DRAFT] Konto erstellt, aber die Bestätigungs-E-Mail konnte nicht gesendet werden. Nutzen Sie „Bestätigung erneut senden“, damit sich der Benutzer anmelden kann.",
+    "verificationResent": "[DRAFT] Bestätigungs-E-Mail gesendet an",
     "noPermissionAssign": "Sie haben keine Berechtigung, diese Rolle zuzuweisen",
     "roleUpdated": "Rolle für {{name}} auf {{role}} aktualisiert",
     "failedDelete": "Benutzer konnte nicht gelöscht werden",

@@ -170,7 +170,10 @@ export default function ProfileManagementTable({
           ? (createForm[f.key] || null)
           : createForm[f.key];
       });
-      await apiPost('/api/create-user', payload);
+      const result = await apiPost('/api/create-user', payload);
+      // The account is unusable until the user clicks the verification link, so
+      // a failed send has to be visible here rather than showing a plain success.
+      if (result?.emailSendFailed) setError(t('admin.createdButEmailFailed'));
       setSuccess(`${t('common.add') || 'Added'}: ${createForm.full_name || createForm.email || ''}`);
       setShowCreate(false);
       fetchItems();
@@ -217,10 +220,15 @@ export default function ProfileManagementTable({
         />
       ),
     });
-    allColumns.push({
-      key: 'actions',
-      label: t('dashboard.action'),
-      render: (_, row) => (
+  }
+  // The read-only "View" action is available to every admin who can reach this
+  // list (client request: View enabled for all categories of users). Only the
+  // Super Admin gets the destructive/edit actions alongside it.
+  allColumns.push({
+    key: 'actions',
+    label: t('dashboard.action'),
+    render: (_, row) => (
+      isSuperAdmin ? (
         <RowActions
           isActive={row.is_active !== false}
           showEdit={editFields.length > 0}
@@ -230,9 +238,17 @@ export default function ProfileManagementTable({
           onEdit={() => openEdit(row)}
           onDelete={() => handleDelete(row)}
         />
-      ),
-    });
-  }
+      ) : (
+        <RowActions
+          showView
+          onView={() => openView(row)}
+          showToggle={false}
+          showEdit={false}
+          showDelete={false}
+        />
+      )
+    ),
+  });
 
   return (
     <div className="page-container">

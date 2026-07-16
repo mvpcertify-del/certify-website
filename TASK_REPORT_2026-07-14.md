@@ -107,6 +107,13 @@ The client asked to **remove "Region" and replace it with "Country"** for **all 
 - **Under the hood:** the system still derives an internal region from the country automatically, so **the Country Admin's access limits keep working exactly as before** — they still only see their own area. This was verified so nothing about who-can-see-what changed.
 - **Note:** `Country` is a new field on the client/user record. Existing users' countries are **backfilled** by the same `phase17` migration (from data captured at signup). Users created before that had no country stored will show "—" until edited. New users capture it going forward.
 
+## Batch 9 — Landing hero cleanup ✅
+
+The client marked two things on the homepage hero to remove (desktop **and** mobile).
+- ✅ Removed the **"IAF Accredited Certification Bodies Partners" badge** (the green pill above the headline).
+- ✅ Removed **"IAF"** from the headline — it now reads **"Accredited ISO Certifications"** (was "IAF Accredited ISO Certifications").
+- The homepage is one responsive layout, so both changes apply to desktop and mobile automatically.
+
 ## Still to do from today's list
 
 Everything on today's list is now built. Remaining blockers are **data/decisions from the client**, not development:

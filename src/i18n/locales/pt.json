@@ -628,6 +628,8 @@
     "passwordMinLength": "A senha deve ter pelo menos 6 caracteres",
     "noPermissionCreate": "Você não tem permissão para criar esta função",
     "successCreated": "Criado com sucesso",
+    "createdButEmailFailed": "[DRAFT] Conta criada, mas não foi possível enviar o e-mail de verificação. Use Reenviar verificação para que o usuário possa entrar.",
+    "verificationResent": "[DRAFT] E-mail de verificação enviado para",
     "noPermissionAssign": "Você não tem permissão para atribuir esta função",
     "roleUpdated": "Função de {{name}} atualizada para {{role}}",
     "failedDelete": "Falha ao excluir o usuário",

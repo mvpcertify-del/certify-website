@@ -158,6 +158,10 @@ export default function AdminApplications() {
         });
         clientId = res?.user?.id;
         if (!clientId) throw new Error('Client creation failed');
+        // The client account cannot be logged into until they click the
+        // verification link, so surface a failed send instead of implying the
+        // handover is complete.
+        if (res?.emailSendFailed) setError(t('admin.createdButEmailFailed'));
       }
 
       // 2. Insert the application on the client's behalf.

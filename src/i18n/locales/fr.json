@@ -628,6 +628,8 @@
     "passwordMinLength": "Le mot de passe doit comporter au moins 6 caractères",
     "noPermissionCreate": "Vous n'avez pas l'autorisation de créer ce rôle",
     "successCreated": "Créé avec succès",
+    "createdButEmailFailed": "[DRAFT] Compte créé, mais l'e-mail de vérification n'a pas pu être envoyé. Utilisez Renvoyer la vérification pour que l'utilisateur puisse se connecter.",
+    "verificationResent": "[DRAFT] E-mail de vérification envoyé à",
     "noPermissionAssign": "Vous n'avez pas l'autorisation d'attribuer ce rôle",
     "roleUpdated": "Rôle de {{name}} mis à jour en {{role}}",
     "failedDelete": "Échec de la suppression de l'utilisateur",
