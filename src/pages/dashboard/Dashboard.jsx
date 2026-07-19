@@ -295,6 +295,14 @@ export default function Dashboard() {
   if (!user || loading) return <div className="page-container"><p>{t('common.loadingDashboard')}</p></div>;
 
   const isClient = user?.role === ROLES.CLIENT;
+  // Consultancies and investors ride on the `client` role but are not seeking a
+  // certificate of their own, so the "Take your free Gap Analysis" prompt is
+  // meaningless to them (client instruction, 19 Jul: "the Gap Analysis is only
+  // optional for clients"). Consultancies move to role='referral' in phase19;
+  // this also covers accounts created before that migration runs.
+  const seeksCertification = isClient
+    && user?.stakeholder_type !== 'consultancy'
+    && user?.stakeholder_type !== 'investor';
   const isAdmin = user?.role === ROLES.SUPER_ADMIN || user?.role === ROLES.REGIONAL_ADMIN;
   const isAuditor = user?.role === ROLES.AUDITOR;
   const isCB = user?.role === ROLES.CERTIFICATION_BODY;
@@ -317,7 +325,7 @@ export default function Dashboard() {
 
       {isClient ? (
         <div className="dashboard__client-layout">
-          {!fetchingApps && clientApplications.length === 0 ? (
+          {!fetchingApps && clientApplications.length === 0 && seeksCertification ? (
             <div className="dashboard__empty-state" style={{ textAlign: 'center', padding: '40px', background: 'var(--surface-color)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)' }}>
               {gapScore == null ? (
                 <>

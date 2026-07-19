@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { apiPost } from '../../lib/apiClient';
 import StatusBadge from '../../components/ui/StatusBadge';
-import { Button, Select } from '../../components/ui/FormElements';
+import { Button, Select, Input, Textarea } from '../../components/ui/FormElements';
 import Modal from '../../components/ui/Modal';
 import CustomFieldRenderer, { validateCustomFields } from '../../components/CustomFieldRenderer';
-import { ArrowLeft, CheckCircle, FileText, Download, Building, Users, Target, Activity, Globe, ClipboardCheck, XCircle, CheckCircle2, AlertCircle, Award, ShieldCheck, Upload, Trash2, CreditCard } from 'lucide-react';
+import { ArrowLeft, CheckCircle, FileText, Download, Building, Users, Target, Activity, Globe, ClipboardCheck, XCircle, CheckCircle2, AlertCircle, Award, ShieldCheck, Upload, Trash2, CreditCard, Receipt, Wallet } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROLES, REGIONS } from '../../utils/roles';
 import './ApplicationDetails.css';
@@ -71,6 +71,31 @@ function getRequiredDocs(isoName) {
   return ISO_REQUIRED_DOCUMENTS[isoName] || [];
 }
 
+// Payment methods offered on the billing forms. Values are the human-readable
+// strings stored verbatim on the invoice/receipt row and printed on the PDF, so
+// they stay in English (the PDF is a financial record, not localised UI); only
+// the dropdown label goes through i18n.
+const BILLING_PAYMENT_METHODS = [
+  { value: 'Credit / Debit Card', labelKey: 'payment.methodCard' },
+  { value: 'Bank Transfer', labelKey: 'payment.methodBankTransfer' },
+  { value: 'Cash', labelKey: 'payment.methodCash' },
+  { value: 'PayPal', labelKey: 'payment.methodPaypal' },
+  { value: 'MoneyGram', labelKey: 'payment.methodMoneygram' },
+];
+
+const today = () => new Date().toISOString().slice(0, 10);
+
+function formatMoney(amount, currency = 'USD') {
+  const n = Number(amount || 0);
+  return `${currency === 'USD' ? 'US$' : `${currency} `}${n.toFixed(2)}`;
+}
+
+function formatDay(value) {
+  if (!value) return '—';
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString();
+}
+
 export default function ApplicationDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -115,6 +140,16 @@ export default function ApplicationDetails() {
   // Admin upload state
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+
+  // --- Billing (admin only) ---
+  const [invoices, setInvoices] = useState([]);
+  const [receipts, setReceipts] = useState([]);
+  const [billingLoading, setBillingLoading] = useState(false);
+  const [billingError, setBillingError] = useState('');
+  const [billingModal, setBillingModal] = useState(null); // 'invoice' | 'receipt' | null
+  const [billingSubmitting, setBillingSubmitting] = useState(false);
+  const [invoiceForm, setInvoiceForm] = useState(null);
+  const [receiptForm, setReceiptForm] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -195,6 +230,172 @@ export default function ApplicationDetails() {
 
     if (id) fetchData();
   }, [id, user, isRegionalAdmin]);
+
+  // --- Billing: load issued documents -------------------------------------
+  // Signed URLs on each row are short-lived, so this always re-fetches rather
+  // than caching; it is also called again after every successful issuance.
+  const loadBilling = useCallback(async () => {
+    setBillingLoading(true);
+    setBillingError('');
+    try {
+      const data = await apiPost('/api/checkout', {
+        action: 'list-billing-documents',
+        applicationId: id,
+      });
+      setInvoices(data.invoices || []);
+      setReceipts(data.receipts || []);
+    } catch (err) {
+      console.error('Error loading billing documents', err);
+      setBillingError(err.message || t('billing.loadFailed'));
+    } finally {
+      setBillingLoading(false);
+    }
+  }, [id, t]);
+
+  useEffect(() => {
+    if (id && canAssign) loadBilling();
+  }, [id, canAssign, loadBilling]);
+
+  const outstandingOf = (inv) =>
+    Math.max(0, Number(inv?.total || 0) - Number(inv?.amount_paid || 0));
+
+  const openInvoiceModal = () => {
+    setBillingError('');
+    setInvoiceForm({
+      billToName: application?.company_name || application?.client?.company_name || application?.client?.full_name || '',
+      billToAddress: '',
+      billToEmail: application?.client?.email || '',
+      billToCountry: application?.client?.country || '',
+      description: application?.recommended_iso || '',
+      subtotal: application?.total_amount != null ? String(application.total_amount) : '',
+      discountAmount: '',
+      discountLabel: '',
+      invoiceNumber: '',
+      issueDate: today(),
+      dueDate: '',
+      paymentMethod: '',
+      paymentTerms: '',
+      notes: '',
+      send: true,
+    });
+    setBillingModal('invoice');
+  };
+
+  const openReceiptModal = () => {
+    setBillingError('');
+    const target = invoices.find(inv => outstandingOf(inv) > 0) || invoices[0] || null;
+    setReceiptForm({
+      invoiceId: target?.id || '',
+      customerName: target?.bill_to_name || application?.company_name || application?.client?.full_name || '',
+      amount: target ? String(outstandingOf(target) || target.total || '') : '',
+      paymentMethod: '',
+      paymentDate: today(),
+      memo: target?.invoice_number || '',
+      receiptNumber: '',
+      send: true,
+    });
+    setBillingModal('receipt');
+  };
+
+  // Re-prefill the amount / customer / memo when staff pick a different invoice.
+  const handleReceiptInvoiceChange = (invoiceId) => {
+    const inv = invoices.find(i => i.id === invoiceId);
+    setReceiptForm(prev => ({
+      ...prev,
+      invoiceId,
+      customerName: inv?.bill_to_name || prev.customerName,
+      amount: inv ? String(outstandingOf(inv) || inv.total || '') : prev.amount,
+      memo: inv?.invoice_number || prev.memo,
+    }));
+  };
+
+  const closeBillingModal = () => {
+    setBillingModal(null);
+    setBillingSubmitting(false);
+  };
+
+  const handleIssueInvoice = async () => {
+    const f = invoiceForm;
+    if (!f?.billToName?.trim() || !f?.description?.trim() || f?.subtotal === '' || Number.isNaN(Number(f?.subtotal))) {
+      setBillingError(t('billing.invoiceRequiredFields'));
+      return;
+    }
+    setBillingSubmitting(true);
+    setBillingError('');
+    try {
+      const result = await apiPost('/api/checkout', {
+        action: 'issue-invoice',
+        applicationId: id,
+        clientId: application?.client_id || null,
+        billToName: f.billToName.trim(),
+        billToAddress: f.billToAddress.trim() || null,
+        billToEmail: f.billToEmail.trim() || null,
+        billToCountry: f.billToCountry.trim() || null,
+        description: f.description.trim(),
+        subtotal: Number(f.subtotal),
+        discountAmount: f.discountAmount === '' ? 0 : Number(f.discountAmount),
+        discountLabel: f.discountLabel.trim() || null,
+        paymentMethod: f.paymentMethod || null,
+        paymentTerms: f.paymentTerms.trim() || null,
+        notes: f.notes.trim() || null,
+        issueDate: f.issueDate || null,
+        dueDate: f.dueDate || null,
+        invoiceNumber: f.invoiceNumber.trim() || null,
+        send: f.send,
+      });
+      closeBillingModal();
+      await loadBilling();
+      if (result.alreadyExisted) {
+        showToast(t('billing.invoiceAlreadyExisted'));
+      } else if (f.send && !result.emailSent) {
+        showToast(t('billing.invoiceCreatedNoEmail'));
+      } else {
+        showToast(t('billing.invoiceCreated'));
+      }
+    } catch (err) {
+      console.error('Error issuing invoice', err);
+      setBillingError(err.message || t('billing.issueFailed'));
+    } finally {
+      setBillingSubmitting(false);
+    }
+  };
+
+  const handleIssueReceipt = async () => {
+    const f = receiptForm;
+    if (!f?.customerName?.trim() || !(Number(f?.amount) > 0)) {
+      setBillingError(t('billing.receiptRequiredFields'));
+      return;
+    }
+    setBillingSubmitting(true);
+    setBillingError('');
+    try {
+      const result = await apiPost('/api/checkout', {
+        action: 'issue-receipt',
+        invoiceId: f.invoiceId || null,
+        applicationId: id,
+        clientId: application?.client_id || null,
+        customerName: f.customerName.trim(),
+        amount: Number(f.amount),
+        paymentMethod: f.paymentMethod || null,
+        paymentDate: f.paymentDate || null,
+        memo: f.memo.trim() || null,
+        receiptNumber: f.receiptNumber.trim() || null,
+        send: f.send,
+      });
+      closeBillingModal();
+      await loadBilling();
+      if (f.send && !result.emailSent) {
+        showToast(t('billing.receiptCreatedNoEmail'));
+      } else {
+        showToast(t('billing.receiptCreated'));
+      }
+    } catch (err) {
+      console.error('Error issuing receipt', err);
+      setBillingError(err.message || t('billing.issueFailed'));
+    } finally {
+      setBillingSubmitting(false);
+    }
+  };
 
   // --- Admin Save ---
   const handleSave = async () => {
@@ -853,6 +1054,225 @@ export default function ApplicationDetails() {
           </div>
         )}
       </div>
+
+      {/* ===== BILLING (super admin / country admin only) ===== */}
+      {canAssign && (
+        <div className="app-card" style={{ marginTop: '1.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: '0.75rem' }}>
+            <h3 className="app-card-title" style={{ margin: 0 }}>{t('billing.title')}</h3>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <Button variant="primary" size="sm" onClick={openInvoiceModal}>
+                <Receipt size={14} /> {t('billing.createInvoice')}
+              </Button>
+              <Button variant="outline" size="sm" onClick={openReceiptModal} disabled={invoices.length === 0}>
+                <Wallet size={14} /> {t('billing.recordPayment')}
+              </Button>
+            </div>
+          </div>
+          <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginTop: 0, marginBottom: '1rem' }}>
+            {t('billing.description')}
+          </p>
+
+          {billingError && !billingModal && (
+            <div style={{ padding: '10px 12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', borderRadius: 6, fontSize: '0.85rem', marginBottom: '0.75rem' }}>
+              {billingError}
+            </div>
+          )}
+
+          {billingLoading ? (
+            <p className="no-docs">{t('common.loading')}</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              {/* Invoices */}
+              <div>
+                <h4 style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  {t('billing.invoices')}
+                </h4>
+                {invoices.length === 0 ? (
+                  <p className="no-docs">{t('billing.noInvoices')}</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {invoices.map(inv => (
+                      <div key={inv.id} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '10px 12px', border: '1px solid var(--color-border)', borderRadius: 8 }}>
+                        <FileText size={16} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />
+                        <strong style={{ fontSize: '0.85rem' }}>{inv.invoice_number}</strong>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{formatDay(inv.issue_date)}</span>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{formatMoney(inv.total, inv.currency)}</span>
+                        <StatusBadge status={inv.status} label={t(`billing.status_${inv.status}`, inv.status)} />
+                        <span style={{ flex: 1 }} />
+                        {inv.url ? (
+                          <Button variant="outline" size="sm" onClick={() => window.open(inv.url, '_blank', 'noopener')}>
+                            <Download size={14} /> {t('common.download')}
+                          </Button>
+                        ) : (
+                          <span style={{ fontSize: '0.78rem', color: 'var(--color-text-tertiary)' }}>{t('billing.fileUnavailable')}</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Receipts */}
+              <div>
+                <h4 style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  {t('billing.receipts')}
+                </h4>
+                {receipts.length === 0 ? (
+                  <p className="no-docs">{t('billing.noReceipts')}</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {receipts.map(rcp => (
+                      <div key={rcp.id} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '10px 12px', border: '1px solid var(--color-border)', borderRadius: 8 }}>
+                        <Wallet size={16} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />
+                        <strong style={{ fontSize: '0.85rem' }}>{rcp.receipt_number}</strong>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{formatDay(rcp.payment_date)}</span>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{formatMoney(rcp.amount, rcp.currency)}</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{rcp.payment_method || '—'}</span>
+                        <span style={{ flex: 1 }} />
+                        {rcp.url ? (
+                          <Button variant="outline" size="sm" onClick={() => window.open(rcp.url, '_blank', 'noopener')}>
+                            <Download size={14} /> {t('common.download')}
+                          </Button>
+                        ) : (
+                          <span style={{ fontSize: '0.78rem', color: 'var(--color-text-tertiary)' }}>{t('billing.fileUnavailable')}</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Create Invoice */}
+      <Modal
+        isOpen={billingModal === 'invoice'}
+        onClose={closeBillingModal}
+        title={t('billing.createInvoice')}
+        size="lg"
+      >
+        {invoiceForm && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {billingError && (
+              <div style={{ padding: '10px 12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', borderRadius: 6, fontSize: '0.85rem' }}>
+                {billingError}
+              </div>
+            )}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
+              <Input label={t('billing.billToName')} value={invoiceForm.billToName}
+                onChange={(e) => setInvoiceForm(p => ({ ...p, billToName: e.target.value }))} />
+              <Input label={t('billing.billToEmail')} type="email" value={invoiceForm.billToEmail}
+                onChange={(e) => setInvoiceForm(p => ({ ...p, billToEmail: e.target.value }))} />
+              <Input label={t('billing.billToCountry')} value={invoiceForm.billToCountry}
+                onChange={(e) => setInvoiceForm(p => ({ ...p, billToCountry: e.target.value }))} />
+              <Input label={t('billing.invoiceNumber')} placeholder={t('billing.invoiceNumberAuto')} value={invoiceForm.invoiceNumber}
+                onChange={(e) => setInvoiceForm(p => ({ ...p, invoiceNumber: e.target.value }))} />
+              <Input label={t('billing.issueDate')} type="date" value={invoiceForm.issueDate}
+                onChange={(e) => setInvoiceForm(p => ({ ...p, issueDate: e.target.value }))} />
+              <Input label={t('billing.dueDate')} type="date" value={invoiceForm.dueDate}
+                onChange={(e) => setInvoiceForm(p => ({ ...p, dueDate: e.target.value }))} />
+            </div>
+            <Textarea label={t('billing.billToAddress')} rows={2} value={invoiceForm.billToAddress}
+              onChange={(e) => setInvoiceForm(p => ({ ...p, billToAddress: e.target.value }))} />
+            <Textarea label={t('billing.descriptionField')} rows={2} value={invoiceForm.description}
+              onChange={(e) => setInvoiceForm(p => ({ ...p, description: e.target.value }))} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
+              <Input label={t('billing.subtotal')} type="number" min="0" step="0.01" value={invoiceForm.subtotal}
+                onChange={(e) => setInvoiceForm(p => ({ ...p, subtotal: e.target.value }))} />
+              <Input label={t('billing.discountAmount')} type="number" min="0" step="0.01" value={invoiceForm.discountAmount}
+                onChange={(e) => setInvoiceForm(p => ({ ...p, discountAmount: e.target.value }))} />
+              <Input label={t('billing.discountLabel')} value={invoiceForm.discountLabel}
+                onChange={(e) => setInvoiceForm(p => ({ ...p, discountLabel: e.target.value }))} />
+              <Select label={t('billing.paymentMethod')} value={invoiceForm.paymentMethod}
+                onChange={(e) => setInvoiceForm(p => ({ ...p, paymentMethod: e.target.value }))}>
+                <option value="">{t('billing.noPaymentMethod')}</option>
+                {BILLING_PAYMENT_METHODS.map(m => (
+                  <option key={m.value} value={m.value}>{t(m.labelKey)}</option>
+                ))}
+              </Select>
+            </div>
+            <Textarea label={t('billing.paymentTerms')} rows={2} value={invoiceForm.paymentTerms}
+              onChange={(e) => setInvoiceForm(p => ({ ...p, paymentTerms: e.target.value }))} />
+            <Textarea label={t('billing.notes')} rows={2} value={invoiceForm.notes}
+              onChange={(e) => setInvoiceForm(p => ({ ...p, notes: e.target.value }))} />
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+              <input type="checkbox" checked={invoiceForm.send}
+                onChange={(e) => setInvoiceForm(p => ({ ...p, send: e.target.checked }))} />
+              {t('billing.sendByEmail')}
+            </label>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 8 }}>
+              <Button type="button" variant="ghost" onClick={closeBillingModal} disabled={billingSubmitting}>
+                {t('common.cancel')}
+              </Button>
+              <Button type="button" variant="primary" onClick={handleIssueInvoice} loading={billingSubmitting}>
+                {t('billing.issueInvoice')}
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Record Payment */}
+      <Modal
+        isOpen={billingModal === 'receipt'}
+        onClose={closeBillingModal}
+        title={t('billing.recordPayment')}
+        size="md"
+      >
+        {receiptForm && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {billingError && (
+              <div style={{ padding: '10px 12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', borderRadius: 6, fontSize: '0.85rem' }}>
+                {billingError}
+              </div>
+            )}
+            <Select label={t('billing.againstInvoice')} value={receiptForm.invoiceId}
+              onChange={(e) => handleReceiptInvoiceChange(e.target.value)}>
+              <option value="">{t('billing.noInvoiceLink')}</option>
+              {invoices.map(inv => (
+                <option key={inv.id} value={inv.id}>
+                  {inv.invoice_number} — {formatMoney(outstandingOf(inv), inv.currency)} {t('billing.outstandingSuffix')}
+                </option>
+              ))}
+            </Select>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
+              <Input label={t('billing.customerName')} value={receiptForm.customerName}
+                onChange={(e) => setReceiptForm(p => ({ ...p, customerName: e.target.value }))} />
+              <Input label={t('billing.amount')} type="number" min="0" step="0.01" value={receiptForm.amount}
+                onChange={(e) => setReceiptForm(p => ({ ...p, amount: e.target.value }))} />
+              <Select label={t('billing.paymentMethod')} value={receiptForm.paymentMethod}
+                onChange={(e) => setReceiptForm(p => ({ ...p, paymentMethod: e.target.value }))}>
+                <option value="">{t('billing.noPaymentMethod')}</option>
+                {BILLING_PAYMENT_METHODS.map(m => (
+                  <option key={m.value} value={m.value}>{t(m.labelKey)}</option>
+                ))}
+              </Select>
+              <Input label={t('billing.paymentDate')} type="date" value={receiptForm.paymentDate}
+                onChange={(e) => setReceiptForm(p => ({ ...p, paymentDate: e.target.value }))} />
+              <Input label={t('billing.receiptNumber')} placeholder={t('billing.invoiceNumberAuto')} value={receiptForm.receiptNumber}
+                onChange={(e) => setReceiptForm(p => ({ ...p, receiptNumber: e.target.value }))} />
+            </div>
+            <Textarea label={t('billing.memo')} rows={2} value={receiptForm.memo}
+              onChange={(e) => setReceiptForm(p => ({ ...p, memo: e.target.value }))} />
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+              <input type="checkbox" checked={receiptForm.send}
+                onChange={(e) => setReceiptForm(p => ({ ...p, send: e.target.checked }))} />
+              {t('billing.sendByEmail')}
+            </label>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 8 }}>
+              <Button type="button" variant="ghost" onClick={closeBillingModal} disabled={billingSubmitting}>
+                {t('common.cancel')}
+              </Button>
+              <Button type="button" variant="primary" onClick={handleIssueReceipt} loading={billingSubmitting}>
+                {t('billing.issueReceipt')}
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       <Modal
         isOpen={!!decisionModal}

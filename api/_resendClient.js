@@ -26,8 +26,11 @@ const SUPPORT_FROM_EMAIL =
  * @param {string} p.html    HTML body
  * @param {string} p.text    plain-text fallback
  * @param {string} [p.from]  optional override of the from-address
+ * @param {Array<{filename: string, content: string}>} [p.attachments]
+ *        optional file attachments; `content` must be base64-encoded.
+ *        Used by the billing documents (invoice / payment receipt PDFs).
  */
-export async function sendViaResend({ to, subject, html, text, from }) {
+export async function sendViaResend({ to, subject, html, text, from, attachments }) {
   if (!RESEND_API_KEY) {
     throw new Error('RESEND_API_KEY not configured');
   }
@@ -43,6 +46,8 @@ export async function sendViaResend({ to, subject, html, text, from }) {
       subject,
       html,
       text,
+      // Omitted entirely when absent — Resend rejects an empty array.
+      ...(attachments && attachments.length ? { attachments } : {}),
     }),
   });
   if (!resp.ok) {

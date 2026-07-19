@@ -44,7 +44,12 @@ export default function DashboardLayout() {
   // registration deliberately never asks for one, and the profile page has no
   // company field to satisfy this with. Prompting them for a Company Name would
   // be an unclearable popup, so the modal is for real (company) clients only.
-  const isPureIndividual = user?.stakeholder_type === 'referral' || user?.stakeholder_type === 'investor';
+  // 'consultancy' is included because accounts created before phase19 still sit
+  // on role='client', and a consultancy has no company record to satisfy this
+  // with either.
+  const isPureIndividual = user?.stakeholder_type === 'referral'
+    || user?.stakeholder_type === 'investor'
+    || user?.stakeholder_type === 'consultancy';
 
   // Show profile-completion modal for clients missing essential company info
   // (typical after Google OAuth or the simplified email signup). Dismissals

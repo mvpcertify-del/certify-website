@@ -1,13 +1,14 @@
 import crypto from 'node:crypto';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
-import { computeTotal, PACKAGE_LABEL } from '../src/utils/pricing.js';
+import { computeTotal, applyCoupon, bestDiscount, PACKAGE_LABEL } from '../src/utils/pricing.js';
 import { getIsoBySlug } from '../src/utils/isoCatalog.js';
 import { isOfflineMethod, stripeMethodTypesFor, PAYMENT_METHOD_IDS } from '../src/config/paymentMethods.js';
 import { getRegionFromCountry } from '../src/utils/roles.js';
 import { sendVerificationEmail } from './_sendVerificationEmail.js';
 import { notifyAdmins } from './_notifyAdmins.js';
 import { verifyAdmin } from './_verifyAdmin.js';
+import { issueInvoice, issueReceipt, signedUrlFor } from './_billing.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2023-10-16',
@@ -42,6 +43,22 @@ function pickTier(tiers, conversionCount) {
 }
 
 async function getReferrerTier(referrerId) {
+  // A partner who negotiated their own rate bypasses the tier ladder entirely.
+  // Consultancies are seeded at 25% by phase20; affiliates normally have no
+  // override and fall through to the Bronze/Silver/Gold table below.
+  const { data: profile } = await supabaseAdmin
+    .from('profiles')
+    .select('commission_percent_override, stakeholder_type')
+    .eq('id', referrerId)
+    .maybeSingle();
+
+  if (profile?.commission_percent_override != null) {
+    return {
+      commission_percent: Number(profile.commission_percent_override),
+      label: profile.stakeholder_type === 'consultancy' ? 'Consultancy' : 'Agreed rate',
+    };
+  }
+
   // Count conversions by this referrer in the rolling 12-month window
   const twelveMonthsAgo = new Date();
   twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
@@ -106,7 +123,9 @@ async function validateCouponHandler(req, res) {
     coupon: {
       id: coupon.id,
       code: coupon.code,
-      discount_percent: Number(coupon.discount_percent),
+      discount_type: coupon.discount_type || 'percent',
+      discount_percent: coupon.discount_percent == null ? null : Number(coupon.discount_percent),
+      discount_amount: coupon.discount_amount == null ? null : Number(coupon.discount_amount),
       description: coupon.description,
     },
   });
@@ -135,7 +154,7 @@ async function burnCoupon(couponCode, { clientId, applicationId, finalAmount }) 
   try {
     const { data: c } = await supabaseAdmin
       .from('discount_coupons')
-      .select('id, discount_percent, redemption_count')
+      .select('id, discount_type, discount_percent, discount_amount, redemption_count')
       .ilike('code', String(couponCode).trim())
       .maybeSingle();
     if (!c) return;
@@ -149,7 +168,9 @@ async function burnCoupon(couponCode, { clientId, applicationId, finalAmount }) 
         coupon_id: c.id,
         client_id: clientId || null,
         application_id: applicationId || null,
-        discount_percent: Number(c.discount_percent),
+        discount_type: c.discount_type || 'percent',
+        discount_percent: c.discount_percent == null ? null : Number(c.discount_percent),
+        discount_amount: c.discount_amount == null ? null : Number(c.discount_amount),
         discounted_amount: finalAmount ?? null,
       });
     } catch (e) {
@@ -210,8 +231,7 @@ async function guestCheckoutHandler(req, res) {
     // ---- Price (recomputed server-side; never trust the client) ----
     const totals = computeTotal({ standardSlug: isoName, employeeBands, locations: additionalLocations });
     const coupon = await resolveCoupon(couponCode);
-    const couponPct = coupon ? Number(coupon.discount_percent) : 0;
-    const finalPrice = Math.round(totals.subtotal * (1 - couponPct / 100) * 100) / 100;
+    const { discountAmount, total: finalPrice } = applyCoupon(totals.subtotal, coupon);
 
     // ---- 1. Create the client account ----
     // New buyers are created approval_status='pending' so nobody can log in
@@ -323,7 +343,7 @@ async function guestCheckoutHandler(req, res) {
       // we unlock the account, so this redirect cannot be forged.
       success_url: `${baseUrl}/checkout/success?app=${applicationId}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/checkout?iso=${encodeURIComponent(isoName)}&cancelled=1`,
-      metadata: { applicationId, clientId: userId, guest: 'true', paymentMethod, couponCode: coupon?.code || '', discountPct: String(couponPct) },
+      metadata: { applicationId, clientId: userId, guest: 'true', paymentMethod, couponCode: coupon?.code || '', discountAmount: String(discountAmount) },
     });
 
     return res.status(200).json({ url: session.url });
@@ -473,6 +493,122 @@ async function approveClientAccessHandler(req, res) {
 }
 
 // ---- Admin: verify an offline (cash / bank) payment ----
+// -------------------------------------------------------
+// Billing documents (invoice + payment receipt)
+// -------------------------------------------------------
+// All three are admin-gated. Issuing a financial document is a staff action;
+// nothing here may be reachable by a client, and every amount is taken from
+// the admin's request rather than the buyer's browser.
+
+// A regional admin is scoped to their own region. verifyAdmin admits them but
+// says nothing about WHICH records they may touch, so without this a Kenya
+// admin could POST any other region's applicationId and read back the full
+// invoice — bill-to details, amounts, and a working signed URL to the PDF.
+// Returns { error, status } on refusal, or null when the caller may proceed.
+async function assertBillingScope(caller, { applicationId, clientId }) {
+  if (caller.role === 'super_admin') return null;
+
+  let subjectId = clientId || null;
+  if (!subjectId && applicationId) {
+    const { data: app } = await supabaseAdmin
+      .from('applications').select('client_id').eq('id', applicationId).maybeSingle();
+    if (!app) return { error: 'Order not found', status: 404 };
+    subjectId = app.client_id;
+  }
+  if (!subjectId) return { error: 'Provide an applicationId or clientId', status: 400 };
+
+  const { data: subject } = await supabaseAdmin
+    .from('profiles').select('region').eq('id', subjectId).maybeSingle();
+  if (!subject) return { error: 'Client not found', status: 404 };
+
+  if (!caller.region || subject.region !== caller.region) {
+    return { error: 'Forbidden: that client is outside your region.', status: 403 };
+  }
+  return null;
+}
+
+async function issueInvoiceHandler(req, res) {
+  const auth = await verifyAdmin(req);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+
+  const scope = await assertBillingScope(auth.caller, req.body || {});
+  if (scope) return res.status(scope.status).json({ error: scope.error });
+
+  try {
+    const result = await issueInvoice(supabaseAdmin, req.body || {}, auth.caller);
+    return res.status(200).json({
+      success: true,
+      invoice: result.invoice,
+      alreadyExisted: result.alreadyExisted,
+      emailSent: result.emailSent,
+      url: await signedUrlFor(supabaseAdmin, result.invoice.storage_path),
+    });
+  } catch (err) {
+    console.error('issue-invoice error:', err);
+    return res.status(err.status || 500).json({ error: err.message || 'Could not issue the invoice' });
+  }
+}
+
+async function issueReceiptHandler(req, res) {
+  const auth = await verifyAdmin(req);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+
+  const scope = await assertBillingScope(auth.caller, req.body || {});
+  if (scope) return res.status(scope.status).json({ error: scope.error });
+
+  try {
+    const result = await issueReceipt(supabaseAdmin, req.body || {}, auth.caller);
+    return res.status(200).json({
+      success: true,
+      receipt: result.receipt,
+      invoice: result.invoice,
+      emailSent: result.emailSent,
+      url: await signedUrlFor(supabaseAdmin, result.receipt.storage_path),
+    });
+  } catch (err) {
+    console.error('issue-receipt error:', err);
+    return res.status(err.status || 500).json({ error: err.message || 'Could not issue the receipt' });
+  }
+}
+
+// List the invoices and receipts for one application, each with a short-lived
+// signed download URL. The PDFs live in a private bucket, so a URL is the only
+// way to hand the file to the browser.
+async function listBillingDocumentsHandler(req, res) {
+  const auth = await verifyAdmin(req);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+
+  try {
+    const { applicationId, clientId } = req.body || {};
+    if (!applicationId && !clientId) {
+      return res.status(400).json({ error: 'Provide an applicationId or clientId' });
+    }
+
+    const scope = await assertBillingScope(auth.caller, { applicationId, clientId });
+    if (scope) return res.status(scope.status).json({ error: scope.error });
+
+    const filter = (q) => (applicationId ? q.eq('application_id', applicationId) : q.eq('client_id', clientId));
+
+    const { data: invoices } = await filter(
+      supabaseAdmin.from('invoices').select('*')).order('created_at', { ascending: false });
+    const { data: receipts } = await filter(
+      supabaseAdmin.from('payment_receipts').select('*')).order('created_at', { ascending: false });
+
+    const withUrls = async (rows) => Promise.all((rows || []).map(async (r) => ({
+      ...r,
+      url: await signedUrlFor(supabaseAdmin, r.storage_path),
+    })));
+
+    return res.status(200).json({
+      invoices: await withUrls(invoices),
+      receipts: await withUrls(receipts),
+    });
+  } catch (err) {
+    console.error('list-billing-documents error:', err);
+    return res.status(500).json({ error: err.message || 'Could not load billing documents' });
+  }
+}
+
 // Admin-gated (Bearer JWT). Marks the order verified, approves the client, and
 // emails the one-click dashboard magic link — the moment an offline buyer
 // actually gains access. Replaces the old client-side status flip so the
@@ -627,6 +763,19 @@ export default async function handler(req, res) {
   if (req.body?.action === 'book-consultation') {
     return bookConsultationHandler(req, res);
   }
+  // --- Billing documents ---
+  // These live here rather than in their own api/ file because api/ is at
+  // exactly the 12-function Vercel Hobby ceiling; a 13th route file would fail
+  // the deployment. The implementation is in api/_billing.js.
+  if (req.body?.action === 'issue-invoice') {
+    return issueInvoiceHandler(req, res);
+  }
+  if (req.body?.action === 'issue-receipt') {
+    return issueReceiptHandler(req, res);
+  }
+  if (req.body?.action === 'list-billing-documents') {
+    return listBillingDocumentsHandler(req, res);
+  }
 
   try {
     const {
@@ -695,10 +844,11 @@ export default async function handler(req, res) {
 
     // ---- 3. Decide which discount to apply (do NOT stack) ----
     // Coupon wins over the baseline 10% referral sign-up discount.
-    const couponPct = coupon ? Number(coupon.discount_percent) : 0;
+    // A percent coupon and a fixed-amount coupon can't be compared as raw
+    // numbers, so bestDiscount resolves both into money against this subtotal
+    // and keeps whichever saves the buyer more.
     const referralSignupDiscountPct = referralRecord ? 10 : 0;
-    const discountPct = Math.max(couponPct, referralSignupDiscountPct);
-    const finalPrice = Math.round(price * (1 - discountPct / 100) * 100) / 100;
+    const { discountAmount, total: finalPrice } = bestDiscount(price, coupon, referralSignupDiscountPct);
 
     // ---- 4. Offline payment (MoneyGram / bank transfer) ----
     // No Stripe session: the buyer transfers funds out-of-band. We persist the
@@ -744,7 +894,7 @@ export default async function handler(req, res) {
         offline: true,
         paymentMethod,
         amount: finalPrice,
-        appliedDiscountPct: discountPct,
+        appliedDiscountAmount: discountAmount,
       });
     }
 
@@ -778,7 +928,7 @@ export default async function handler(req, res) {
         paymentMethod,
         referralDiscount: referralRecord ? 'true' : 'false',
         couponCode: coupon?.code || '',
-        discountPct: String(discountPct),
+        discountAmount: String(discountAmount),
         employeeBands: String(totals.employeeSurchargeTotal / 200 || 0),
         additionalLocations: String(totals.locationSurchargeTotal / 200 || 0),
       },
@@ -813,7 +963,9 @@ export default async function handler(req, res) {
           coupon_id: coupon.id,
           client_id: clientId || null,
           application_id: applicationId || null,
-          discount_percent: couponPct,
+          discount_type: coupon.discount_type || 'percent',
+          discount_percent: coupon.discount_percent == null ? null : Number(coupon.discount_percent),
+          discount_amount: coupon.discount_amount == null ? null : Number(coupon.discount_amount),
           original_amount: price,
           discounted_amount: finalPrice,
         });
@@ -872,8 +1024,13 @@ export default async function handler(req, res) {
     return res.status(200).json({
       url: session.url,
       referralDiscount: !!referralRecord,
-      coupon: coupon ? { code: coupon.code, discount_percent: couponPct } : null,
-      appliedDiscountPct: discountPct,
+      coupon: coupon ? {
+        code: coupon.code,
+        discount_type: coupon.discount_type || 'percent',
+        discount_percent: coupon.discount_percent == null ? null : Number(coupon.discount_percent),
+        discount_amount: coupon.discount_amount == null ? null : Number(coupon.discount_amount),
+      } : null,
+      appliedDiscountAmount: discountAmount,
     });
   } catch (error) {
     console.error('Stripe checkout error:', error);

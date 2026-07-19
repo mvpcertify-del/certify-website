@@ -12,17 +12,49 @@ import { Plus, Search, Pencil, Trash2, Copy, Check, Link2, RefreshCw } from 'luc
 const EMPTY = {
   code: '',
   description: '',
+  discount_type: 'percent',
   discount_percent: 10,
+  discount_amount: 100,
   max_redemptions: '',
   expires_at: '',
   is_active: true,
 };
 
 const DISCOUNT_PRESETS = [10, 15, 20, 25];
+const AMOUNT_PRESETS = [50, 100, 200, 500];
 
-function genCode(percent) {
+// `SAVE20-XXXXX` for percent coupons, `SAVE200USD-XXXXX` for fixed-amount ones.
+function genCode(type, value) {
   const rand = Math.random().toString(36).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5);
-  return `SAVE${percent || 10}-${rand}`;
+  if (type === 'amount') {
+    return `SAVE${value || 100}USD-${rand}`;
+  }
+  return `SAVE${value || 10}-${rand}`;
+}
+
+// Shared look for the selectable pill buttons (type toggle + value presets).
+function pillStyle(isSelected) {
+  return {
+    padding: '6px 14px',
+    borderRadius: 6,
+    border: isSelected
+      ? '2px solid var(--color-accent, #3ECF8E)'
+      : '1px solid var(--color-border)',
+    background: isSelected ? 'rgba(62,207,142,0.1)' : 'transparent',
+    cursor: 'pointer',
+    fontWeight: 600,
+    fontSize: '0.85rem',
+  };
+}
+
+// Rows created before the fixed-amount feature have a null discount_type.
+function formatDiscount(row) {
+  if ((row.discount_type || 'percent') === 'amount') {
+    const amt = Number(row.discount_amount);
+    return amt > 0 ? `US$${amt.toLocaleString()}` : '—';
+  }
+  const pct = Number(row.discount_percent);
+  return pct > 0 ? `${pct}%` : '—';
 }
 
 export default function AdminCoupons() {
@@ -45,6 +77,8 @@ export default function AdminCoupons() {
   const [error, setError] = useState('');
   const [copiedId, setCopiedId] = useState(null);
 
+  const isAmountType = formData.discount_type === 'amount';
+
   const fetchData = async () => {
     setFetching(true);
     const { data, error: err } = await supabase
@@ -60,7 +94,7 @@ export default function AdminCoupons() {
   const openCreate = () => {
     if (!canWrite) return;
     setEditingId(null);
-    setFormData({ ...EMPTY, code: genCode(10) });
+    setFormData({ ...EMPTY, code: genCode('percent', 10) });
     setCustomDiscount(false);
     setError('');
     setShowModal(true);
@@ -69,16 +103,22 @@ export default function AdminCoupons() {
   const openEdit = (row) => {
     if (!canWrite) return;
     setEditingId(row.id);
+    const type = (row.discount_type || 'percent') === 'amount' ? 'amount' : 'percent';
     const pct = Number(row.discount_percent) || 10;
+    const amt = Number(row.discount_amount) || 100;
     setFormData({
       code: row.code || '',
       description: row.description || '',
+      discount_type: type,
       discount_percent: pct,
+      discount_amount: amt,
       max_redemptions: row.max_redemptions ?? '',
       expires_at: row.expires_at ? row.expires_at.slice(0, 10) : '',
       is_active: !!row.is_active,
     });
-    setCustomDiscount(!DISCOUNT_PRESETS.includes(pct));
+    setCustomDiscount(type === 'amount'
+      ? !AMOUNT_PRESETS.includes(amt)
+      : !DISCOUNT_PRESETS.includes(pct));
     setError('');
     setShowModal(true);
   };
@@ -96,23 +136,34 @@ export default function AdminCoupons() {
     setError('');
 
     const code = formData.code.trim().toUpperCase();
+    const isAmount = formData.discount_type === 'amount';
     const pct = Number(formData.discount_percent);
+    const amt = Number(formData.discount_amount);
 
     if (!code) {
       setError(t('coupons.codeRequired'));
       return;
     }
-    if (!pct || pct <= 0 || pct > 100) {
+    if (isAmount) {
+      if (!Number.isFinite(amt) || amt <= 0) {
+        setError(t('coupons.amountInvalid'));
+        return;
+      }
+    } else if (!Number.isFinite(pct) || pct <= 0 || pct > 100) {
       setError(t('coupons.percentInvalid'));
       return;
     }
 
     setSaving(true);
     try {
+      // The DB CHECK requires exactly one value column set and the other
+      // explicitly NULL — always send both keys.
       const payload = {
         code,
         description: formData.description.trim() || null,
-        discount_percent: pct,
+        discount_type: isAmount ? 'amount' : 'percent',
+        discount_percent: isAmount ? null : pct,
+        discount_amount: isAmount ? amt : null,
         max_redemptions: formData.max_redemptions === '' ? null : Number(formData.max_redemptions),
         expires_at: formData.expires_at || null,
         is_active: !!formData.is_active,
@@ -207,7 +258,7 @@ export default function AdminCoupons() {
     {
       key: 'discount_percent',
       label: t('coupons.discount'),
-      render: (v) => v ? `${v}%` : '—',
+      render: (_, row) => formatDiscount(row),
     },
     {
       key: 'redemption_count',
@@ -408,18 +459,53 @@ export default function AdminCoupons() {
             <Button
               type="button"
               variant="ghost"
-              onClick={() => setFormData(f => ({ ...f, code: genCode(f.discount_percent) }))}
+              onClick={() => setFormData(f => ({
+                ...f,
+                code: genCode(f.discount_type, f.discount_type === 'amount' ? f.discount_amount : f.discount_percent),
+              }))}
             >
               <RefreshCw size={14} /> {t('coupons.regenerate')}
             </Button>
           </div>
 
           <div>
+            <label className="form-label">{t('coupons.discountType')}</label>
+            <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
+              {[
+                { value: 'percent', label: t('coupons.typePercent') },
+                { value: 'amount', label: t('coupons.typeAmount') },
+              ].map(opt => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => {
+                    setCustomDiscount(false);
+                    setFormData(f => ({ ...f, discount_type: opt.value }));
+                  }}
+                  style={pillStyle(formData.discount_type === opt.value)}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
             <label className="form-label">{t('coupons.discount')}</label>
             <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
-              {DISCOUNT_PRESETS.map(p => {
-                const isSelected = !customDiscount && Number(formData.discount_percent) === p;
-                return (
+              {isAmountType
+                ? AMOUNT_PRESETS.map(a => (
+                  <button
+                    key={a}
+                    type="button"
+                    onClick={() => {
+                      setCustomDiscount(false);
+                      setFormData(f => ({ ...f, discount_amount: a }));
+                    }}
+                    style={pillStyle(!customDiscount && Number(formData.discount_amount) === a)}
+                  >
+                    US${a}
+                  </button>
+                ))
+                : DISCOUNT_PRESETS.map(p => (
                   <button
                     key={p}
                     type="button"
@@ -427,45 +513,31 @@ export default function AdminCoupons() {
                       setCustomDiscount(false);
                       setFormData(f => ({ ...f, discount_percent: p }));
                     }}
-                    style={{
-                      padding: '6px 14px',
-                      borderRadius: 6,
-                      border: isSelected
-                        ? '2px solid var(--color-accent, #3ECF8E)'
-                        : '1px solid var(--color-border)',
-                      background: isSelected
-                        ? 'rgba(62,207,142,0.1)'
-                        : 'transparent',
-                      cursor: 'pointer',
-                      fontWeight: 600,
-                      fontSize: '0.85rem',
-                    }}
+                    style={pillStyle(!customDiscount && Number(formData.discount_percent) === p)}
                   >
                     {p}%
                   </button>
-                );
-              })}
+                ))}
               <button
                 type="button"
                 onClick={() => setCustomDiscount(true)}
-                style={{
-                  padding: '6px 14px',
-                  borderRadius: 6,
-                  border: customDiscount
-                    ? '2px solid var(--color-accent, #3ECF8E)'
-                    : '1px solid var(--color-border)',
-                  background: customDiscount
-                    ? 'rgba(62,207,142,0.1)'
-                    : 'transparent',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  fontSize: '0.85rem',
-                }}
+                style={pillStyle(customDiscount)}
               >
                 {t('coupons.custom')}
               </button>
             </div>
-            {customDiscount && (
+            {customDiscount && (isAmountType ? (
+              <Input
+                type="number"
+                name="discount_amount"
+                min="1"
+                step="0.01"
+                value={formData.discount_amount}
+                onChange={e => setFormData({ ...formData, discount_amount: e.target.value })}
+                placeholder={t('coupons.customAmountPlaceholder')}
+                required
+              />
+            ) : (
               <Input
                 type="number"
                 name="discount_percent"
@@ -477,7 +549,7 @@ export default function AdminCoupons() {
                 placeholder={t('coupons.customPercentPlaceholder')}
                 required
               />
-            )}
+            ))}
           </div>
 
           <Input

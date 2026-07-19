@@ -6,6 +6,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import BrandLogo from '../../components/ui/BrandLogo';
 import {
   computeTotal,
+  applyCoupon,
+  bestDiscount,
   PACKAGE_LABEL,
   SURCHARGE_PER_EMPLOYEE_BAND,
   SURCHARGE_PER_LOCATION,
@@ -179,13 +181,19 @@ export default function PaymentPlaceholder() {
   });
   const originalPrice = totals.subtotal;
 
-  // Coupon and referral discount do not stack — the larger wins.
-  const couponPct = coupon ? Number(coupon.discount_percent) : 0;
+  // Coupon and referral discount do not stack — whichever saves more wins.
+  // bestDiscount resolves both into money first, because a percentage and a
+  // fixed US$ amount cannot be compared as raw numbers.
   const referralPct = hasReferralDiscount ? 10 : 0;
-  const appliedDiscountPct = Math.max(couponPct, referralPct);
-  const currentPrice = appliedDiscountPct > 0
-    ? Math.round(originalPrice * (1 - appliedDiscountPct / 100) * 100) / 100
-    : originalPrice;
+  const {
+    discountAmount: appliedDiscountAmount,
+    total: currentPrice,
+    label: appliedDiscountLabel,
+  } = bestDiscount(originalPrice, coupon, referralPct);
+
+  // Which of the two produced the winning discount — drives the banner copy.
+  const couponWins = !!coupon
+    && applyCoupon(originalPrice, coupon).discountAmount >= (originalPrice * referralPct) / 100;
 
   const offlineSelected = isOfflineMethod(paymentMethod);
 
@@ -377,17 +385,17 @@ export default function PaymentPlaceholder() {
         </div>
 
         {/* DISCOUNT BANNER — coupon wins over referral if both present */}
-        {appliedDiscountPct > 0 && (
+        {appliedDiscountAmount > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 18px', background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)', border: '1px solid #6ee7b7', borderRadius: '14px', marginBottom: '20px' }}>
             <Tag size={20} color="#059669" />
             <div>
               <p style={{ margin: 0, fontWeight: 700, color: '#065f46', fontSize: '0.95rem' }}>
-                {coupon && couponPct >= referralPct
-                  ? t('coupons.couponApplied', { percent: couponPct, code: coupon.code })
+                {couponWins
+                  ? t('coupons.couponAppliedValue', { value: appliedDiscountLabel, code: coupon.code })
                   : t('payment.referralDiscount')}
               </p>
               <p style={{ margin: 0, color: '#047857', fontSize: '0.82rem' }}>
-                {coupon && couponPct >= referralPct
+                {couponWins
                   ? (coupon.description || t('coupons.couponAppliedDesc'))
                   : t('payment.referralDiscountDesc')}
               </p>
@@ -403,7 +411,7 @@ export default function PaymentPlaceholder() {
           {coupon ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{ flex: 1, padding: '8px 12px', background: '#ecfdf5', border: '1px solid #86efac', borderRadius: 8, fontFamily: 'monospace', fontWeight: 700, color: '#065f46' }}>
-                {coupon.code} — {coupon.discount_percent}% off
+                {coupon.code} — {applyCoupon(originalPrice, coupon).label}
               </div>
               <button type="button" onClick={clearCoupon} style={{ padding: '8px 14px', background: 'transparent', border: '1px solid #e2e8f0', borderRadius: 8, cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: '#64748b' }}>
                 {t('common.remove') || 'Remove'}
@@ -615,10 +623,10 @@ export default function PaymentPlaceholder() {
                   {t('payment.totalAmount')}
                 </p>
                 <p style={{ margin: 0, fontSize: '0.82rem', color: '#64748b' }}>
-                  {appliedDiscountPct > 0 && (
+                  {appliedDiscountAmount > 0 && (
                     <span style={{ color: '#059669', fontWeight: 600 }}>
-                      {coupon && couponPct >= referralPct
-                        ? t('coupons.couponAppliedShort', { percent: couponPct })
+                      {couponWins
+                        ? t('coupons.couponAppliedValueShort', { value: appliedDiscountLabel })
                         : t('payment.referralApplied')} &bull;{' '}
                     </span>
                   )}
@@ -626,7 +634,7 @@ export default function PaymentPlaceholder() {
                 </p>
               </div>
               <div style={{ textAlign: 'right' }}>
-                {appliedDiscountPct > 0 && (
+                {appliedDiscountAmount > 0 && (
                   <span style={{ fontSize: '1rem', color: '#94a3b8', textDecoration: 'line-through', marginRight: '8px' }}>
                     ${originalPrice}
                   </span>

@@ -5,7 +5,7 @@ import {
   Shield, CreditCard, Banknote, Landmark, Lock, CheckCircle2, Copy,
   ArrowRight, Mail, AlertCircle, MailCheck, Ticket, X, ChevronDown,
 } from 'lucide-react';
-import { computeTotal, PACKAGE_LABEL } from '../../utils/pricing';
+import { computeTotal, applyCoupon, PACKAGE_LABEL } from '../../utils/pricing';
 import { getIsoBySlug } from '../../utils/isoCatalog';
 import {
   PAYMENT_METHODS, isOfflineMethod, BANK_TRANSFER_DETAILS, CASH_DETAILS,
@@ -69,8 +69,9 @@ function CheckoutForm() {
   const [couponError, setCouponError] = useState('');
   const [validatingCoupon, setValidatingCoupon] = useState(false);
 
-  const discountAmount = coupon ? Math.round(totals.subtotal * coupon.discount_percent) / 100 : 0;
-  const finalTotal = Math.max(0, totals.subtotal - discountAmount);
+  // Shared with api/checkout.js so the displayed total and the charged total
+  // can never disagree, whether the code is a percentage or a US$ amount.
+  const { discountAmount, total: finalTotal, label: discountLabel } = applyCoupon(totals.subtotal, coupon);
   const money = (n) => n.toLocaleString(undefined, { maximumFractionDigits: 2 });
 
   const validateCoupon = async () => {
@@ -281,7 +282,7 @@ function CheckoutForm() {
             )}
             {coupon && (
               <div className="checkout__line checkout__line--discount">
-                <span>{t('coupons.discount')} ({coupon.discount_percent}%)</span>
+                <span>{t('coupons.discount')} ({discountLabel})</span>
                 <span>−${money(discountAmount)}</span>
               </div>
             )}
@@ -293,7 +294,7 @@ function CheckoutForm() {
               <div className="checkout__coupon-applied">
                 <Ticket size={15} />
                 <span className="checkout__coupon-code">{coupon.code}</span>
-                <span className="checkout__coupon-off">−{coupon.discount_percent}%</span>
+                <span className="checkout__coupon-off">−${money(discountAmount)}</span>
                 <button type="button" className="checkout__coupon-remove" onClick={clearCoupon} aria-label={t('common.remove')}>
                   <X size={15} />
                 </button>
@@ -419,7 +420,7 @@ function CheckoutForm() {
             {processing ? (
               <><span className="checkout__spinner" /> {t('common.processing')}</>
             ) : (
-              <><Lock size={17} /> {offlineSelected ? t('checkout.placeOrderButton') : t('checkout.payButton')} · ${totals.subtotal.toLocaleString()}</>
+              <><Lock size={17} /> {offlineSelected ? t('checkout.placeOrderButton') : t('checkout.payButton')} · ${money(finalTotal)}</>
             )}
           </button>
 

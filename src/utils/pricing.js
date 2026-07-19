@@ -101,6 +101,60 @@ export function computeTotal({
   };
 }
 
+// Apply a discount coupon to a subtotal.
+//
+// Coupons come in two shapes (see supabase/phase20_billing_invoices_receipts):
+//   discount_type='percent' → discount_percent, e.g. 10 = 10% off
+//   discount_type='amount'  → discount_amount,  e.g. 200 = US$200 off
+//
+// Single source of truth so the checkout UI and api/checkout.js can never
+// disagree about what the buyer owes. Older rows have no discount_type; they
+// are all percent coupons, hence the fallback.
+//
+// The result is clamped at zero — a $699 coupon against a $300 order gives a
+// $300 discount and a $0 total, never a negative charge.
+export function applyCoupon(subtotal, coupon) {
+  const base = Math.max(0, Number(subtotal) || 0);
+  if (!coupon) {
+    return { discountAmount: 0, total: base, label: null };
+  }
+
+  const type = coupon.discount_type || 'percent';
+  let discountAmount;
+  let label;
+
+  if (type === 'amount') {
+    discountAmount = Math.max(0, Number(coupon.discount_amount) || 0);
+    label = `US$${discountAmount.toLocaleString()} off`;
+  } else {
+    const pct = Math.max(0, Number(coupon.discount_percent) || 0);
+    discountAmount = base * (pct / 100);
+    label = `${pct}% off`;
+  }
+
+  discountAmount = Math.min(base, Math.round(discountAmount * 100) / 100);
+
+  return {
+    discountAmount,
+    total: Math.round((base - discountAmount) * 100) / 100,
+    label,
+  };
+}
+
+// Pick the better of two competing discounts. Percent and fixed-amount
+// coupons cannot be compared numerically (25 vs 200 is meaningless), so they
+// are resolved into actual money against this subtotal first. Used where a
+// coupon and the baseline referral sign-up discount both apply — they do not
+// stack, the buyer gets whichever saves more.
+export function bestDiscount(subtotal, coupon, referralPercent = 0) {
+  const withCoupon = applyCoupon(subtotal, coupon);
+  const withReferral = referralPercent > 0
+    ? applyCoupon(subtotal, { discount_type: 'percent', discount_percent: referralPercent })
+    : { discountAmount: 0, total: Math.max(0, Number(subtotal) || 0), label: null };
+
+  return withReferral.discountAmount > withCoupon.discountAmount ? withReferral : withCoupon;
+}
+
 // -------------------------------------------------------
 // Public landing-page Pricing Calculator
 //
