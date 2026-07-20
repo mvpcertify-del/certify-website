@@ -149,21 +149,50 @@ async function nextNumber(supabaseAdmin, { sequence, prefix, kind }) {
 // ----------------------------------------------------------------------------
 // PDF drawing helpers
 // ----------------------------------------------------------------------------
+// pdf-lib's standard fonts are WinAnsi-encoded and THROW on any character
+// outside that set, aborting the whole document. Bill-to names, addresses and
+// notes are free text typed by an admin, so smart quotes, dashes pasted from
+// Word, and non-Latin scripts all reach here. Map what has an obvious
+// equivalent and drop the rest — a receipt missing one glyph beats a 500 the
+// admin cannot act on.
+const WINANSI_SUBSTITUTIONS = {
+  '\u2212': '-', '\u2013': '-', '\u2014': '-', '\u2010': '-', '\u2011': '-',
+  '\u2018': "'", '\u2019': "'", '\u201A': "'", '\u201B': "'",
+  '\u201C': '"', '\u201D': '"', '\u201E': '"',
+  '\u2026': '...',
+  // Narrow/thin/non-breaking/zero-width spaces - Word and web paste are full of them.
+  '\u202F': ' ', '\u2009': ' ', '\u00A0': ' ', '\u200B': '',
+};
+
+function winAnsi(text) {
+  return String(text)
+    .replace(
+      /[\u2212\u2013\u2014\u2010\u2011\u2018\u2019\u201A\u201B\u201C\u201D\u201E\u2026\u202F\u2009\u00A0\u200B]/g,
+      (c) => WINANSI_SUBSTITUTIONS[c],
+    )
+    // Anything still outside Latin-1 (Arabic, CJK, emoji) cannot be drawn at
+    // all with these fonts.
+    .replace(/[^\x20-\x7E\xA0-\xFF\n]/g, '');
+}
+
 function drawText(page, text, { x, y, size = 10, font, color = INK }) {
   if (text == null || text === '') return;
-  page.drawText(String(text), { x, y, size, font, color });
+  page.drawText(winAnsi(text), { x, y, size, font, color });
 }
 
 function drawRight(page, text, { x, y, size = 10, font, color = INK }) {
   if (text == null || text === '') return;
-  const w = font.widthOfTextAtSize(String(text), size);
-  page.drawText(String(text), { x: x - w, y, size, font, color });
+  const safe = winAnsi(text);
+  const w = font.widthOfTextAtSize(safe, size);
+  page.drawText(safe, { x: x - w, y, size, font, color });
 }
 
 // Wrap a long string to a pixel width, returning an array of lines.
 function wrap(text, font, size, maxWidth) {
   if (!text) return [];
-  const words = String(text).split(/\s+/);
+  // Sanitize before measuring — widthOfTextAtSize throws on the same
+  // characters drawText does, and it runs first.
+  const words = winAnsi(text).split(/\s+/);
   const lines = [];
   let line = '';
   for (const word of words) {
@@ -331,7 +360,7 @@ async function buildInvoicePdf(invoice, org) {
   if (Number(invoice.discount_amount) > 0) {
     totalRow(
       invoice.discount_label || 'Discount',
-      `− ${money(invoice.discount_amount, invoice.currency)}`,
+      `- ${money(invoice.discount_amount, invoice.currency)}`,
       { color: ACCENT },
     );
   }
@@ -416,7 +445,7 @@ async function buildReceiptPdf(receipt, org, invoice) {
 
     drawText(page, receipt.receipt_number, { x: MARGIN, y, size: 9, font: regular });
     drawText(page, formatDate(receipt.payment_date), { x: MARGIN + 180, y, size: 9, font: regular });
-    drawRight(page, `− ${money(receipt.amount, receipt.currency)}`, { x: PAGE_W - MARGIN, y, size: 9, font: regular, color: ACCENT });
+    drawRight(page, `- ${money(receipt.amount, receipt.currency)}`, { x: PAGE_W - MARGIN, y, size: 9, font: regular, color: ACCENT });
     y -= 20;
 
     const balance = Math.max(0, Number(invoice.total || 0) - Number(invoice.amount_paid || 0));
