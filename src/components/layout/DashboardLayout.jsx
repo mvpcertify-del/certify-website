@@ -44,9 +44,9 @@ export default function DashboardLayout() {
   // registration deliberately never asks for one, and the profile page has no
   // company field to satisfy this with. Prompting them for a Company Name would
   // be an unclearable popup, so the modal is for real (company) clients only.
-  // 'consultancy' is included because accounts created before phase19 still sit
-  // on role='client', and a consultancy has no company record to satisfy this
-  // with either.
+  // 'consultancy' is kept here for accounts created before phase22 gave it its
+  // own role — those still sit on role='client' and would otherwise be shown
+  // the same unclearable company prompt.
   const isPureIndividual = user?.stakeholder_type === 'referral'
     || user?.stakeholder_type === 'investor'
     || user?.stakeholder_type === 'consultancy';

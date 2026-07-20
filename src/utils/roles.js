@@ -14,6 +14,13 @@ export const ROLES = {
   // Referral partner — an individual who refers clients and earns commission.
   // Promoted from a `client` stakeholder_type to a first-class role in phase 14.
   REFERRAL: 'referral',
+  // Consultancy partner — a firm that onboards clients onto the platform and
+  // follows them through to payment. It shares the referral partner's screens
+  // but is NOT a referral: it carries its own commission rate (25% of net),
+  // a monthly KPI, and a signed 12-month contract. Client instruction, 21 Jul:
+  // "Do not classify as referral." Promoted from a `client` stakeholder_type
+  // in phase 22 (phase 19 had briefly parked it on `referral`).
+  CONSULTANCY: 'consultancy',
 };
 
 export const ROLE_LABELS = {
@@ -27,6 +34,7 @@ export const ROLE_LABELS = {
   [ROLES.CERTIFICATION_BODY]: 'Certification Body',
   [ROLES.CLIENT]: 'Client',
   [ROLES.REFERRAL]: 'Referral',
+  [ROLES.CONSULTANCY]: 'Consultancy',
 };
 
 /** Ordered by privilege level (highest first) */
@@ -36,6 +44,7 @@ export const ROLE_HIERARCHY = [
   ROLES.CERTIFICATION_BODY,
   ROLES.AUDITOR,
   ROLES.CLIENT,
+  ROLES.CONSULTANCY,
   ROLES.REFERRAL,
 ];
 
@@ -448,6 +457,17 @@ const ROLE_PERMISSIONS = {
     // Settings (own profile)
     PERMISSIONS.MANAGE_SETTINGS,
   ],
+
+  // ---- Consultancy Partner (firm) ----
+  // Deliberately identical to the referral partner's set: the client asked for
+  // "the same process features as Referral/Affiliate". What differs is not the
+  // screens but the commercial terms (25% of net, monthly KPI, signed
+  // contract), which live in data, not permissions.
+  [ROLES.CONSULTANCY]: [
+    PERMISSIONS.VIEW_DASHBOARD,
+    PERMISSIONS.VIEW_REFERRALS,
+    PERMISSIONS.MANAGE_SETTINGS,
+  ],
 };
 
 // ---------------------------------------------------
@@ -580,7 +600,7 @@ export function getAccessibleRoutes(role) {
  */
 export function getCreatableRoles(role) {
   const map = {
-    [ROLES.SUPER_ADMIN]: [ROLES.REGIONAL_ADMIN, ROLES.AUDITOR, ROLES.CERTIFICATION_BODY, ROLES.CLIENT, ROLES.REFERRAL],
+    [ROLES.SUPER_ADMIN]: [ROLES.REGIONAL_ADMIN, ROLES.AUDITOR, ROLES.CERTIFICATION_BODY, ROLES.CLIENT, ROLES.CONSULTANCY, ROLES.REFERRAL],
     [ROLES.REGIONAL_ADMIN]: [ROLES.AUDITOR, ROLES.CERTIFICATION_BODY],
   };
   return map[role] || [];
@@ -589,9 +609,11 @@ export function getCreatableRoles(role) {
 // ---------------------------------------------------
 // Display labels for client-role stakeholder variants
 // ---------------------------------------------------
-// Referral, Consultancy, and Investor users share the underlying `client` role
-// but should NOT be shown as "Client" in user-facing surfaces (Profile/Settings,
-// admin user list, etc). Map each stakeholder_type to its display label here.
+// Investor users share the underlying `client` role but should NOT be shown as
+// "Client" in user-facing surfaces (Profile/Settings, admin user list, etc).
+// Referral (phase 14) and Consultancy (phase 22) have since been promoted to
+// real roles and are labelled from ROLE_LABELS instead; their entries are kept
+// here so accounts created before those migrations still render correctly.
 export const STAKEHOLDER_DISPLAY_LABELS = {
   referral: 'Referral Partner',
   consultancy: 'Consultancy',

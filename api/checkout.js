@@ -19,6 +19,12 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+// Consultancy partners earn a flat agreed rate on net sales rather than
+// climbing the volume ladder (client, 21 Jul: "the consultancies will get 25%
+// on each Client whom they onboard"). An explicit
+// profiles.commission_percent_override still takes precedence.
+const CONSULTANCY_COMMISSION_PERCENT = 25;
+
 const DEFAULT_TIERS = [
   { min_conversions: 1,  max_conversions: 15, commission_percent: 15, label: 'Bronze' },
   { min_conversions: 15, max_conversions: 20, commission_percent: 20, label: 'Silver' },
@@ -57,6 +63,15 @@ async function getReferrerTier(referrerId) {
       commission_percent: Number(profile.commission_percent_override),
       label: profile.stakeholder_type === 'consultancy' ? 'Consultancy' : 'Agreed rate',
     };
+  }
+
+  // A consultancy earns 25% of net by agreement (client, 21 Jul), not by
+  // volume tier. phase22 seeds the override for consultancies that existed
+  // when it ran, but a consultancy onboarded afterwards has none — without
+  // this it would silently fall through to the Bronze/Silver/Gold ladder and
+  // be paid 15%. The override still wins when an admin sets a different rate.
+  if (profile?.stakeholder_type === 'consultancy') {
+    return { commission_percent: CONSULTANCY_COMMISSION_PERCENT, label: 'Consultancy' };
   }
 
   // Count conversions by this referrer in the rolling 12-month window

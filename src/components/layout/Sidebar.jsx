@@ -66,9 +66,10 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     { path: '/admin/permissions', labelKey: 'nav.permissions', icon: KeyRound, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN] },
     { path: '/admin/user-fields', labelKey: 'nav.userFields', icon: FormInput, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN] },
     { path: '/admin/application-fields', labelKey: 'nav.applicationFields', icon: ClipboardList, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN] },
-    // Referral partners (their own role since phase 14) get their referral
-    // dashboard in the sidebar. Admins manage referrals via Commission Tiers.
-    { path: '/referrals', labelKey: 'nav.referrals', icon: Gift, permissions: [PERMISSIONS.VIEW_REFERRALS], allowedRoles: [ROLES.REFERRAL] },
+    // Referral partners (their own role since phase 14) and consultancy
+    // partners (phase 22) both get the partner dashboard here — same screen,
+    // different commercial terms. Admins manage referrals via Commission Tiers.
+    { path: '/referrals', labelKey: 'nav.referrals', icon: Gift, permissions: [PERMISSIONS.VIEW_REFERRALS], allowedRoles: [ROLES.REFERRAL, ROLES.CONSULTANCY] },
     { path: '/profile', labelKey: 'nav.myProfile', icon: User, permissions: [PERMISSIONS.MANAGE_SETTINGS] },
     { path: '/notifications', labelKey: 'nav.notifications', icon: Bell, permissions: [PERMISSIONS.VIEW_DASHBOARD] },
     { path: '/settings', labelKey: 'nav.settings', icon: Settings, permissions: [PERMISSIONS.MANAGE_USERS] },

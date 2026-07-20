@@ -31,12 +31,14 @@ export const STAKEHOLDER_TYPES = {
     title: 'Consultancies',
     singularTitle: 'Consultancy',
     // A consultancy brings clients to the platform and earns on them — the same
-    // shape as a referral partner, not a company seeking its own certificate.
-    // On the `client` role it got the certification menu (New Application, My
-    // Certificates, the Gap Analysis prompt) and NO way to add or track the
-    // clients it introduced. Client instruction, 19 Jul: "Consultancy can have
-    // the same process features as Referral/Affiliate."
-    role: 'referral',
+    // SCREENS as a referral partner, but not the same thing. It carries its own
+    // commission rate (25% of net), a monthly KPI, and a signed 12-month
+    // contract, so it needs to be countable and governable on its own.
+    // Client instruction, 19 Jul: "the same process features as
+    // Referral/Affiliate"; 21 Jul: "Do not classify as referral."
+    // Phase 19 briefly parked this on 'referral'; phase 22 moves it to its own
+    // role. `stakeholder_type` stays 'consultancy' either way.
+    role: 'consultancy',
     icon: 'Briefcase',
     color: '#F59E0B',
     description: 'Join CertifyCX as a consultancy partner and help organizations achieve ISO certification with expert guidance.',

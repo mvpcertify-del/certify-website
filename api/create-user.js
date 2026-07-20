@@ -89,7 +89,7 @@ export default async function handler(req, res) {
     // can mint any role; a regional admin only auditors and CBs — not another
     // Country Admin, and not a referral with commission entitlements).
     const allowedRoles = isSelfSignup
-      ? ['client', 'auditor', 'certification_body', 'referral']
+      ? ['client', 'auditor', 'certification_body', 'referral', 'consultancy']
       : getCreatableRoles(caller.role);
 
     if (!allowedRoles.includes(assignedRole)) {
@@ -106,6 +106,20 @@ export default async function handler(req, res) {
     const resolvedApprovalStatus = isSelfSignup
       ? 'approved'
       : (approval_status || 'approved');
+
+    // stakeholder_type is the stable identifier the platform counts, filters and
+    // prices on — it survived consultancy's role moving twice (client → referral
+    // in phase19 → consultancy in phase22). It used to be attached only when the
+    // role was `client`, which was fine while every stakeholder variant WAS a
+    // client. It no longer is: an admin picking the Consultancy role would
+    // otherwise create a row with stakeholder_type NULL, which is counted in no
+    // dashboard box, missed by the ?stakeholder=consultancy filter, and — worst —
+    // skipped by the 25% commission override, since that is keyed on
+    // stakeholder_type. Roles that ARE a stakeholder type imply their own.
+    const SELF_DESCRIBING_STAKEHOLDER_ROLES = ['consultancy', 'referral'];
+    const resolvedStakeholderType = SELF_DESCRIBING_STAKEHOLDER_ROLES.includes(assignedRole)
+      ? assignedRole
+      : (assignedRole === 'client' ? (stakeholder_type || 'client') : null);
 
     // Build user_metadata. Self-signup carries extra stakeholder details.
     const userMetadata = isSelfSignup
@@ -131,11 +145,7 @@ export default async function handler(req, res) {
           company_name: company_name || null,
           country: country || null,
           region: resolvedRegion,
-          // Admin-created clients may be a stakeholder variant (referral /
-          // investor / consultancy). Only attach when creating a client.
-          ...(assignedRole === 'client' && stakeholder_type
-            ? { stakeholder_type }
-            : {}),
+          ...(resolvedStakeholderType ? { stakeholder_type: resolvedStakeholderType } : {}),
         };
 
     // email_confirm: false leaves email_confirmed_at NULL — the user cannot log
@@ -183,9 +193,7 @@ export default async function handler(req, res) {
           company_name: company_name || null,
           ...(contact_number ? { phone: contact_number } : {}),
           ...(city ? { city } : {}),
-          ...(assignedRole === 'client' && stakeholder_type
-            ? { stakeholder_type }
-            : {}),
+          ...(resolvedStakeholderType ? { stakeholder_type: resolvedStakeholderType } : {}),
           ...(custom_fields && typeof custom_fields === 'object' ? { custom_fields } : {}),
         };
 

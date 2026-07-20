@@ -295,11 +295,12 @@ export default function Dashboard() {
   if (!user || loading) return <div className="page-container"><p>{t('common.loadingDashboard')}</p></div>;
 
   const isClient = user?.role === ROLES.CLIENT;
-  // Consultancies and investors ride on the `client` role but are not seeking a
-  // certificate of their own, so the "Take your free Gap Analysis" prompt is
-  // meaningless to them (client instruction, 19 Jul: "the Gap Analysis is only
-  // optional for clients"). Consultancies move to role='referral' in phase19;
-  // this also covers accounts created before that migration runs.
+  // Investors ride on the `client` role but are not seeking a certificate of
+  // their own, so the "Take your free Gap Analysis" prompt is meaningless to
+  // them (client instruction, 19 Jul: "the Gap Analysis is only optional for
+  // clients"). Consultancies have their own role since phase22 and so no longer
+  // reach this branch at all; the check is kept for accounts created before
+  // that migration ran.
   const seeksCertification = isClient
     && user?.stakeholder_type !== 'consultancy'
     && user?.stakeholder_type !== 'investor';

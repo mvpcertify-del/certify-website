@@ -46,8 +46,19 @@ export default function MainDashboard() {
           countRows('profiles', (q) => q.eq('role', 'client').or('stakeholder_type.is.null,stakeholder_type.eq.client')),
           countRows('certification_bodies'),
           countRows('profiles', (q) => q.eq('role', 'auditor')),
-          countRows('profiles', (q) => q.eq('role', 'client').eq('stakeholder_type', 'consultancy')),
-          countRows('profiles', (q) => q.eq('role', 'referral')),
+          // Count consultancies by stakeholder_type, not role. The role has moved
+          // twice now (client → referral in phase 19 → consultancy in phase 22)
+          // and this box read 0 the whole time phase 19 was live, because no row
+          // could satisfy role='client' AND stakeholder_type='consultancy' after
+          // that migration. stakeholder_type has been stable throughout.
+          countRows('profiles', (q) => q.eq('stakeholder_type', 'consultancy')),
+          // Referrals must EXCLUDE consultancies or the two boxes double-count
+          // the same people — which is what produced the inflated referral
+          // figure while consultancies sat on the referral role.
+          // `.neq` alone would silently drop rows whose stakeholder_type is NULL,
+          // because NULL <> 'consultancy' is NULL, not true.
+          countRows('profiles', (q) => q.eq('role', 'referral')
+            .or('stakeholder_type.is.null,stakeholder_type.neq.consultancy')),
           supabase.from('payments').select('amount').in('status', PAID_STATUSES),
         ]);
 
