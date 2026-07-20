@@ -482,9 +482,11 @@ async function uploadPdf(supabaseAdmin, { clientId, kind, number, bytes }) {
   return path;
 }
 
-export async function signedUrlFor(supabaseAdmin, storagePath, seconds = 300) {
+// `bucket` defaults to the billing bucket so existing callers are unchanged;
+// api/_contract.js passes its own.
+export async function signedUrlFor(supabaseAdmin, storagePath, seconds = 300, bucket = BUCKET) {
   if (!storagePath) return null;
-  const { data } = await supabaseAdmin.storage.from(BUCKET).createSignedUrl(storagePath, seconds);
+  const { data } = await supabaseAdmin.storage.from(bucket).createSignedUrl(storagePath, seconds);
   return data?.signedUrl || null;
 }
 

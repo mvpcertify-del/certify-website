@@ -61,6 +61,7 @@ const AdminAccreditationBodies = lazy(() => import('./pages/admin/AdminAccredita
 const AdminCountries = lazy(() => import('./pages/admin/AdminCountries'));
 const AdminCoupons = lazy(() => import('./pages/admin/AdminCoupons'));
 const AdminCommissionTiers = lazy(() => import('./pages/admin/AdminCommissionTiers'));
+const AdminConsultancies = lazy(() => import('./pages/admin/AdminConsultancies'));
 const CertificationBodiesRegistry = lazy(() => import('./pages/bodies/CertificationBodies'));
 const AdminCompanies = lazy(() => import('./pages/admin/AdminCompanies'));
 const ApplicationDetails = lazy(() => import('./pages/admin/ApplicationDetails'));
@@ -88,6 +89,7 @@ const StartPayment = lazy(() => import('./pages/client/StartPayment'));
 const GapAnalysis = lazy(() => import('./pages/client/GapAnalysis'));
 const MyCertificates = lazy(() => import('./pages/client/MyCertificates'));
 const Referrals = lazy(() => import('./pages/referrals/Referrals'));
+const PartnerContract = lazy(() => import('./pages/partner/PartnerContract'));
 
 // Lightweight fallback shown while a route's chunk is being fetched. Kept tiny
 // and theme-aware (transparent background) so it doesn't flash a black screen.
@@ -306,6 +308,13 @@ function AppRoutes() {
               </ProtectedRoute>
             } />
 
+            {/* Admin — Consultancy Partners (performance + agreement) */}
+            <Route path="/admin/consultancies" element={
+              <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.REGIONAL_ADMIN]}>
+                <AdminConsultancies />
+              </ProtectedRoute>
+            } />
+
             {/* Admin — Shareable Links */}
             <Route path="/admin/shareable-links" element={
               <ProtectedRoute requiredPermission={PERMISSIONS.MANAGE_USERS}>
@@ -366,6 +375,13 @@ function AppRoutes() {
             <Route path="/referrals" element={
               <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_REFERRALS}>
                 <Referrals />
+              </ProtectedRoute>
+            } />
+
+            {/* Consultancy partner agreement — electronic contract signing */}
+            <Route path="/partner/contract" element={
+              <ProtectedRoute allowedRoles={[ROLES.CONSULTANCY]}>
+                <PartnerContract />
               </ProtectedRoute>
             } />
 

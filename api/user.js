@@ -1,5 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
-import { verifyAdmin } from './_verifyAdmin.js';
+import { verifyAdmin, verifySession } from './_verifyAdmin.js';
+import {
+  ContractError,
+  getContractForPartner,
+  getActiveTemplate,
+  saveTemplate,
+  acceptContract,
+} from './_contract.js';
 import { notifyAdmins } from './_notifyAdmins.js';
 import { sendWhatsApp } from './_notifyWhatsApp.js';
 import { getRegionFromCountry } from '../src/utils/roles.js';
@@ -27,6 +34,14 @@ export default async function handler(req, res) {
     if (action === 'update-role') return await updateRole(req, res);
     if (action === 'set-active') return await setActive(req, res);
     if (action === 'save-permission-override') return await savePermissionOverride(req, res);
+    // Consultancy partner contracts (phase23). Folded in here rather than
+    // added as api/contract.js — api/ is at exactly 12 non-underscore routes,
+    // the Vercel Hobby ceiling, and a 13th breaks the deployment.
+    if (action === 'get-contract') return await getContract(req, res);
+    if (action === 'accept-contract') return await postAcceptContract(req, res);
+    if (action === 'get-contract-template') return await getContractTemplate(req, res);
+    if (action === 'save-contract-template') return await postSaveContractTemplate(req, res);
+    if (action === 'consultancy-kpi') return await getConsultancyKpi(req, res);
     return res.status(400).json({ error: 'Unknown action' });
   } catch (error) {
     console.error('User route error:', error);
@@ -235,6 +250,101 @@ async function savePermissionOverride(req, res) {
 
   if (error) throw error;
   return res.status(200).json({ success: true });
+}
+
+// ---------------------------------------------------------------------------
+// Consultancy partner contracts (phase23)
+// ---------------------------------------------------------------------------
+// Shared error shape so a ContractError's own status/message reaches the client
+// while anything unexpected stays generic.
+function contractFailure(res, err, context) {
+  if (err instanceof ContractError) {
+    return res.status(err.status).json({ error: err.message });
+  }
+  console.error(`${context} failed:`, err);
+  return res.status(500).json({ error: 'Something went wrong. Please try again.' });
+}
+
+// The partner's own view: current agreement + their signature, if any.
+async function getContract(req, res) {
+  const { caller, error, status } = await verifySession(req);
+  if (error) return res.status(status).json({ error });
+
+  try {
+    const data = await getContractForPartner(
+      supabaseAdmin, caller, req.body?.partnerType || 'consultancy',
+    );
+    return res.status(200).json(data);
+  } catch (err) {
+    return contractFailure(res, err, 'getContract');
+  }
+}
+
+async function postAcceptContract(req, res) {
+  const { caller, error, status } = await verifySession(req);
+  if (error) return res.status(status).json({ error });
+
+  try {
+    const result = await acceptContract(supabaseAdmin, req.body, caller, req);
+    return res.status(200).json({ success: true, ...result });
+  } catch (err) {
+    return contractFailure(res, err, 'acceptContract');
+  }
+}
+
+// Admin: read the template for editing.
+async function getContractTemplate(req, res) {
+  const { error, status } = await verifyAdmin(req, { requireSuperAdmin: true });
+  if (error) return res.status(status).json({ error });
+
+  try {
+    const template = await getActiveTemplate(supabaseAdmin, req.body?.partnerType || 'consultancy');
+    return res.status(200).json({ template });
+  } catch (err) {
+    return contractFailure(res, err, 'getContractTemplate');
+  }
+}
+
+// Admin: publish a new version. Never edits a signed version in place.
+async function postSaveContractTemplate(req, res) {
+  const { caller, error, status } = await verifyAdmin(req, { requireSuperAdmin: true });
+  if (error) return res.status(status).json({ error });
+
+  try {
+    const result = await saveTemplate(supabaseAdmin, req.body, caller);
+    return res.status(200).json({ success: true, ...result });
+  } catch (err) {
+    return contractFailure(res, err, 'saveContractTemplate');
+  }
+}
+
+// Admin: the consultancy KPI board. The consultancy_kpi view is REVOKEd from
+// anon/authenticated precisely so it can only be read here, behind this check —
+// a view bypasses the RLS on profiles and referrals and would otherwise expose
+// every partner's earnings.
+async function getConsultancyKpi(req, res) {
+  const { caller, error, status } = await verifyAdmin(req);
+  if (error) return res.status(status).json({ error });
+
+  let query = supabaseAdmin
+    .from('consultancy_kpi')
+    .select('*')
+    .order('at_risk', { ascending: false })
+    .order('total_paying_clients', { ascending: false });
+
+  // A country admin sees only their own region, consistent with every other
+  // admin list view. Fail closed when they have no region set.
+  if (caller.role === 'regional_admin') {
+    query = query.eq('region', caller.region || '__no_region__');
+  }
+
+  const { data, error: qErr } = await query;
+  if (qErr) {
+    console.error('getConsultancyKpi failed:', qErr);
+    return res.status(500).json({ error: 'Could not load partner performance.' });
+  }
+
+  return res.status(200).json({ partners: data || [], target: 5 });
 }
 
 async function getMeta(req, res) {

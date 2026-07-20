@@ -15,7 +15,7 @@ const BOXES = [
   { key: 'clients',       icon: Users,            path: '/admin/companies',                  color: '#3ECF8E' },
   { key: 'certBodies',    icon: Building,         path: '/admin/cb-registry',                color: '#6366f1' },
   { key: 'auditors',      icon: UserCheck,        path: '/admin/auditors',                   color: '#f59e0b' },
-  { key: 'consultancies', icon: Briefcase,        path: '/admin/users?stakeholder=consultancy', color: '#0ea5e9' },
+  { key: 'consultancies', icon: Briefcase,        path: '/admin/consultancies',               color: '#0ea5e9' },
   { key: 'referrals',     icon: Gift,             path: '/referrals',                        color: '#ec4899' },
   { key: 'sales',         icon: CircleDollarSign, path: '/admin/sales',                      color: '#10b981', currency: true },
 ];

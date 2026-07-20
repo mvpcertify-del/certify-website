@@ -1,4 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
+import { verifyAdmin } from './_verifyAdmin.js';
+import { stampEffectiveDate } from './_contract.js';
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -11,7 +13,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { userId, action, adminId } = req.body;
+    const { userId, action } = req.body;
 
     if (!userId || !action) {
       return res.status(400).json({ error: 'Missing userId or action' });
@@ -21,31 +23,40 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Action must be "approved" or "rejected"' });
     }
 
-    // Verify the admin making the request
-    if (adminId) {
-      const { data: adminProfile } = await supabaseAdmin
-        .from('profiles')
-        .select('role')
-        .eq('id', adminId)
-        .maybeSingle();
+    // Verify the admin making the request against their session token, not
+    // against a body field. The previous check ran only `if (adminId)`, so
+    // omitting adminId skipped authorisation entirely and let anyone approve
+    // (or reject) any registration with a single request.
+    const { caller, error: authError, status: authStatus } = await verifyAdmin(req);
+    if (authError) return res.status(authStatus).json({ error: authError });
 
-      if (!adminProfile || !['super_admin', 'regional_admin'].includes(adminProfile.role)) {
-        return res.status(403).json({ error: 'Unauthorized — admin access required' });
-      }
-    }
+    const approvedAt = new Date().toISOString();
 
     // Update the approval_status
     const { error } = await supabaseAdmin
       .from('profiles')
       .update({
         approval_status: action,
-        approved_by: adminId || null,
-        approved_at: new Date().toISOString(),
+        approved_by: caller.id,
+        approved_at: approvedAt,
       })
       .eq('id', userId);
 
     if (error) {
       return res.status(500).json({ error: error.message });
+    }
+
+    // A consultancy's contract is "effective from date of approval by Certify.cx
+    // Administrator" (client, 21 Jul). A partner who signed before being
+    // approved has an acceptance with no dates; this is the moment they are
+    // known, so fill them in and start the 12-month term. Best-effort: the
+    // approval itself must not fail because of this.
+    if (action === 'approved') {
+      try {
+        await stampEffectiveDate(supabaseAdmin, userId, approvedAt);
+      } catch (e) {
+        console.error('stampEffectiveDate failed:', e?.message);
+      }
     }
 
     // Fetch user info for notification

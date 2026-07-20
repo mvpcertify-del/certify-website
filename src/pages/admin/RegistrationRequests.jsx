@@ -9,6 +9,7 @@ import {
   Building2, Mail, MapPin, Globe2, Filter,
 } from 'lucide-react';
 import { Button } from '../../components/ui/FormElements';
+import { apiPost } from '../../lib/apiClient';
 import './RegistrationRequests.css';
 
 const STATUS_TABS = [
@@ -56,12 +57,10 @@ export default function RegistrationRequests() {
   const handleAction = async (userId, action) => {
     setActionLoading(userId);
     try {
-      const res = await fetch('/api/approve-registration', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, action, adminId: user.id }),
-      });
-      const result = await res.json();
+      // apiPost attaches the Supabase access token. A bare fetch sent no
+      // Authorization header, and the endpoint now verifies the caller from
+      // that token rather than trusting an adminId in the body.
+      const result = await apiPost('/api/approve-registration', { userId, action });
       if (result.success) {
         // Remove from current list
         setRequests(prev => prev.filter(r => r.id !== userId));

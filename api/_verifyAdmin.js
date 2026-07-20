@@ -19,6 +19,54 @@ export function getAdmin() {
 }
 
 /**
+ * Verify the caller's Supabase access token and return who they are, WITHOUT
+ * requiring an admin role. Use for actions a signed-in user performs on their
+ * own behalf — e.g. a consultancy partner accepting their contract.
+ *
+ * The identity comes from the verified token, never from the request body, so
+ * a caller cannot act as somebody else by editing the payload.
+ *
+ * Returns:
+ *   { caller: { id, role, region, stakeholder_type, approval_status } }
+ *   { error: '<message>', status: 401|500 }
+ */
+export async function verifySession(req) {
+  try {
+    const header = req.headers?.authorization || req.headers?.Authorization || '';
+    const token = header.startsWith('Bearer ') ? header.slice(7).trim() : null;
+
+    if (!token) {
+      return { error: 'Unauthorized: missing access token', status: 401 };
+    }
+
+    const admin = getAdmin();
+
+    const { data: userData, error: userErr } = await admin.auth.getUser(token);
+    if (userErr || !userData?.user) {
+      return { error: 'Unauthorized: invalid or expired session', status: 401 };
+    }
+
+    const { data: profile } = await admin
+      .from('profiles')
+      .select('id, role, region, stakeholder_type, approval_status')
+      .eq('id', userData.user.id)
+      .maybeSingle();
+
+    return {
+      caller: {
+        id: userData.user.id,
+        role: profile?.role || null,
+        region: profile?.region || null,
+        stakeholder_type: profile?.stakeholder_type || null,
+        approval_status: profile?.approval_status || null,
+      },
+    };
+  } catch (err) {
+    return { error: `Auth check failed: ${err.message}`, status: 500 };
+  }
+}
+
+/**
  * Verify the caller's Supabase access token (Authorization: Bearer) and confirm
  * they hold an admin role.
  *

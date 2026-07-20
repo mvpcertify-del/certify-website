@@ -8,6 +8,7 @@ import {
   LayoutGrid,
   Building2,
   FileCheck2,
+  FileSignature,
   UserCheck,
   Award,
   ShieldCheck,
@@ -32,6 +33,7 @@ import {
   KeyRound,
   FormInput,
   ClipboardList,
+  Briefcase,
 } from 'lucide-react';
 import BrandLogo from '../ui/BrandLogo';
 import LanguageSwitcher from '../LanguageSwitcher';
@@ -59,6 +61,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     { path: '/admin/countries', labelKey: 'nav.countries', icon: Globe, permissions: [PERMISSIONS.MANAGE_REGIONS] },
     { path: '/admin/coupons', labelKey: 'nav.coupons', icon: Ticket, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN] },
     { path: '/admin/commission-tiers', labelKey: 'nav.commissionTiers', icon: TrendingUp, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN] },
+    { path: '/admin/consultancies', labelKey: 'nav.consultancies', icon: Briefcase, permissions: [PERMISSIONS.MANAGE_USERS] },
     { path: '/admin/sales', labelKey: 'nav.sales', icon: CircleDollarSign, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN] },
     { path: '/admin/users', labelKey: 'nav.users', icon: Users, permissions: [PERMISSIONS.CREATE_ADMINS, PERMISSIONS.MANAGE_AUDITORS] },
     { path: '/admin/shareable-links', labelKey: 'nav.shareableLinks', icon: Link2, permissions: [PERMISSIONS.MANAGE_USERS] },
@@ -70,6 +73,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     // partners (phase 22) both get the partner dashboard here — same screen,
     // different commercial terms. Admins manage referrals via Commission Tiers.
     { path: '/referrals', labelKey: 'nav.referrals', icon: Gift, permissions: [PERMISSIONS.VIEW_REFERRALS], allowedRoles: [ROLES.REFERRAL, ROLES.CONSULTANCY] },
+    { path: '/partner/contract', labelKey: 'nav.partnerContract', icon: FileSignature, permissions: [PERMISSIONS.MANAGE_SETTINGS], allowedRoles: [ROLES.CONSULTANCY] },
     { path: '/profile', labelKey: 'nav.myProfile', icon: User, permissions: [PERMISSIONS.MANAGE_SETTINGS] },
     { path: '/notifications', labelKey: 'nav.notifications', icon: Bell, permissions: [PERMISSIONS.VIEW_DASHBOARD] },
     { path: '/settings', labelKey: 'nav.settings', icon: Settings, permissions: [PERMISSIONS.MANAGE_USERS] },
