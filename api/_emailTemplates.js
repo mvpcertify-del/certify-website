@@ -5,13 +5,28 @@
 // carry user locale. Follow-up: read profiles.preferred_locale in the hook
 // and switch on it.
 //
-// Design follows the in-app brand: light surface, accent #3ECF8E.
+// Design follows the in-app brand: light surface, the client's official mark.
+
+import { BRAND_MARK_URL, BRAND_MARK_ASPECT, BRAND_ACCENT_HEX } from './_brandAsset.js';
 
 const BRAND_TEXT = 'Certify.cx';
 const SUPPORT_EMAIL = 'support@certify.cx';
 
-// Match src/index.css --color-accent.
+// Two greens, each for the job it is actually good at on a white card:
+//
+//   ACCENT (#3ECF8E, the dark-theme --color-accent) is a BUTTON FILL only. It
+//   is light, so the dark button label sits on it at ~10:1 contrast.
+//
+//   ACCENT_ON_WHITE (#0e9f6e, the light-theme --color-accent, shared from
+//   _brandAsset.js) is for anything drawn AS text on the white card — links,
+//   the billing heading. #3ECF8E as text on white is roughly 1.9:1, which is
+//   effectively unreadable; the deeper green roughly doubles that.
+//
+// This is the same constant the invoice/receipt PDFs use, so the documents and
+// the emails that carry them can no longer drift apart (they previously used
+// #0DA673 and #0da678 respectively — two different greens nobody chose).
 const ACCENT = '#3ECF8E';
+const ACCENT_ON_WHITE = BRAND_ACCENT_HEX;
 const ACCENT_HOVER = '#2EB87A';
 const TEXT_PRIMARY = '#1a1f36';
 const TEXT_SECONDARY = '#5b6478';
@@ -20,20 +35,30 @@ const SURFACE_BG = '#f4f6fb';
 const CARD_BG = '#ffffff';
 const BORDER = '#e6e9f0';
 
-// Branded wordmark: "C" and ".cx" in accent green, "ertify" in default text,
-// with a small superscript trademark. Mirrors the JSX in Sidebar/AuthLayout.
+// Branded wordmark — ONE flat colour, never two-tone.
+//
+// This used to paint the "C" and the ".cx" green against neutral "ertify".
+// src/components/ui/BrandLogo.jsx abolished that treatment across the app
+// ("Brand rule from the client: ONE colour, never multi-colour"); email was the
+// last surface still doing it. The ™ stays grey, matching BrandLogo's default
+// `tm="grey"` — that is a de-emphasis, not a second brand colour.
 const wordmark = (size = 22) => `
-  <span style="font-size:${size}px;font-weight:700;letter-spacing:-0.01em;color:${TEXT_PRIMARY};line-height:1;">
-    <span style="color:${ACCENT};">C</span>ertify<span style="color:${ACCENT};">.cx</span><sup style="font-size:0.55em;vertical-align:super;margin-left:1px;font-weight:500;color:${ACCENT};opacity:0.75;">™</sup>
-  </span>`;
+  <span style="font-size:${size}px;font-weight:700;letter-spacing:-0.01em;color:${TEXT_PRIMARY};line-height:1;">Certify.cx<sup style="font-size:0.55em;vertical-align:super;margin-left:1px;font-weight:500;color:${TEXT_TERTIARY};">™</sup></span>`;
 
-// Inline shield logo matching public/favicon.svg.
+// The client's official mark, as a hosted PNG.
+//
+// This replaces an inline <svg> that reproduced a green-shield logo which was
+// never the client's artwork. It is an <img> rather than inline SVG because
+// inline SVG is not renderable in Outlook 2007-2019 (Word's rendering engine
+// ignores it entirely) and is stripped by several webmail sanitisers — a hosted
+// PNG is the only image treatment every major client draws.
+//
+// Most clients block remote images on first view, so the mark cannot be the
+// only thing carrying the brand: the wordmark beside it is real text and always
+// renders. Explicit width/height keep the header from reflowing while the image
+// loads (and give Outlook the box it needs when images are off).
 const logoMark = (size = 36) => `
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 64" width="${size}" height="${Math.round(size * 64 / 56)}" fill="none" style="display:block;vertical-align:middle;">
-    <path d="M28 2L4 13V32C4 46 14.5 57.5 28 62C41.5 57.5 52 46 52 32V13L28 2Z" fill="${ACCENT}" fill-opacity="0.18" stroke="${ACCENT}" stroke-width="2" stroke-linejoin="round"/>
-    <path d="M28 8L10 17V32C10 43 17.5 52 28 56C38.5 52 46 43 46 32V17L28 8Z" fill="${ACCENT}" fill-opacity="0.08"/>
-    <path d="M18 32L24.5 38.5L38 24" stroke="${ACCENT}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>`;
+  <img src="${BRAND_MARK_URL}" width="${size}" height="${Math.round(size / BRAND_MARK_ASPECT)}" alt="Certify.cx" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" />`;
 
 // `preheader` is the hidden inbox-preview line (so the preview is never blank);
 // it defaults to the title. The card is fluid (width:100% capped at 560px) and
@@ -74,7 +99,7 @@ const layout = ({ title, bodyHtml, preheader }) => `<!DOCTYPE html>
         <tr><td class="ccx-body" style="padding:36px;">${bodyHtml}</td></tr>
         <tr><td class="ccx-foot" style="padding:24px 36px;border-top:1px solid ${BORDER};background:#fafbfd;">
           <p style="margin:0;font-size:13px;line-height:1.6;color:${TEXT_SECONDARY};">
-            Need help? Reach us at <a href="mailto:${SUPPORT_EMAIL}" style="color:${ACCENT};text-decoration:none;font-weight:500;">${SUPPORT_EMAIL}</a>.
+            Need help? Reach us at <a href="mailto:${SUPPORT_EMAIL}" style="color:${ACCENT_ON_WHITE};text-decoration:none;font-weight:500;">${SUPPORT_EMAIL}</a>.
           </p>
           <p style="margin:8px 0 0;font-size:12px;line-height:1.5;color:${TEXT_TERTIARY};">
             ${BRAND_TEXT}™ — ISO certification, simplified.
@@ -102,7 +127,7 @@ const button = (href, label) => `<a href="${href}" class="ccx-btn" style="displa
 const linkFallback = (href) => `
   <p style="font-size:13px;line-height:1.5;color:${TEXT_TERTIARY};margin:0 0 6px;">Or paste this link into your browser:</p>
   <p style="font-size:13px;line-height:1.5;word-break:break-all;margin:0 0 28px;">
-    <a href="${href}" style="color:${ACCENT};text-decoration:none;">${href}</a>
+    <a href="${href}" style="color:${ACCENT_ON_WHITE};text-decoration:none;">${href}</a>
   </p>`;
 
 const heading = (text) => `<h1 style="margin:0 0 16px;font-size:22px;font-weight:700;line-height:1.3;color:${TEXT_PRIMARY};letter-spacing:-0.01em;">${text}</h1>`;
@@ -303,7 +328,7 @@ export function welcomeEmail({ name, role, dashboardUrl }) {
         <ul style="margin:0 0 0;padding-left:20px;font-size:14px;line-height:1.8;color:${TEXT_SECONDARY};">
           <li>Complete your profile and company details.</li>
           <li>Explore the ISO standards we support.</li>
-          <li>Reach out any time at <a href="mailto:${SUPPORT_EMAIL}" style="color:${ACCENT};text-decoration:none;">${SUPPORT_EMAIL}</a>.</li>
+          <li>Reach out any time at <a href="mailto:${SUPPORT_EMAIL}" style="color:${ACCENT_ON_WHITE};text-decoration:none;">${SUPPORT_EMAIL}</a>.</li>
         </ul>
       </div>`,
   });
@@ -371,4 +396,36 @@ export function emailChangeEmail({ name, link }) {
   });
   const text = `${greeting}\n\nConfirm your new ${BRAND_TEXT} email: ${link}\n\n— ${BRAND_TEXT}`;
   return { subject, html, text };
+}
+
+// ---- Billing documents (invoice / payment receipt) --------------------------
+//
+// Used by api/_billing.js, which previously hand-rolled its own bare <div> of
+// HTML with a hard-coded #0da678 heading and no logo at all — so the one class
+// of email that is literally a financial document was the least branded thing
+// we sent. It now goes through the same layout, header mark and footer as every
+// other transactional email.
+//
+// `title` and `message` are composed server-side but interpolate admin-editable
+// org settings and free-text payment methods, so they are escaped here rather
+// than at the call site: a template that escapes its own inputs cannot be
+// forgotten. The PDF itself rides along as an attachment.
+export function billingDocumentEmail({ title, message, orgName, taxLabel, taxNumber }) {
+  const org = escapeHtml(orgName || BRAND_TEXT);
+  const taxLine = taxNumber
+    ? `${org} &middot; ${escapeHtml(taxLabel || 'TRN')} ${escapeHtml(taxNumber)}`
+    : org;
+
+  const html = layout({
+    title,
+    preheader: message,
+    bodyHtml: `
+      <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;line-height:1.3;color:${ACCENT_ON_WHITE};letter-spacing:-0.01em;">${escapeHtml(title)}</h1>
+      ${body(escapeHtml(message))}
+      ${muted(`The document is attached to this email as a PDF. You can also view it any time from your ${org} dashboard under Billing.`)}
+      <p style="margin:20px 0 0;font-size:12px;line-height:1.5;color:${TEXT_TERTIARY};">${taxLine}</p>`,
+  });
+
+  const text = `${title}\n\n${message}\n\nThe document is attached to this email as a PDF. You can also view it any time from your ${orgName || BRAND_TEXT} dashboard under Billing.\n\nQuestions? ${SUPPORT_EMAIL}\n\n— ${BRAND_TEXT}`;
+  return { html, text };
 }

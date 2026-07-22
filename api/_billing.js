@@ -19,6 +19,8 @@
 
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { sendViaResend } from './_resendClient.js';
+import { brandMarkBytes, BRAND_ACCENT_RGB } from './_brandAsset.js';
+import { billingDocumentEmail } from './_emailTemplates.js';
 
 const BUCKET = 'billing-documents';
 
@@ -90,8 +92,16 @@ const PAGE_H = 842;
 const MARGIN = 50;
 const INK = rgb(0.11, 0.12, 0.15);
 const MUTED = rgb(0.42, 0.45, 0.50);
-const ACCENT = rgb(0.05, 0.65, 0.45);
+// Single shared brand green (#0e9f6e), defined once in _brandAsset.js and used
+// by both this PDF and the email that delivers it. It was previously
+// rgb(0.05,0.65,0.45) here and #0da678 in the covering email — two greens that
+// nobody chose and that read as a printing error when seen side by side.
+const ACCENT = rgb(BRAND_ACCENT_RGB.r, BRAND_ACCENT_RGB.g, BRAND_ACCENT_RGB.b);
 const RULE = rgb(0.85, 0.87, 0.89);
+
+// Height of the brand mark in the letterhead, in points. ~38pt reads as a logo
+// at A4 print size without crowding the issuer address block beneath it.
+const LOGO_H = 38;
 
 // ----------------------------------------------------------------------------
 // Issuer identity
@@ -220,33 +230,69 @@ function formatDate(d) {
   return date.toISOString().slice(0, 10);
 }
 
-// Shared header: issuer block on the left, document title on the right.
-function drawHeader(page, { org, title, fonts }) {
+// Shared header: brand mark + issuer block on the left, document title on the
+// right. Async because embedding the logo is an async pdf-lib call; `doc` is
+// threaded in from the caller rather than held in a module-level global, so two
+// concurrent issuances can never draw into each other's document.
+//
+// Client instruction: the official mark goes on every outbound document,
+// invoices and receipts included.
+async function drawHeader(page, { doc, org, title, fonts }) {
   const { bold, regular } = fonts;
-  let y = PAGE_H - MARGIN;
+  const topY = PAGE_H - MARGIN;
 
-  drawText(page, org.trading_name || org.legal_name, { x: MARGIN, y, size: 20, font: bold, color: ACCENT });
+  // The embed is best-effort by design. If the PNG were ever truncated by a bad
+  // merge or rejected by pdf-lib, an admin issuing an invoice would get a 500
+  // and the client waiting on it would get nothing — a missing logo is a far
+  // cheaper failure than a missing invoice, so we degrade to the text-only
+  // letterhead this function drew before.
+  let markW = 0;
+  let markH = 0;
+  try {
+    const png = await doc.embedPng(brandMarkBytes());
+    markH = LOGO_H;
+    markW = Math.round(markH * (png.width / png.height));
+    page.drawImage(png, { x: MARGIN, y: topY - markH, width: markW, height: markH });
+  } catch (err) {
+    console.error('billing: brand mark embed failed — falling back to text-only header', err);
+    markW = 0;
+    markH = 0;
+  }
+
+  // With a mark, the issuer column sits beside it and the trading name is
+  // optically centred on it (the ~0.36em nudge lifts the baseline to the
+  // glyphs' visual middle). Without one, every coordinate is exactly what it
+  // was before, so the fallback is the previous layout unchanged.
+  const textX = markH ? MARGIN + markW + 14 : MARGIN;
+  const markMid = topY - markH / 2;
+  let y = markH ? Math.round(markMid - 20 * 0.36) : topY;
+
+  drawText(page, org.trading_name || org.legal_name, { x: textX, y, size: 20, font: bold, color: ACCENT });
   y -= 16;
 
   if (org.trading_name && org.legal_name && org.trading_name !== org.legal_name) {
-    drawText(page, org.legal_name, { x: MARGIN, y, size: 9, font: regular, color: MUTED });
+    drawText(page, org.legal_name, { x: textX, y, size: 9, font: regular, color: MUTED });
     y -= 12;
   }
 
   for (const line of org.address_lines || []) {
-    drawText(page, line, { x: MARGIN, y, size: 9, font: regular, color: MUTED });
+    drawText(page, line, { x: textX, y, size: 9, font: regular, color: MUTED });
     y -= 11;
   }
   if (org.tax_number) {
-    drawText(page, `${org.tax_label || 'TRN'}: ${org.tax_number}`, { x: MARGIN, y, size: 9, font: regular, color: MUTED });
+    drawText(page, `${org.tax_label || 'TRN'}: ${org.tax_number}`, { x: textX, y, size: 9, font: regular, color: MUTED });
     y -= 11;
   }
   if (org.email) {
-    drawText(page, org.email, { x: MARGIN, y, size: 9, font: regular, color: MUTED });
+    drawText(page, org.email, { x: textX, y, size: 9, font: regular, color: MUTED });
     y -= 11;
   }
 
-  drawRight(page, title, { x: PAGE_W - MARGIN, y: PAGE_H - MARGIN, size: 24, font: bold });
+  // Right-aligned title, on the same optical line as the trading name so the
+  // letterhead reads as one band. "INVOICE" at 24pt bold is ~110pt wide, and
+  // the issuer column starts around x=102, so the two cannot collide.
+  const titleY = markH ? Math.round(markMid - 24 * 0.36) : topY;
+  drawRight(page, title, { x: PAGE_W - MARGIN, y: titleY, size: 24, font: bold });
 
   return Math.min(y, PAGE_H - MARGIN - 80) - 14;
 }
@@ -281,7 +327,7 @@ async function buildInvoicePdf(invoice, org) {
   const fonts = { bold, regular };
   const width = PAGE_W - MARGIN * 2;
 
-  let y = drawHeader(page, { org, title: 'INVOICE', fonts });
+  let y = await drawHeader(page, { doc, org, title: 'INVOICE', fonts });
 
   // --- Bill to ---
   drawText(page, 'BILL TO', { x: MARGIN, y, size: 8, font: bold, color: MUTED });
@@ -407,7 +453,7 @@ async function buildReceiptPdf(receipt, org, invoice) {
   const regular = await doc.embedFont(StandardFonts.Helvetica);
   const fonts = { bold, regular };
 
-  let y = drawHeader(page, { org, title: 'RECEIPT', fonts });
+  let y = await drawHeader(page, { doc, org, title: 'RECEIPT', fonts });
 
   drawText(page, `Payment Receipt: ${receipt.receipt_number}`, { x: MARGIN, y, size: 14, font: bold });
   y -= 24;
@@ -495,28 +541,29 @@ export async function signedUrlFor(supabaseAdmin, storagePath, seconds = 300, bu
 // ----------------------------------------------------------------------------
 // Best-effort: a mail outage must never roll back a successfully issued
 // document. The caller surfaces `emailSent: false` so staff can retry.
+//
+// The HTML comes from _emailTemplates.js so the invoice/receipt email carries
+// the same brand mark, card and footer as every other transactional email. It
+// used to build its own bare <div> with no logo and a green nobody else used —
+// which meant the most formal thing we send looked the least official. That
+// template escapes its own inputs, so the local `safe()` helper is gone with
+// it; do not re-introduce raw interpolation here (org fields are admin-typed).
 async function emailDocument({ to, subject, heading, body, org, attachment }) {
   if (!to) return false;
   try {
-    const safe = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
-      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
-    ));
+    const { html, text } = billingDocumentEmail({
+      title: heading,
+      message: body,
+      orgName: org.trading_name,
+      taxLabel: org.tax_label,
+      taxNumber: org.tax_number,
+    });
 
     await sendViaResend({
       to,
       subject,
-      html: `
-        <div style="font-family:system-ui,-apple-system,Segoe UI,sans-serif;max-width:560px;margin:0 auto;color:#1d1f26">
-          <h2 style="color:#0da678;margin:0 0 16px">${safe(heading)}</h2>
-          <p style="line-height:1.6">${safe(body)}</p>
-          <p style="line-height:1.6;color:#6b7280;font-size:13px">
-            The document is attached to this email as a PDF. You can also view it any time
-            from your ${safe(org.trading_name || 'Certify.cx')} dashboard under Billing.
-          </p>
-          <p style="color:#6b7280;font-size:12px;margin-top:24px">
-            ${safe(org.trading_name || 'Certify.cx')}${org.tax_number ? ` · ${safe(org.tax_label || 'TRN')} ${safe(org.tax_number)}` : ''}
-          </p>
-        </div>`,
+      html,
+      text,
       attachments: attachment ? [attachment] : undefined,
     });
     return true;

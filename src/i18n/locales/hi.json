@@ -51,7 +51,10 @@
     "add": "Add",
     "create": "Create",
     "clear": "Clear [DRAFT]",
-    "gotIt": "Got it"
+    "gotIt": "Got it",
+    "accessDenied": "पहुँच अस्वीकृत।",
+    "allStatuses": "सभी स्थितियाँ",
+    "send": "भेजें"
   },
   "languageSuggestion": {
     "title": "भाषा बदलें?",
@@ -108,7 +111,8 @@
     "menu": "मेन्यू",
     "signUp": "साइन अप करें",
     "partnerContract": "साझेदार अनुबंध",
-    "consultancies": "कंसल्टेंसी"
+    "consultancies": "कंसल्टेंसी",
+    "billing": "बिलिंग"
   },
   "landing": {
     "iafBadge": "IAF मान्यता प्राप्त प्रमाणन निकाय भागीदार",
@@ -269,7 +273,25 @@
     "nextStep1": "Open the email above and click the verification link.",
     "nextStep2": "Log in to your account.",
     "nextStep3": "Our certification team will contact you to guide your next steps.",
-    "nextStepsContact": "Questions? Email us at"
+    "nextStepsContact": "Questions? Email us at",
+    "auditorStandards": "मानक",
+    "auditorStandardsPlaceholder": "मानक चुनें…",
+    "auditorLevel": "प्रमाणपत्र का स्तर",
+    "auditorLevelPlaceholder": "स्तर चुनें…",
+    "auditorSectors": "क्षेत्र (IAF कोड)",
+    "auditorSectorsPlaceholder": "क्षेत्र चुनें…",
+    "auditorCertificates": "प्रमाणपत्र",
+    "auditorAuditLog": "ऑडिट लॉग",
+    "mobileNumber": "मोबाइल नंबर",
+    "auditorDocsSizeNote": "प्रत्येक फ़ाइल {{max}} MB या उससे छोटी होनी चाहिए।",
+    "validationAuditorQualifications": "कृपया कम से कम एक मानक और एक प्रमाणपत्र स्तर चुनें।",
+    "auditorAttachWarning": "आपका खाता बन गया, लेकिन हम ये संलग्न नहीं कर सके: {{files}}। कृपया इन्हें support@certify.cx पर ईमेल करें।",
+    "fullName": "पूरा नाम",
+    "chooseNewPassword": "अपने खाते के लिए नया पासवर्ड चुनें।",
+    "invalidResetLink": "अमान्य या समाप्त लिंक",
+    "invalidResetLinkDesc": "यह पासवर्ड रीसेट लिंक अमान्य है या समाप्त हो चुका है। कृपया नया लिंक माँगें।",
+    "passwordTooShort": "पासवर्ड कम से कम 6 अक्षरों का होना चाहिए।",
+    "redirectingToSignIn": "आपको साइन इन पर भेजा जा रहा है…"
   },
   "unauthorized": {
     "accessDenied": "पहुंच अस्वीकृत",
@@ -380,7 +402,8 @@
       "healthcare": "स्वास्थ्य सेवा",
       "foodBeverage": "खाद्य और पेय",
       "logistics": "लॉजिस्टिक्स"
-    }
+    },
+    "appNotFound": "आवेदन नहीं मिला।"
   },
   "gapAnalysis": {
     "title": "ISO तत्परता गैप विश्लेषण",
@@ -801,7 +824,16 @@
     "clientAwaitingApproval": "This client has paid and is awaiting your approval.",
     "countryOptional": "Country (optional)",
     "countryPlaceholder": "e.g. United Arab Emirates",
-    "filterByCountry": "Filter by country…"
+    "filterByCountry": "Filter by country…",
+    "paymentStatusLabel": "भुगतान स्थिति",
+    "paymentStatusNotSet": "निर्धारित नहीं",
+    "paymentStatus_paid": "भुगतान हो गया",
+    "paymentStatus_paidCard": "भुगतान हो गया — क्रेडिट/डेबिट कार्ड",
+    "paymentStatus_paidCash": "भुगतान हो गया — नकद",
+    "paymentStatus_paidBank": "भुगतान हो गया — बैंक ट्रांसफर",
+    "paymentStatus_paidWith": "भुगतान हो गया — {{method}}",
+    "filesSelected": "{{count}} फ़ाइल चुनी गईं — प्रत्येक अधिकतम {{max}} MB।",
+    "docUploadPartialFailed": "सहेज लिया गया, लेकिन {{count}} दस्तावेज़ अपलोड नहीं हो सके ({{files}})। फ़ाइलें {{max}} MB या उससे छोटी होनी चाहिए — एडिट फ़ॉर्म से दोबारा कोशिश करें।"
   },
   "certBody": {
     "addBody": "प्रमाणन निकाय जोड़ें",
@@ -1036,7 +1068,8 @@
     "groupBodies": "प्रमाणन निकाय",
     "groupReports": "रिपोर्ट",
     "groupAdmin": "प्रशासन",
-    "groupReferrals": "Referrals"
+    "groupReferrals": "Referrals",
+    "reset": "रीसेट"
   },
   "userFields": {
     "title": "कस्टम उपयोगकर्ता फ़ील्ड",
@@ -1408,5 +1441,48 @@
     "titleRequired": "शीर्षक आवश्यक है।",
     "bodyRequired": "अनुबंध का पाठ आवश्यक है।",
     "termInvalid": "अवधि 1 से 120 महीनों के बीच होनी चाहिए।"
+  },
+  "adminBilling": {
+    "title": "चालान और रसीदें",
+    "subtitle": "चालान और भुगतान रसीदें तैयार करें और जारी करें, और अब तक की सारी बिलिंग देखें।",
+    "refresh": "रीफ़्रेश करें",
+    "newInvoice": "नया चालान",
+    "newReceipt": "नई रसीद",
+    "totalInvoiced": "कुल चालान राशि",
+    "totalPaid": "कुल भुगतान",
+    "outstanding": "बकाया",
+    "invoiceCount": "चालान",
+    "receiptCount": "रसीदें",
+    "tabInvoices": "चालान",
+    "tabReceipts": "रसीदें",
+    "searchPlaceholder": "नंबर, क्लाइंट नाम या ईमेल से खोजें...",
+    "allStatuses": "सभी स्थितियाँ",
+    "noInvoices": "अभी कोई चालान नहीं",
+    "noInvoicesHint": "ऊपर दिए “नया चालान” बटन से अपना पहला चालान बनाएँ।",
+    "noReceipts": "अभी कोई भुगतान रसीद नहीं",
+    "noReceiptsHint": "रसीद बनाने के लिए किसी चालान पर भुगतान दर्ज करें।",
+    "noMatches": "आपके फ़िल्टर से कोई परिणाम मेल नहीं खाता",
+    "colNumber": "चालान #",
+    "colClient": "क्लाइंट",
+    "colDescription": "विवरण",
+    "colIssued": "जारी",
+    "colDue": "देय",
+    "colTotal": "कुल",
+    "colPaid": "भुगतान",
+    "colStatus": "स्थिति",
+    "colActions": "कार्रवाइयाँ",
+    "rColNumber": "रसीद #",
+    "rColCustomer": "ग्राहक",
+    "rColAmount": "राशि",
+    "rColMethod": "तरीका",
+    "rColDate": "भुगतान तिथि",
+    "rColInvoice": "चालान",
+    "findApplication": "आवेदन खोजें",
+    "findApplicationPlaceholder": "सूची छाँटने के लिए कंपनी, क्लाइंट या ISO मानक लिखें",
+    "selectApplication": "आवेदन",
+    "noApplicationLink": "किसी आवेदन से जुड़ा नहीं",
+    "alreadyInvoiced": "पहले ही चालान बन चुका",
+    "emailOptInHint": "इसे बंद ही रहने दें जब तक आप अभी क्लाइंट को ईमेल न भेजना चाहें। PDF हमेशा सहेजा जाता है और बाद में डाउनलोड कर भेजा जा सकता है।",
+    "downloadFailed": "दस्तावेज़ डाउनलोड नहीं हो सका।"
   }
 }

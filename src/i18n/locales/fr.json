@@ -51,7 +51,10 @@
     "add": "Add",
     "create": "Create",
     "clear": "Clear [DRAFT]",
-    "gotIt": "Got it"
+    "gotIt": "Got it",
+    "accessDenied": "Accès refusé.",
+    "allStatuses": "Tous les statuts",
+    "send": "Envoyer"
   },
   "languageSuggestion": {
     "title": "Changer de langue ?",
@@ -108,7 +111,8 @@
     "menu": "Menu",
     "signUp": "S'inscrire",
     "partnerContract": "Contrat de Partenaire",
-    "consultancies": "Cabinets de conseil"
+    "consultancies": "Cabinets de conseil",
+    "billing": "Facturation"
   },
   "landing": {
     "iafBadge": "Partenaires d'organismes de certification accrédités IAF",
@@ -269,7 +273,25 @@
     "nextStep1": "Open the email above and click the verification link.",
     "nextStep2": "Log in to your account.",
     "nextStep3": "Our certification team will contact you to guide your next steps.",
-    "nextStepsContact": "Questions? Email us at"
+    "nextStepsContact": "Questions? Email us at",
+    "auditorStandards": "Normes",
+    "auditorStandardsPlaceholder": "Sélectionner des normes…",
+    "auditorLevel": "Niveau du certificat",
+    "auditorLevelPlaceholder": "Sélectionner des niveaux…",
+    "auditorSectors": "Secteurs (codes IAF)",
+    "auditorSectorsPlaceholder": "Sélectionner des secteurs…",
+    "auditorCertificates": "Certificats",
+    "auditorAuditLog": "Journal d’audit",
+    "mobileNumber": "Numéro de mobile",
+    "auditorDocsSizeNote": "Chaque fichier doit faire {{max}} Mo maximum.",
+    "validationAuditorQualifications": "Veuillez sélectionner au moins une norme et un niveau de certificat.",
+    "auditorAttachWarning": "Votre compte a été créé, mais nous n’avons pas pu joindre : {{files}}. Merci de les envoyer à support@certify.cx.",
+    "fullName": "Nom complet",
+    "chooseNewPassword": "Choisissez un nouveau mot de passe pour votre compte.",
+    "invalidResetLink": "Lien invalide ou expiré",
+    "invalidResetLinkDesc": "Ce lien de réinitialisation du mot de passe est invalide ou a expiré. Veuillez en demander un nouveau.",
+    "passwordTooShort": "Le mot de passe doit comporter au moins 6 caractères.",
+    "redirectingToSignIn": "Redirection vers la connexion…"
   },
   "unauthorized": {
     "accessDenied": "Accès refusé",
@@ -380,7 +402,8 @@
       "healthcare": "Santé",
       "foodBeverage": "Agroalimentaire",
       "logistics": "Logistique"
-    }
+    },
+    "appNotFound": "Demande introuvable."
   },
   "gapAnalysis": {
     "title": "Analyse d'écart de préparation ISO",
@@ -801,7 +824,16 @@
     "clientAwaitingApproval": "This client has paid and is awaiting your approval.",
     "countryOptional": "Country (optional)",
     "countryPlaceholder": "e.g. United Arab Emirates",
-    "filterByCountry": "Filter by country…"
+    "filterByCountry": "Filter by country…",
+    "paymentStatusLabel": "Statut du paiement",
+    "paymentStatusNotSet": "Non défini",
+    "paymentStatus_paid": "Payé",
+    "paymentStatus_paidCard": "Payé — Carte de crédit/débit",
+    "paymentStatus_paidCash": "Payé — Espèces",
+    "paymentStatus_paidBank": "Payé — Virement bancaire",
+    "paymentStatus_paidWith": "Payé — {{method}}",
+    "filesSelected": "{{count}} fichier(s) sélectionné(s) — max. {{max}} Mo chacun.",
+    "docUploadPartialFailed": "Enregistré, mais {{count}} document(s) n’ont pas pu être téléversés ({{files}}). Les fichiers doivent faire {{max}} Mo maximum — réessayez depuis le formulaire de modification."
   },
   "certBody": {
     "addBody": "Ajouter un organisme de certification",
@@ -1036,7 +1068,8 @@
     "groupBodies": "Organismes de certification",
     "groupReports": "Rapports",
     "groupAdmin": "Administration",
-    "groupReferrals": "Referrals"
+    "groupReferrals": "Referrals",
+    "reset": "Réinitialiser"
   },
   "userFields": {
     "title": "Champs utilisateur personnalisés",
@@ -1408,5 +1441,48 @@
     "titleRequired": "Le titre est obligatoire.",
     "bodyRequired": "Le texte du contrat est obligatoire.",
     "termInvalid": "La durée doit être comprise entre 1 et 120 mois."
+  },
+  "adminBilling": {
+    "title": "Factures et reçus",
+    "subtitle": "Préparez et émettez des factures et des reçus de paiement, et consultez tout ce qui a été facturé à ce jour.",
+    "refresh": "Actualiser",
+    "newInvoice": "Nouvelle facture",
+    "newReceipt": "Nouveau reçu",
+    "totalInvoiced": "Total facturé",
+    "totalPaid": "Total payé",
+    "outstanding": "En attente",
+    "invoiceCount": "Factures",
+    "receiptCount": "Reçus",
+    "tabInvoices": "Factures",
+    "tabReceipts": "Reçus",
+    "searchPlaceholder": "Rechercher par numéro, nom du client ou e-mail...",
+    "allStatuses": "Tous les statuts",
+    "noInvoices": "Aucune facture pour le moment",
+    "noInvoicesHint": "Émettez votre première facture avec le bouton Nouvelle facture ci-dessus.",
+    "noReceipts": "Aucun reçu de paiement pour le moment",
+    "noReceiptsHint": "Enregistrez un paiement sur une facture pour générer un reçu.",
+    "noMatches": "Aucun résultat ne correspond à vos filtres",
+    "colNumber": "N° de facture",
+    "colClient": "Client",
+    "colDescription": "Description",
+    "colIssued": "Émise",
+    "colDue": "Échéance",
+    "colTotal": "Total",
+    "colPaid": "Payé",
+    "colStatus": "Statut",
+    "colActions": "Actions",
+    "rColNumber": "N° de reçu",
+    "rColCustomer": "Client",
+    "rColAmount": "Montant",
+    "rColMethod": "Méthode",
+    "rColDate": "Date de paiement",
+    "rColInvoice": "Facture",
+    "findApplication": "Rechercher une demande",
+    "findApplicationPlaceholder": "Saisissez une entreprise, un client ou une norme ISO pour filtrer la liste",
+    "selectApplication": "Demande",
+    "noApplicationLink": "Non lié à une demande",
+    "alreadyInvoiced": "déjà facturée",
+    "emailOptInHint": "Laissez cette option désactivée sauf si vous comptez envoyer l’e-mail au client maintenant. Le PDF est toujours enregistré et peut être téléchargé et envoyé plus tard.",
+    "downloadFailed": "Le document n’a pas pu être téléchargé."
   }
 }

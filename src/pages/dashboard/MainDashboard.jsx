@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { ROLES } from '../../utils/roles';
 import { Users, Building, UserCheck, Briefcase, Gift, CircleDollarSign } from 'lucide-react';
 import './MainDashboard.css';
 
@@ -20,7 +21,8 @@ const BOXES = [
   { key: 'sales',         icon: CircleDollarSign, path: '/admin/sales',                      color: '#10b981', currency: true },
 ];
 
-const PAID_STATUSES = ['paid', 'completed', 'succeeded'];
+// 'verified' is the legacy offline-verified value; both mean money arrived.
+const PAID_STATUSES = ['paid', 'verified'];
 
 export default function MainDashboard() {
   const { t } = useTranslation();
@@ -28,6 +30,9 @@ export default function MainDashboard() {
   const navigate = useNavigate();
   const [counts, setCounts] = useState({});
   const [loading, setLoading] = useState(true);
+
+  const isRegionalAdmin = user?.role === ROLES.REGIONAL_ADMIN;
+  const userRegion = user?.region || null;
 
   useEffect(() => {
     let mounted = true;
@@ -39,10 +44,40 @@ export default function MainDashboard() {
       return error ? null : (count || 0);
     };
 
+    // Revenue is derived from the orders themselves plus phase20's invoices.
+    // The `payments` table this tile used to read is never written to by any
+    // code path, which is why it always showed $0 despite real paid business.
+    const loadRevenue = async () => {
+      const [appsRes, invoicesRes] = await Promise.all([
+        supabase
+          .from('applications')
+          .select('id, total_amount, client:profiles!client_id(region)')
+          .in('payment_status', PAID_STATUSES),
+        supabase.from('invoices').select('application_id, total'),
+      ]);
+      if (appsRes.error) return null;
+
+      const invoiceTotals = new Map();
+      (invoicesRes.data || []).forEach((inv) => {
+        if (inv.application_id && !invoiceTotals.has(inv.application_id)) {
+          invoiceTotals.set(inv.application_id, Number(inv.total) || 0);
+        }
+      });
+
+      return (appsRes.data || [])
+        // Regional admins see only their own region; no region set → nothing.
+        .filter((a) => !isRegionalAdmin || (userRegion && a.client?.region === userRegion))
+        // An admin-created order often has no total_amount but does have an
+        // invoice — without this fallback those sales count as $0.
+        .reduce((sum, a) => sum + (a.total_amount != null
+          ? Number(a.total_amount)
+          : (invoiceTotals.get(a.id) || 0)), 0);
+    };
+
     const load = async () => {
       setLoading(true);
       try {
-        const [clients, certBodies, auditors, consultancies, referrals, paidPayments] = await Promise.all([
+        const [clients, certBodies, auditors, consultancies, referrals, revenue] = await Promise.all([
           countRows('profiles', (q) => q.eq('role', 'client').or('stakeholder_type.is.null,stakeholder_type.eq.client')),
           countRows('certification_bodies'),
           countRows('profiles', (q) => q.eq('role', 'auditor')),
@@ -59,10 +94,8 @@ export default function MainDashboard() {
           // because NULL <> 'consultancy' is NULL, not true.
           countRows('profiles', (q) => q.eq('role', 'referral')
             .or('stakeholder_type.is.null,stakeholder_type.neq.consultancy')),
-          supabase.from('payments').select('amount').in('status', PAID_STATUSES),
+          loadRevenue(),
         ]);
-
-        const revenue = (paidPayments?.data || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
 
         if (mounted) {
           setCounts({ clients, certBodies, auditors, consultancies, referrals, sales: revenue });
@@ -76,7 +109,7 @@ export default function MainDashboard() {
 
     load();
     return () => { mounted = false; };
-  }, []);
+  }, [isRegionalAdmin, userRegion]);
 
   const formatValue = (box) => {
     const v = counts[box.key];

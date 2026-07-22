@@ -427,7 +427,15 @@ async function confirmGuestPaymentHandler(req, res) {
     const email = prof?.email || null;
 
     if (!alreadyPaid) {
-      await supabaseAdmin.from('applications').update({ payment_status: 'paid' }).eq('id', applicationId);
+      // Stamp the method as well as the status: this is the automatic
+      // "reflected from the payment gateway" link the client asked for — a
+      // Stripe order then reads back as "Paid — Credit/Debit Card" in the admin
+      // Payment Status dropdown without anybody touching it. 'card' is the only
+      // online method (see src/config/paymentMethods.js), so it is unambiguous.
+      await supabaseAdmin
+        .from('applications')
+        .update({ payment_status: 'paid', payment_method: 'card' })
+        .eq('id', applicationId);
       // Burn the coupon now that money has actually arrived (first confirm only).
       await burnCoupon(app.coupon_code, {
         clientId: app.client_id, applicationId, finalAmount: app.total_amount,
@@ -624,6 +632,49 @@ async function listBillingDocumentsHandler(req, res) {
   }
 }
 
+// Values accepted by the applications.payment_status / payment_method CHECK
+// constraints (supabase/phase17_checkout_repair_and_country.sql). Anything
+// outside these sets must be rejected here — Postgres would otherwise reject it
+// as an opaque 23514 the admin cannot act on.
+const PAYMENT_STATUS_VALUES = ['pending', 'awaiting_verification', 'verified', 'paid', 'unpaid'];
+const PAYMENT_METHOD_VALUES = ['card', 'cash', 'bank_transfer', 'paypal', 'moneygram'];
+// 'verified' is the legacy offline-verified value; both mean "money arrived".
+const PAID_PAYMENT_STATUSES = ['verified', 'paid'];
+
+// Everything that must happen once an order's money has actually landed:
+// approve the buyer, burn their coupon, and email the one-click dashboard link.
+// Shared by the Verify Payment button and the admin Payment Status dropdown so
+// an admin who marks a cash sale "Paid" can never leave the buyer locked out.
+// Returns whether the access email was sent.
+async function applyPaymentLandedSideEffects(app, { alreadyPaid }) {
+  // "Has this already run?" cannot be answered by the order's payment_status
+  // alone. An admin who moves an order paid → unpaid → paid arrives back here
+  // with alreadyPaid=false and would burn the coupon a second time and email a
+  // second magic link. So look for the traces the first run leaves behind:
+  //   - the buyer is already approved (created 'pending', so this only becomes
+  //     true once payment landed or an admin granted access — and that button
+  //     emails the link itself), and
+  //   - a coupon_redemptions row already exists for this order.
+  const { data: prof } = await supabaseAdmin
+    .from('profiles').select('approval_status').eq('id', app.client_id).maybeSingle();
+  const alreadyApproved = prof?.approval_status === 'approved';
+
+  await supabaseAdmin.from('profiles').update({ approval_status: 'approved' }).eq('id', app.client_id);
+
+  // Coupon burn and access email fire only on the first confirmation.
+  if (alreadyPaid || alreadyApproved) return false;
+
+  const { data: burnt } = await supabaseAdmin
+    .from('coupon_redemptions').select('id').eq('application_id', app.id).limit(1);
+  if (!burnt?.length) {
+    await burnCoupon(app.coupon_code, {
+      clientId: app.client_id, applicationId: app.id, finalAmount: app.total_amount,
+    });
+  }
+  const r = await emailDashboardLink(app.client_id);
+  return r.ok;
+}
+
 // Admin-gated (Bearer JWT). Marks the order verified, approves the client, and
 // emails the one-click dashboard magic link — the moment an offline buyer
 // actually gains access. Replaces the old client-side status flip so the
@@ -643,26 +694,83 @@ async function verifyOfflinePaymentHandler(req, res) {
       .maybeSingle();
     if (!app) return res.status(404).json({ error: 'Order not found' });
 
-    const alreadyVerified = app.payment_status === 'verified' || app.payment_status === 'paid';
+    const alreadyVerified = PAID_PAYMENT_STATUSES.includes(app.payment_status);
 
     await supabaseAdmin.from('applications').update({ payment_status: 'verified' }).eq('id', applicationId);
-    await supabaseAdmin.from('profiles').update({ approval_status: 'approved' }).eq('id', app.client_id);
-    if (!alreadyVerified) {
-      await burnCoupon(app.coupon_code, {
-        clientId: app.client_id, applicationId, finalAmount: app.total_amount,
-      });
-    }
-
-    // Email the buyer their dashboard access link (only on first verification).
-    let emailSent = false;
-    if (!alreadyVerified) {
-      const r = await emailDashboardLink(app.client_id);
-      emailSent = r.ok;
-    }
+    const emailSent = await applyPaymentLandedSideEffects(app, { alreadyPaid: alreadyVerified });
 
     return res.status(200).json({ ok: true, emailSent });
   } catch (error) {
     console.error('verify-offline-payment error:', error);
+    return res.status(500).json({ error: error.message || 'Internal Server Error' });
+  }
+}
+
+// ---- Admin: set an order's payment status + method from the workflow card ----
+// Admin-gated and region-scoped. Deliberately NOT done as a browser-side
+// applications.update(): moving an order into a paid state has to carry the same
+// follow-through as the Verify Payment button (approve the client, burn the
+// coupon, email their dashboard link), which needs the service role.
+async function setPaymentStatusHandler(req, res) {
+  const auth = await verifyAdmin(req);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+
+  try {
+    const { applicationId, paymentStatus, paymentMethod } = req.body || {};
+    if (!applicationId) return res.status(400).json({ error: 'Missing application reference' });
+
+    const scope = await assertBillingScope(auth.caller, { applicationId });
+    if (scope) return res.status(scope.status).json({ error: scope.error });
+
+    const nextStatus = paymentStatus ? String(paymentStatus) : null;
+    const nextMethod = paymentMethod ? String(paymentMethod) : null;
+    // A blank status is NOT accepted. Writing payment_status = NULL would make
+    // the client dashboard treat the order as paid (it reads null as "no gate")
+    // and expose the assigned Certification Body on an unpaid order. An admin
+    // who means "not paid" picks Unpaid.
+    if (!nextStatus || !PAYMENT_STATUS_VALUES.includes(nextStatus)) {
+      return res.status(400).json({ error: 'Invalid payment status' });
+    }
+    if (nextMethod && !PAYMENT_METHOD_VALUES.includes(nextMethod)) {
+      return res.status(400).json({ error: 'Invalid payment method' });
+    }
+
+    const { data: app } = await supabaseAdmin
+      .from('applications')
+      .select('id, client_id, payment_status, payment_method, coupon_code, total_amount')
+      .eq('id', applicationId)
+      .maybeSingle();
+    if (!app) return res.status(404).json({ error: 'Order not found' });
+
+    const wasPaid = PAID_PAYMENT_STATUSES.includes(app.payment_status);
+    const nowPaid = PAID_PAYMENT_STATUSES.includes(nextStatus);
+
+    // The method is only written when the chosen option carries one (the
+    // "Paid — …" rows). The non-paid options say nothing about how the buyer
+    // intends to pay, so moving a bank-transfer order to "Awaiting
+    // verification" must not erase payment_method='bank_transfer' — otherwise
+    // verifying it later would re-label a bank sale as a card sale.
+    const patch = { payment_status: nextStatus };
+    if (nextMethod) patch.payment_method = nextMethod;
+
+    const { error: updErr } = await supabaseAdmin
+      .from('applications')
+      .update(patch)
+      .eq('id', applicationId);
+    if (updErr) throw updErr;
+
+    const emailSent = nowPaid
+      ? await applyPaymentLandedSideEffects(app, { alreadyPaid: wasPaid })
+      : false;
+
+    return res.status(200).json({
+      ok: true,
+      emailSent,
+      payment_status: nextStatus,
+      payment_method: nextMethod || app.payment_method || null,
+    });
+  } catch (error) {
+    console.error('set-payment-status error:', error);
     return res.status(500).json({ error: error.message || 'Internal Server Error' });
   }
 }
@@ -766,6 +874,11 @@ export default async function handler(req, res) {
   // verified, approves the client, and emails their dashboard magic link.
   if (req.body?.action === 'verify-offline-payment') {
     return verifyOfflinePaymentHandler(req, res);
+  }
+  // Admin sets an order's payment status/method from the Workflow Controls card.
+  // Moving into a paid state grants dashboard access, same as verifying above.
+  if (req.body?.action === 'set-payment-status') {
+    return setPaymentStatusHandler(req, res);
   }
   // Admin approves a paid client and grants dashboard access (magic link).
   // The client-account activation gate: card payers are only let in after this.

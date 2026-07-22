@@ -3,6 +3,7 @@ import { sendVerificationEmail } from './_sendVerificationEmail.js';
 import { notifyAdmins } from './_notifyAdmins.js';
 import { verifyAdmin } from './_verifyAdmin.js';
 import { getRegionFromCountry, getCreatableRoles } from '../src/utils/roles.js';
+import { sanitizeAuditorTags } from '../src/utils/auditorOptions.js';
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -37,9 +38,15 @@ export default async function handler(req, res) {
       website, city, country, contact_number, contact_role,
       stakeholder_type, approval_status,
       custom_fields,
+      // phase24 — auditor professional profile. `phone` is what the admin
+      // modal sends; `contact_number` is the self-signup name for the same
+      // thing, and both land in the single profiles.phone column.
+      phone,
+      auditor_standards, auditor_levels, auditor_sectors,
     } = req.body;
 
     const displayName = full_name || name;
+    const resolvedPhone = phone || contact_number || null;
 
     if (!email || !password || !displayName) {
       return res.status(400).json({ error: 'Missing required fields: email, password, name' });
@@ -121,6 +128,17 @@ export default async function handler(req, res) {
       ? assignedRole
       : (assignedRole === 'client' ? (stakeholder_type || 'client') : null);
 
+    // Auditor qualifications are written ONLY when the assigned role is
+    // auditor. The body is attacker-controlled and this is a whitelist of
+    // exactly three columns — a caller must not be able to name any others.
+    const auditorProfileFields = assignedRole === 'auditor'
+      ? {
+          auditor_standards: sanitizeAuditorTags(auditor_standards),
+          auditor_levels: sanitizeAuditorTags(auditor_levels),
+          auditor_sectors: sanitizeAuditorTags(auditor_sectors),
+        }
+      : {};
+
     // Build user_metadata. Self-signup carries extra stakeholder details.
     const userMetadata = isSelfSignup
       ? {
@@ -176,12 +194,13 @@ export default async function handler(req, res) {
           approval_status: resolvedApprovalStatus,
           // Persist the contact number on the profile so WhatsApp notifications
           // can reach the user (it otherwise lives only in auth metadata).
-          ...(contact_number ? { phone: contact_number } : {}),
+          ...(resolvedPhone ? { phone: resolvedPhone } : {}),
           // The registration form collects a city (affiliates especially) — it
           // has to land on the profile, not just in auth metadata, or the
           // profile page and the admin lists show it blank.
           ...(city ? { city } : {}),
           ...(custom_fields && typeof custom_fields === 'object' ? { custom_fields } : {}),
+          ...auditorProfileFields,
         }
       : {
           id: authData.user.id,
@@ -191,10 +210,11 @@ export default async function handler(req, res) {
           country: country || null,
           region: resolvedRegion,
           company_name: company_name || null,
-          ...(contact_number ? { phone: contact_number } : {}),
+          ...(resolvedPhone ? { phone: resolvedPhone } : {}),
           ...(city ? { city } : {}),
           ...(resolvedStakeholderType ? { stakeholder_type: resolvedStakeholderType } : {}),
           ...(custom_fields && typeof custom_fields === 'object' ? { custom_fields } : {}),
+          ...auditorProfileFields,
         };
 
     const { error: profileError } = await supabaseAdmin
@@ -213,8 +233,14 @@ export default async function handler(req, res) {
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id).catch((delErr) => {
         console.error('Failed to clean up orphaned auth user:', delErr);
       });
+      // Name the missing migration instead of returning "please try again"
+      // forever. An unrun migration is the single most common cause of this
+      // branch (see phase17) and the generic message hides it completely.
+      const missingAuditorColumns = /auditor_(standards|levels|sectors)/.test(profileError.message || '');
       return res.status(500).json({
-        error: 'Could not create the user profile. Please try again.',
+        error: missingAuditorColumns
+          ? 'The auditor profile columns are missing. Run supabase/phase24_auditor_profile.sql, then try again.'
+          : 'Could not create the user profile. Please try again.',
       });
     }
 

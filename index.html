@@ -2,11 +2,67 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- ==== Favicon ==========================================================
+         The tab icon is the client's official mark (teal outlined "C" enclosing
+         a checkmark) — the same artwork used in the app lockup, the invoice and
+         receipt PDFs, and the transactional emails. One asset, everywhere.
+
+         There is deliberately no rel="icon" type="image/svg+xml" link here.
+         Browsers prefer an SVG icon over a PNG whenever both are declared,
+         regardless of source order, so leaving the old /favicon.svg link in
+         place would silently keep showing the retired green-shield mark and
+         defeat this change entirely. That shield was never the client's logo;
+         it is retired, not merely deprioritised, and public/favicon.svg has
+         been removed so it cannot be linked again by accident.
+         (Deliberately phrased without literal tag markup — a stray "<link ...>"
+         inside a comment is exactly the kind of thing a future minifier or
+         scraper mis-parses.)
+
+         The PNG is 352x339 with transparency, which browsers downscale for the
+         16/32px tab slot. If the client ever supplies vector artwork, replace
+         public/brand-mark.png (and regenerate api/_brandAsset.js) rather than
+         reintroducing a second, competing icon link here.
+    ==================================================================== -->
+    <link rel="icon" type="image/png" href="/brand-mark.png" />
+    <link rel="apple-touch-icon" href="/brand-mark.png" />
+
+    <!-- Browser UI chrome (Android address bar, iOS PWA, Safari tab strip).
+         Matches --color-bg-primary in src/index.css for each theme. -->
+    <meta name="theme-color" content="#171717" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+
+    <title>Certify.cx™ - ISO Certification Platform</title>
     <meta name="description" content="Certify.cx™ — ISO Certification Marketplace. Apply for ISO certifications, manage audits, and streamline your compliance workflow." />
     <meta name="google" content="notranslate" />
-    <title>Certify.cx™ - ISO Certification Platform</title>
+
+    <!-- ==== Link previews (WhatsApp, LinkedIn, Slack, iMessage, X) ==========
+         og:image and og:url MUST be absolute — scrapers fetch the page from
+         their own servers and never resolve a relative path, so "/brand-mark.png"
+         renders as no image at all. The production origin is hard-coded on
+         purpose: this file is static and has no access to APP_PUBLIC_URL at
+         build time, and a preview card pointing at a preview/localhost origin
+         is worse than one pointing at production. Update both if the domain
+         ever changes.
+
+         twitter:card is "summary" (small square thumbnail), not
+         "summary_large_image": the mark is a 352x339 near-square logo, and a
+         large-image card would letterbox it into a mostly-empty banner. Switch
+         to summary_large_image only once the client supplies a proper ~1200x630
+         social banner.
+    ==================================================================== -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Certify.cx" />
+    <meta property="og:title" content="Certify.cx™ - ISO Certification Platform" />
+    <meta property="og:description" content="Certify.cx™ — ISO Certification Marketplace. Apply for ISO certifications, manage audits, and streamline your compliance workflow." />
+    <meta property="og:image" content="https://certify.cx/brand-mark.png" />
+    <meta property="og:image:alt" content="Certify.cx" />
+    <meta property="og:url" content="https://certify.cx/" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Certify.cx™ - ISO Certification Platform" />
+    <meta name="twitter:description" content="Certify.cx™ — ISO Certification Marketplace. Apply for ISO certifications, manage audits, and streamline your compliance workflow." />
+    <meta name="twitter:image" content="https://certify.cx/brand-mark.png" />
   </head>
   <body translate="no" class="notranslate">
     <div id="root"></div>

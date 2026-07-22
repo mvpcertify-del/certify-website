@@ -51,7 +51,10 @@
     "add": "Add",
     "create": "Create",
     "clear": "Clear",
-    "gotIt": "Got it"
+    "gotIt": "Got it",
+    "accessDenied": "Access denied.",
+    "allStatuses": "All Statuses",
+    "send": "Send"
   },
   "languageSuggestion": {
     "title": "Change Language?",
@@ -108,7 +111,8 @@
     "menu": "Menu",
     "signUp": "Sign Up",
     "partnerContract": "Partner Agreement",
-    "consultancies": "Consultancies"
+    "consultancies": "Consultancies",
+    "billing": "Billing"
   },
   "landing": {
     "iafBadge": "IAF Accredited Certification Bodies Partners",
@@ -283,7 +287,25 @@
     "nextStep1": "Open the email above and click the verification link.",
     "nextStep2": "Log in to your account.",
     "nextStep3": "Our certification team will contact you to guide your next steps.",
-    "nextStepsContact": "Questions? Email us at"
+    "nextStepsContact": "Questions? Email us at",
+    "auditorStandards": "Standards",
+    "auditorStandardsPlaceholder": "Select standards…",
+    "auditorLevel": "Level of Certificate",
+    "auditorLevelPlaceholder": "Select levels…",
+    "auditorSectors": "Sectors (IAF Codes)",
+    "auditorSectorsPlaceholder": "Select sectors…",
+    "auditorCertificates": "Certificates",
+    "auditorAuditLog": "Audit Log",
+    "mobileNumber": "Mobile Number",
+    "auditorDocsSizeNote": "Each file must be {{max}} MB or smaller.",
+    "validationAuditorQualifications": "Please select at least one standard and one level of certificate.",
+    "auditorAttachWarning": "Your account was created, but we could not attach: {{files}}. Please email them to support@certify.cx.",
+    "fullName": "Full Name",
+    "chooseNewPassword": "Choose a new password for your account.",
+    "invalidResetLink": "Invalid or expired link",
+    "invalidResetLinkDesc": "This password reset link is invalid or has expired. Please request a new one.",
+    "passwordTooShort": "Password must be at least 6 characters.",
+    "redirectingToSignIn": "Redirecting you to sign in…"
   },
   "unauthorized": {
     "accessDenied": "Access Denied",
@@ -394,7 +416,8 @@
       "healthcare": "Healthcare",
       "foodBeverage": "Food & Beverage",
       "logistics": "Logistics"
-    }
+    },
+    "appNotFound": "Application not found."
   },
   "gapAnalysis": {
     "title": "ISO Readiness Gap Analysis",
@@ -815,7 +838,16 @@
     "clientAwaitingApproval": "This client has paid and is awaiting your approval.",
     "countryOptional": "Country (optional)",
     "countryPlaceholder": "e.g. United Arab Emirates",
-    "filterByCountry": "Filter by country…"
+    "filterByCountry": "Filter by country…",
+    "paymentStatusLabel": "Payment Status",
+    "paymentStatusNotSet": "Not set",
+    "paymentStatus_paid": "Paid",
+    "paymentStatus_paidCard": "Paid — Credit/Debit Card",
+    "paymentStatus_paidCash": "Paid — Cash",
+    "paymentStatus_paidBank": "Paid — Bank Transfer",
+    "paymentStatus_paidWith": "Paid — {{method}}",
+    "filesSelected": "{{count}} file(s) selected — max {{max}} MB each.",
+    "docUploadPartialFailed": "Saved, but {{count}} document(s) could not be uploaded ({{files}}). Files must be {{max}} MB or smaller — try again from the Edit form."
   },
   "certBody": {
     "addBody": "Add Certification Body",
@@ -1063,7 +1095,8 @@
     "groupBodies": "Certification Bodies",
     "groupReports": "Reports",
     "groupAdmin": "Administration",
-    "groupReferrals": "Referrals"
+    "groupReferrals": "Referrals",
+    "reset": "Reset"
   },
   "userFields": {
     "title": "Custom User Fields",
@@ -1435,5 +1468,48 @@
     "titleRequired": "Title is required.",
     "bodyRequired": "Agreement text is required.",
     "termInvalid": "Term must be between 1 and 120 months."
+  },
+  "adminBilling": {
+    "title": "Invoices & Receipts",
+    "subtitle": "Prepare and issue invoices and payment receipts, and review everything billed to date.",
+    "refresh": "Refresh",
+    "newInvoice": "New Invoice",
+    "newReceipt": "New Receipt",
+    "totalInvoiced": "Total Invoiced",
+    "totalPaid": "Total Paid",
+    "outstanding": "Outstanding",
+    "invoiceCount": "Invoices",
+    "receiptCount": "Receipts",
+    "tabInvoices": "Invoices",
+    "tabReceipts": "Receipts",
+    "searchPlaceholder": "Search by number, client name or email...",
+    "allStatuses": "All statuses",
+    "noInvoices": "No invoices yet",
+    "noInvoicesHint": "Issue your first invoice with the New Invoice button above.",
+    "noReceipts": "No payment receipts yet",
+    "noReceiptsHint": "Record a payment against an invoice to generate a receipt.",
+    "noMatches": "No results match your filters",
+    "colNumber": "Invoice #",
+    "colClient": "Client",
+    "colDescription": "Description",
+    "colIssued": "Issued",
+    "colDue": "Due",
+    "colTotal": "Total",
+    "colPaid": "Paid",
+    "colStatus": "Status",
+    "colActions": "Actions",
+    "rColNumber": "Receipt #",
+    "rColCustomer": "Customer",
+    "rColAmount": "Amount",
+    "rColMethod": "Method",
+    "rColDate": "Payment date",
+    "rColInvoice": "Invoice",
+    "findApplication": "Find an application",
+    "findApplicationPlaceholder": "Type a company, client or ISO standard to narrow the list",
+    "selectApplication": "Application",
+    "noApplicationLink": "Not linked to an application",
+    "alreadyInvoiced": "already invoiced",
+    "emailOptInHint": "Leave this off unless you intend to email the client right now. The PDF is always saved and can be downloaded and sent later.",
+    "downloadFailed": "The document could not be downloaded."
   }
 }

@@ -83,6 +83,45 @@ const BILLING_PAYMENT_METHODS = [
   { value: 'MoneyGram', labelKey: 'payment.methodMoneygram' },
 ];
 
+// The admin Payment Status dropdown. One control expresses both the status and
+// the method ("Paid — Cash"), because that is how the client asked for it; the
+// value is `status:method` and is split apart again before it reaches the DB.
+// 'pending' and 'awaiting_verification' are not in the client's list, but the
+// checkout flow really writes them — they are offered so that saving an
+// unrelated change on such an order does not silently rewrite its payment state.
+const PAYMENT_CHOICES = [
+  // Placeholder only — legacy orders carry no payment_status and must still
+  // render. It is `disabled` because saving it back would write NULL, and the
+  // client dashboard reads a NULL payment_status as "no payment gate" and would
+  // reveal the assigned Certification Body on an unpaid order. To say "not
+  // paid", the admin picks Unpaid.
+  { value: '',                      labelKey: 'admin.paymentStatusNotSet', disabled: true },
+  { value: 'unpaid',                labelKey: 'admin.paymentStatus_unpaid' },
+  { value: 'awaiting_verification', labelKey: 'admin.paymentStatus_awaiting_verification' },
+  { value: 'pending',               labelKey: 'admin.paymentStatus_pending' },
+  { value: 'paid:card',             labelKey: 'admin.paymentStatus_paidCard' },
+  { value: 'paid:cash',             labelKey: 'admin.paymentStatus_paidCash' },
+  { value: 'paid:bank_transfer',    labelKey: 'admin.paymentStatus_paidBank' },
+];
+
+const PAYMENT_METHOD_LABEL_KEYS = {
+  card: 'payment.methodCard',
+  cash: 'payment.methodCash',
+  bank_transfer: 'payment.methodBankTransfer',
+  paypal: 'payment.methodPaypal',
+  moneygram: 'payment.methodMoneygram',
+};
+
+// Collapse (payment_status, payment_method) into one dropdown value. 'verified'
+// is the legacy offline-verified status — it means paid, so it displays as the
+// matching Paid option; it is only written back as 'paid' if the admin actually
+// picks a different option.
+function paymentChoiceOf(app) {
+  const status = app?.payment_status || '';
+  if (status !== 'paid' && status !== 'verified') return status;
+  return `paid:${app?.payment_method || 'card'}`;
+}
+
 const today = () => new Date().toISOString().slice(0, 10);
 
 function formatMoney(amount, currency = 'USD') {
@@ -122,6 +161,7 @@ export default function ApplicationDetails() {
   const [assignedAuditor, setAssignedAuditor] = useState('');
   const [assignedCb, setAssignedCb] = useState('');
   const [internalNotes, setInternalNotes] = useState('');
+  const [paymentChoice, setPaymentChoice] = useState('');
 
   // Auditor form states
   const [auditDecision, setAuditDecision] = useState('');
@@ -209,6 +249,7 @@ export default function ApplicationDetails() {
           setAssignedAuditor(appData.assigned_auditor_id || '');
           setAssignedCb(appData.assigned_cb_id || '');
           setInternalNotes(appData.internal_notes || '');
+          setPaymentChoice(paymentChoiceOf(appData));
         }
 
         if (audData) setAuditors(audData);
@@ -407,7 +448,42 @@ export default function ApplicationDetails() {
         .update({ status, assigned_auditor_id: assignedAuditor || null, assigned_cb_id: assignedCb || null, internal_notes: internalNotes })
         .eq('id', id);
       if (error) throw error;
-      setApplication(prev => ({ ...prev, status, assigned_auditor_id: assignedAuditor || null, assigned_cb_id: assignedCb || null, internal_notes: internalNotes }));
+
+      // Payment is deliberately NOT part of the update above: moving an order
+      // into a paid state must also approve the client, burn their coupon and
+      // email their dashboard link, which needs the service role. Sent only when
+      // the admin actually changed the dropdown, so an untouched legacy
+      // 'verified' row is never rewritten as 'paid'.
+      let paymentPatch = null;
+      const [choiceStatus, choiceMethod] = paymentChoice.split(':');
+      // `choiceStatus` is only empty for the disabled placeholder, i.e. a legacy
+      // order the admin left alone — nothing to send.
+      if (choiceStatus && paymentChoice !== paymentChoiceOf(application)) {
+        const result = await apiPost('/api/checkout', {
+          action: 'set-payment-status',
+          applicationId: id,
+          paymentStatus: choiceStatus,
+          paymentMethod: choiceMethod || null,
+        });
+        paymentPatch = {
+          payment_status: result.payment_status ?? null,
+          payment_method: result.payment_method ?? null,
+        };
+      }
+
+      setApplication(prev => ({
+        ...prev,
+        status,
+        assigned_auditor_id: assignedAuditor || null,
+        assigned_cb_id: assignedCb || null,
+        internal_notes: internalNotes,
+        ...(paymentPatch || {}),
+        // A paid order approves the client server-side; mirror it so the
+        // "awaiting approval" prompt doesn't linger until the next reload.
+        ...(paymentPatch?.payment_status === 'paid'
+          ? { client: { ...prev.client, approval_status: 'approved' } }
+          : {}),
+      }));
       // Notify the client when their audit gets scheduled (only on transition).
       if (status === 'audit_scheduled' && prevStatus !== 'audit_scheduled') {
         apiPost('/api/notify-event', { applicationId: id, event: 'audit_scheduled' }).catch(() => {});
@@ -415,7 +491,7 @@ export default function ApplicationDetails() {
       showToast(t('admin.appUpdated'));
     } catch (err) {
       console.error('Error updating application', err);
-      alert(t('admin.failedUpdateApp'));
+      alert(err.message || t('admin.failedUpdateApp'));
     } finally { setSaving(false); }
   };
 
@@ -428,6 +504,7 @@ export default function ApplicationDetails() {
     try {
       await apiPost('/api/checkout', { action: 'verify-offline-payment', applicationId: id });
       setApplication(prev => ({ ...prev, payment_status: 'verified' }));
+      setPaymentChoice(paymentChoiceOf({ ...application, payment_status: 'verified' }));
       showToast(t('admin.paymentVerified'));
     } catch (err) {
       console.error('Error verifying payment', err);
@@ -720,7 +797,7 @@ export default function ApplicationDetails() {
                   {{ card: t('payment.methodCard'), cash: t('payment.methodCash'), paypal: t('payment.methodPaypal'), moneygram: t('payment.methodMoneygram'), bank_transfer: t('payment.methodBankTransfer') }[application.payment_method] || application.payment_method}
                   {application.payment_status && (
                     <span style={{ marginLeft: 8, fontSize: '0.72rem', fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: application.payment_status === 'verified' ? '#dcfce7' : application.payment_status === 'awaiting_verification' ? '#fef3c7' : '#e2e8f0', color: application.payment_status === 'verified' ? '#166534' : application.payment_status === 'awaiting_verification' ? '#92400e' : '#475569' }}>
-                      {t(`admin.paymentStatus_${application.payment_status}`)}
+                      {t(`admin.paymentStatus_${application.payment_status}`, application.payment_status)}
                     </span>
                   )}
                 </p>
@@ -892,6 +969,24 @@ export default function ApplicationDetails() {
                   <option value="audited">{t('admin.audited')}</option>
                   <option value="approved">{t('admin.approved')}</option>
                   <option value="rejected">{t('admin.rejected')}</option>
+                </Select>
+              </div>
+              <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--color-text-secondary)' }}>{t('admin.paymentStatusLabel')}</label>
+                <Select value={paymentChoice} onChange={(e) => setPaymentChoice(e.target.value)}>
+                  {PAYMENT_CHOICES.map(opt => (
+                    <option key={opt.value} value={opt.value} disabled={opt.disabled}>{t(opt.labelKey)}</option>
+                  ))}
+                  {/* Legacy rows may be paid by a method no longer offered
+                      (PayPal / MoneyGram). Show the real one rather than
+                      snapping the dropdown onto a method that wasn't used. */}
+                  {!PAYMENT_CHOICES.some(o => o.value === paymentChoice) && (
+                    <option value={paymentChoice}>
+                      {t('admin.paymentStatus_paidWith', {
+                        method: t(PAYMENT_METHOD_LABEL_KEYS[paymentChoice.split(':')[1]] || 'admin.paymentStatusNotSet'),
+                      })}
+                    </option>
+                  )}
                 </Select>
               </div>
               <div className="form-group" style={{ marginBottom: '1.25rem' }}>

@@ -4,15 +4,34 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { Input, Select, Button, Autocomplete } from '../../components/ui/FormElements';
 import CustomFieldRenderer, { validateCustomFields } from '../../components/CustomFieldRenderer';
+import MultiSelect from '../../components/ui/MultiSelect';
 import { getStakeholderType } from '../../utils/stakeholderTypes';
 import { COUNTRY_DIAL_CODES } from '../../utils/dialCodes';
+import {
+  AUDITOR_LEVELS,
+  AUDITOR_STANDARD_OPTIONS,
+  AUDITOR_SECTOR_OPTIONS,
+} from '../../utils/auditorOptions';
 import { supabase } from '../../lib/supabase';
+import { apiPost } from '../../lib/apiClient';
 import { AlertCircle, CheckCircle, Eye, EyeOff, Clock, Mail, ArrowLeft } from 'lucide-react';
 import './Auth.css';
 
 const EMPLOYEE_RANGES = [
   '1-10', '11-50', '51-200', '201-500', '501-1000', '1000+',
 ];
+
+// Auditor paperwork travels to /api/user as base64 inside a JSON body, so it
+// has to stay under the Vercel 4.5 MB request cap once inflated by a third.
+// Kept in step with MAX_DOC_BYTES in api/user.js.
+const MAX_AUDITOR_UPLOAD_MB = 3;
+
+const fileToBase64 = (file) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => resolve(String(reader.result).split(',')[1] || '');
+  reader.onerror = () => reject(new Error('Could not read file'));
+  reader.readAsDataURL(file);
+});
 
 // Hook: load active custom_user_fields that apply to the given role.
 function useCustomFieldsForRole(role) {
@@ -433,6 +452,15 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
   }, [formData, step, DRAFT_KEY]);
   const [auditorCert, setAuditorCert] = useState(null);
   const [auditorCv, setAuditorCv] = useState(null);
+  const [auditorAuditLog, setAuditorAuditLog] = useState(null);
+  // Qualification arrays, shared with the admin "Add Auditor" modal through
+  // src/utils/auditorOptions.js so the two forms collect identical values.
+  const [auditorStandards, setAuditorStandards] = useState([]);
+  const [auditorLevels, setAuditorLevels] = useState([]);
+  const [auditorSectors, setAuditorSectors] = useState([]);
+  // Non-blocking: the account exists, but a document or the qualification list
+  // did not save. Shown on the "verify your email" screen.
+  const [attachWarning, setAttachWarning] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
@@ -503,6 +531,13 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
         setError(t('auth.validationAuditorDocs'));
         return false;
       }
+      // An auditor with no standard and no level cannot be matched to an audit,
+      // which is the only reason the record exists. The Audit Log stays
+      // optional — not every auditor has one to hand at registration.
+      if (targetRole === 'auditor' && (auditorStandards.length === 0 || auditorLevels.length === 0)) {
+        setError(t('auth.validationAuditorQualifications'));
+        return false;
+      }
       const customCheck = validateCustomFields(customFields, customValues);
       if (!customCheck.valid) {
         setError(t('auth.validationCustomField', { field: customCheck.errorField }));
@@ -541,6 +576,61 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
     return true;
   };
 
+  // Everything an auditor supplies that AuthContext.signup() does not carry.
+  // It runs AFTER the account exists because the qualification arrays key off
+  // the new profile id and the files cannot ride inside the signup payload.
+  //
+  // The uploads go through /api/user rather than straight to storage: signup
+  // creates the account unconfirmed and never signs the user in, so there is
+  // no session here and a browser-side upload has no identity to authorize
+  // against. That is also why every auditor certificate uploaded before
+  // phase24 was lost — the bucket did not exist, and the error was swallowed.
+  // Returns a human-readable list of what failed, or '' when all is well.
+  const attachAuditorDetails = async (auditorId) => {
+    const failed = [];
+
+    try {
+      await apiPost('/api/user', {
+        action: 'save-auditor-qualifications',
+        auditorId,
+        standards: auditorStandards,
+        levels: auditorLevels,
+        sectors: auditorSectors,
+      });
+    } catch (err) {
+      console.error('Auditor qualifications save failed:', err);
+      failed.push(t('auth.auditorStandards'));
+    }
+
+    const documents = [
+      ['certificate', auditorCert],
+      ['cv', auditorCv],
+      ['audit_log', auditorAuditLog],
+    ].filter(([, file]) => !!file);
+
+    for (const [docType, file] of documents) {
+      try {
+        if (file.size > MAX_AUDITOR_UPLOAD_MB * 1024 * 1024) {
+          throw new Error(`Larger than ${MAX_AUDITOR_UPLOAD_MB} MB`);
+        }
+        await apiPost('/api/user', {
+          action: 'add-auditor-document',
+          auditorId,
+          docType,
+          fileName: file.name,
+          mimeType: file.type || null,
+          sizeBytes: file.size,
+          dataBase64: await fileToBase64(file),
+        });
+      } catch (err) {
+        console.error('Auditor document upload failed:', docType, err);
+        failed.push(file.name);
+      }
+    }
+
+    return failed.join(', ');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isPureIndividual ? !validateSimple() : !validateStep()) return;
@@ -569,21 +659,8 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
 
     if (result.success) {
       try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
-      if (targetRole === 'auditor' && result.data?.user && (auditorCert || auditorCv)) {
-        try {
-          const uploads = [];
-          if (auditorCert) {
-            uploads.push(supabase.storage.from('auditor-documents')
-              .upload(`${result.data.user.id}/lead-auditor-certificate-${Date.now()}-${auditorCert.name}`, auditorCert, { upsert: true }));
-          }
-          if (auditorCv) {
-            uploads.push(supabase.storage.from('auditor-documents')
-              .upload(`${result.data.user.id}/cv-${Date.now()}-${auditorCv.name}`, auditorCv, { upsert: true }));
-          }
-          await Promise.all(uploads);
-        } catch (uploadErr) {
-          console.error('Auditor document upload error:', uploadErr);
-        }
+      if (targetRole === 'auditor' && result.data?.user?.id) {
+        setAttachWarning(await attachAuditorDetails(result.data.user.id));
       }
       if (result.needsApproval) {
         await supabase.auth.signOut();
@@ -654,6 +731,14 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
                 {t('auth.checkInboxMessage')}
               </p>
             </>
+          )}
+          {/* The account is fine; a document is not. Say so, instead of
+              console.error-ing it into the void like the old upload block. */}
+          {attachWarning && (
+            <div className="auth-form__error" style={{ marginBottom: '16px' }}>
+              <AlertCircle size={16} />
+              <span>{t('auth.auditorAttachWarning', { files: attachWarning })}</span>
+            </div>
           )}
           <NextSteps />
           <Link to="/login" className="auth-form__link" style={{ fontSize: 'var(--font-size-sm)' }}>{t('auth.goToLogin')}</Link>
@@ -979,6 +1064,44 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
             />
 
             {targetRole === 'auditor' && (
+              <>
+                {/* Client: "If possible to put the Standards & Level of
+                    certificate next to each other, it will be good."
+                    auth-form__row collapses to one column under 640px. */}
+                <div className="auth-form__row">
+                  <MultiSelect
+                    id="signup-auditor-standards"
+                    label={t('auth.auditorStandards')}
+                    options={AUDITOR_STANDARD_OPTIONS}
+                    value={auditorStandards}
+                    onChange={setAuditorStandards}
+                    placeholder={t('auth.auditorStandardsPlaceholder')}
+                    maxVisible={2}
+                  />
+                  <MultiSelect
+                    id="signup-auditor-levels"
+                    label={t('auth.auditorLevel')}
+                    options={AUDITOR_LEVELS}
+                    value={auditorLevels}
+                    onChange={setAuditorLevels}
+                    placeholder={t('auth.auditorLevelPlaceholder')}
+                    maxVisible={2}
+                  />
+                </div>
+
+                <MultiSelect
+                  id="signup-auditor-sectors"
+                  label={t('auth.auditorSectors')}
+                  options={AUDITOR_SECTOR_OPTIONS}
+                  value={auditorSectors}
+                  onChange={setAuditorSectors}
+                  placeholder={t('auth.auditorSectorsPlaceholder')}
+                  maxVisible={2}
+                />
+              </>
+            )}
+
+            {targetRole === 'auditor' && (
               <div style={{ marginTop: '8px', padding: '16px', border: '1px solid var(--color-border)', borderRadius: '8px', background: 'var(--color-bg-subtle, #f9fafb)' }}>
                 <p style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: '4px' }}>{t('auth.auditorDocsTitle')}</p>
                 <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', marginBottom: '12px' }}>{t('auth.auditorDocsEnglishNote')}</p>
@@ -1006,6 +1129,23 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
                     required
                   />
                 </div>
+
+                {/* Optional: not every auditor has their log to hand at
+                    registration, and blocking sign-up on it loses the auditor. */}
+                <div className="form-group">
+                  <label className="form-label" htmlFor="signup-audit-log">{t('auth.auditorAuditLog')}</label>
+                  <input
+                    className="form-input"
+                    id="signup-audit-log"
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
+                    onChange={(e) => setAuditorAuditLog(e.target.files?.[0] || null)}
+                  />
+                </div>
+
+                <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', margin: 0 }}>
+                  {t('auth.auditorDocsSizeNote', { max: MAX_AUDITOR_UPLOAD_MB })}
+                </p>
               </div>
             )}
 

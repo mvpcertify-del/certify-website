@@ -51,7 +51,10 @@
     "add": "Add",
     "create": "Create",
     "clear": "Clear [DRAFT]",
-    "gotIt": "Got it"
+    "gotIt": "Got it",
+    "accessDenied": "拒绝访问。",
+    "allStatuses": "所有状态",
+    "send": "发送"
   },
   "languageSuggestion": {
     "title": "切换语言？",
@@ -108,7 +111,8 @@
     "menu": "菜单",
     "signUp": "注册",
     "partnerContract": "合作伙伴协议",
-    "consultancies": "咨询伙伴"
+    "consultancies": "咨询伙伴",
+    "billing": "账单"
   },
   "landing": {
     "iafBadge": "IAF 认可认证机构合作伙伴",
@@ -269,7 +273,25 @@
     "nextStep1": "Open the email above and click the verification link.",
     "nextStep2": "Log in to your account.",
     "nextStep3": "Our certification team will contact you to guide your next steps.",
-    "nextStepsContact": "Questions? Email us at"
+    "nextStepsContact": "Questions? Email us at",
+    "auditorStandards": "标准",
+    "auditorStandardsPlaceholder": "选择标准…",
+    "auditorLevel": "证书级别",
+    "auditorLevelPlaceholder": "选择级别…",
+    "auditorSectors": "行业领域（IAF 代码）",
+    "auditorSectorsPlaceholder": "选择行业领域…",
+    "auditorCertificates": "证书",
+    "auditorAuditLog": "审核记录",
+    "mobileNumber": "手机号码",
+    "auditorDocsSizeNote": "每个文件不得超过 {{max}} MB。",
+    "validationAuditorQualifications": "请至少选择一项标准和一个证书级别。",
+    "auditorAttachWarning": "您的账户已创建，但无法附加：{{files}}。请将它们发送至 support@certify.cx。",
+    "fullName": "全名",
+    "chooseNewPassword": "为您的账户设置新密码。",
+    "invalidResetLink": "链接无效或已过期",
+    "invalidResetLinkDesc": "此密码重置链接无效或已过期，请重新申请。",
+    "passwordTooShort": "密码至少需要 6 个字符。",
+    "redirectingToSignIn": "正在跳转到登录页…"
   },
   "unauthorized": {
     "accessDenied": "访问被拒绝",
@@ -380,7 +402,8 @@
       "healthcare": "医疗保健",
       "foodBeverage": "食品饮料",
       "logistics": "物流"
-    }
+    },
+    "appNotFound": "未找到该申请。"
   },
   "gapAnalysis": {
     "title": "ISO 就绪度差距分析",
@@ -801,7 +824,16 @@
     "clientAwaitingApproval": "This client has paid and is awaiting your approval.",
     "countryOptional": "Country (optional)",
     "countryPlaceholder": "e.g. United Arab Emirates",
-    "filterByCountry": "Filter by country…"
+    "filterByCountry": "Filter by country…",
+    "paymentStatusLabel": "付款状态",
+    "paymentStatusNotSet": "未设置",
+    "paymentStatus_paid": "已付款",
+    "paymentStatus_paidCard": "已付款 — 信用卡/借记卡",
+    "paymentStatus_paidCash": "已付款 — 现金",
+    "paymentStatus_paidBank": "已付款 — 银行转账",
+    "paymentStatus_paidWith": "已付款 — {{method}}",
+    "filesSelected": "已选择 {{count}} 个文件 — 每个最大 {{max}} MB。",
+    "docUploadPartialFailed": "已保存，但有 {{count}} 个文档未能上传（{{files}}）。文件不得超过 {{max}} MB — 请在编辑表单中重试。"
   },
   "certBody": {
     "addBody": "添加认证机构",
@@ -1036,7 +1068,8 @@
     "groupBodies": "认证机构",
     "groupReports": "报告",
     "groupAdmin": "管理",
-    "groupReferrals": "Referrals"
+    "groupReferrals": "Referrals",
+    "reset": "重置"
   },
   "userFields": {
     "title": "自定义用户字段",
@@ -1408,5 +1441,48 @@
     "titleRequired": "标题为必填项。",
     "bodyRequired": "协议正文为必填项。",
     "termInvalid": "期限必须介于 1 至 120 个月之间。"
+  },
+  "adminBilling": {
+    "title": "发票与收据",
+    "subtitle": "创建并签发发票和收款收据，查看迄今为止的所有账单。",
+    "refresh": "刷新",
+    "newInvoice": "新建发票",
+    "newReceipt": "新建收据",
+    "totalInvoiced": "开票总额",
+    "totalPaid": "已付总额",
+    "outstanding": "未结金额",
+    "invoiceCount": "发票",
+    "receiptCount": "收据",
+    "tabInvoices": "发票",
+    "tabReceipts": "收据",
+    "searchPlaceholder": "按编号、客户名称或邮箱搜索...",
+    "allStatuses": "所有状态",
+    "noInvoices": "暂无发票",
+    "noInvoicesHint": "使用上方的“新建发票”按钮开具第一张发票。",
+    "noReceipts": "暂无收款收据",
+    "noReceiptsHint": "对发票登记付款以生成收据。",
+    "noMatches": "没有符合筛选条件的结果",
+    "colNumber": "发票编号",
+    "colClient": "客户",
+    "colDescription": "说明",
+    "colIssued": "开具日期",
+    "colDue": "到期日",
+    "colTotal": "合计",
+    "colPaid": "已付",
+    "colStatus": "状态",
+    "colActions": "操作",
+    "rColNumber": "收据编号",
+    "rColCustomer": "付款人",
+    "rColAmount": "金额",
+    "rColMethod": "付款方式",
+    "rColDate": "付款日期",
+    "rColInvoice": "发票",
+    "findApplication": "查找申请",
+    "findApplicationPlaceholder": "输入公司、客户或 ISO 标准以缩小列表",
+    "selectApplication": "申请",
+    "noApplicationLink": "未关联到申请",
+    "alreadyInvoiced": "已开票",
+    "emailOptInHint": "除非您现在就要给客户发邮件，否则请保持关闭。PDF 始终会保存，之后可下载并发送。",
+    "downloadFailed": "无法下载该文档。"
   }
 }

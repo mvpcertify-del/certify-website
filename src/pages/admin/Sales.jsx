@@ -1,50 +1,115 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../contexts/AuthContext';
+import { ROLES } from '../../utils/roles';
 import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
 import { CircleDollarSign, CheckCircle2, Clock } from 'lucide-react';
 
-// Super-Admin sales overview built on the existing `payments` table. Shows total
-// collected revenue, pending revenue, and the most recent transactions. This is
-// the destination for the "Sales" box on the Main Dashboard.
-const PAID_STATUSES = ['paid', 'completed', 'succeeded'];
+// Super-Admin sales overview. Revenue is derived from the orders themselves
+// (`applications`) plus phase20's `invoices` — NOT from the `payments` table,
+// which no code path has ever written to and which made this page report $0
+// while real paid business existed.
+const PAID_STATUSES = ['paid', 'verified'];
+const PENDING_STATUSES = ['pending', 'awaiting_verification'];
+
+const METHOD_LABEL_KEYS = {
+  card: 'payment.methodCard',
+  cash: 'payment.methodCash',
+  bank_transfer: 'payment.methodBankTransfer',
+  paypal: 'payment.methodPaypal',
+  moneygram: 'payment.methodMoneygram',
+};
+
+const STATUS_VARIANTS = {
+  paid: 'success',
+  verified: 'success',
+  pending: 'warning',
+  awaiting_verification: 'warning',
+  unpaid: 'danger',
+};
 
 export default function Sales() {
   const { t } = useTranslation();
-  const [payments, setPayments] = useState([]);
+  const { user } = useAuth();
+  const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const isRegionalAdmin = user?.role === ROLES.REGIONAL_ADMIN;
+  const userRegion = user?.region || null;
 
   useEffect(() => {
     let mounted = true;
     const load = async () => {
       setLoading(true);
       setError('');
-      const { data, error: err } = await supabase
-        .from('payments')
-        .select('id, amount, currency, payment_type, status, created_at, client:profiles!payments_client_id_fkey ( full_name, email )')
-        .order('created_at', { ascending: false })
-        .limit(100);
+
+      // No .limit(): the stat tiles above the table are totals, and a silently
+      // truncated total is worse than a slow page.
+      const [appsRes, invoicesRes] = await Promise.all([
+        supabase
+          .from('applications')
+          .select('id, company_name, total_amount, payment_status, payment_method, created_at, client:profiles!client_id(full_name, email, company_name, region)')
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('invoices')
+          .select('application_id, total, amount_paid, invoice_number, currency'),
+      ]);
+
       if (!mounted) return;
-      if (err) {
-        console.error('Sales load failed:', err);
-        setError(err.message);
-      } else {
-        setPayments(data || []);
+      if (appsRes.error) {
+        console.error('Sales load failed:', appsRes.error);
+        setError(appsRes.error.message);
+        setLoading(false);
+        return;
       }
+      // Invoices are only the fallback amount source, so a failure there
+      // degrades the figures rather than blanking the page.
+      if (invoicesRes.error) console.error('Sales invoice load failed:', invoicesRes.error);
+
+      const invoiceByApp = new Map();
+      (invoicesRes.data || []).forEach((inv) => {
+        if (inv.application_id && !invoiceByApp.has(inv.application_id)) {
+          invoiceByApp.set(inv.application_id, inv);
+        }
+      });
+
+      const mapped = (appsRes.data || []).map((app) => {
+        const invoice = invoiceByApp.get(app.id) || null;
+        return {
+          id: app.id,
+          // An admin-created order often has no total_amount but does have an
+          // invoice — without this fallback those sales count as $0.
+          amount: app.total_amount != null ? Number(app.total_amount) : Number(invoice?.total || 0),
+          currency: invoice?.currency || 'USD',
+          company: app.company_name || app.client?.company_name || app.client?.full_name || app.client?.email || '—',
+          payment_method: app.payment_method || null,
+          payment_status: app.payment_status || null,
+          created_at: app.created_at,
+          region: app.client?.region || null,
+        };
+      });
+
+      // Regional admins see only their own region. An admin with no region set
+      // sees nothing rather than everything.
+      const scoped = isRegionalAdmin
+        ? (userRegion ? mapped.filter((r) => r.region === userRegion) : [])
+        : mapped;
+
+      setRows(scoped);
       setLoading(false);
     };
     load();
     return () => { mounted = false; };
-  }, []);
+  }, [isRegionalAdmin, userRegion]);
 
-  const isPaid = (p) => PAID_STATUSES.includes((p.status || '').toLowerCase());
-  const sum = (rows) => rows.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+  const sum = (list) => list.reduce((s, r) => s + (Number(r.amount) || 0), 0);
   const fmt = (n) => `$${Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-  const paidRows = payments.filter(isPaid);
-  const pendingRows = payments.filter((p) => !isPaid(p));
+  const paidRows = rows.filter((r) => PAID_STATUSES.includes(r.payment_status));
+  const pendingRows = rows.filter((r) => PENDING_STATUSES.includes(r.payment_status));
   const totalRevenue = sum(paidRows);
   const pendingRevenue = sum(pendingRows);
 
@@ -55,18 +120,24 @@ export default function Sales() {
   ];
 
   const columns = [
-    {
-      key: 'client',
-      label: t('sales.client'),
-      render: (val) => val?.full_name || val?.email || '—',
-    },
+    { key: 'company', label: t('sales.client'), render: (val) => val || '—' },
     {
       key: 'amount',
       label: t('sales.amount'),
-      render: (val, row) => `${(row.currency || 'usd').toUpperCase()} ${Number(val || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+      render: (val, row) => `${(row.currency || 'USD').toUpperCase()} ${Number(val || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
     },
-    { key: 'payment_type', label: t('sales.type'), render: (val) => val || '—' },
-    { key: 'status', label: t('dashboard.status'), render: (val) => <StatusBadge status={val || 'pending'} /> },
+    {
+      key: 'payment_method',
+      label: t('sales.type'),
+      render: (val) => (val ? t(METHOD_LABEL_KEYS[val] || 'sales.type', val) : '—'),
+    },
+    {
+      key: 'payment_status',
+      label: t('dashboard.status'),
+      render: (val) => (val
+        ? <StatusBadge status={val} variant={STATUS_VARIANTS[val]} label={t(`admin.paymentStatus_${val}`, val)} />
+        : '—'),
+    },
     { key: 'created_at', label: t('sales.date'), render: (val) => (val ? new Date(val).toLocaleDateString() : '—') },
   ];
 
@@ -131,7 +202,7 @@ export default function Sales() {
       ) : (
         <DataTable
           columns={columns}
-          data={payments}
+          data={rows}
           emptyMessage={t('sales.noPayments')}
         />
       )}

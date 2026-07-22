@@ -62,6 +62,7 @@ const AdminCountries = lazy(() => import('./pages/admin/AdminCountries'));
 const AdminCoupons = lazy(() => import('./pages/admin/AdminCoupons'));
 const AdminCommissionTiers = lazy(() => import('./pages/admin/AdminCommissionTiers'));
 const AdminConsultancies = lazy(() => import('./pages/admin/AdminConsultancies'));
+const AdminBilling = lazy(() => import('./pages/admin/AdminBilling'));
 const CertificationBodiesRegistry = lazy(() => import('./pages/bodies/CertificationBodies'));
 const AdminCompanies = lazy(() => import('./pages/admin/AdminCompanies'));
 const ApplicationDetails = lazy(() => import('./pages/admin/ApplicationDetails'));
@@ -176,6 +177,17 @@ function AppRoutes() {
             <Route path="/admin/sales" element={
               <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}>
                 <Sales />
+              </ProtectedRoute>
+            } />
+
+            {/* Admin — Invoices & Receipts.
+                A regional admin is admitted deliberately: RLS on invoices /
+                payment_receipts and the server-side scope check on the
+                issue-invoice / issue-receipt actions both restrict them to
+                their own region, so this is not a cross-region leak. */}
+            <Route path="/admin/billing" element={
+              <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.REGIONAL_ADMIN]}>
+                <AdminBilling />
               </ProtectedRoute>
             } />
 

@@ -9,6 +9,7 @@ import {
   getBaselineRolePermissions,
 } from '../../utils/roles';
 import { ShieldCheck, RotateCcw, AlertTriangle } from 'lucide-react';
+import { apiPost } from '../../lib/apiClient';
 
 // Order permissions into readable sections so the grid isn't a wall of keys.
 const PERMISSION_GROUPS = [
@@ -133,13 +134,9 @@ export default function AdminPermissions() {
       // If the new value matches baseline, clear the override instead of storing it.
       // Keeps the table lean and the "Reset to defaults" state obvious.
       if (next === baseline) {
-        const res = await fetch('/api/user', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'save-permission-override', role, permission, clear: true, updatedBy: user?.id }),
-        });
-        const json = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(json.error || 'Failed to save');
+        // apiPost attaches the access token — the endpoint is super-admin only
+        // now, and records the actor from that token rather than from the body.
+        await apiPost('/api/user', { action: 'save-permission-override', role, permission, clear: true });
         setOverrides(prev => {
           const copy = { ...prev };
           if (copy[role]) {
@@ -149,13 +146,7 @@ export default function AdminPermissions() {
           return copy;
         });
       } else {
-        const res = await fetch('/api/user', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'save-permission-override', role, permission, enabled: next, updatedBy: user?.id }),
-        });
-        const json = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(json.error || 'Failed to save');
+        await apiPost('/api/user', { action: 'save-permission-override', role, permission, enabled: next });
         setOverrides(prev => ({
           ...prev,
           [role]: { ...(prev[role] || {}), [permission]: next },
@@ -182,11 +173,7 @@ export default function AdminPermissions() {
     try {
       await Promise.all(
         keys.map(permission =>
-          fetch('/api/user', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'save-permission-override', role, permission, clear: true, updatedBy: user?.id }),
-          })
+          apiPost('/api/user', { action: 'save-permission-override', role, permission, clear: true })
         )
       );
       setOverrides(prev => {

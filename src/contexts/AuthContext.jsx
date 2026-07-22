@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { apiPost } from '../lib/apiClient';
 import { ROLES, getRegionFromCountryAsync, setCustomPermissionOverrides } from '../utils/roles';
 
 // Fetch role×permission overrides and install them into the roles module so
@@ -108,11 +109,10 @@ export function AuthProvider({ children }) {
             payload.stakeholder_type = stakeholderType;
             payload.approval_status = approvalStatus;
           }
-          await fetch('/api/user', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          });
+          // Must carry the access token: /api/user verifies the caller and only
+          // allows this one self-bootstrap (a profile with no role yet, moving
+          // to 'client'). The Google session already exists by this point.
+          await apiPost('/api/user', payload);
           try { sessionStorage.removeItem('pendingStakeholderType'); } catch { /* ignore */ }
           // Re-fetch profile after update
           let { data: updatedProfile } = await supabase

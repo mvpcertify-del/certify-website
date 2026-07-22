@@ -51,7 +51,10 @@
     "add": "Add",
     "create": "Create",
     "clear": "Clear [DRAFT]",
-    "gotIt": "Got it"
+    "gotIt": "Got it",
+    "accessDenied": "Zugriff verweigert.",
+    "allStatuses": "Alle Status",
+    "send": "Senden"
   },
   "languageSuggestion": {
     "title": "Sprache ändern?",
@@ -108,7 +111,8 @@
     "menu": "Menü",
     "signUp": "Registrieren",
     "partnerContract": "Partnervertrag",
-    "consultancies": "Beratungspartner"
+    "consultancies": "Beratungspartner",
+    "billing": "Abrechnung"
   },
   "landing": {
     "iafBadge": "IAF-akkreditierte Zertifizierungsstellen-Partner",
@@ -269,7 +273,25 @@
     "nextStep1": "Open the email above and click the verification link.",
     "nextStep2": "Log in to your account.",
     "nextStep3": "Our certification team will contact you to guide your next steps.",
-    "nextStepsContact": "Questions? Email us at"
+    "nextStepsContact": "Questions? Email us at",
+    "auditorStandards": "Normen",
+    "auditorStandardsPlaceholder": "Normen auswählen…",
+    "auditorLevel": "Zertifikatsstufe",
+    "auditorLevelPlaceholder": "Stufen auswählen…",
+    "auditorSectors": "Sektoren (IAF-Codes)",
+    "auditorSectorsPlaceholder": "Sektoren auswählen…",
+    "auditorCertificates": "Zertifikate",
+    "auditorAuditLog": "Auditprotokoll",
+    "mobileNumber": "Mobilnummer",
+    "auditorDocsSizeNote": "Jede Datei darf höchstens {{max}} MB groß sein.",
+    "validationAuditorQualifications": "Bitte wählen Sie mindestens eine Norm und eine Zertifikatsstufe aus.",
+    "auditorAttachWarning": "Ihr Konto wurde erstellt, aber Folgendes konnte nicht angehängt werden: {{files}}. Bitte senden Sie die Dateien an support@certify.cx.",
+    "fullName": "Vollständiger Name",
+    "chooseNewPassword": "Wählen Sie ein neues Passwort für Ihr Konto.",
+    "invalidResetLink": "Ungültiger oder abgelaufener Link",
+    "invalidResetLinkDesc": "Dieser Link zum Zurücksetzen des Passworts ist ungültig oder abgelaufen. Bitte fordern Sie einen neuen an.",
+    "passwordTooShort": "Das Passwort muss mindestens 6 Zeichen lang sein.",
+    "redirectingToSignIn": "Sie werden zur Anmeldung weitergeleitet…"
   },
   "unauthorized": {
     "accessDenied": "Zugriff verweigert",
@@ -380,7 +402,8 @@
       "healthcare": "Gesundheitswesen",
       "foodBeverage": "Lebensmittel & Getränke",
       "logistics": "Logistik"
-    }
+    },
+    "appNotFound": "Antrag nicht gefunden."
   },
   "gapAnalysis": {
     "title": "ISO-Reifegrad-Gap-Analyse",
@@ -801,7 +824,16 @@
     "clientAwaitingApproval": "This client has paid and is awaiting your approval.",
     "countryOptional": "Country (optional)",
     "countryPlaceholder": "e.g. United Arab Emirates",
-    "filterByCountry": "Filter by country…"
+    "filterByCountry": "Filter by country…",
+    "paymentStatusLabel": "Zahlungsstatus",
+    "paymentStatusNotSet": "Nicht festgelegt",
+    "paymentStatus_paid": "Bezahlt",
+    "paymentStatus_paidCard": "Bezahlt — Kredit-/Debitkarte",
+    "paymentStatus_paidCash": "Bezahlt — Bar",
+    "paymentStatus_paidBank": "Bezahlt — Banküberweisung",
+    "paymentStatus_paidWith": "Bezahlt — {{method}}",
+    "filesSelected": "{{count}} Datei(en) ausgewählt — max. {{max}} MB pro Datei.",
+    "docUploadPartialFailed": "Gespeichert, aber {{count}} Dokument(e) konnten nicht hochgeladen werden ({{files}}). Dateien dürfen höchstens {{max}} MB groß sein — bitte im Bearbeiten-Formular erneut versuchen."
   },
   "certBody": {
     "addBody": "Zertifizierungsstelle hinzufügen",
@@ -1036,7 +1068,8 @@
     "groupBodies": "Zertifizierungsstellen",
     "groupReports": "Berichte",
     "groupAdmin": "Administration",
-    "groupReferrals": "Referrals"
+    "groupReferrals": "Referrals",
+    "reset": "Zurücksetzen"
   },
   "userFields": {
     "title": "Benutzerdefinierte Benutzerfelder",
@@ -1408,5 +1441,48 @@
     "titleRequired": "Titel ist erforderlich.",
     "bodyRequired": "Vertragstext ist erforderlich.",
     "termInvalid": "Die Laufzeit muss zwischen 1 und 120 Monaten liegen."
+  },
+  "adminBilling": {
+    "title": "Rechnungen & Belege",
+    "subtitle": "Rechnungen und Zahlungsbelege erstellen und ausstellen sowie alles bisher Abgerechnete einsehen.",
+    "refresh": "Aktualisieren",
+    "newInvoice": "Neue Rechnung",
+    "newReceipt": "Neuer Beleg",
+    "totalInvoiced": "Gesamt fakturiert",
+    "totalPaid": "Gesamt bezahlt",
+    "outstanding": "Offen",
+    "invoiceCount": "Rechnungen",
+    "receiptCount": "Belege",
+    "tabInvoices": "Rechnungen",
+    "tabReceipts": "Belege",
+    "searchPlaceholder": "Nach Nummer, Kundenname oder E-Mail suchen...",
+    "allStatuses": "Alle Status",
+    "noInvoices": "Noch keine Rechnungen",
+    "noInvoicesHint": "Erstellen Sie Ihre erste Rechnung über die Schaltfläche „Neue Rechnung“ oben.",
+    "noReceipts": "Noch keine Zahlungsbelege",
+    "noReceiptsHint": "Erfassen Sie eine Zahlung zu einer Rechnung, um einen Beleg zu erzeugen.",
+    "noMatches": "Keine Ergebnisse für Ihre Filter",
+    "colNumber": "Rechnungsnr.",
+    "colClient": "Kunde",
+    "colDescription": "Beschreibung",
+    "colIssued": "Ausgestellt",
+    "colDue": "Fällig",
+    "colTotal": "Gesamt",
+    "colPaid": "Bezahlt",
+    "colStatus": "Status",
+    "colActions": "Aktionen",
+    "rColNumber": "Belegnr.",
+    "rColCustomer": "Kunde",
+    "rColAmount": "Betrag",
+    "rColMethod": "Zahlungsart",
+    "rColDate": "Zahlungsdatum",
+    "rColInvoice": "Rechnung",
+    "findApplication": "Antrag suchen",
+    "findApplicationPlaceholder": "Firma, Kunde oder ISO-Norm eingeben, um die Liste einzugrenzen",
+    "selectApplication": "Antrag",
+    "noApplicationLink": "Nicht mit einem Antrag verknüpft",
+    "alreadyInvoiced": "bereits fakturiert",
+    "emailOptInHint": "Lassen Sie dies aus, sofern Sie dem Kunden nicht jetzt sofort eine E-Mail senden möchten. Das PDF wird immer gespeichert und kann später heruntergeladen und versendet werden.",
+    "downloadFailed": "Das Dokument konnte nicht heruntergeladen werden."
   }
 }

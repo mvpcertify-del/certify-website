@@ -51,7 +51,10 @@
     "add": "Add",
     "create": "Create",
     "clear": "Clear [DRAFT]",
-    "gotIt": "حسنًا"
+    "gotIt": "حسنًا",
+    "accessDenied": "تم رفض الوصول.",
+    "allStatuses": "كل الحالات",
+    "send": "إرسال"
   },
   "languageSuggestion": {
     "title": "تغيير اللغة؟",
@@ -108,7 +111,8 @@
     "menu": "القائمة",
     "signUp": "إنشاء حساب",
     "partnerContract": "اتفاقية الشريك",
-    "consultancies": "الشركات الاستشارية"
+    "consultancies": "الشركات الاستشارية",
+    "billing": "الفوترة"
   },
   "landing": {
     "iafBadge": "شركاء من هيئات منح الشهادات المعتمدة من IAF",
@@ -283,7 +287,25 @@
     "nextStep1": "Open the email above and click the verification link.",
     "nextStep2": "Log in to your account.",
     "nextStep3": "Our certification team will contact you to guide your next steps.",
-    "nextStepsContact": "Questions? Email us at"
+    "nextStepsContact": "Questions? Email us at",
+    "auditorStandards": "المعايير",
+    "auditorStandardsPlaceholder": "اختر المعايير…",
+    "auditorLevel": "مستوى الشهادة",
+    "auditorLevelPlaceholder": "اختر المستويات…",
+    "auditorSectors": "القطاعات (رموز IAF)",
+    "auditorSectorsPlaceholder": "اختر القطاعات…",
+    "auditorCertificates": "الشهادات",
+    "auditorAuditLog": "سجل التدقيق",
+    "mobileNumber": "رقم الجوال",
+    "auditorDocsSizeNote": "يجب ألا يتجاوز حجم كل ملف {{max}} ميجابايت.",
+    "validationAuditorQualifications": "يرجى اختيار معيار واحد على الأقل ومستوى شهادة واحد.",
+    "auditorAttachWarning": "تم إنشاء حسابك، لكن تعذّر إرفاق: {{files}}. يرجى إرسالها بالبريد إلى support@certify.cx.",
+    "fullName": "الاسم الكامل",
+    "chooseNewPassword": "اختر كلمة مرور جديدة لحسابك.",
+    "invalidResetLink": "رابط غير صالح أو منتهي الصلاحية",
+    "invalidResetLinkDesc": "رابط إعادة تعيين كلمة المرور هذا غير صالح أو انتهت صلاحيته. يرجى طلب رابط جديد.",
+    "passwordTooShort": "يجب ألا تقل كلمة المرور عن 6 أحرف.",
+    "redirectingToSignIn": "جارٍ تحويلك إلى تسجيل الدخول…"
   },
   "unauthorized": {
     "accessDenied": "الوصول مرفوض",
@@ -394,7 +416,8 @@
       "healthcare": "الرعاية الصحية",
       "foodBeverage": "الأغذية والمشروبات",
       "logistics": "الخدمات اللوجستية"
-    }
+    },
+    "appNotFound": "لم يتم العثور على الطلب."
   },
   "gapAnalysis": {
     "title": "تحليل جاهزية ISO",
@@ -815,7 +838,16 @@
     "clientAwaitingApproval": "دفع هذا العميل وهو في انتظار موافقتك.",
     "countryOptional": "الدولة (اختياري)",
     "countryPlaceholder": "مثال: الإمارات العربية المتحدة",
-    "filterByCountry": "تصفية حسب الدولة…"
+    "filterByCountry": "تصفية حسب الدولة…",
+    "paymentStatusLabel": "حالة الدفع",
+    "paymentStatusNotSet": "غير محدد",
+    "paymentStatus_paid": "مدفوع",
+    "paymentStatus_paidCard": "مدفوع — بطاقة ائتمان/خصم",
+    "paymentStatus_paidCash": "مدفوع — نقداً",
+    "paymentStatus_paidBank": "مدفوع — تحويل بنكي",
+    "paymentStatus_paidWith": "مدفوع — {{method}}",
+    "filesSelected": "تم اختيار {{count}} ملف — بحد أقصى {{max}} ميجابايت لكل ملف.",
+    "docUploadPartialFailed": "تم الحفظ، لكن تعذّر رفع {{count}} مستند ({{files}}). يجب ألا يتجاوز حجم الملف {{max}} ميجابايت — حاول مرة أخرى من نموذج التعديل."
   },
   "certBody": {
     "addBody": "إضافة هيئة تصديق",
@@ -1063,7 +1095,8 @@
     "groupBodies": "جهات المنح",
     "groupReports": "التقارير",
     "groupAdmin": "الإدارة",
-    "groupReferrals": "Referrals"
+    "groupReferrals": "Referrals",
+    "reset": "إعادة تعيين"
   },
   "userFields": {
     "title": "حقول المستخدم المخصصة",
@@ -1435,5 +1468,48 @@
     "titleRequired": "العنوان مطلوب.",
     "bodyRequired": "نص الاتفاقية مطلوب.",
     "termInvalid": "يجب أن تتراوح المدة بين 1 و120 شهرًا."
+  },
+  "adminBilling": {
+    "title": "الفواتير والإيصالات",
+    "subtitle": "أنشئ وأصدر الفواتير وإيصالات الدفع، وراجع كل ما تمت فوترته حتى الآن.",
+    "refresh": "تحديث",
+    "newInvoice": "فاتورة جديدة",
+    "newReceipt": "إيصال جديد",
+    "totalInvoiced": "إجمالي الفواتير",
+    "totalPaid": "إجمالي المدفوع",
+    "outstanding": "المبلغ المستحق",
+    "invoiceCount": "الفواتير",
+    "receiptCount": "الإيصالات",
+    "tabInvoices": "الفواتير",
+    "tabReceipts": "الإيصالات",
+    "searchPlaceholder": "ابحث بالرقم أو اسم العميل أو البريد الإلكتروني...",
+    "allStatuses": "كل الحالات",
+    "noInvoices": "لا توجد فواتير بعد",
+    "noInvoicesHint": "أصدر أول فاتورة عبر زر «فاتورة جديدة» أعلاه.",
+    "noReceipts": "لا توجد إيصالات دفع بعد",
+    "noReceiptsHint": "سجّل دفعة على فاتورة لإنشاء إيصال.",
+    "noMatches": "لا توجد نتائج مطابقة للفلاتر",
+    "colNumber": "رقم الفاتورة",
+    "colClient": "العميل",
+    "colDescription": "الوصف",
+    "colIssued": "تاريخ الإصدار",
+    "colDue": "تاريخ الاستحقاق",
+    "colTotal": "الإجمالي",
+    "colPaid": "المدفوع",
+    "colStatus": "الحالة",
+    "colActions": "الإجراءات",
+    "rColNumber": "رقم الإيصال",
+    "rColCustomer": "العميل",
+    "rColAmount": "المبلغ",
+    "rColMethod": "طريقة الدفع",
+    "rColDate": "تاريخ الدفع",
+    "rColInvoice": "الفاتورة",
+    "findApplication": "ابحث عن طلب",
+    "findApplicationPlaceholder": "اكتب اسم شركة أو عميل أو معيار ISO لتصفية القائمة",
+    "selectApplication": "الطلب",
+    "noApplicationLink": "غير مرتبط بأي طلب",
+    "alreadyInvoiced": "تمت فوترته",
+    "emailOptInHint": "اتركه غير مفعّل ما لم تكن تنوي إرسال البريد إلى العميل الآن. يُحفظ ملف PDF دائماً ويمكن تنزيله وإرساله لاحقاً.",
+    "downloadFailed": "تعذّر تنزيل المستند."
   }
 }

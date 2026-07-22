@@ -26,4 +26,15 @@ export default defineConfig([
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
     },
   },
+  {
+    // api/ and the build config run on Node, not in the browser. Without this
+    // every use of process.env or Buffer in a serverless handler was reported
+    // as no-undef — a whole class of noise that hid real findings and blocked
+    // ever turning on CERTIFYCX_BLOCK_ON_LINT.
+    files: ['api/**/*.js', 'vite.config.js', 'seed.js'],
+    languageOptions: {
+      globals: { ...globals.node },
+      sourceType: 'module',
+    },
+  },
 ])

@@ -4,6 +4,7 @@ import { Building2, X } from 'lucide-react';
 import { Input, Select, Button, Autocomplete } from './ui/FormElements';
 import { getRegionFromCountryAsync } from '../utils/roles';
 import { supabase } from '../lib/supabase';
+import { apiPost } from '../lib/apiClient';
 import './ProfileCompletionModal.css';
 
 const EMPLOYEE_RANGES = ['1-10', '11-50', '51-200', '201-500', '501-1000', '1000+'];
@@ -48,26 +49,19 @@ export default function ProfileCompletionModal({ user, onComplete, onSkip }) {
     setSaving(true);
     try {
       const region = await getRegionFromCountryAsync(formData.country, supabase);
-      const res = await fetch('/api/user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'update-profile',
-          userId: user.id,
-          company_name: formData.company_name,
-          region: region || null,
-          activity: formData.activity,
-          country: formData.country,
-          number_of_employees: formData.number_of_employees,
-          contact_number: formData.contact_number,
-        }),
+      // apiPost attaches the access token; /api/user now rejects anonymous
+      // profile writes. `region` is ignored for a self-edit and re-derived
+      // server-side from the country, which lands on the same value.
+      await apiPost('/api/user', {
+        action: 'update-profile',
+        userId: user.id,
+        company_name: formData.company_name,
+        region: region || null,
+        activity: formData.activity,
+        country: formData.country,
+        number_of_employees: formData.number_of_employees,
+        contact_number: formData.contact_number,
       });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok || json.error) {
-        setError(json.error || 'Failed to save profile');
-        setSaving(false);
-        return;
-      }
       onComplete?.();
     } catch (err) {
       setError(err.message || 'Failed to save profile');

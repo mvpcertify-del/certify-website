@@ -34,6 +34,7 @@ import {
   FormInput,
   ClipboardList,
   Briefcase,
+  Receipt,
 } from 'lucide-react';
 import BrandLogo from '../ui/BrandLogo';
 import LanguageSwitcher from '../LanguageSwitcher';
@@ -63,6 +64,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     { path: '/admin/commission-tiers', labelKey: 'nav.commissionTiers', icon: TrendingUp, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN] },
     { path: '/admin/consultancies', labelKey: 'nav.consultancies', icon: Briefcase, permissions: [PERMISSIONS.MANAGE_USERS] },
     { path: '/admin/sales', labelKey: 'nav.sales', icon: CircleDollarSign, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN] },
+    { path: '/admin/billing', labelKey: 'nav.billing', icon: Receipt, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN, ROLES.REGIONAL_ADMIN] },
     { path: '/admin/users', labelKey: 'nav.users', icon: Users, permissions: [PERMISSIONS.CREATE_ADMINS, PERMISSIONS.MANAGE_AUDITORS] },
     { path: '/admin/shareable-links', labelKey: 'nav.shareableLinks', icon: Link2, permissions: [PERMISSIONS.MANAGE_USERS] },
     { path: '/admin/registrations', labelKey: 'nav.registrations', icon: UserPlus, permissions: [PERMISSIONS.MANAGE_USERS] },

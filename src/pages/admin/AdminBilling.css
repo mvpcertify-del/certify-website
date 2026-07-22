@@ -1,0 +1,353 @@
+/* ============================================
+   Admin — Billing (Invoices & Receipts)
+   ============================================
+   Colours come from the semantic custom properties in src/index.css, which are
+   redefined under :root[data-theme="light"] — so nothing here needs a light
+   override of its own. Logical properties (start/end, margin-inline) keep the
+   layout correct under the Arabic RTL locale. */
+
+.adbill__header-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+/* ---- Alerts ---- */
+.adbill__alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-base);
+}
+
+.adbill__alert p {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.adbill__alert-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.adbill__alert--error {
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger);
+  color: var(--color-danger);
+}
+
+.adbill__alert--info {
+  background: var(--color-accent-light);
+  border: 1px solid rgba(62, 207, 142, 0.35);
+  color: var(--color-accent-text);
+}
+
+/* ---- Summary strip ---- */
+.adbill__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--spacing-base);
+  margin-bottom: var(--spacing-lg);
+}
+
+.adbill__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 18px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  min-width: 0;
+}
+
+.adbill__stat-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.adbill__stat-value {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.adbill__stat--money .adbill__stat-value {
+  font-size: var(--font-size-xl);
+  color: var(--color-accent);
+}
+
+.adbill__stat--due .adbill__stat-value {
+  font-size: var(--font-size-xl);
+  color: var(--color-warning);
+}
+
+/* ---- Tabs ---- */
+.adbill__tabs {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-base);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--spacing-sm);
+  overflow-x: auto;
+}
+
+.adbill__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  font-family: var(--font-family);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+}
+
+.adbill__tab:hover {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
+
+.adbill__tab--active {
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+}
+
+/* ---- Filters ---- */
+.adbill__filters {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+  flex-wrap: wrap;
+}
+
+.adbill__search {
+  position: relative;
+  flex: 1;
+  min-width: 220px;
+}
+
+.adbill__search-icon {
+  position: absolute;
+  inset-inline-start: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-tertiary);
+  pointer-events: none;
+}
+
+.adbill__search-input {
+  width: 100%;
+  padding-block: 10px;
+  padding-inline: 42px 14px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  transition: border-color var(--transition-fast);
+}
+
+.adbill__search-input:focus,
+.adbill__status-filter:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.adbill__search-input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.adbill__status-filter {
+  padding: 10px 14px;
+  min-width: 170px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  cursor: pointer;
+}
+
+.adbill__loading {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  padding: var(--spacing-lg);
+}
+
+/* ---- Empty state ---- */
+.adbill__empty {
+  text-align: center;
+  padding: 60px var(--spacing-lg);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+}
+
+.adbill__empty h3 {
+  font-size: var(--font-size-lg);
+  color: var(--color-text-primary);
+  margin-top: var(--spacing-base);
+  margin-bottom: var(--spacing-xs);
+}
+
+.adbill__empty p {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* ---- Table ----
+   The wrapper owns the horizontal scroll so a wide table never pushes the page
+   sideways on a phone. */
+.adbill__table-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+}
+
+.adbill__table {
+  width: 100%;
+  min-width: 1040px;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.adbill__table thead th {
+  text-align: start;
+  padding: 12px 16px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.adbill__table tbody td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  vertical-align: top;
+}
+
+.adbill__table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.adbill__table tbody tr:hover {
+  background: var(--color-bg-surface-hover);
+}
+
+.adbill__strong {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.adbill__money {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.adbill__desc {
+  max-width: 260px;
+  overflow-wrap: anywhere;
+}
+
+.adbill__client {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 160px;
+}
+
+.adbill__client-name {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.adbill__client-sub {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.adbill__row-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
+}
+
+/* ---- Modal forms ---- */
+.adbill__form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.adbill__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+}
+
+.adbill__check {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.adbill__hint {
+  margin: -8px 0 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  line-height: 1.5;
+}
+
+.adbill__form-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: flex-end;
+  margin-top: var(--spacing-xs);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  .adbill__summary {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+
+  .adbill__stat-value,
+  .adbill__stat--money .adbill__stat-value,
+  .adbill__stat--due .adbill__stat-value {
+    font-size: var(--font-size-lg);
+  }
+
+  .adbill__header-actions {
+    width: 100%;
+  }
+}

@@ -51,7 +51,10 @@
     "add": "Add",
     "create": "Create",
     "clear": "Clear [DRAFT]",
-    "gotIt": "Got it"
+    "gotIt": "Got it",
+    "accessDenied": "Доступ запрещён.",
+    "allStatuses": "Все статусы",
+    "send": "Отправить"
   },
   "languageSuggestion": {
     "title": "Сменить язык?",
@@ -108,7 +111,8 @@
     "menu": "Меню",
     "signUp": "Регистрация",
     "partnerContract": "Партнёрское соглашение",
-    "consultancies": "Консалтинговые партнёры"
+    "consultancies": "Консалтинговые партнёры",
+    "billing": "Биллинг"
   },
   "landing": {
     "iafBadge": "Партнёры аккредитованных органов по сертификации IAF",
@@ -269,7 +273,25 @@
     "nextStep1": "Open the email above and click the verification link.",
     "nextStep2": "Log in to your account.",
     "nextStep3": "Our certification team will contact you to guide your next steps.",
-    "nextStepsContact": "Questions? Email us at"
+    "nextStepsContact": "Questions? Email us at",
+    "auditorStandards": "Стандарты",
+    "auditorStandardsPlaceholder": "Выберите стандарты…",
+    "auditorLevel": "Уровень сертификата",
+    "auditorLevelPlaceholder": "Выберите уровни…",
+    "auditorSectors": "Секторы (коды IAF)",
+    "auditorSectorsPlaceholder": "Выберите секторы…",
+    "auditorCertificates": "Сертификаты",
+    "auditorAuditLog": "Журнал аудитов",
+    "mobileNumber": "Номер мобильного",
+    "auditorDocsSizeNote": "Каждый файл должен быть не более {{max}} МБ.",
+    "validationAuditorQualifications": "Выберите хотя бы один стандарт и один уровень сертификата.",
+    "auditorAttachWarning": "Аккаунт создан, но не удалось прикрепить: {{files}}. Отправьте их на support@certify.cx.",
+    "fullName": "Полное имя",
+    "chooseNewPassword": "Выберите новый пароль для вашего аккаунта.",
+    "invalidResetLink": "Недействительная или устаревшая ссылка",
+    "invalidResetLinkDesc": "Эта ссылка для сброса пароля недействительна или устарела. Запросите новую.",
+    "passwordTooShort": "Пароль должен содержать не менее 6 символов.",
+    "redirectingToSignIn": "Перенаправляем вас на вход…"
   },
   "unauthorized": {
     "accessDenied": "Доступ запрещён",
@@ -380,7 +402,8 @@
       "healthcare": "Здравоохранение",
       "foodBeverage": "Продукты питания и напитки",
       "logistics": "Логистика"
-    }
+    },
+    "appNotFound": "Заявка не найдена."
   },
   "gapAnalysis": {
     "title": "Анализ пробелов готовности к ISO",
@@ -801,7 +824,16 @@
     "clientAwaitingApproval": "This client has paid and is awaiting your approval.",
     "countryOptional": "Country (optional)",
     "countryPlaceholder": "e.g. United Arab Emirates",
-    "filterByCountry": "Filter by country…"
+    "filterByCountry": "Filter by country…",
+    "paymentStatusLabel": "Статус оплаты",
+    "paymentStatusNotSet": "Не указано",
+    "paymentStatus_paid": "Оплачено",
+    "paymentStatus_paidCard": "Оплачено — банковской картой",
+    "paymentStatus_paidCash": "Оплачено — наличными",
+    "paymentStatus_paidBank": "Оплачено — банковским переводом",
+    "paymentStatus_paidWith": "Оплачено — {{method}}",
+    "filesSelected": "Выбрано файлов: {{count}} — не более {{max}} МБ каждый.",
+    "docUploadPartialFailed": "Сохранено, но не удалось загрузить документов: {{count}} ({{files}}). Размер файла не должен превышать {{max}} МБ — повторите попытку в форме редактирования."
   },
   "certBody": {
     "addBody": "Добавить орган по сертификации",
@@ -1036,7 +1068,8 @@
     "groupBodies": "Органы по сертификации",
     "groupReports": "Отчёты",
     "groupAdmin": "Администрирование",
-    "groupReferrals": "Referrals"
+    "groupReferrals": "Referrals",
+    "reset": "Сбросить"
   },
   "userFields": {
     "title": "Пользовательские поля",
@@ -1408,5 +1441,48 @@
     "titleRequired": "Укажите название.",
     "bodyRequired": "Введите текст соглашения.",
     "termInvalid": "Срок должен быть от 1 до 120 месяцев."
+  },
+  "adminBilling": {
+    "title": "Счета и квитанции",
+    "subtitle": "Создавайте и выставляйте счета и квитанции об оплате, просматривайте всю выставленную сумму.",
+    "refresh": "Обновить",
+    "newInvoice": "Новый счёт",
+    "newReceipt": "Новая квитанция",
+    "totalInvoiced": "Всего выставлено",
+    "totalPaid": "Всего оплачено",
+    "outstanding": "К оплате",
+    "invoiceCount": "Счета",
+    "receiptCount": "Квитанции",
+    "tabInvoices": "Счета",
+    "tabReceipts": "Квитанции",
+    "searchPlaceholder": "Поиск по номеру, имени клиента или email...",
+    "allStatuses": "Все статусы",
+    "noInvoices": "Счетов пока нет",
+    "noInvoicesHint": "Выставьте первый счёт кнопкой «Новый счёт» выше.",
+    "noReceipts": "Квитанций об оплате пока нет",
+    "noReceiptsHint": "Зарегистрируйте оплату по счёту, чтобы создать квитанцию.",
+    "noMatches": "Нет результатов по заданным фильтрам",
+    "colNumber": "№ счёта",
+    "colClient": "Клиент",
+    "colDescription": "Описание",
+    "colIssued": "Выставлен",
+    "colDue": "Срок оплаты",
+    "colTotal": "Итого",
+    "colPaid": "Оплачено",
+    "colStatus": "Статус",
+    "colActions": "Действия",
+    "rColNumber": "№ квитанции",
+    "rColCustomer": "Плательщик",
+    "rColAmount": "Сумма",
+    "rColMethod": "Способ",
+    "rColDate": "Дата оплаты",
+    "rColInvoice": "Счёт",
+    "findApplication": "Найти заявку",
+    "findApplicationPlaceholder": "Введите компанию, клиента или стандарт ISO, чтобы сузить список",
+    "selectApplication": "Заявка",
+    "noApplicationLink": "Не связано с заявкой",
+    "alreadyInvoiced": "счёт уже выставлен",
+    "emailOptInHint": "Оставьте выключенным, если не собираетесь отправлять письмо клиенту прямо сейчас. PDF всегда сохраняется и может быть скачан и отправлен позже.",
+    "downloadFailed": "Не удалось скачать документ."
   }
 }
