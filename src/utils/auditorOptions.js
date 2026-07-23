@@ -7,8 +7,15 @@
 // two screens each kept their own list they would drift the first time a
 // standard is added, and the data would stop being comparable.
 
-import { ISO_STANDARD_OPTIONS } from './isoStandards';
-import { IAF_SECTOR_CODES } from './iafCodes';
+// NOTE: the .js extensions are REQUIRED, not stylistic. api/user.js and
+// api/create-user.js import this module, and those run as Vercel serverless
+// functions under Node's native ESM resolver, which does not guess extensions.
+// Vite resolves './isoStandards' happily for the browser, so an extensionless
+// specifier here builds and lints clean and then crashes both endpoints in
+// production with FUNCTION_INVOCATION_FAILED — taking down Edit User Role and
+// every signup at once. Keep the extensions on anything reachable from api/.
+import { ISO_STANDARD_OPTIONS } from './isoStandards.js';
+import { IAF_SECTOR_CODES } from './iafCodes.js';
 
 // The client's exact four levels, in their order.
 //
