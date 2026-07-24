@@ -106,6 +106,7 @@ export default function CertificationRequests() {
           <option value="all">{t('admin.allStatuses')}</option>
           <option value="pending">{t('admin.pending')}</option>
           <option value="awaiting_payment">{t('admin.awaitingPayment')}</option>
+          <option value="payment_received">{t('admin.paymentReceived')}</option>
           <option value="audit_scheduled">{t('admin.auditScheduled')}</option>
           <option value="in_review">{t('admin.inReview')}</option>
           <option value="approved">{t('admin.approved')}</option>

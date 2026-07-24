@@ -8,6 +8,9 @@ const variantMap = {
   paid: 'success',
   converted: 'success',
   awaiting_payment: 'warning',
+  // Money has arrived but the certification work has not started yet — green,
+  // because from the client's point of view the blocking step is done.
+  payment_received: 'success',
   pending: 'warning',
   needs_changes: 'warning',
   signed_up: 'info',
@@ -32,6 +35,7 @@ const labelMap = {
   converted: 'Converted',
   signed_up: 'Signed Up',
   awaiting_payment: 'Awaiting Payment',
+  payment_received: 'Payment Received',
   pending: 'Pending',
   needs_changes: 'Needs Changes',
   audit_scheduled: 'Audit Scheduled',

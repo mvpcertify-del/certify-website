@@ -964,6 +964,11 @@ export default function ApplicationDetails() {
                 <Select value={status} onChange={(e) => setStatus(e.target.value)}>
                   <option value="pending">{t('admin.pending')}</option>
                   <option value="awaiting_payment">{t('admin.awaitingPayment')}</option>
+                  {/* Client request 24 Jul: a stage between "waiting for the
+                      money" and "the work has started". Distinct from the
+                      Payment Status field below — that records HOW they paid;
+                      this records where the ORDER has got to. */}
+                  <option value="payment_received">{t('admin.paymentReceived')}</option>
                   <option value="in_review">{t('admin.inReview')}</option>
                   <option value="audit_scheduled">{t('admin.auditScheduled')}</option>
                   <option value="audited">{t('admin.audited')}</option>
