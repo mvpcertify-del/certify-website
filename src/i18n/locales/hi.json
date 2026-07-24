@@ -112,7 +112,11 @@
     "signUp": "साइन अप करें",
     "partnerContract": "साझेदार अनुबंध",
     "consultancies": "कंसल्टेंसी",
-    "billing": "बिलिंग"
+    "billing": "बिलिंग",
+    "myAudits": "मेरे ऑडिट",
+    "myReviews": "मेरी समीक्षाएँ",
+    "kindViewOnly": "केवल देखें",
+    "kindDataEntry": "डेटा प्रविष्टि"
   },
   "landing": {
     "iafBadge": "IAF मान्यता प्राप्त प्रमाणन निकाय भागीदार",
@@ -376,7 +380,9 @@
     "failedDelete": "दस्तावेज़ हटाने में विफल।",
     "failedUpload": "दस्तावेज़ अपलोड करने में विफल: {{error}}",
     "yourCertBody": "आपका प्रमाणन निकाय",
-    "accreditedBy": "मान्यता प्राप्त"
+    "accreditedBy": "मान्यता प्राप्त",
+    "browseCertifications": "प्रमाणपत्र देखें",
+    "retakeGapAnalysis": "गैप विश्लेषण दोबारा करें"
   },
   "application": {
     "title": "नया ISO प्रमाणन आवेदन",
@@ -605,7 +611,10 @@
     "addReferralHint": "Enter the details of the client you're referring. They'll appear in your list as pending until they sign up.",
     "referralAdded": "Referral added",
     "noSelfReferral": "You can't refer yourself.",
-    "alreadyReferred": "You've already referred this email."
+    "alreadyReferred": "You've already referred this email.",
+    "yourDiscountCode": "आपका डिस्काउंट कोड",
+    "discountCodeHint": "यह कोड अपने ग्राहकों के साथ साझा करें। उन्हें 10% छूट मिलेगी और आपको आपका कमीशन अपने आप मिलेगा।",
+    "codePending": "आपका डिस्काउंट कोड बनाया जा रहा है। कृपया थोड़ी देर में रिफ्रेश करें या सहायता से संपर्क करें।"
   },
   "register": {
     "invalidType": "अमान्य पंजीकरण प्रकार",

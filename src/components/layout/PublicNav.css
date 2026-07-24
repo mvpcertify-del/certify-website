@@ -9,7 +9,7 @@
   left: 0;
   right: 0;
   z-index: 100;
-  background: rgba(17, 18, 23, 0.85);
+  background: var(--color-nav-translucent);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--color-border);
 }
@@ -54,8 +54,8 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--color-nav-control);
+  border: 1px solid var(--color-nav-control-border);
   border-radius: var(--radius-md);
   color: var(--color-text-primary);
   cursor: pointer;
@@ -64,7 +64,34 @@
 }
 
 .pubnav__toggle:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-nav-control-hover);
+}
+
+/* Theme (dark/light) toggle. Matches the hamburger's treatment so the two sit
+   together on mobile without looking like different control families. */
+.pubnav__icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--color-nav-control);
+  border: 1px solid var(--color-nav-control-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast, 150ms ease);
+  flex-shrink: 0;
+}
+
+.pubnav__icon-btn:hover {
+  background: var(--color-nav-control-hover);
+  color: var(--color-text-primary);
+}
+
+.pubnav__mobile-actions .pubnav__icon-btn {
+  width: 40px;
+  height: 40px;
 }
 
 /* Mobile dropdown menu (rendered only when open) */
@@ -73,7 +100,7 @@
   flex-direction: column;
   gap: var(--spacing-sm);
   padding: var(--spacing-sm) var(--spacing-lg) var(--spacing-lg);
-  background: rgba(17, 18, 23, 0.98);
+  background: var(--color-nav-translucent-solid);
   border-top: 1px solid var(--color-border);
 }
 

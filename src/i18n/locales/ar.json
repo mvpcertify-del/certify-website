@@ -112,7 +112,11 @@
     "signUp": "إنشاء حساب",
     "partnerContract": "اتفاقية الشريك",
     "consultancies": "الشركات الاستشارية",
-    "billing": "الفوترة"
+    "billing": "الفوترة",
+    "myAudits": "عمليات التدقيق الخاصة بي",
+    "myReviews": "مراجعاتي",
+    "kindViewOnly": "للعرض فقط",
+    "kindDataEntry": "إدخال البيانات"
   },
   "landing": {
     "iafBadge": "شركاء من هيئات منح الشهادات المعتمدة من IAF",
@@ -390,7 +394,9 @@
     "failedDelete": "فشل حذف المستند.",
     "failedUpload": "فشل رفع المستند: {{error}}",
     "yourCertBody": "هيئة التصديق الخاصة بك",
-    "accreditedBy": "معتمدة من قبل"
+    "accreditedBy": "معتمدة من قبل",
+    "browseCertifications": "تصفح الشهادات",
+    "retakeGapAnalysis": "إعادة تحليل الفجوات"
   },
   "application": {
     "title": "طلب شهادة ISO جديد",
@@ -619,7 +625,10 @@
     "addReferralHint": "Enter the details of the client you're referring. They'll appear in your list as pending until they sign up.",
     "referralAdded": "Referral added",
     "noSelfReferral": "You can't refer yourself.",
-    "alreadyReferred": "You've already referred this email."
+    "alreadyReferred": "You've already referred this email.",
+    "yourDiscountCode": "رمز الخصم الخاص بك",
+    "discountCodeHint": "شارك هذا الرمز مع عملائك. يحصلون على خصم 10٪ وتحصل أنت على عمولتك تلقائياً.",
+    "codePending": "يتم إنشاء رمز الخصم الخاص بك. يرجى التحديث بعد قليل أو الاتصال بالدعم إذا لم يظهر."
   },
   "register": {
     "invalidType": "نوع تسجيل غير صالح",

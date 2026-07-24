@@ -333,7 +333,15 @@ export default function Dashboard() {
                   <FileCheck2 size={48} color="var(--text-muted)" style={{ margin: '0 auto 16px' }} />
                   <h3 style={{ marginBottom: '8px' }}>{t('dashboard.takeGapAnalysis')}</h3>
                   <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>{t('dashboard.takeGapAnalysisDesc')}</p>
-                  <Button onClick={() => navigate('/client/gap-analysis')}>{t('dashboard.takeGapAnalysisBtn')}</Button>
+                  {/* The gap analysis is a recommendation, not a gate. Before
+                      this second button a new client's only option was the
+                      quiz — there was no route from the dashboard to the
+                      certification catalogue at all (24 Jul: "cannot access
+                      any certifications"). */}
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <Button onClick={() => navigate('/client/gap-analysis')}>{t('dashboard.takeGapAnalysisBtn')}</Button>
+                    <Button variant="secondary" onClick={() => navigate('/certifications')}>{t('dashboard.browseCertifications')}</Button>
+                  </div>
                 </>
               ) : gapScore < 60 ? (
                 <>
@@ -345,6 +353,14 @@ export default function Dashboard() {
                   <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>
                     {t('dashboard.needsWork')}
                   </p>
+                  {/* This branch previously rendered NO action at all: a client
+                      who scored under 60 was left on a page with nothing to
+                      click and no way to buy. A low score is advisory — it must
+                      not block the purchase. */}
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <Button onClick={() => navigate('/certifications')}>{t('dashboard.browseCertifications')}</Button>
+                    <Button variant="secondary" onClick={() => navigate('/client/gap-analysis')}>{t('dashboard.retakeGapAnalysis')}</Button>
+                  </div>
                 </>
               ) : (
                 <>

@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Menu, X, User, LogOut, LayoutDashboard, ChevronDown } from 'lucide-react';
+import { Menu, X, User, LogOut, LayoutDashboard, ChevronDown, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import LanguageSwitcher from '../LanguageSwitcher';
 import BrandLogo from '../ui/BrandLogo';
 import './PublicNav.css';
@@ -18,6 +19,10 @@ import './PublicNav.css';
 export default function PublicNav() {
   const { t } = useTranslation();
   const { user, loading, logout, getRoleDashboard } = useAuth();
+  // The theme toggle existed only inside the dashboard shell (TopBar), so a
+  // visitor on the public site had no way to switch to dark mode at all — and
+  // no way back once they had. It belongs on both.
+  const { isLight, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -61,6 +66,16 @@ export default function PublicNav() {
           <a href={anchor('standards')} className="pubnav__link">{t('nav.standards')}</a>
           <a href={anchor('benefits')} className="pubnav__link">{t('nav.benefits')}</a>
           <LanguageSwitcher variant="landing" />
+          <button
+            type="button"
+            className="pubnav__icon-btn"
+            onClick={toggleTheme}
+            title={isLight ? t('common.darkMode') : t('common.lightMode')}
+            aria-label={isLight ? t('common.darkMode') : t('common.lightMode')}
+            aria-pressed={isLight}
+          >
+            {isLight ? <Moon size={18} /> : <Sun size={18} />}
+          </button>
           {isLoggedIn ? (
             <div className="pubnav__profile" ref={profileRef}>
               <button
@@ -114,6 +129,16 @@ export default function PublicNav() {
             can override the country default without opening the menu. */}
         <div className="pubnav__mobile-actions">
           <LanguageSwitcher variant="landing" />
+          <button
+            type="button"
+            className="pubnav__icon-btn"
+            onClick={toggleTheme}
+            title={isLight ? t('common.darkMode') : t('common.lightMode')}
+            aria-label={isLight ? t('common.darkMode') : t('common.lightMode')}
+            aria-pressed={isLight}
+          >
+            {isLight ? <Moon size={18} /> : <Sun size={18} />}
+          </button>
           <button
             className="pubnav__toggle"
             onClick={() => setMobileOpen((o) => !o)}

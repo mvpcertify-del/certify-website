@@ -112,7 +112,11 @@
     "signUp": "注册",
     "partnerContract": "合作伙伴协议",
     "consultancies": "咨询伙伴",
-    "billing": "账单"
+    "billing": "账单",
+    "myAudits": "我的审核",
+    "myReviews": "我的复审",
+    "kindViewOnly": "仅查看",
+    "kindDataEntry": "数据录入"
   },
   "landing": {
     "iafBadge": "IAF 认可认证机构合作伙伴",
@@ -376,7 +380,9 @@
     "failedDelete": "文件删除失败。",
     "failedUpload": "文件上传失败：{{error}}",
     "yourCertBody": "您的认证机构",
-    "accreditedBy": "认可方"
+    "accreditedBy": "认可方",
+    "browseCertifications": "浏览认证",
+    "retakeGapAnalysis": "重新进行差距分析"
   },
   "application": {
     "title": "新建 ISO 认证申请",
@@ -605,7 +611,10 @@
     "addReferralHint": "Enter the details of the client you're referring. They'll appear in your list as pending until they sign up.",
     "referralAdded": "Referral added",
     "noSelfReferral": "You can't refer yourself.",
-    "alreadyReferred": "You've already referred this email."
+    "alreadyReferred": "You've already referred this email.",
+    "yourDiscountCode": "您的折扣码",
+    "discountCodeHint": "将此代码分享给您的客户。他们可享受九折优惠，您将自动获得佣金。",
+    "codePending": "您的折扣码正在生成中。请稍后刷新或联系支持团队。"
   },
   "register": {
     "invalidType": "无效的注册类型",

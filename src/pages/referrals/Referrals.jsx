@@ -25,9 +25,26 @@ export default function Referrals() {
   const [addError, setAddError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Referral code = first 8 chars of user ID (unique enough, short for sharing)
-  const referralCode = user?.id?.slice(0, 8) || '';
-  const referralLink = `${window.location.origin}/signup?ref=${referralCode}`;
+  // The partner's real, stored code (phase25 profiles.referral_code).
+  //
+  // This used to be `user.id.slice(0, 8)` — computed here in the browser,
+  // stored nowhere, and resolved server-side by scanning the first 1000 users
+  // for a UUID prefix. Partner #1001 could never be resolved, and a prefix
+  // collision would pay the wrong partner. It also could not be typed into
+  // the checkout coupon box, so it discounted nobody.
+  //
+  // The fallback keeps the screen usable for a partner whose row predates the
+  // migration; it cannot be redeemed, which is why it is labelled as pending.
+  const referralCode = user?.referral_code || '';
+  const codeReady = Boolean(referralCode);
+
+  // The code points at CHECKOUT, not at signup. The old link sent buyers to
+  // /signup, but the live funnel creates the account during payment — so a
+  // buyer who followed it registered first and then bought through a path
+  // that recorded no referral at all.
+  const referralLink = codeReady
+    ? `${window.location.origin}/checkout?ref=${encodeURIComponent(referralCode)}`
+    : '';
 
   const fetchReferrals = useCallback(async () => {
     if (!user?.id) return;
@@ -217,23 +234,35 @@ export default function Referrals() {
         <StatCard title={t('referrals.totalEarnings')} value={`$${totalEarnings.toFixed(2)}`} icon={DollarSign} iconColor="#f59e0b" />
       </div>
 
-      {/* Referral Link */}
+      {/* Discount code — the thing the client asked to be "activated in the
+          referral Dashboard to enable them share with their clients". One
+          code: the buyer types it for their discount, and it credits us. */}
       <div className="referral-link-card">
-        <div className="referral-link-card__title">{t('referrals.yourReferralLink')}</div>
-        <div className="referral-link-card__row">
-          <input
-            className="referral-link-card__input"
-            value={referralLink}
-            readOnly
-            onClick={(e) => e.target.select()}
-          />
-          <button className="referral-link-card__btn" onClick={handleCopy}>
-            {copied ? <><Check size={16} /> {t('common.copied')}</> : <><Copy size={16} /> {t('referrals.copyLink')}</>}
-          </button>
-        </div>
-        <p className="referral-link-card__hint">
-          {t('referrals.shareLinkHint')}
-        </p>
+        <div className="referral-link-card__title">{t('referrals.yourDiscountCode')}</div>
+        {codeReady ? (
+          <>
+            <div className="referral-code-display">{referralCode}</div>
+            <p className="referral-link-card__hint">{t('referrals.discountCodeHint')}</p>
+
+            <div className="referral-link-card__title" style={{ marginTop: '1.25rem' }}>
+              {t('referrals.yourReferralLink')}
+            </div>
+            <div className="referral-link-card__row">
+              <input
+                className="referral-link-card__input"
+                value={referralLink}
+                readOnly
+                onClick={(e) => e.target.select()}
+              />
+              <button className="referral-link-card__btn" onClick={handleCopy}>
+                {copied ? <><Check size={16} /> {t('common.copied')}</> : <><Copy size={16} /> {t('referrals.copyLink')}</>}
+              </button>
+            </div>
+            <p className="referral-link-card__hint">{t('referrals.shareLinkHint')}</p>
+          </>
+        ) : (
+          <p className="referral-link-card__hint">{t('referrals.codePending')}</p>
+        )}
       </div>
 
       {/* Commission Tier */}

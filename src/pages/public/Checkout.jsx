@@ -45,6 +45,12 @@ function CheckoutForm() {
   const staff = Math.max(0, Math.floor(Number(searchParams.get('staff')) || 0));
   const locations = Math.max(0, Math.floor(Number(searchParams.get('locations')) || 0));
   const cancelled = searchParams.get('cancelled') === '1';
+  // A partner's share link carries their code here. This page previously read
+  // only iso/staff/locations, so every sale that arrived through a partner
+  // link was recorded as if nobody had referred it — no discount for the
+  // buyer, no commission for the partner. Accept `coupon` as an alias so a
+  // single link works whichever of the two the partner was given.
+  const referralCode = (searchParams.get('ref') || searchParams.get('coupon') || '').trim();
 
   const isoConfig = getIsoBySlug(isoSlug);
   const isoCode = isoConfig?.code || 'ISO 9001';
@@ -106,6 +112,35 @@ function CheckoutForm() {
     }
   };
 
+  // Auto-apply the code from a partner's share link, so the buyer sees the
+  // referral discount on the total straight away instead of reaching the card
+  // form at full price and only being charged less afterwards. Runs once; a
+  // code the buyer types by hand still goes through validateCoupon above.
+  useEffect(() => {
+    if (!referralCode || coupon) return;
+    let cancelledFetch = false;
+    (async () => {
+      try {
+        const r = await fetch('/api/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'validate-coupon', code: referralCode }),
+        });
+        const data = await r.json();
+        if (!cancelledFetch && data.valid) {
+          setCoupon(data.coupon);
+          setCouponInput(data.coupon.code);
+          setCouponOpen(true);
+        }
+      } catch {
+        // A bad code in a link is not worth an error banner — the buyer can
+        // still purchase, just without the discount.
+      }
+    })();
+    return () => { cancelledFetch = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [referralCode]);
+
   const clearCoupon = () => {
     setCoupon(null);
     setCouponInput('');
@@ -159,6 +194,9 @@ function CheckoutForm() {
           additionalLocations: locations,
           paymentMethod,
           couponCode: coupon?.code || null,
+          // Sent separately from the coupon: the server applies whichever of
+          // the two saves the buyer more, and credits the partner either way.
+          referralCode: referralCode || null,
           contact: {
             name: form.name.trim(),
             email: form.email.trim(),

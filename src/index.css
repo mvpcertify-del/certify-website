@@ -44,6 +44,48 @@
   --color-neutral: #888888;
   --color-neutral-bg: rgba(136, 136, 136, 0.12);
 
+  /* Translucent surfaces for the blurred public header and its mobile menu.
+     These need a real rgba (backdrop-filter shows through), so they cannot be
+     expressed with the solid --color-bg-* variables and get their own pair.
+     Without them PublicNav.css hard-coded rgba(17,18,23,…), which meant the
+     public header stayed dark in light mode and the mobile menu rendered
+     near-black on a near-black page in dark mode. */
+  --color-nav-translucent: rgba(17, 18, 23, 0.85);
+  --color-nav-translucent-solid: rgba(17, 18, 23, 0.98);
+  --color-nav-control: rgba(255, 255, 255, 0.05);
+  --color-nav-control-hover: rgba(255, 255, 255, 0.10);
+  --color-nav-control-border: rgba(255, 255, 255, 0.10);
+
+  /* ---- Legacy variable aliases ----
+     Twenty variable names are used across the app that this file never
+     defined, so every one of them silently fell back to its hard-coded
+     literal — and those literals are all light-theme colours. That is why the
+     Main Dashboard cards rendered WHITE on the dark theme
+     (MainDashboard.css: `var(--color-surface, #fff)` — `--color-surface` does
+     not exist; the real name is `--color-bg-surface`). The same fault made
+     My Certificates blue-on-white and the Settings alerts light-on-dark.
+     Those without a fallback resolved to nothing at all, leaving elements
+     with no background or border.
+
+     Aliasing here fixes every call site at once and, because custom
+     properties resolve at use time, each alias automatically picks up the
+     light-theme override below — so they re-theme correctly with no
+     per-file duplication. New code should use the canonical names. */
+  --color-surface: var(--color-bg-surface);
+  --surface-color: var(--color-bg-surface);
+  --color-bg-base: var(--color-bg-primary);
+  --border-color: var(--color-border);
+  --text-muted: var(--color-text-tertiary);
+  --color-primary: var(--color-accent);
+  --color-error: var(--color-danger);
+  --danger-color: var(--color-danger);
+  --color-bg-error: var(--color-danger-bg);
+  --color-text-error: var(--color-danger);
+  --color-bg-success: var(--color-success-bg);
+  --color-text-success: var(--color-success);
+  --radius-base: var(--radius-md);
+  --transition-normal: 250ms ease;
+
   /* ---- Typography ---- */
   --font-family: 'Inter', -apple-system, system-ui, sans-serif;
   --font-size-xs: 0.75rem;
@@ -133,6 +175,15 @@
   --color-success-bg: rgba(5, 150, 105, 0.12);
   --color-neutral: #6b7280;
   --color-neutral-bg: rgba(107, 114, 128, 0.12);
+
+  /* Light-mode counterparts. The header becomes a frosted white bar instead of
+     staying dark, and its controls tint with the text colour rather than with
+     white-on-white (which was invisible). */
+  --color-nav-translucent: rgba(255, 255, 255, 0.85);
+  --color-nav-translucent-solid: rgba(255, 255, 255, 0.98);
+  --color-nav-control: rgba(26, 29, 33, 0.04);
+  --color-nav-control-hover: rgba(26, 29, 33, 0.08);
+  --color-nav-control-border: rgba(26, 29, 33, 0.12);
 
   /* Softer shadows read better on light backgrounds. */
   --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);

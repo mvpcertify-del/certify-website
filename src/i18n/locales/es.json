@@ -112,7 +112,11 @@
     "signUp": "Registrarse",
     "partnerContract": "Acuerdo de Socio",
     "consultancies": "Consultorías",
-    "billing": "Facturación"
+    "billing": "Facturación",
+    "myAudits": "Mis Auditorías",
+    "myReviews": "Mis Revisiones",
+    "kindViewOnly": "Solo lectura",
+    "kindDataEntry": "Entrada de datos"
   },
   "landing": {
     "iafBadge": "Socios de Organismos de Certificación Acreditados por IAF",
@@ -390,7 +394,9 @@
     "failedDelete": "Error al eliminar el documento.",
     "failedUpload": "Error al subir el documento: {{error}}",
     "yourCertBody": "Tu Organismo de Certificación",
-    "accreditedBy": "Acreditado Por"
+    "accreditedBy": "Acreditado Por",
+    "browseCertifications": "Ver Certificaciones",
+    "retakeGapAnalysis": "Repetir Análisis de Brechas"
   },
   "application": {
     "title": "Nueva solicitud de certificación ISO",
@@ -619,7 +625,10 @@
     "addReferralHint": "Enter the details of the client you're referring. They'll appear in your list as pending until they sign up.",
     "referralAdded": "Referral added",
     "noSelfReferral": "You can't refer yourself.",
-    "alreadyReferred": "You've already referred this email."
+    "alreadyReferred": "You've already referred this email.",
+    "yourDiscountCode": "Tu Código de Descuento",
+    "discountCodeHint": "Comparte este código con tus clientes. Ellos obtienen 10% de descuento y tú ganas tu comisión automáticamente.",
+    "codePending": "Tu código de descuento se está generando. Actualiza en un momento o contacta con soporte si no aparece."
   },
   "register": {
     "invalidType": "Tipo de registro inválido",

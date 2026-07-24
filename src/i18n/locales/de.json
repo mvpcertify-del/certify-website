@@ -112,7 +112,11 @@
     "signUp": "Registrieren",
     "partnerContract": "Partnervertrag",
     "consultancies": "Beratungspartner",
-    "billing": "Abrechnung"
+    "billing": "Abrechnung",
+    "myAudits": "Meine Audits",
+    "myReviews": "Meine Prüfungen",
+    "kindViewOnly": "Nur Ansicht",
+    "kindDataEntry": "Dateneingabe"
   },
   "landing": {
     "iafBadge": "IAF-akkreditierte Zertifizierungsstellen-Partner",
@@ -376,7 +380,9 @@
     "failedDelete": "Dokument konnte nicht gelöscht werden.",
     "failedUpload": "Dokument konnte nicht hochgeladen werden: {{error}}",
     "yourCertBody": "Ihre Zertifizierungsstelle",
-    "accreditedBy": "Akkreditiert durch"
+    "accreditedBy": "Akkreditiert durch",
+    "browseCertifications": "Zertifizierungen ansehen",
+    "retakeGapAnalysis": "Gap-Analyse wiederholen"
   },
   "application": {
     "title": "Neuer ISO-Zertifizierungsantrag",
@@ -605,7 +611,10 @@
     "addReferralHint": "Enter the details of the client you're referring. They'll appear in your list as pending until they sign up.",
     "referralAdded": "Referral added",
     "noSelfReferral": "You can't refer yourself.",
-    "alreadyReferred": "You've already referred this email."
+    "alreadyReferred": "You've already referred this email.",
+    "yourDiscountCode": "Ihr Rabattcode",
+    "discountCodeHint": "Teilen Sie diesen Code mit Ihren Kunden. Sie erhalten 10% Rabatt und Sie verdienen Ihre Provision automatisch.",
+    "codePending": "Ihr Rabattcode wird erstellt. Bitte aktualisieren Sie in Kürze oder wenden Sie sich an den Support."
   },
   "register": {
     "invalidType": "Ungültiger Registrierungstyp",

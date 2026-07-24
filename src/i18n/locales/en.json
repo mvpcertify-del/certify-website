@@ -112,7 +112,11 @@
     "signUp": "Sign Up",
     "partnerContract": "Partner Agreement",
     "consultancies": "Consultancies",
-    "billing": "Billing"
+    "billing": "Billing",
+    "myAudits": "My Audits",
+    "myReviews": "My Reviews",
+    "kindViewOnly": "View only",
+    "kindDataEntry": "Data entry"
   },
   "landing": {
     "iafBadge": "IAF Accredited Certification Bodies Partners",
@@ -390,7 +394,9 @@
     "failedDelete": "Failed to delete document.",
     "failedUpload": "Failed to upload document: {{error}}",
     "yourCertBody": "Your Certification Body",
-    "accreditedBy": "Accredited By"
+    "accreditedBy": "Accredited By",
+    "browseCertifications": "Browse Certifications",
+    "retakeGapAnalysis": "Retake Gap Analysis"
   },
   "application": {
     "title": "New ISO Certification Application",
@@ -619,7 +625,10 @@
     "addReferralHint": "Enter the details of the client you're referring. They'll appear in your list as pending until they sign up.",
     "referralAdded": "Referral added",
     "noSelfReferral": "You can't refer yourself.",
-    "alreadyReferred": "You've already referred this email."
+    "alreadyReferred": "You've already referred this email.",
+    "yourDiscountCode": "Your Discount Code",
+    "discountCodeHint": "Share this code with your clients. They get 10% off their purchase, and you earn your commission automatically.",
+    "codePending": "Your discount code is being generated. Please refresh in a moment or contact support if it does not appear."
   },
   "register": {
     "invalidType": "Invalid Registration Type",

@@ -138,6 +138,25 @@
   flex-shrink: 0;
 }
 
+/* Category marker (view-only / data-entry) sitting after the label text.
+   Muted so it reads as an annotation on the item rather than a second icon
+   competing with the real one on the left. */
+.sidebar__link-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sidebar__link-marker {
+  flex-shrink: 0;
+  opacity: 0.45;
+}
+
+.sidebar__link:hover .sidebar__link-marker,
+.sidebar__link--active .sidebar__link-marker {
+  opacity: 0.8;
+}
+
 /* ---- Footer ---- */
 .sidebar__footer {
   padding: var(--spacing-sm);

@@ -112,7 +112,11 @@
     "signUp": "Регистрация",
     "partnerContract": "Партнёрское соглашение",
     "consultancies": "Консалтинговые партнёры",
-    "billing": "Биллинг"
+    "billing": "Биллинг",
+    "myAudits": "Мои аудиты",
+    "myReviews": "Мои проверки",
+    "kindViewOnly": "Только просмотр",
+    "kindDataEntry": "Ввод данных"
   },
   "landing": {
     "iafBadge": "Партнёры аккредитованных органов по сертификации IAF",
@@ -376,7 +380,9 @@
     "failedDelete": "Не удалось удалить документ.",
     "failedUpload": "Не удалось загрузить документ: {{error}}",
     "yourCertBody": "Ваш орган по сертификации",
-    "accreditedBy": "Аккредитован"
+    "accreditedBy": "Аккредитован",
+    "browseCertifications": "Просмотр сертификаций",
+    "retakeGapAnalysis": "Пройти анализ заново"
   },
   "application": {
     "title": "Новая заявка на сертификацию ISO",
@@ -605,7 +611,10 @@
     "addReferralHint": "Enter the details of the client you're referring. They'll appear in your list as pending until they sign up.",
     "referralAdded": "Referral added",
     "noSelfReferral": "You can't refer yourself.",
-    "alreadyReferred": "You've already referred this email."
+    "alreadyReferred": "You've already referred this email.",
+    "yourDiscountCode": "Ваш промокод",
+    "discountCodeHint": "Поделитесь этим кодом с клиентами. Они получат скидку 10%, а вы автоматически получите комиссию.",
+    "codePending": "Ваш промокод создаётся. Обновите страницу через минуту или обратитесь в поддержку."
   },
   "register": {
     "invalidType": "Недопустимый тип регистрации",

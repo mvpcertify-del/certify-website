@@ -40,6 +40,23 @@
   font-family: monospace;
 }
 
+/* The partner's code, shown large enough to read off a phone screen and
+   dictate over the phone — which is how these actually get shared. */
+.referral-code-display {
+  display: inline-block;
+  padding: 0.6rem 1.1rem;
+  margin: 0.25rem 0 0.6rem;
+  border: 1px dashed var(--color-accent);
+  border-radius: var(--radius-md);
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+  font-family: monospace;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  user-select: all;
+}
+
 .referral-link-card__btn {
   padding: 0.65rem 1.25rem;
   border: none;

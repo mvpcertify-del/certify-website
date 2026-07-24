@@ -31,6 +31,16 @@
   margin-bottom: var(--spacing-xl);
 }
 
+/* The container centres its children, which pulled the back control into the
+   middle of the page under the logo. A back arrow belongs at the leading edge
+   — that is where users look for it, and it is where every other screen in
+   the app puts it. Overriding it here rather than un-centring the container
+   keeps the logo and card centred. */
+.auth-layout .back-button {
+  align-self: flex-start;
+  margin-top: calc(var(--spacing-lg) * -1);
+}
+
 .auth-layout__logo-icon {
   display: flex;
   align-items: center;

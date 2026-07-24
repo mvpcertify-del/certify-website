@@ -1,7 +1,10 @@
 import crypto from 'node:crypto';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
-import { computeTotal, applyCoupon, bestDiscount, PACKAGE_LABEL } from '../src/utils/pricing.js';
+// applyCoupon is no longer imported directly: every pricing path now goes
+// through bestDiscount, which resolves a coupon and the referral discount
+// against the same subtotal and picks whichever saves the buyer more.
+import { computeTotal, bestDiscount, PACKAGE_LABEL } from '../src/utils/pricing.js';
 import { getIsoBySlug } from '../src/utils/isoCatalog.js';
 import { isOfflineMethod, stripeMethodTypesFor, PAYMENT_METHOD_IDS } from '../src/config/paymentMethods.js';
 import { getRegionFromCountry } from '../src/utils/roles.js';
@@ -24,6 +27,206 @@ const supabaseAdmin = createClient(
 // on each Client whom they onboard"). An explicit
 // profiles.commission_percent_override still takes precedence.
 const CONSULTANCY_COMMISSION_PERCENT = 25;
+
+// The discount a buyer gets for arriving through a partner. This number is
+// advertised publicly on /register/referral ("Referred clients get 10% off
+// their first purchase") — changing it here without changing that copy makes
+// the site state something untrue, so the two must move together.
+const REFERRAL_BUYER_DISCOUNT_PERCENT = 10;
+
+// Coupon lookups run through `.ilike()`, which treats `%`, `_` and `*` as
+// wildcards. Because the lookup ends in `.maybeSingle()` — null on no match,
+// an error on more than one — an unauthenticated caller could binary-search
+// the coupon table one character at a time ('A%', 'AB%', …) until exactly one
+// row matched, and `validate-coupon` would then hand back the real code and
+// its value. A 100%-off admin coupon was discoverable, and usable, in minutes.
+//
+// The fix is to reject any code that is not a plain code, rather than to
+// switch to `.eq()`. Case-insensitivity has to be preserved: coupon codes are
+// user-typed, and there is no way to confirm from here that no legacy row was
+// stored lower-case — an exact match would silently stop honouring it.
+//
+// Real codes are A–Z, 0–9 and hyphens (see genCode in AdminCoupons.jsx), so
+// anything containing a wildcard was never a valid code in the first place.
+// Returns '' for anything unusable, and callers treat '' as "no match".
+const SAFE_CODE_RE = /^[A-Za-z0-9-]{1,64}$/;
+
+function normalizeCouponCode(raw) {
+  if (typeof raw !== 'string') return '';
+  const trimmed = raw.trim();
+  return SAFE_CODE_RE.test(trimmed) ? trimmed : '';
+}
+
+// ---- Resolve a code typed at checkout, or carried in a ?ref= link ----
+//
+// One code does both jobs. The client asked for "a Unique ID code which will
+// be automated to be reflected through the whole client purchase process" —
+// so the partner shares ONE string, and it simultaneously discounts the buyer
+// and credits the partner. Two separate codes (a tracking link plus a coupon)
+// is what the old design had, and partners kept sharing the wrong one.
+//
+// Resolution order matters: an ordinary marketing coupon wins over a partner
+// code of the same string, because a coupon is the more specific instrument
+// and an admin can revoke it.
+//
+// Returns { coupon, referrer, referralCode } — any of which may be null.
+async function resolveCheckoutCode(rawCode) {
+  // Reject non-strings and cap the length before this reaches a database
+  // query. An object would stringify to "[object Object]" and an array would
+  // join itself; neither is a code, and an uncapped string goes straight into
+  // a URL-encoded PostgREST filter.
+  if (typeof rawCode !== 'string') return { coupon: null, referrer: null, referralCode: null };
+  const code = rawCode.trim().slice(0, 64);
+  if (!code) return { coupon: null, referrer: null, referralCode: null };
+
+  // 1. A real coupon. May itself belong to a partner (phase25 referrer_id).
+  const coupon = await resolveCoupon(code);
+  if (coupon) {
+    let referrer = null;
+    if (coupon.referrer_id) {
+      const { data } = await supabaseAdmin
+        .from('profiles')
+        .select('id, role, stakeholder_type, referral_code')
+        .eq('id', coupon.referrer_id)
+        .maybeSingle();
+      referrer = data || null;
+    }
+    return { coupon, referrer, referralCode: referrer?.referral_code || null };
+  }
+
+  // 2. A partner's own referral code — an exact, indexed lookup. The previous
+  // implementation scanned the first 1000 auth users for a UUID prefix, so
+  // partner #1001 could never be resolved and two partners could collide.
+  //
+  // The role and approval filters are load-bearing, not defensive padding:
+  //   - demoting a partner to `client` does NOT clear their referral_code (the
+  //     phase25 trigger only ever fills a NULL, it never revokes), so without
+  //     the role check an ex-partner's code would keep discounting buyers and
+  //     earning commission indefinitely; and
+  //   - `referral_code` sits on `profiles`, a row users can update themselves.
+  //     Without the role check, anyone could set their own referral_code and
+  //     become a resolvable "partner" without ever holding a partner role.
+  const { data: partner } = await supabaseAdmin
+    .from('profiles')
+    .select('id, email, role, stakeholder_type, referral_code, approval_status, is_active')
+    .eq('referral_code', code.toUpperCase())
+    .in('role', ['referral', 'consultancy'])
+    .maybeSingle();
+
+  const usable = partner
+    && partner.approval_status !== 'pending'
+    && partner.approval_status !== 'rejected'
+    && partner.is_active !== false;
+
+  if (usable) return { coupon: null, referrer: partner, referralCode: partner.referral_code };
+
+  return { coupon: null, referrer: null, referralCode: null };
+}
+
+// ---- Credit a partner for a sale, exactly once ----
+//
+// Called at the point money is committed. Idempotency is enforced by the
+// unique index on referrals.application_id (phase25) AND by an explicit
+// pre-check, so a re-confirmed payment or an admin toggling an order
+// paid → unpaid → paid cannot pay the same commission twice.
+//
+// Best-effort by design: a commission failure must never roll back a sale
+// that the buyer has already paid for. Failures are logged, not thrown.
+async function creditReferralForOrder({ applicationId, referrerId, clientId, clientEmail, finalAmount, source }) {
+  if (!applicationId || !referrerId) return null;
+
+  // Self-referral. The id comparison alone is worthless on the guest path:
+  // that handler creates a brand-new account for the buyer, so the two ids can
+  // never match by construction, and a partner could buy through their own
+  // code with a second email address — taking the buyer's 10% discount AND
+  // their own commission on the same order, then repeating it as a resale
+  // channel while ratcheting up their volume tier.
+  if (referrerId === clientId) return null;
+
+  const normaliseEmail = (e) => {
+    const s = String(e || '').trim().toLowerCase();
+    const at = s.lastIndexOf('@');
+    if (at < 1) return s;
+    // Strip +tags and (for Google-hosted addresses) dots, which are the two
+    // free ways to make one mailbox look like many.
+    let local = s.slice(0, at).split('+')[0];
+    const domain = s.slice(at + 1);
+    if (domain === 'gmail.com' || domain === 'googlemail.com') local = local.replace(/\./g, '');
+    return `${local}@${domain}`;
+  };
+
+  try {
+    const { data: referrerProfile } = await supabaseAdmin
+      .from('profiles').select('email').eq('id', referrerId).maybeSingle();
+    if (referrerProfile?.email && clientEmail
+        && normaliseEmail(referrerProfile.email) === normaliseEmail(clientEmail)) {
+      console.warn(`creditReferralForOrder: self-referral blocked on application ${applicationId}`);
+      return null;
+    }
+  } catch {
+    // A failed lookup must not silently skip the check — fall through to the
+    // review hold below, which catches it either way.
+  }
+
+  try {
+    const { data: existing } = await supabaseAdmin
+      .from('referrals')
+      .select('id')
+      .eq('application_id', applicationId)
+      .maybeSingle();
+    if (existing) return existing.id;
+
+    const tier = await getReferrerTier(referrerId);
+    const pct = Number(tier?.commission_percent || 0);
+    const commission = Math.round((Number(finalAmount || 0) * pct) / 100 * 100) / 100;
+
+    const { data: row, error } = await supabaseAdmin
+      .from('referrals')
+      .insert({
+        referrer_id: referrerId,
+        referred_id: clientId || null,
+        referred_email: clientEmail || '',
+        application_id: applicationId,
+        status: 'converted',
+        payment_amount: Number(finalAmount || 0),
+        commission_amount: commission,
+        commission_percent: pct,
+        tier_label: tier?.label || null,
+        converted_at: new Date().toISOString(),
+        payout_status: 'pending',
+        source: source || 'code',
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      // 23505 = the unique index fired, i.e. another request credited this
+      // order first. That is the guarantee working, not a failure.
+      if (error.code !== '23505') console.error('creditReferralForOrder insert failed:', error);
+      return null;
+    }
+
+    // NOT `.catch()`: a Supabase query builder is a PromiseLike with only a
+    // `then`, so calling .catch on it throws TypeError — which the outer catch
+    // would swallow, leaving the commission written, the partner never
+    // notified, and this function returning null as though it had failed.
+    try {
+      await supabaseAdmin.from('notifications').insert({
+        user_id: referrerId,
+        type: 'referral',
+        title: 'Referral converted',
+        message: `A client you referred has paid. You earned ${commission.toFixed(2)} (${pct}%).`,
+      });
+    } catch (e) {
+      console.error('referral notification failed (non-blocking):', e?.message);
+    }
+
+    return row?.id || null;
+  } catch (e) {
+    console.error('creditReferralForOrder error (non-blocking):', e?.message);
+    return null;
+  }
+}
 
 const DEFAULT_TIERS = [
   { min_conversions: 1,  max_conversions: 15, commission_percent: 15, label: 'Bronze' },
@@ -115,17 +318,50 @@ async function validateCouponHandler(req, res) {
     }
   }
 
-  const normalized = extracted.trim().toUpperCase();
+  const safe = normalizeCouponCode(extracted);
+  if (!safe) return res.status(200).json({ valid: false, reason: 'not_found' });
+  const normalized = safe.toUpperCase();
+
   const { data: coupon, error } = await supabaseAdmin
     .from('discount_coupons')
     .select('*')
-    .ilike('code', normalized)
+    .ilike('code', safe)
     .maybeSingle();
   if (error) {
+    // Never echo the raw Postgres/PostgREST text to an unauthenticated caller:
+    // combined with a crafted code that is a free schema-probing primitive.
     console.error('Validate coupon error:', error);
-    return res.status(500).json({ valid: false, error: error.message });
+    return res.status(500).json({ valid: false, error: 'Could not validate that code' });
   }
-  if (!coupon)            return res.status(200).json({ valid: false, reason: 'not_found' });
+  // Not a coupon — it may be a partner's referral code. The buyer should not
+  // have to know which kind of code they were given, and the partner shares
+  // only one string, so the same box has to accept both.
+  if (!coupon) {
+    const { data: partner } = await supabaseAdmin
+      .from('profiles')
+      .select('id, referral_code')
+      .eq('referral_code', normalized)
+      .maybeSingle();
+
+    if (partner) {
+      return res.status(200).json({
+        valid: true,
+        coupon: {
+          id: null,
+          code: partner.referral_code,
+          discount_type: 'percent',
+          discount_percent: REFERRAL_BUYER_DISCOUNT_PERCENT,
+          discount_amount: null,
+          // Marks this as a partner code rather than a marketing coupon, so
+          // the page can label it correctly. The server re-resolves it at
+          // purchase regardless — nothing here is trusted for pricing.
+          referral: true,
+        },
+      });
+    }
+    return res.status(200).json({ valid: false, reason: 'not_found' });
+  }
+
   if (!coupon.is_active)  return res.status(200).json({ valid: false, reason: 'inactive' });
   if (coupon.expires_at && new Date(coupon.expires_at) < new Date()) {
     return res.status(200).json({ valid: false, reason: 'expired' });
@@ -170,7 +406,7 @@ async function burnCoupon(couponCode, { clientId, applicationId, finalAmount }) 
     const { data: c } = await supabaseAdmin
       .from('discount_coupons')
       .select('id, discount_type, discount_percent, discount_amount, redemption_count')
-      .ilike('code', String(couponCode).trim())
+      .ilike('code', normalizeCouponCode(couponCode))
       .maybeSingle();
     if (!c) return;
     // Increment first — this is the anti-abuse guarantee (single-use / cap).
@@ -203,7 +439,7 @@ async function resolveCoupon(couponCode) {
   const { data: c } = await supabaseAdmin
     .from('discount_coupons')
     .select('*')
-    .ilike('code', String(couponCode).trim())
+    .ilike('code', normalizeCouponCode(couponCode))
     .maybeSingle();
   if (c && c.is_active) {
     const exp = c.expires_at ? new Date(c.expires_at) : null;
@@ -226,6 +462,7 @@ async function guestCheckoutHandler(req, res) {
       additionalLocations = 0,
       paymentMethod = 'card',
       couponCode,
+      referralCode,
       contact = {},
     } = req.body || {};
 
@@ -244,9 +481,36 @@ async function guestCheckoutHandler(req, res) {
     const region = country ? (getRegionFromCountry(country) || null) : null;
 
     // ---- Price (recomputed server-side; never trust the client) ----
+    //
+    // The buyer may have typed a coupon, arrived on a partner's ?ref= link, or
+    // both. Until now this handler read only `couponCode` and ignored referrals
+    // entirely — which is why no partner had ever been paid for a sale made
+    // through this funnel, and why the advertised "referred clients get 10%
+    // off" never actually applied here.
     const totals = computeTotal({ standardSlug: isoName, employeeBands, locations: additionalLocations });
-    const coupon = await resolveCoupon(couponCode);
-    const { discountAmount, total: finalPrice } = applyCoupon(totals.subtotal, coupon);
+
+    const typed = await resolveCheckoutCode(couponCode);
+    // Only resolve the link code if the typed one produced nothing useful, so
+    // a code the buyer deliberately typed always wins over one they merely
+    // arrived with.
+    const needLink = !typed.coupon && !typed.referrer;
+    const linked = needLink
+      ? await resolveCheckoutCode(referralCode)
+      : { coupon: null, referrer: null, referralCode: null };
+
+    // The link's coupon was previously computed and then thrown away, so a
+    // partner who shared a partner-owned coupon in their link had their buyer
+    // silently dropped to the flat 10% instead of the larger promotion the
+    // partner had advertised.
+    const coupon = typed.coupon || linked.coupon || null;
+    const referrer = typed.referrer || linked.referrer || null;
+    const usedReferralCode = typed.referralCode || linked.referralCode || null;
+
+    // The coupon and the referral discount do NOT stack — the buyer gets
+    // whichever saves them more (bestDiscount resolves percent vs fixed-amount
+    // into real money against this subtotal before comparing).
+    const referralPct = referrer ? REFERRAL_BUYER_DISCOUNT_PERCENT : 0;
+    const { discountAmount, total: finalPrice } = bestDiscount(totals.subtotal, coupon, referralPct);
 
     // ---- 1. Create the client account ----
     // New buyers are created approval_status='pending' so nobody can log in
@@ -317,6 +581,11 @@ async function guestCheckoutHandler(req, res) {
         payment_status: offline ? 'awaiting_verification' : 'pending',
         ...(company_name ? { company_name } : {}),
         ...(coupon ? { coupon_code: coupon.code } : {}),
+        // Attribution rides on the ORDER, not on an email match against a row
+        // the partner typed by hand. A buyer who pays with a different address
+        // than the partner entered used to lose them the commission entirely.
+        ...(usedReferralCode ? { referral_code: usedReferralCode } : {}),
+        ...(referrer ? { referrer_id: referrer.id } : {}),
       })
       .select('id')
       .single();
@@ -412,7 +681,7 @@ async function confirmGuestPaymentHandler(req, res) {
 
     const { data: app } = await supabaseAdmin
       .from('applications')
-      .select('id, client_id, payment_status, coupon_code, total_amount')
+      .select('id, client_id, payment_status, coupon_code, total_amount, referrer_id, referral_code')
       .eq('id', applicationId)
       .maybeSingle();
     if (!app) return res.status(404).json({ error: 'Order not found' });
@@ -440,6 +709,23 @@ async function confirmGuestPaymentHandler(req, res) {
       await burnCoupon(app.coupon_code, {
         clientId: app.client_id, applicationId, finalAmount: app.total_amount,
       });
+
+      // Credit the referring partner. This path does not run
+      // applyPaymentLandedSideEffects (it deliberately leaves the buyer
+      // pending for admin approval), so the credit has to be raised here too —
+      // otherwise every CARD sale, the most common kind, would still pay
+      // nobody. Idempotent, so an admin later marking the same order paid
+      // cannot double it.
+      if (app.referrer_id) {
+        await creditReferralForOrder({
+          applicationId,
+          referrerId: app.referrer_id,
+          clientId: app.client_id,
+          clientEmail: email || '',
+          finalAmount: app.total_amount,
+          source: 'code',
+        });
+      }
       // The client asked that a client account be activated in the dashboard
       // ONLY AFTER a Super Admin approves. So payment no longer auto-approves:
       // the buyer stays 'pending' and we alert the admins that a paid client is
@@ -450,6 +736,24 @@ async function confirmGuestPaymentHandler(req, res) {
         message: `${prof?.full_name || email || 'A client'}${prof?.company_name ? ` (${prof.company_name})` : ''} has paid and is awaiting dashboard approval.`,
         region: prof?.region || null,
       }).catch(() => {});
+
+      // The buyer gets a receipt notification of their own. This path does NOT
+      // go through applyPaymentLandedSideEffects (it deliberately leaves the
+      // client 'pending' for admin approval), so without this a card buyer had
+      // no record of their payment anywhere in the product. It is waiting for
+      // them the moment the admin approves their access.
+      try {
+        await supabaseAdmin.from('notifications').insert({
+          user_id: app.client_id,
+          type: 'system',
+          title: 'Payment received',
+          message: app.total_amount != null
+            ? `We have received your card payment of ${Number(app.total_amount).toFixed(2)}. Your account is being activated.`
+            : 'We have received your card payment. Your account is being activated.',
+        });
+      } catch (e) {
+        console.error('payment-received notification failed (non-blocking):', e?.message);
+      }
     }
 
     // Never downgrade an already-approved client (idempotent re-confirm).
@@ -671,6 +975,44 @@ async function applyPaymentLandedSideEffects(app, { alreadyPaid }) {
       clientId: app.client_id, applicationId: app.id, finalAmount: app.total_amount,
     });
   }
+
+  // Credit the partner who brought this sale, if any. Attribution was stamped
+  // onto the order at checkout (phase25 applications.referrer_id), so it does
+  // not depend on the buyer's email still matching a row a partner typed by
+  // hand months earlier. Idempotent — see creditReferralForOrder.
+  if (app.referrer_id) {
+    const { data: buyer } = await supabaseAdmin
+      .from('profiles').select('email').eq('id', app.client_id).maybeSingle();
+    await creditReferralForOrder({
+      applicationId: app.id,
+      referrerId: app.referrer_id,
+      clientId: app.client_id,
+      clientEmail: buyer?.email || '',
+      finalAmount: app.total_amount,
+      source: 'code',
+    });
+  }
+
+  // Tell the buyer their money arrived. Until now the only thing that ever
+  // raised a "Payment received" notification was the post-payment registration
+  // form (src/pages/client/ApplicationForm.jsx, on ?payment=success) — so a
+  // card buyer who closed the tab, and EVERY cash or bank-transfer buyer, got
+  // nothing in their notifications at all. This is the one place all three
+  // payment routes converge, so it is the right place to raise it.
+  // Best-effort: a notification failure must never roll back a confirmed sale.
+  try {
+    await supabaseAdmin.from('notifications').insert({
+      user_id: app.client_id,
+      type: 'system',
+      title: 'Payment received',
+      message: app.total_amount != null
+        ? `We have received your payment of ${Number(app.total_amount).toFixed(2)}. Your certification is now being processed.`
+        : 'We have received your payment. Your certification is now being processed.',
+    });
+  } catch (e) {
+    console.error('payment-received notification failed (non-blocking):', e?.message);
+  }
+
   const r = await emailDashboardLink(app.client_id);
   return r.ok;
 }
@@ -689,7 +1031,7 @@ async function verifyOfflinePaymentHandler(req, res) {
 
     const { data: app } = await supabaseAdmin
       .from('applications')
-      .select('id, client_id, payment_status, coupon_code, total_amount')
+      .select('id, client_id, payment_status, coupon_code, total_amount, referrer_id, referral_code')
       .eq('id', applicationId)
       .maybeSingle();
     if (!app) return res.status(404).json({ error: 'Order not found' });
@@ -737,7 +1079,7 @@ async function setPaymentStatusHandler(req, res) {
 
     const { data: app } = await supabaseAdmin
       .from('applications')
-      .select('id, client_id, payment_status, payment_method, coupon_code, total_amount')
+      .select('id, client_id, payment_status, payment_method, coupon_code, total_amount, referrer_id, referral_code')
       .eq('id', applicationId)
       .maybeSingle();
     if (!app) return res.status(404).json({ error: 'Order not found' });
@@ -939,7 +1281,7 @@ export default async function handler(req, res) {
       const { data: c } = await supabaseAdmin
         .from('discount_coupons')
         .select('*')
-        .ilike('code', String(couponCode).trim())
+        .ilike('code', normalizeCouponCode(couponCode))
         .maybeSingle();
       if (c && c.is_active) {
         const exp = c.expires_at ? new Date(c.expires_at) : null;
