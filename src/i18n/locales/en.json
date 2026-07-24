@@ -856,7 +856,8 @@
     "paymentStatus_paidBank": "Paid — Bank Transfer",
     "paymentStatus_paidWith": "Paid — {{method}}",
     "filesSelected": "{{count}} file(s) selected — max {{max}} MB each.",
-    "docUploadPartialFailed": "Saved, but {{count}} document(s) could not be uploaded ({{files}}). Files must be {{max}} MB or smaller — try again from the Edit form."
+    "docUploadPartialFailed": "Saved, but {{count}} document(s) could not be uploaded ({{files}}). Files must be {{max}} MB or smaller — try again from the Edit form.",
+    "paymentReceived": "Payment Received"
   },
   "certBody": {
     "addBody": "Add Certification Body",

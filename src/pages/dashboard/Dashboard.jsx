@@ -17,7 +17,10 @@ import './Dashboard.css';
 const PHASE_1_HIDE_CB = true;
 
 const STEP_KEYS = [
-  { id: 1, labelKey: 'dashboard.submitted', statuses: ['pending', 'awaiting_payment'] },
+  // 'payment_received' sits with Submitted, not with Under Review: the money
+  // has arrived but nobody has started reviewing the application yet, and
+  // showing the client "Under Review" before that happens would be a lie.
+  { id: 1, labelKey: 'dashboard.submitted', statuses: ['pending', 'awaiting_payment', 'payment_received'] },
   { id: 2, labelKey: 'dashboard.underReview', statuses: ['in_review'] },
   { id: 3, labelKey: 'dashboard.auditScheduled', statuses: ['audit_scheduled'] },
   { id: 4, labelKey: 'dashboard.certified', statuses: ['approved'] }

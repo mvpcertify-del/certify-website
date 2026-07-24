@@ -842,7 +842,8 @@
     "paymentStatus_paidBank": "भुगतान हो गया — बैंक ट्रांसफर",
     "paymentStatus_paidWith": "भुगतान हो गया — {{method}}",
     "filesSelected": "{{count}} फ़ाइल चुनी गईं — प्रत्येक अधिकतम {{max}} MB।",
-    "docUploadPartialFailed": "सहेज लिया गया, लेकिन {{count}} दस्तावेज़ अपलोड नहीं हो सके ({{files}})। फ़ाइलें {{max}} MB या उससे छोटी होनी चाहिए — एडिट फ़ॉर्म से दोबारा कोशिश करें।"
+    "docUploadPartialFailed": "सहेज लिया गया, लेकिन {{count}} दस्तावेज़ अपलोड नहीं हो सके ({{files}})। फ़ाइलें {{max}} MB या उससे छोटी होनी चाहिए — एडिट फ़ॉर्म से दोबारा कोशिश करें।",
+    "paymentReceived": "भुगतान प्राप्त"
   },
   "certBody": {
     "addBody": "प्रमाणन निकाय जोड़ें",

@@ -842,7 +842,8 @@
     "paymentStatus_paidBank": "Payé — Virement bancaire",
     "paymentStatus_paidWith": "Payé — {{method}}",
     "filesSelected": "{{count}} fichier(s) sélectionné(s) — max. {{max}} Mo chacun.",
-    "docUploadPartialFailed": "Enregistré, mais {{count}} document(s) n’ont pas pu être téléversés ({{files}}). Les fichiers doivent faire {{max}} Mo maximum — réessayez depuis le formulaire de modification."
+    "docUploadPartialFailed": "Enregistré, mais {{count}} document(s) n’ont pas pu être téléversés ({{files}}). Les fichiers doivent faire {{max}} Mo maximum — réessayez depuis le formulaire de modification.",
+    "paymentReceived": "Paiement reçu"
   },
   "certBody": {
     "addBody": "Ajouter un organisme de certification",

@@ -856,7 +856,8 @@
     "paymentStatus_paidBank": "Pagado — Transferencia bancaria",
     "paymentStatus_paidWith": "Pagado — {{method}}",
     "filesSelected": "{{count}} archivo(s) seleccionado(s) — máx. {{max}} MB cada uno.",
-    "docUploadPartialFailed": "Guardado, pero no se pudieron subir {{count}} documento(s) ({{files}}). Los archivos deben ser de {{max}} MB o menos — inténtalo de nuevo desde el formulario de edición."
+    "docUploadPartialFailed": "Guardado, pero no se pudieron subir {{count}} documento(s) ({{files}}). Los archivos deben ser de {{max}} MB o menos — inténtalo de nuevo desde el formulario de edición.",
+    "paymentReceived": "Pago Recibido"
   },
   "certBody": {
     "addBody": "Añadir Organismo de Certificación",

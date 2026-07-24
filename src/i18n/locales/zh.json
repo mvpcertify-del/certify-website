@@ -842,7 +842,8 @@
     "paymentStatus_paidBank": "已付款 — 银行转账",
     "paymentStatus_paidWith": "已付款 — {{method}}",
     "filesSelected": "已选择 {{count}} 个文件 — 每个最大 {{max}} MB。",
-    "docUploadPartialFailed": "已保存，但有 {{count}} 个文档未能上传（{{files}}）。文件不得超过 {{max}} MB — 请在编辑表单中重试。"
+    "docUploadPartialFailed": "已保存，但有 {{count}} 个文档未能上传（{{files}}）。文件不得超过 {{max}} MB — 请在编辑表单中重试。",
+    "paymentReceived": "已收到付款"
   },
   "certBody": {
     "addBody": "添加认证机构",

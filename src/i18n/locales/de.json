@@ -842,7 +842,8 @@
     "paymentStatus_paidBank": "Bezahlt — Banküberweisung",
     "paymentStatus_paidWith": "Bezahlt — {{method}}",
     "filesSelected": "{{count}} Datei(en) ausgewählt — max. {{max}} MB pro Datei.",
-    "docUploadPartialFailed": "Gespeichert, aber {{count}} Dokument(e) konnten nicht hochgeladen werden ({{files}}). Dateien dürfen höchstens {{max}} MB groß sein — bitte im Bearbeiten-Formular erneut versuchen."
+    "docUploadPartialFailed": "Gespeichert, aber {{count}} Dokument(e) konnten nicht hochgeladen werden ({{files}}). Dateien dürfen höchstens {{max}} MB groß sein — bitte im Bearbeiten-Formular erneut versuchen.",
+    "paymentReceived": "Zahlung erhalten"
   },
   "certBody": {
     "addBody": "Zertifizierungsstelle hinzufügen",

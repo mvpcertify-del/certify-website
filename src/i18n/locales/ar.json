@@ -856,7 +856,8 @@
     "paymentStatus_paidBank": "مدفوع — تحويل بنكي",
     "paymentStatus_paidWith": "مدفوع — {{method}}",
     "filesSelected": "تم اختيار {{count}} ملف — بحد أقصى {{max}} ميجابايت لكل ملف.",
-    "docUploadPartialFailed": "تم الحفظ، لكن تعذّر رفع {{count}} مستند ({{files}}). يجب ألا يتجاوز حجم الملف {{max}} ميجابايت — حاول مرة أخرى من نموذج التعديل."
+    "docUploadPartialFailed": "تم الحفظ، لكن تعذّر رفع {{count}} مستند ({{files}}). يجب ألا يتجاوز حجم الملف {{max}} ميجابايت — حاول مرة أخرى من نموذج التعديل.",
+    "paymentReceived": "تم استلام الدفعة"
   },
   "certBody": {
     "addBody": "إضافة هيئة تصديق",
