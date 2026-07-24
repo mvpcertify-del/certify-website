@@ -281,6 +281,31 @@
   color: var(--color-text-primary);
 }
 
+/* Show/hide control inside the password fields. Sits in the Input's
+   rightElement slot, which already handles absolute positioning — this only
+   strips the default button chrome and gives it a hit area worth tapping. */
+.settings__password-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast);
+}
+
+.settings__password-toggle:hover {
+  color: var(--color-text-primary);
+}
+
+.settings__password-toggle:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
 @media (max-width: 768px) {
   .settings__layout {
     grid-template-columns: 1fr;

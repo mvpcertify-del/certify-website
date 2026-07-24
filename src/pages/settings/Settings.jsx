@@ -8,7 +8,7 @@ import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
 import CustomFieldRenderer from '../../components/CustomFieldRenderer';
 import { supabase as supabaseClient } from '../../lib/supabase';
-import { User, Globe, Shield, Settings as SettingsIcon, Check, DollarSign } from 'lucide-react';
+import { User, Globe, Shield, Settings as SettingsIcon, Check, DollarSign, Eye, EyeOff } from 'lucide-react';
 import './Settings.css';
 
 const allTabs = [
@@ -69,6 +69,9 @@ export default function Settings() {
 
 function ProfileTab({ user }) {
   const { updatePassword, supabase } = useAuth();
+  // Needed for the password show/hide labels. The visible labels in this tab
+  // are still hard-coded English — a separate cleanup, not this change.
+  const { t } = useTranslation();
 
   // Split a stored phone string ("+971 50 123 4567") back into dial code +
   // number so the two-part control can round-trip it. Longest code wins so
@@ -101,6 +104,13 @@ function ProfileTab({ user }) {
     newPassword: '',
     confirmPassword: '',
   });
+
+  // Show/hide toggles for the two password fields. Tracked separately so
+  // revealing the new password does not also reveal the confirmation — the
+  // point of the second field is to catch a typo, and it cannot do that if
+  // both are visible at once.
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [profileLoading, setProfileLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
@@ -340,18 +350,48 @@ function ProfileTab({ user }) {
           <Input
             label="New Password"
             id="settings-new-password"
-            type="password"
+            // Revealing the field flips type to "text", and FormElements only
+            // forces LTR for type="password" — so in Arabic a revealed password
+            // would render right-to-left. dir pins it regardless of type.
+            dir="ltr"
+            type={showNewPassword ? 'text' : 'password'}
             placeholder="Enter new password"
             value={passwordData.newPassword}
             onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+            rightElement={
+              <button
+                type="button"
+                className="settings__password-toggle"
+                onClick={() => setShowNewPassword((v) => !v)}
+                aria-label={showNewPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+                title={showNewPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+              >
+                {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            }
           />
           <Input
             label="Confirm Password"
             id="settings-confirm-password"
-            type="password"
+            // Revealing the field flips type to "text", and FormElements only
+            // forces LTR for type="password" — so in Arabic a revealed password
+            // would render right-to-left. dir pins it regardless of type.
+            dir="ltr"
+            type={showConfirmPassword ? 'text' : 'password'}
             placeholder="Confirm new password"
             value={passwordData.confirmPassword}
             onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+            rightElement={
+              <button
+                type="button"
+                className="settings__password-toggle"
+                onClick={() => setShowConfirmPassword((v) => !v)}
+                aria-label={showConfirmPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+                title={showConfirmPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+              >
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            }
           />
         </div>
         <div className="settings__form-actions">
