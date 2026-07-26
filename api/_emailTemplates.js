@@ -429,3 +429,75 @@ export function billingDocumentEmail({ title, message, orgName, taxLabel, taxNum
   const text = `${title}\n\n${message}\n\nThe document is attached to this email as a PDF. You can also view it any time from your ${orgName || BRAND_TEXT} dashboard under Billing.\n\nQuestions? ${SUPPORT_EMAIL}\n\n— ${BRAND_TEXT}`;
   return { html, text };
 }
+
+// ---- Referral partner → their client invitation (phase27) -------------------
+//
+// Sent from a referral partner's dashboard to a client they added. Everything
+// interpolated here is partner-supplied (client name, partner name, signature)
+// or partner-triggered (their code), so ALL of it is HTML-escaped — a partner
+// is authenticated but still untrusted input as far as another person's inbox
+// is concerned.
+//
+// The discount code is shown as a copyable code AND baked into the link, so the
+// client can either click through (code pre-applied) or type it. `profileUrl`
+// is optional — a company profile PDF or video link — and the row is dropped
+// when absent so we never render a dangling "View: " with no link.
+export function referralClientInviteEmail({
+  clientName, partnerName, partnerCompany, registrationUrl, discountCode, profileUrl, signature,
+}) {
+  const cName = escapeHtml(clientName || 'there');
+  const pName = escapeHtml(partnerName || 'A Certify.cx partner');
+  const pCompany = partnerCompany ? escapeHtml(partnerCompany) : '';
+  const code = escapeHtml(discountCode || '');
+  const fromLine = pCompany ? `${pName} (${pCompany})` : pName;
+
+  const subject = `${pName} invites you to get ISO certified with ${BRAND_TEXT}`;
+
+  const codeBox = code ? `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;">
+      <tr><td align="center" style="padding:16px;border:1px dashed ${ACCENT_ON_WHITE};border-radius:12px;background:#f0fbf6;">
+        <p style="margin:0 0 6px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:${TEXT_TERTIARY};">Your discount code</p>
+        <p style="margin:0;font-family:'SFMono-Regular',Consolas,monospace;font-size:24px;font-weight:700;letter-spacing:0.1em;color:${ACCENT_ON_WHITE};">${code}</p>
+      </td></tr>
+    </table>` : '';
+
+  const profileRow = profileUrl ? body(
+    `Want to know more first? <a href="${escapeHtml(profileUrl)}" style="color:${ACCENT_ON_WHITE};text-decoration:none;font-weight:500;">View our company profile</a>.`
+  ) : '';
+
+  const signatureBlock = signature ? `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:28px 0 0;border-top:1px solid ${BORDER};">
+      <tr><td style="padding:18px 0 0;">
+        <p style="margin:0;font-size:13px;line-height:1.6;color:${TEXT_SECONDARY};white-space:pre-line;">${escapeHtml(signature)}</p>
+      </td></tr>
+    </table>` : '';
+
+  const html = layout({
+    title: subject,
+    preheader: `${pName} thinks ${BRAND_TEXT} can help you get ISO certified — with a discount.`,
+    bodyHtml: `
+      ${heading('Get ISO certified with Certify.cx')}
+      ${body(`Hi ${cName}, ${fromLine} has invited you to <strong style="color:${TEXT_PRIMARY};">${BRAND_TEXT}</strong> — the online platform that takes your organisation from application to accredited ISO certificate, all in one place.`)}
+      ${code ? body('Use the code below at checkout for a discount on your certification:') : ''}
+      ${codeBox}
+      <p style="margin:0 0 28px;">${button(registrationUrl, 'Start your certification')}</p>
+      ${linkFallback(registrationUrl)}
+      ${profileRow}
+      ${signatureBlock}`,
+  });
+
+  const text = [
+    `Hi ${clientName || 'there'},`,
+    ``,
+    `${partnerName || 'A Certify.cx partner'}${partnerCompany ? ` (${partnerCompany})` : ''} has invited you to ${BRAND_TEXT} — the online platform for ISO certification.`,
+    code ? `\nYour discount code: ${discountCode}` : '',
+    ``,
+    `Start here: ${registrationUrl}`,
+    profileUrl ? `\nCompany profile: ${profileUrl}` : '',
+    signature ? `\n\n${signature}` : '',
+    ``,
+    `— ${BRAND_TEXT}`,
+  ].filter(Boolean).join('\n');
+
+  return { subject, html, text };
+}

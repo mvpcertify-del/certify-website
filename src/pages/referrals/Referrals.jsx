@@ -7,7 +7,8 @@ import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
 import Modal from '../../components/ui/Modal';
 import { Input, Button } from '../../components/ui/FormElements';
-import { Link2, Copy, Check, Users, DollarSign, UserPlus, Gift, Plus, AlertCircle, CheckCircle } from 'lucide-react';
+import { apiPost } from '../../lib/apiClient';
+import { Link2, Copy, Check, Users, DollarSign, UserPlus, Gift, Plus, AlertCircle, CheckCircle, Mail, PenLine } from 'lucide-react';
 import './Referrals.css';
 
 export default function Referrals() {
@@ -20,9 +21,16 @@ export default function Referrals() {
 
   // "Add Referral" modal — referral partner uploads a client they refer.
   const [showAdd, setShowAdd] = useState(false);
-  const [addForm, setAddForm] = useState({ referred_name: '', referred_email: '', referred_company: '' });
+  const [addForm, setAddForm] = useState({ referred_name: '', referred_email: '', referred_company: '', referred_whatsapp: '', referred_website: '' });
   const [saving, setSaving] = useState(false);
   const [addError, setAddError] = useState('');
+
+  // Per-client invite email + the editable signature it carries.
+  const [sendingId, setSendingId] = useState(null);
+  const [invitedIds, setInvitedIds] = useState(() => new Set());
+  const [showSignature, setShowSignature] = useState(false);
+  const [signature, setSignature] = useState(user?.email_signature || '');
+  const [signatureSaving, setSignatureSaving] = useState(false);
   const [success, setSuccess] = useState('');
 
   // The partner's real, stored code (phase25 profiles.referral_code).
@@ -81,7 +89,7 @@ export default function Referrals() {
   const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
   const openAdd = () => {
-    setAddForm({ referred_name: '', referred_email: '', referred_company: '' });
+    setAddForm({ referred_name: '', referred_email: '', referred_company: '', referred_whatsapp: '', referred_website: '' });
     setAddError('');
     setShowAdd(true);
   };
@@ -119,6 +127,8 @@ export default function Referrals() {
           referred_email: email,
           referred_name: addForm.referred_name.trim(),
           referred_company: addForm.referred_company.trim() || null,
+          referred_whatsapp: addForm.referred_whatsapp.trim() || null,
+          referred_website: addForm.referred_website.trim() || null,
           status: 'pending',
         })
         .select()
@@ -131,6 +141,43 @@ export default function Referrals() {
       setAddError(err.message);
     }
     setSaving(false);
+  };
+
+  // Send the pre-set invite email to one added client. The server owns the
+  // content, the discount code, the rate limit and the ownership check — the
+  // browser only names which referral row to send to.
+  const handleSendInvite = async (row) => {
+    if (!codeReady) { setSuccess(''); setAddError(t('referrals.codePending')); return; }
+    setSendingId(row.id);
+    setAddError('');
+    try {
+      await apiPost('/api/referrals', { action: 'send-client-invite', referralId: row.id });
+      setInvitedIds(prev => new Set(prev).add(row.id));
+      setSuccess(`${t('referrals.inviteSent')}: ${row.referred_email}`);
+    } catch (err) {
+      setAddError(err.message || t('referrals.inviteFailed'));
+    } finally {
+      setSendingId(null);
+    }
+  };
+
+  const handleSaveSignature = async () => {
+    setSignatureSaving(true);
+    setAddError('');
+    try {
+      // Routed through the service role, NOT a direct profiles update: a
+      // browser-side profiles.update() is a column-level escalation path (RLS
+      // is row-level only, so the same policy that lets you write your
+      // signature would let you write your own role). The server action touches
+      // only email_signature.
+      await apiPost('/api/referrals', { action: 'save-signature', signature });
+      setSuccess(t('referrals.signatureSaved'));
+      setShowSignature(false);
+    } catch (err) {
+      setAddError(err.message);
+    } finally {
+      setSignatureSaving(false);
+    }
   };
 
   // Stats
@@ -205,6 +252,26 @@ export default function Referrals() {
       label: t('dashboard.date'),
       render: (val) => val ? new Date(val).toLocaleDateString() : '—',
     },
+    {
+      key: 'invite',
+      label: t('referrals.invite'),
+      render: (_val, row) => {
+        // Once a client has paid there is nothing to invite — show their state.
+        if (row.status === 'converted') return <span style={{ color: 'var(--color-text-tertiary)' }}>—</span>;
+        const already = invitedIds.has(row.id);
+        return (
+          <Button
+            size="sm"
+            variant={already ? 'outline' : 'primary'}
+            loading={sendingId === row.id}
+            disabled={sendingId === row.id || !row.referred_email}
+            onClick={() => handleSendInvite(row)}
+          >
+            {already ? <><Check size={15} /> {t('referrals.inviteResend')}</> : <><Mail size={15} /> {t('referrals.sendInvite')}</>}
+          </Button>
+        );
+      },
+    },
   ];
 
   return (
@@ -214,9 +281,14 @@ export default function Referrals() {
           <h1 className="page-title">{t('referrals.title')}</h1>
           <p className="page-subtitle">{t('referrals.subtitle')}</p>
         </div>
-        <Button variant="primary" size="md" onClick={openAdd}>
-          <Plus size={18} /> {t('referrals.addReferral')}
-        </Button>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <Button variant="outline" size="md" onClick={() => { setSignature(user?.email_signature || ''); setShowSignature(true); }}>
+            <PenLine size={18} /> {t('referrals.editSignature')}
+          </Button>
+          <Button variant="primary" size="md" onClick={openAdd}>
+            <Plus size={18} /> {t('referrals.addReferral')}
+          </Button>
+        </div>
       </div>
 
       {success && (
@@ -391,6 +463,24 @@ export default function Referrals() {
             value={addForm.referred_company}
             onChange={(e) => setAddForm(p => ({ ...p, referred_company: e.target.value }))}
           />
+          <Input
+            label={t('referrals.referredWhatsapp')}
+            id="ref-whatsapp"
+            name="referred_whatsapp"
+            type="tel"
+            placeholder={t('referrals.referredWhatsappPlaceholder')}
+            value={addForm.referred_whatsapp}
+            onChange={(e) => setAddForm(p => ({ ...p, referred_whatsapp: e.target.value }))}
+          />
+          <Input
+            label={t('referrals.referredWebsite')}
+            id="ref-website"
+            name="referred_website"
+            type="url"
+            placeholder={t('referrals.referredWebsitePlaceholder')}
+            value={addForm.referred_website}
+            onChange={(e) => setAddForm(p => ({ ...p, referred_website: e.target.value }))}
+          />
           <div className="admin-users__form-actions">
             <Button type="button" variant="ghost" size="md" onClick={() => setShowAdd(false)}>
               {t('common.cancel')}
@@ -400,6 +490,35 @@ export default function Referrals() {
             </Button>
           </div>
         </form>
+      </Modal>
+
+      {/* Email signature editor — appended to every client invite this partner
+          sends. Saved once on the profile, reused on every send. */}
+      <Modal isOpen={showSignature} onClose={() => setShowSignature(false)} title={t('referrals.editSignature')}>
+        <p className="referral-link-card__hint" style={{ marginTop: 0 }}>
+          {t('referrals.signatureHint')}
+        </p>
+        <textarea
+          className="referral-signature-input"
+          rows={5}
+          value={signature}
+          onChange={(e) => setSignature(e.target.value)}
+          placeholder={t('referrals.signaturePlaceholder')}
+          maxLength={600}
+        />
+        {addError && (
+          <div className="admin-users__error" style={{ marginTop: '12px' }}>
+            <AlertCircle size={16} /><span>{addError}</span>
+          </div>
+        )}
+        <div className="modal-actions" style={{ marginTop: '16px' }}>
+          <Button variant="outline" size="md" onClick={() => setShowSignature(false)}>
+            {t('common.cancel')}
+          </Button>
+          <Button variant="primary" size="md" loading={signatureSaving} onClick={handleSaveSignature}>
+            {t('common.save')}
+          </Button>
+        </div>
       </Modal>
     </div>
   );
