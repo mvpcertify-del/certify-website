@@ -1,4 +1,4 @@
-import { verifyAdmin, getAdmin } from './_verifyAdmin.js';
+import { verifyAdmin, getAdmin, callerCanManageTarget } from './_verifyAdmin.js';
 import { notifyAdmins } from './_notifyAdmins.js';
 
 // ---------------------------------------------------------------------------
@@ -35,8 +35,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Authorization: only a super admin may delete a user account.
-    const auth = await verifyAdmin(req, { requireSuperAdmin: true });
+    // Authorization: any admin may reach this; ownership is enforced per-target
+    // below. A super admin may delete anyone; a country admin may delete only a
+    // non-admin user in their own region (client decision, 25 Jul).
+    const auth = await verifyAdmin(req);
     if (auth.error) {
       return res.status(auth.status).json({ error: auth.error });
     }
@@ -52,12 +54,19 @@ export default async function handler(req, res) {
     const admin = getAdmin();
 
     // Capture who we're deleting BEFORE the rows are gone, so we can alert
-    // admins afterwards with a meaningful message.
+    // admins afterwards with a meaningful message — and enforce that this
+    // caller is actually allowed to delete this specific target.
     const { data: targetProfile } = await admin
       .from('profiles')
       .select('full_name, email, role, region')
       .eq('id', userId)
       .maybeSingle();
+    if (!targetProfile) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    if (!callerCanManageTarget(auth.caller, targetProfile)) {
+      return res.status(403).json({ error: 'Forbidden: you cannot delete that user' });
+    }
 
     // Run every independent cleanup concurrently. allSettled never rejects, so
     // a missing table / already-gone row can't abort the batch or crash us.

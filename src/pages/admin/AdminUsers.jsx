@@ -263,45 +263,34 @@ export default function AdminUsers() {
           setViewingUser(userRow);
           setShowViewModal(true);
         };
-        // Super Admin gets the full action cluster: [View] [Deactivate] [Edit] [Delete]
-        // (Edit opens the role editor). Destructive actions are server-enforced
-        // and never offered on your own account.
-        if (isSuperAdmin) {
-          return (
-            <RowActions
-              isActive={userRow.is_active !== false}
-              showView
-              onView={openView}
-              showResend={userRow.id !== user?.id}
-              onResend={() => handleResendVerification(userRow)}
-              showToggle={userRow.id !== user?.id}
-              showDelete={userRow.id !== user?.id}
-              onToggle={() => handleToggleActive(userRow)}
-              onEdit={openEditRole}
-              onDelete={() => {
-                setDeletingUser(userRow);
-                setError('');
-                setShowDeleteModal(true);
-              }}
-            />
-          );
-        }
-        // Other admins (e.g. regional) keep View + their existing Edit-Role action.
+        // Who may this admin manage with the full [View][Edit][Deactivate][Delete]
+        // cluster? A super admin: anyone but themselves. A country admin (client
+        // decision, 25 Jul): the non-admin users in their own region — the list
+        // is already region-scoped server-side, so the only extra guard here is
+        // "not an admin account". The server re-checks every one of these, so a
+        // hidden button is a courtesy, not the security boundary.
+        const isAdminTarget = userRow.role === ROLES.SUPER_ADMIN || userRow.role === ROLES.REGIONAL_ADMIN;
+        const isSelf = userRow.id === user?.id;
+        const canManage = !isSelf && (isSuperAdmin || (isRegionalAdmin && !isAdminTarget));
+
         return (
-          <div style={{ display: 'flex', gap: 6 }}>
-            <RowActions
-              showView
-              onView={openView}
-              showResend
-              onResend={() => handleResendVerification(userRow)}
-              showToggle={false}
-              showEdit={false}
-              showDelete={false}
-            />
-            <Button size="sm" variant="ghost" onClick={openEditRole}>
-              {t('admin.editRole')}
-            </Button>
-          </div>
+          <RowActions
+            isActive={userRow.is_active !== false}
+            showView
+            onView={openView}
+            showResend={!isSelf}
+            onResend={() => handleResendVerification(userRow)}
+            showToggle={canManage}
+            showEdit={canManage}
+            showDelete={canManage}
+            onToggle={() => handleToggleActive(userRow)}
+            onEdit={openEditRole}
+            onDelete={() => {
+              setDeletingUser(userRow);
+              setError('');
+              setShowDeleteModal(true);
+            }}
+          />
         );
       }
     }

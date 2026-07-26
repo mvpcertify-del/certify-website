@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { verifyAdmin, verifySession } from './_verifyAdmin.js';
+import { verifyAdmin, verifySession, callerCanManageTarget } from './_verifyAdmin.js';
 import {
   ContractError,
   getContractForPartner,
@@ -18,6 +18,11 @@ const supabaseAdmin = createClient(
 );
 
 const VALID_ROLES = Object.values(ROLES);
+
+// The two roles a regional (country) admin may never assign — assigning one
+// would be self-escalation. `callerCanManageTarget` (shared, in _verifyAdmin.js)
+// enforces the same set for who a regional admin may act ON.
+const ADMIN_ROLES = [ROLES.SUPER_ADMIN, ROLES.REGIONAL_ADMIN];
 
 export default async function handler(req, res) {
   try {
@@ -234,11 +239,14 @@ async function updateProfile(req, res) {
 }
 
 async function updateRole(req, res) {
-  // Was completely unauthenticated: a bare POST could hand anyone super_admin.
-  const auth = await verifyAdmin(req, { requireSuperAdmin: true });
+  // Any admin may reach this; ownership is enforced per-target below. Was
+  // super-admin-only, but the client asked country admins to manage the users
+  // in their region (25 Jul).
+  const auth = await verifyAdmin(req);
   if (auth.error) {
     return res.status(auth.status).json({ error: auth.error });
   }
+  const caller = auth.caller;
 
   const { userId, newRole } = req.body;
 
@@ -248,6 +256,27 @@ async function updateRole(req, res) {
 
   if (!VALID_ROLES.includes(newRole)) {
     return res.status(400).json({ error: 'Unknown role' });
+  }
+
+  if (userId === caller.id) {
+    return res.status(400).json({ error: 'You cannot change your own role.' });
+  }
+
+  const { data: target } = await supabaseAdmin
+    .from('profiles')
+    .select('id, role, region')
+    .eq('id', userId)
+    .maybeSingle();
+  if (!target) return res.status(404).json({ error: 'User not found' });
+
+  if (!callerCanManageTarget(caller, target)) {
+    return res.status(403).json({ error: 'Forbidden: you cannot manage that user' });
+  }
+
+  // A regional admin may not promote anyone into an admin role — that is the
+  // one lever that would let them escalate their own reach.
+  if (caller.role !== ROLES.SUPER_ADMIN && ADMIN_ROLES.includes(newRole)) {
+    return res.status(403).json({ error: 'Only a super admin can assign an admin role' });
   }
 
   const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
@@ -274,17 +303,28 @@ async function updateRole(req, res) {
 // Super-admin only. Flips profiles.is_active AND bans/unbans the auth user so a
 // deactivated account cannot log in.
 async function setActive(req, res) {
-  const auth = await verifyAdmin(req, { requireSuperAdmin: true });
+  const auth = await verifyAdmin(req);
   if (auth.error) {
     return res.status(auth.status).json({ error: auth.error });
   }
+  const caller = auth.caller;
 
   const { userId, isActive } = req.body;
   if (!userId || typeof isActive !== 'boolean') {
     return res.status(400).json({ error: 'Missing required fields: userId, isActive (boolean)' });
   }
-  if (userId === auth.caller.id) {
+  if (userId === caller.id) {
     return res.status(400).json({ error: 'You cannot deactivate your own account.' });
+  }
+
+  const { data: target } = await supabaseAdmin
+    .from('profiles')
+    .select('id, role, region')
+    .eq('id', userId)
+    .maybeSingle();
+  if (!target) return res.status(404).json({ error: 'User not found' });
+  if (!callerCanManageTarget(caller, target)) {
+    return res.status(403).json({ error: 'Forbidden: you cannot manage that user' });
   }
 
   const { error: profileError } = await supabaseAdmin

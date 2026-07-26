@@ -116,3 +116,27 @@ export async function verifyAdmin(req, { requireSuperAdmin = false } = {}) {
     return { error: `Auth check failed: ${err.message}`, status: 500 };
   }
 }
+
+// Can `caller` act on `target` (deactivate / delete / re-role)?
+//
+// A super admin may act on anyone. A regional (country) admin may act ONLY on
+// a non-admin user inside their own region — the model the client asked for on
+// 25 Jul ("a country admin manages the users in their country"). Fails closed
+// on a null caller region, and never lets a regional admin touch a super_admin
+// or another regional_admin. Self-checks are the caller's responsibility (they
+// carry their own message).
+//
+// Shared here so api/user.js (deactivate, re-role) and api/delete-user.js apply
+// the exact same rule and cannot drift apart.
+const _ADMIN_ROLES = ['super_admin', 'regional_admin'];
+
+export function callerCanManageTarget(caller, target) {
+  if (!caller || !target) return false;
+  if (caller.role === 'super_admin') return true;
+  if (caller.role === 'regional_admin') {
+    return !!caller.region
+      && target.region === caller.region
+      && !_ADMIN_ROLES.includes(target.role);
+  }
+  return false;
+}
