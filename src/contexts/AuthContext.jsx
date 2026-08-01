@@ -216,12 +216,13 @@ export function AuthProvider({ children }) {
     });
 
     if (error) {
-      // Supabase returns this when the user hasn't confirmed their email yet
+      // Email verification was removed (client, 25 Jul). New users are created
+      // already-confirmed, so this error should no longer occur — but if a
+      // legacy unconfirmed account still trips it (before the one-time backfill
+      // runs), do NOT block them for verification: surface a generic sign-in
+      // failure instead of sending them to look for a link that never comes.
       if (error.message === 'Email not confirmed') {
-        return {
-          success: false,
-          error: 'Please verify your email address before logging in. Check your inbox for the confirmation link.',
-        };
+        return { success: false, error: 'Could not sign you in. Please check your details and try again.' };
       }
       return { success: false, error: error.message };
     }
@@ -279,9 +280,9 @@ export function AuthProvider({ children }) {
     const needsApproval = false;
     const approvalStatus = 'approved';
 
-    // Route signup through the service-role API. The user is created unconfirmed
-    // and that endpoint emails the verification link itself (generateLink +
-    // Resend). Users must confirm their email before they can log in.
+    // Route signup through the service-role API. The user is created already
+    // confirmed — email verification was removed (client, 25 Jul), so there is
+    // no "check your email" step and the caller can sign in immediately.
     const signupRes = await fetch('/api/create-user', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -318,16 +319,13 @@ export function AuthProvider({ children }) {
       }).catch(() => {});
     }
 
-    // User must verify their email before they can log in.
-    // Return emailVerification flag so the UI shows "check your email".
-    // emailSendFailed=true means user is created but the verification email
-    // didn't ship (Resend issue, etc.) — UI should offer a "resend" button.
+    // No verification step. The caller signs in right after this returns (see
+    // SignUp.jsx). needsApproval stays for the pay-first client path, which is
+    // a separate admin gate, not email verification.
     return {
       success: true,
       data: { user: createdUser },
       needsApproval,
-      emailVerification: true,
-      emailSendFailed: !!signupJson.emailSendFailed,
     };
   };
 

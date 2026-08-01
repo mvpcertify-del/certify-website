@@ -1,14 +1,41 @@
 import { createClient } from '@supabase/supabase-js';
-import { sendVerificationEmail } from './_sendVerificationEmail.js';
 import { notifyAdmins } from './_notifyAdmins.js';
 import { verifyAdmin } from './_verifyAdmin.js';
 import { getRegionFromCountry, getCreatableRoles } from '../src/utils/roles.js';
 import { sanitizeAuditorTags } from '../src/utils/auditorOptions.js';
+import { welcomeEmail } from './_emailTemplates.js';
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
+
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL;
+const APP_PUBLIC_URL = process.env.APP_PUBLIC_URL || 'https://certify.cx';
+
+// Email verification was removed for everyone (client, 25 Jul). New users are
+// created already-confirmed and are never sent a "verify your email" link, so
+// the welcome email — which used to ride on the email_confirmed_at trigger — no
+// longer has a transition to fire on. We send it directly here instead, so a
+// new user still gets welcomed. Best-effort: never blocks account creation.
+async function sendWelcomeDirect({ email, name, role }) {
+  if (!RESEND_API_KEY || !RESEND_FROM_EMAIL) return;
+  try {
+    const { subject, html, text } = welcomeEmail({
+      name: name || null,
+      role: role || 'client',
+      dashboardUrl: `${APP_PUBLIC_URL}/dashboard`,
+    });
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: RESEND_FROM_EMAIL, to: [email], subject, html, text }),
+    });
+  } catch (e) {
+    console.error('create-user: welcome email failed (non-blocking):', e?.message);
+  }
+}
 
 // Unified user-creation endpoint.
 // - Admin path (default): requires full_name + role, creates the user on
@@ -166,13 +193,13 @@ export default async function handler(req, res) {
           ...(resolvedStakeholderType ? { stakeholder_type: resolvedStakeholderType } : {}),
         };
 
-    // email_confirm: false leaves email_confirmed_at NULL — the user cannot log
-    // in until they click the link we send below. createUser() itself sends
-    // nothing; the send is ours (see the verification block further down).
+    // email_confirm: true creates the user already confirmed — email
+    // verification was removed for all users (client, 25 Jul), so nobody is
+    // ever blocked by a "verify your email" step and can log in immediately.
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
-      email_confirm: false,
+      email_confirm: true,
       user_metadata: userMetadata,
     });
 
@@ -244,26 +271,21 @@ export default async function handler(req, res) {
       });
     }
 
-    // Send the verification email ourselves via Resend.
-    // We don't rely on Supabase's built-in email path because this project's
-    // GoTrue email rate limit was throttled to 2/h after a historical bounce
-    // spike — see plan Phase 6. generateLink + Resend bypasses that limit.
-    //
-    // This runs for BOTH paths. It used to be gated on isSelfSignup, which meant
-    // an admin-created user (Country Admin, auditor, CB) never received a link,
-    // could never confirm their email, and was locked out forever while the
-    // dashboard still showed them as "Active".
-    let emailSendFailed = false;
-    const sendResult = await sendVerificationEmail({
-      supabaseAdmin,
-      email,
-      password,
-      name: displayName,
-    });
-    if (!sendResult.ok) {
-      emailSendFailed = true;
-      console.error('create-user: verification email send failed', sendResult);
+    // No verification email — verification was removed (client, 25 Jul).
+    // Instead, welcome the new user directly. Skipped for a user held at
+    // approval_status 'pending' (a pay-first client awaiting admin approval),
+    // mirroring the old send-welcome rule so they aren't welcomed before access.
+    if (resolvedApprovalStatus !== 'pending') {
+      await sendWelcomeDirect({ email, name: displayName, role: assignedRole });
+      // Stamp welcome_sent_at so the legacy email_confirmed_at trigger, if it
+      // ever fires for this user, does not send a second welcome.
+      await supabaseAdmin
+        .from('profiles')
+        .update({ welcome_sent_at: new Date().toISOString() })
+        .eq('id', authData.user.id)
+        .then(() => {}, () => {});
     }
+    const emailSendFailed = false;
 
     // Alert admins to the new client registration / lead (best-effort).
     // In the current funnel a registered email IS the lead, so this covers

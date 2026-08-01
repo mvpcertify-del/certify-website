@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { Input, Select, Button, Autocomplete } from '../../components/ui/FormElements';
 import CustomFieldRenderer, { validateCustomFields } from '../../components/CustomFieldRenderer';
 import MultiSelect from '../../components/ui/MultiSelect';
 import { getStakeholderType } from '../../utils/stakeholderTypes';
-import { COUNTRY_DIAL_CODES } from '../../utils/dialCodes';
+import { COUNTRY_DIAL_CODES, dialCodeForCountry } from '../../utils/dialCodes';
 import {
   AUDITOR_LEVELS,
   AUDITOR_STANDARD_OPTIONS,
@@ -14,7 +14,7 @@ import {
 } from '../../utils/auditorOptions';
 import { supabase } from '../../lib/supabase';
 import { apiPost } from '../../lib/apiClient';
-import { AlertCircle, CheckCircle, Eye, EyeOff, Clock, Mail, ArrowLeft } from 'lucide-react';
+import { AlertCircle, CheckCircle, Eye, EyeOff, Clock, ArrowLeft } from 'lucide-react';
 import './Auth.css';
 
 const EMPLOYEE_RANGES = [
@@ -49,13 +49,38 @@ function useCustomFieldsForRole(role) {
   return fields;
 }
 
+// Returns STRUCTURED options: { label, city, country, countryCode }.
+//
+// `label` is Geoapify's formatted "City, Region, Country" string shown in the
+// dropdown; the other fields are pulled straight from the feature so a single
+// selection fills city AND country AND the phone dial code — no fragile
+// comma-splitting of the display string (client, 25 Jul: "type the city name,
+// it appears with the country, select it").
+//
+// `&lang=en` is essential: without it the Arabic funnel gets country names in
+// Arabic, which match nothing in the English country->region / country->dial
+// maps, silently blanking both region and the phone code.
 const fetchGeoapifyOptions = async (text, type) => {
   try {
     const apiKey = import.meta.env.VITE_GEOAPIFY_API_KEY;
-    const res = await fetch(`https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(text)}&type=${type}&apiKey=${apiKey}`);
+    const res = await fetch(`https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(text)}&type=${type}&lang=en&apiKey=${apiKey}`);
     const data = await res.json();
     if (data.features) {
-      return [...new Set(data.features.map(f => f.properties.formatted))];
+      const seen = new Set();
+      const out = [];
+      for (const f of data.features) {
+        const p = f.properties || {};
+        const label = p.formatted;
+        if (!label || seen.has(label)) continue;
+        seen.add(label);
+        out.push({
+          label,
+          city: p.city || p.county || p.address_line1 || '',
+          country: p.country || '',
+          countryCode: p.country_code || '',
+        });
+      }
+      return out;
     }
     return [];
   } catch (error) {
@@ -68,36 +93,6 @@ const fetchGeoapifyOptions = async (text, type) => {
 // Instead of dropping a brand-new user straight onto an empty dashboard, this
 // tells them what to do next and how to reach the team — the "further steps /
 // contact someone" the client asked for.
-function NextSteps() {
-  const { t } = useTranslation();
-  return (
-    <div
-      style={{
-        textAlign: 'left',
-        width: '100%',
-        marginBottom: '20px',
-        padding: '16px',
-        border: '1px solid var(--color-border)',
-        borderRadius: '10px',
-        background: 'var(--color-bg-subtle, #f9fafb)',
-      }}
-    >
-      <p style={{ fontWeight: 600, margin: '0 0 10px', fontSize: 'var(--font-size-sm)' }}>
-        {t('auth.nextStepsTitle')}
-      </p>
-      <ol style={{ margin: 0, paddingInlineStart: '20px', display: 'flex', flexDirection: 'column', gap: '6px', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-        <li>{t('auth.nextStep1')}</li>
-        <li>{t('auth.nextStep2')}</li>
-        <li>{t('auth.nextStep3')}</li>
-      </ol>
-      <p style={{ margin: '12px 0 0', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
-        {t('auth.nextStepsContact')}{' '}
-        <a href="mailto:support@certify.cx" className="auth-form__link">support@certify.cx</a>
-      </p>
-    </div>
-  );
-}
-
 export default function SignUp() {
   const [searchParams] = useSearchParams();
   const registrationType = searchParams.get('type') || '';
@@ -116,7 +111,8 @@ export default function SignUp() {
 }
 
 function SimpleClientSignUp() {
-  const { signup, signInWithGoogle } = useAuth();
+  const { signup, signInWithGoogle, login, getRoleDashboard } = useAuth();
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const referralCode = searchParams.get('ref') || '';
@@ -131,9 +127,6 @@ function SimpleClientSignUp() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [emailVerification, setEmailVerification] = useState(false);
-  const [emailSendFailed, setEmailSendFailed] = useState(false);
-  const [resendStatus, setResendStatus] = useState(''); // '', 'sending', 'sent', 'error'
 
   const customFields = useCustomFieldsForRole('client');
   const [customValues, setCustomValues] = useState({});
@@ -183,75 +176,20 @@ function SimpleClientSignUp() {
     });
 
     if (result.success) {
-      setEmailVerification(true);
-      setEmailSendFailed(!!result.emailSendFailed);
-      setLoading(false);
+      // Verification was removed — sign the new user straight in and take them
+      // to their dashboard instead of a "check your email" screen.
+      const loginRes = await login(email, password);
+      if (loginRes?.success) {
+        navigate(getRoleDashboard(loginRes.data?.user?.role || 'client'));
+      } else {
+        navigate('/login');
+      }
       return;
     }
     setError(result.error);
     setLoading(false);
   };
 
-  const handleResendVerification = async () => {
-    setResendStatus('sending');
-    try {
-      const resp = await fetch('/api/resend-verification', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      if (resp.ok) {
-        setResendStatus('sent');
-        setEmailSendFailed(false);
-      } else {
-        setResendStatus('error');
-      }
-    } catch {
-      setResendStatus('error');
-    }
-  };
-
-  if (emailVerification) {
-    return (
-      <div className="auth-form">
-        <div className="auth-form__pending">
-          <Mail size={48} className="auth-form__pending-icon" />
-          <h2 className="auth-form__title">{t('auth.verifyYourEmail')}</h2>
-          {emailSendFailed && resendStatus !== 'sent' ? (
-            <>
-              <p className="auth-form__subtitle" style={{ marginBottom: '12px' }}>
-                {t('auth.verificationEmailFailed', { email })}
-              </p>
-              <Button
-                type="button"
-                onClick={handleResendVerification}
-                disabled={resendStatus === 'sending'}
-                style={{ marginBottom: '16px' }}
-              >
-                {resendStatus === 'sending' ? t('auth.resending') : t('auth.resendVerification')}
-              </Button>
-              {resendStatus === 'error' && (
-                <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-error, #c00)', marginBottom: '16px' }}>
-                  {t('auth.resendError')}
-                </p>
-              )}
-            </>
-          ) : (
-            <>
-              <p className="auth-form__subtitle" style={{ marginBottom: '12px' }}>
-                {t('auth.verificationEmailSent', { email })}
-              </p>
-              <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', lineHeight: 1.6, marginBottom: '24px' }}>
-                {t('auth.checkInboxMessage')}
-              </p>
-            </>
-          )}
-          <NextSteps />
-          <Link to="/login" className="auth-form__link" style={{ fontSize: 'var(--font-size-sm)' }}>{t('auth.goToLogin')}</Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="auth-form auth-form--simple">
@@ -400,7 +338,8 @@ function SimpleClientSignUp() {
 }
 
 function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
-  const { signup, signInWithGoogle } = useAuth();
+  const { signup, signInWithGoogle, login, getRoleDashboard } = useAuth();
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const referralCode = searchParams.get('ref') || '';
@@ -460,16 +399,11 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
   const [auditorSectors, setAuditorSectors] = useState([]);
   // Non-blocking: the account exists, but a document or the qualification list
   // did not save. Shown on the "verify your email" screen.
-  const [attachWarning, setAttachWarning] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [pendingApproval, setPendingApproval] = useState(false);
-  const [emailVerification, setEmailVerification] = useState(false);
-  const [emailSendFailed, setEmailSendFailed] = useState(false);
-  const [resendStatus, setResendStatus] = useState('');
 
   const customFields = useCustomFieldsForRole(targetRole);
   const [customValues, setCustomValues] = useState({});
@@ -478,6 +412,8 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
     const { name, value } = e.target;
     setFormData(prev => {
       const updates = { [name]: value };
+      // Fallback for free typing (no structured pick): split the display string.
+      // A real selection goes through handleLocationSelect below, which is exact.
       if (name === 'location') {
         if (value && typeof value === 'string' && value.includes(',')) {
           const parts = value.split(',');
@@ -492,6 +428,22 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
       }
       return { ...prev, ...updates };
     });
+  };
+
+  // Fired when a city suggestion is actually picked. Uses Geoapify's structured
+  // fields (not string-splitting) to set city + country, and auto-fills the
+  // phone dial code from the country so the user types only the local number
+  // (client, 25 Jul). The user can still change the dial code manually after.
+  const handleLocationSelect = (opt) => {
+    if (!opt || typeof opt === 'string') return;
+    const derivedCode = dialCodeForCountry({ countryCode: opt.countryCode, countryName: opt.country });
+    setFormData(prev => ({
+      ...prev,
+      location: opt.label,
+      city: opt.city || prev.city,
+      country: opt.country || prev.country,
+      ...(derivedCode ? { contact_code: derivedCode } : {}),
+    }));
   };
 
   const validateStep = () => {
@@ -660,17 +612,18 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
     if (result.success) {
       try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
       if (targetRole === 'auditor' && result.data?.user?.id) {
-        setAttachWarning(await attachAuditorDetails(result.data.user.id));
+        // Upload the auditor's documents while there is still no session (the
+        // bootstrap path). A failure is logged inside attachAuditorDetails; we
+        // don't block sign-in on it.
+        await attachAuditorDetails(result.data.user.id);
       }
-      if (result.needsApproval) {
-        await supabase.auth.signOut();
-        setPendingApproval(true);
-        setLoading(false);
-        return;
+      // Verification was removed — sign in and go straight to the dashboard.
+      const loginRes = await login(formData.email, formData.password);
+      if (loginRes?.success) {
+        navigate(getRoleDashboard(loginRes.data?.user?.role || 'client'));
+      } else {
+        navigate('/login');
       }
-      setEmailVerification(true);
-      setEmailSendFailed(!!result.emailSendFailed);
-      setLoading(false);
       return;
     } else {
       setError(result.error);
@@ -678,92 +631,6 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
     setLoading(false);
   };
 
-  const handleResendVerification = async () => {
-    setResendStatus('sending');
-    try {
-      const resp = await fetch('/api/resend-verification', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email }),
-      });
-      if (resp.ok) {
-        setResendStatus('sent');
-        setEmailSendFailed(false);
-      } else {
-        setResendStatus('error');
-      }
-    } catch {
-      setResendStatus('error');
-    }
-  };
-
-  if (emailVerification) {
-    return (
-      <div className="auth-form">
-        <div className="auth-form__pending">
-          <Mail size={48} className="auth-form__pending-icon" />
-          <h2 className="auth-form__title">{t('auth.verifyYourEmail')}</h2>
-          {emailSendFailed && resendStatus !== 'sent' ? (
-            <>
-              <p className="auth-form__subtitle" style={{ marginBottom: '12px' }}>
-                {t('auth.verificationEmailFailed', { email: formData.email })}
-              </p>
-              <Button
-                type="button"
-                onClick={handleResendVerification}
-                disabled={resendStatus === 'sending'}
-                style={{ marginBottom: '16px' }}
-              >
-                {resendStatus === 'sending' ? t('auth.resending') : t('auth.resendVerification')}
-              </Button>
-              {resendStatus === 'error' && (
-                <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-error, #c00)', marginBottom: '16px' }}>
-                  {t('auth.resendError')}
-                </p>
-              )}
-            </>
-          ) : (
-            <>
-              <p className="auth-form__subtitle" style={{ marginBottom: '12px' }}>
-                {t('auth.verificationEmailSent', { email: formData.email })}
-              </p>
-              <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', lineHeight: 1.6, marginBottom: '24px' }}>
-                {t('auth.checkInboxMessage')}
-              </p>
-            </>
-          )}
-          {/* The account is fine; a document is not. Say so, instead of
-              console.error-ing it into the void like the old upload block. */}
-          {attachWarning && (
-            <div className="auth-form__error" style={{ marginBottom: '16px' }}>
-              <AlertCircle size={16} />
-              <span>{t('auth.auditorAttachWarning', { files: attachWarning })}</span>
-            </div>
-          )}
-          <NextSteps />
-          <Link to="/login" className="auth-form__link" style={{ fontSize: 'var(--font-size-sm)' }}>{t('auth.goToLogin')}</Link>
-        </div>
-      </div>
-    );
-  }
-
-  if (pendingApproval) {
-    return (
-      <div className="auth-form">
-        <div className="auth-form__pending">
-          <Clock size={48} className="auth-form__pending-icon" />
-          <h2 className="auth-form__title">{t('auth.registrationSubmitted')}</h2>
-          <p className="auth-form__subtitle" style={{ marginBottom: '12px' }}>
-            {t('auth.thankYouRegister', { type: stakeholderConfig ? stakeholderConfig.singularTitle : 'a stakeholder' })}
-          </p>
-          <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', lineHeight: 1.6, marginBottom: '24px' }}>
-            {t('auth.registrationUnderReview')}
-          </p>
-          <Link to="/login" className="auth-form__link" style={{ fontSize: 'var(--font-size-sm)' }}>{t('auth.goToLogin')}</Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="auth-form auth-form--wide">
@@ -873,7 +740,7 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
             <Autocomplete label={t('auth.location')} id="signup-location" name="location"
               placeholder={t('auth.locationPlaceholder')} freeSolo
               fetchOptions={(text) => fetchGeoapifyOptions(text, 'city')}
-              value={formData.location} onChange={handleChange} required />
+              value={formData.location} onChange={handleChange} onSelect={handleLocationSelect} required />
 
             <Input label={t('auth.passwordRequired')} type={showPassword ? 'text' : 'password'} id="signup-password" name="password"
               placeholder={t('auth.passwordPlaceholder')} value={formData.password}
@@ -958,7 +825,7 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
             <Autocomplete label={t('auth.location')} id="signup-location" name="location"
               placeholder={t('auth.locationPlaceholder')} freeSolo
               fetchOptions={(text) => fetchGeoapifyOptions(text, 'city')}
-              value={formData.location} onChange={handleChange} required />
+              value={formData.location} onChange={handleChange} onSelect={handleLocationSelect} required />
 
             <Button type="button" variant="primary" size="lg" fullWidth onClick={handleNext}>
               {t('auth.continue')}

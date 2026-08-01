@@ -2,6 +2,12 @@ import { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Loader2 } from 'lucide-react';
 import './FormElements.css';
 
+// An option may be a plain string (the original behaviour) OR an object with a
+// `.label` plus extra fields (e.g. the city autocomplete's { label, city,
+// country, countryCode }). optLabel() reads either shape so nothing below has
+// to care which it got.
+const optLabel = (opt) => (typeof opt === 'string' ? opt : (opt?.label ?? ''));
+
 export function Autocomplete({
   label,
   error,
@@ -10,6 +16,10 @@ export function Autocomplete({
   options = [],
   value = '',
   onChange,
+  // Fires with the FULL selected option (string or object) so a caller can
+  // read structured fields — used to fill city + country + dial code from one
+  // pick. `onChange` still fires with the display string for backward compat.
+  onSelect,
   placeholder = 'Select option...',
   required = false,
   freeSolo = false,
@@ -37,10 +47,12 @@ export function Autocomplete({
       if (containerRef.current && !containerRef.current.contains(e.target)) {
         setIsOpen(false);
         if (!freeSolo) {
-          const matchingOption = internalOptions.find(opt => opt.toLowerCase() === inputValue.toLowerCase());
+          const matchingOption = internalOptions.find(opt => optLabel(opt).toLowerCase() === inputValue.toLowerCase());
           if (matchingOption) {
-            if (onChange) onChange({ target: { name: fieldName, value: matchingOption } });
-            setInputValue(matchingOption);
+            const lbl = optLabel(matchingOption);
+            if (onChange) onChange({ target: { name: fieldName, value: lbl } });
+            if (onSelect) onSelect(matchingOption);
+            setInputValue(lbl);
           } else {
             setInputValue(value);
           }
@@ -49,7 +61,7 @@ export function Autocomplete({
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [inputValue, internalOptions, freeSolo, value, onChange, fieldName]);
+  }, [inputValue, internalOptions, freeSolo, value, onChange, onSelect, fieldName]);
 
   const handleInputChange = async (e) => {
     const val = e.target.value;
@@ -78,14 +90,16 @@ export function Autocomplete({
   };
 
   const handleOptionClick = (option) => {
-    setInputValue(option);
-    if (onChange) onChange({ target: { name: fieldName, value: option } });
+    const lbl = optLabel(option);
+    setInputValue(lbl);
+    if (onChange) onChange({ target: { name: fieldName, value: lbl } });
+    if (onSelect) onSelect(option);
     setIsOpen(false);
   };
 
-  const displayOptions = fetchOptions 
-    ? internalOptions 
-    : internalOptions.filter(opt => opt.toLowerCase().includes(inputValue.toLowerCase()));
+  const displayOptions = fetchOptions
+    ? internalOptions
+    : internalOptions.filter(opt => optLabel(opt).toLowerCase().includes(inputValue.toLowerCase()));
 
   return (
     <div className="form-group" ref={containerRef}>
@@ -117,12 +131,12 @@ export function Autocomplete({
               <div className="autocomplete-no-opts">Loading...</div>
             ) : displayOptions.length > 0 ? (
               displayOptions.map((opt, idx) => (
-                <div 
-                  key={idx} 
-                  className={`autocomplete-option ${opt === value ? 'autocomplete-option--selected' : ''}`}
+                <div
+                  key={idx}
+                  className={`autocomplete-option ${optLabel(opt) === value ? 'autocomplete-option--selected' : ''}`}
                   onClick={() => handleOptionClick(opt)}
                 >
-                  {opt}
+                  {optLabel(opt)}
                 </div>
               ))
             ) : (

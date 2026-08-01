@@ -3,7 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { Input, Button, Select } from '../../components/ui/FormElements';
 import { REGIONS, ROLES, ROLE_LABELS, PERMISSIONS, getRolePermissions, hasPermission, getDisplayRoleLabel } from '../../utils/roles';
-import { COUNTRY_DIAL_CODES } from '../../utils/dialCodes';
+import { COUNTRY_DIAL_CODES, dialCodeForCountry } from '../../utils/dialCodes';
+import { fetchCityOptions } from '../../utils/geoapify';
+import { Autocomplete } from '../../components/ui/FormElements';
 import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
 import CustomFieldRenderer from '../../components/CustomFieldRenderer';
@@ -291,19 +293,34 @@ function ProfileTab({ user }) {
               </div>
             </div>
           </div>
-          <Input
+          {/* Type a city → pick "City, Country" → both fill in, and the phone
+              dial code auto-updates to that country (client, 25 Jul). */}
+          <Autocomplete
             label="City"
             id="settings-city"
+            name="city"
+            freeSolo
+            placeholder="Start typing your city..."
             value={formData.city}
-            onChange={(e) => setFormData({...formData, city: e.target.value})}
-            placeholder="City where you live"
+            fetchOptions={fetchCityOptions}
+            onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+            onSelect={(opt) => {
+              if (!opt || typeof opt === 'string') return;
+              const code = dialCodeForCountry({ countryCode: opt.countryCode, countryName: opt.country });
+              setFormData(prev => ({
+                ...prev,
+                city: opt.city || prev.city,
+                country: opt.country || prev.country,
+                ...(code ? { phone_code: code } : {}),
+              }));
+            }}
           />
           <Input
             label="Country"
             id="settings-country"
             value={formData.country}
             onChange={(e) => setFormData({...formData, country: e.target.value})}
-            placeholder="Country where you live"
+            placeholder="Auto-filled from your city"
           />
           <Input
             label="Role"

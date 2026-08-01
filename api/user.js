@@ -586,10 +586,12 @@ async function resolveAuditorWriteAccess(req, auditorId) {
   }
 
   // No session at all — registration bootstrap only (see the note above).
-  const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(auditorId);
-  if (authUser?.user?.email_confirmed_at) {
-    return { error: 'Unauthorized: sign in to update this auditor', status: 401 };
-  }
+  //
+  // This used to also reject once email_confirmed_at was set. That signal is
+  // gone: email verification was removed (25 Jul), so every user is now created
+  // already-confirmed and email_confirmed_at is populated from the first
+  // moment. The bootstrap window is now bounded purely by created_at (a few
+  // minutes) and the per-auditor document cap below — both unchanged.
   if (Date.now() - new Date(target.created_at).getTime() > BOOTSTRAP_WINDOW_MS) {
     return { error: 'Unauthorized: sign in to update this auditor', status: 401 };
   }
