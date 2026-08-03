@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROLES } from '../../utils/roles';
+import { apiPost } from '../../lib/apiClient';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 import SaraChatWidget from '../sara/SaraChatWidget';
@@ -12,6 +13,12 @@ import './DashboardLayout.css';
 // Landing surfaces for each role — there is nothing meaningful to go "back" to
 // from these, so the arrow is suppressed rather than dangling.
 const ROOT_PATHS = new Set(['/dashboard', '/main-dashboard']);
+
+// The four partner roles that must sign their agreement before using anything
+// else (client, 2 Aug — "checking the box during registration"). Since email
+// verification was removed, a new partner lands on their dashboard immediately;
+// this gate makes signing the very first thing they do.
+const CONTRACT_ROLES = new Set([ROLES.REFERRAL, ROLES.CONSULTANCY, ROLES.AUDITOR, ROLES.REGIONAL_ADMIN]);
 
 const pageTitles = {
   '/dashboard': 'Dashboard',
@@ -38,6 +45,24 @@ export default function DashboardLayout() {
   const [profileModalDismissed, setProfileModalDismissed] = useState(false);
   const location = useLocation();
   const isClient = user?.role === ROLES.CLIENT;
+
+  // ---- Sign-before-use gate for partner roles ----
+  // null = still checking, true = signed current version (or n/a), false = must
+  // sign. Fail-OPEN on any error (missing template before the phase29 migration,
+  // network blip) so a broken check never bricks a partner's access.
+  const mustGate = CONTRACT_ROLES.has(user?.role);
+  const [contractOk, setContractOk] = useState(mustGate ? null : true);
+  const onContractPage = location.pathname === '/partner/contract';
+  useEffect(() => {
+    // Only partner roles are gated; non-partners start `true` from useState, so
+    // nothing to set synchronously here (which the hooks rule forbids anyway).
+    if (!mustGate || !user?.id) return;
+    let cancelled = false;
+    apiPost('/api/user', { action: 'get-contract' })
+      .then((res) => { if (!cancelled) setContractOk(res?.signedCurrentVersion === true); })
+      .catch(() => { if (!cancelled) setContractOk(true); });
+    return () => { cancelled = true; };
+  }, [mustGate, user?.id]);
 
   // Referrals/affiliates and investors run on the `client` role but represent a
   // person, not an organisation — they have no company to give, their
@@ -73,6 +98,19 @@ export default function DashboardLayout() {
   const pageTitle = pageTitles[location.pathname] || (
     <>Certify.cx<sup className="brand-tm">™</sup></>
   );
+
+  // An unsigned partner is sent to the agreement and can reach nothing else
+  // until they sign. The contract page itself is never gated (that's where they
+  // sign). While the check is in flight, hold the screen rather than flashing
+  // the dashboard and then yanking it away.
+  if (mustGate && !onContractPage) {
+    if (contractOk === null) {
+      return <div className="dashboard-layout" style={{ minHeight: '100vh' }} />;
+    }
+    if (contractOk === false) {
+      return <Navigate to="/partner/contract" replace />;
+    }
+  }
 
   return (
     <div className={`dashboard-layout ${collapsed ? 'dashboard-layout--collapsed' : ''}`}>

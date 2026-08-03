@@ -28,6 +28,10 @@ const supabaseAdmin = createClient(
 // profiles.commission_percent_override still takes precedence.
 const CONSULTANCY_COMMISSION_PERCENT = 25;
 
+// Referral partners earn a flat 10% (client decision, 2 Aug) — matches the
+// Referral Partner Agreement. Replaces the earlier volume tier ladder.
+const REFERRAL_FLAT_COMMISSION_PERCENT = 10;
+
 // The discount a buyer gets for arriving through a partner. This number is
 // advertised publicly on /register/referral ("Referred clients get 10% off
 // their first purchase") — changing it here without changing that copy makes
@@ -228,31 +232,8 @@ async function creditReferralForOrder({ applicationId, referrerId, clientId, cli
   }
 }
 
-const DEFAULT_TIERS = [
-  { min_conversions: 1,  max_conversions: 15, commission_percent: 15, label: 'Bronze' },
-  { min_conversions: 15, max_conversions: 20, commission_percent: 20, label: 'Silver' },
-  { min_conversions: 20, max_conversions: 25, commission_percent: 25, label: 'Gold' },
-  { min_conversions: 25, max_conversions: null, commission_percent: 25, label: 'Gold+' },
-];
-
-// Pick the tier whose [min, max) bracket contains the conversion count.
-// 0 conversions → first tier; open-ended max (null) handles the top bracket.
-function pickTier(tiers, conversionCount) {
-  const active = (tiers || []).filter(t => t.is_active !== false);
-  const sorted = [...active].sort((a, b) => a.min_conversions - b.min_conversions);
-  const list = sorted.length ? sorted : DEFAULT_TIERS;
-  // Use (n+1) as the "with this conversion" count — the new sale we're about
-  // to commit increments the referrer's rolling count.
-  const n = conversionCount + 1;
-  for (const tier of list) {
-    const max = tier.max_conversions ?? Infinity;
-    if (n >= tier.min_conversions && n < max) return tier;
-  }
-  return list[list.length - 1];
-}
-
 async function getReferrerTier(referrerId) {
-  // A partner who negotiated their own rate bypasses the tier ladder entirely.
+  // A partner who negotiated their own rate bypasses the flat rate entirely.
   // Consultancies are seeded at 25% by phase20; affiliates normally have no
   // override and fall through to the Bronze/Silver/Gold table below.
   const { data: profile } = await supabaseAdmin
@@ -277,23 +258,12 @@ async function getReferrerTier(referrerId) {
     return { commission_percent: CONSULTANCY_COMMISSION_PERCENT, label: 'Consultancy' };
   }
 
-  // Count conversions by this referrer in the rolling 12-month window
-  const twelveMonthsAgo = new Date();
-  twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
-
-  const { count } = await supabaseAdmin
-    .from('referrals')
-    .select('id', { count: 'exact', head: true })
-    .eq('referrer_id', referrerId)
-    .eq('status', 'converted')
-    .gte('converted_at', twelveMonthsAgo.toISOString());
-
-  const { data: tiers } = await supabaseAdmin
-    .from('referral_commission_tiers')
-    .select('*')
-    .order('min_conversions', { ascending: true });
-
-  return pickTier(tiers, count || 0);
+  // Referral partners earn a FLAT 10% (client decision, 2 Aug), matching the
+  // Referral Partner Agreement they sign. This replaces the earlier volume
+  // ladder (Bronze/Silver/Gold); the ladder helpers are kept only so an admin
+  // who re-enables tier rows in referral_commission_tiers still resolves
+  // correctly, but with no rows the flat rate applies.
+  return { commission_percent: REFERRAL_FLAT_COMMISSION_PERCENT, label: 'Referral' };
 }
 
 // --- Validate a coupon code without creating a Stripe session ---

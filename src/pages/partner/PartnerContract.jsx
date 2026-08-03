@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   FileSignature, CheckCircle2, Download, AlertTriangle, FileX2, RefreshCw,
@@ -52,6 +52,29 @@ export default function PartnerContract() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
+  // Force-scroll (client, 2 Aug): the accept checkbox stays disabled until the
+  // partner has scrolled to the bottom of the contract. This strengthens
+  // enforceability — the person cannot "blind-tick" without seeing the terms.
+  const scrollRef = useRef(null);
+  const [scrolledToEnd, setScrolledToEnd] = useState(false);
+  const handleScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    // +12px slack so sub-pixel heights / zoom don't trap the user just short.
+    if (el.scrollHeight - el.scrollTop <= el.clientHeight + 12) setScrolledToEnd(true);
+  };
+  // A short contract that needs no scrolling is already "read" — enable the box
+  // once we know the container isn't overflowing, so it never locks unfairly.
+  // Deferred to the next frame (not a synchronous setState in the effect body)
+  // so the measurement happens after layout and doesn't cascade a render.
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => {
+      const el = scrollRef.current;
+      if (el && el.scrollHeight <= el.clientHeight + 12) setScrolledToEnd(true);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [data]);
+
   // Every outcome sets all three result states rather than clearing them up
   // front, so nothing here calls setState synchronously — a prologue of
   // resets would fire a cascading render on mount (react-hooks/
@@ -82,7 +105,7 @@ export default function PartnerContract() {
     fetchContract();
   };
 
-  const canSubmit = signedName.trim().length > 0 && confirmed && !submitting;
+  const canSubmit = signedName.trim().length > 0 && confirmed && scrolledToEnd && !submitting;
 
   const handleAccept = async (e) => {
     e.preventDefault();
@@ -97,15 +120,16 @@ export default function PartnerContract() {
       });
       setSignedName('');
       setConfirmed(false);
-      // Re-fetch rather than patching state locally: the server also mints the
-      // PDF and its signed download URL, which we have no way to synthesise.
-      await fetchContract();
+      // Full reload to the dashboard: the partner may have been sent here by the
+      // sign-before-use gate (DashboardLayout), and a hard navigation re-runs
+      // that gate fresh so it now sees the signature and lets them through.
+      window.location.assign('/dashboard');
+      return;
     } catch (err) {
       setSubmitError(err.message);
       setSubmitting(false);
       return;
     }
-    setSubmitting(false);
   };
 
   // ---- Loading -------------------------------------------------------------
@@ -265,9 +289,16 @@ export default function PartnerContract() {
           </div>
         </div>
 
-        <div className={`pcontract__scroll${signed ? ' pcontract__scroll--readonly' : ''}`}>
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className={`pcontract__scroll${signed ? ' pcontract__scroll--readonly' : ''}`}
+        >
           <ContractBody text={template.body} />
         </div>
+        {!signed && !scrolledToEnd && (
+          <p className="pcontract__scroll-hint">{t('partnerContract.scrollHint')}</p>
+        )}
       </div>
 
       {/* ---- Signature form ---- */}
@@ -290,10 +321,11 @@ export default function PartnerContract() {
             maxLength={200}
           />
 
-          <label className="pcontract__check">
+          <label className={`pcontract__check${scrolledToEnd ? '' : ' pcontract__check--disabled'}`}>
             <input
               type="checkbox"
               checked={confirmed}
+              disabled={!scrolledToEnd}
               onChange={(e) => setConfirmed(e.target.checked)}
             />
             <span>{t('partnerContract.confirmLabel')}</span>

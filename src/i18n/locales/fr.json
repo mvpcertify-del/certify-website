@@ -1231,7 +1231,7 @@
       "invoiceDate": "Date",
       "invoiceItem": "Article",
       "invoiceAmount": "Montant",
-      "invoiceFooter": "Ceci est une estimation générée par Certify.cx et non une facture fiscale."
+      "invoiceFooter": "Ceci est une estimation générée par Certify.cx™ et non une facture fiscale."
     },
     "orgSizeQuestion": "Quelle est la taille de votre organisation ?",
     "employeesLabel": "Nombre d’employés",
@@ -1393,7 +1393,7 @@
     "loading": "Chargement de votre contrat...",
     "retry": "Réessayer",
     "noneTitle": "Aucun contrat publié pour le moment",
-    "noneBody": "Certify.cx n'a pas encore publié de contrat de partenaire pour votre type de compte. Vous serez informé dès qu'il sera disponible.",
+    "noneBody": "Certify.cx™ n'a pas encore publié de contrat de partenaire pour votre type de compte. Vous serez informé dès qu'il sera disponible.",
     "signedTitle": "Contrat signé",
     "signedSubtitle": "Vous avez accepté la version actuelle de ce contrat.",
     "signedBy": "Signé par",
@@ -1413,7 +1413,8 @@
     "namePlaceholder": "Votre nom légal complet",
     "confirmLabel": "J'ai lu et j'accepte les conditions de ce contrat",
     "acceptButton": "Accepter le Contrat",
-    "submitting": "Envoi en cours..."
+    "submitting": "Envoi en cours...",
+    "scrollHint": "Veuillez faire défiler jusqu au bas de l accord pour continuer."
   },
   "adminConsultancies": {
     "title": "Partenaires consultants",

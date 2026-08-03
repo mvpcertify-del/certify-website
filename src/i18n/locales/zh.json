@@ -1231,7 +1231,7 @@
       "invoiceDate": "日期",
       "invoiceItem": "项目",
       "invoiceAmount": "金额",
-      "invoiceFooter": "这是由 Certify.cx 生成的估算，并非税务发票。"
+      "invoiceFooter": "这是由 Certify.cx™ 生成的估算，并非税务发票。"
     },
     "orgSizeQuestion": "您的组织规模有多大？",
     "employeesLabel": "员工人数",
@@ -1393,7 +1393,7 @@
     "loading": "正在加载您的协议…",
     "retry": "重试",
     "noneTitle": "尚未发布协议",
-    "noneBody": "Certify.cx 尚未针对您的账户类型发布合作伙伴协议。一旦可用，我们会通知您。",
+    "noneBody": "Certify.cx™ 尚未针对您的账户类型发布合作伙伴协议。一旦可用，我们会通知您。",
     "signedTitle": "协议已签署",
     "signedSubtitle": "您已接受本协议的当前版本。",
     "signedBy": "签署人",
@@ -1413,7 +1413,8 @@
     "namePlaceholder": "您的法定全名",
     "confirmLabel": "我已阅读并接受本协议的条款",
     "acceptButton": "接受协议",
-    "submitting": "提交中…"
+    "submitting": "提交中…",
+    "scrollHint": "请滚动至协议底部以继续。"
   },
   "adminConsultancies": {
     "title": "咨询合作伙伴",

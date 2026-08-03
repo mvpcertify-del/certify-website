@@ -64,6 +64,30 @@ export class ContractError extends Error {
   }
 }
 
+// Each partner role has its own agreement (client, 2 Aug). The contract a user
+// sees and signs is derived from their ROLE server-side — never taken from the
+// request body — so nobody can sign a contract that isn't theirs. The four
+// partner_type values below key contract_templates and contract_acceptances.
+export const PARTNER_TYPES = ['referral', 'country_admin', 'auditor', 'consultancy'];
+
+export function partnerTypeForProfile(profile) {
+  if (!profile) return null;
+  const r = profile.role;
+  // Role decides first — it is the authoritative field. An auditor or country
+  // admin whose legacy stakeholder_type happens to read 'referral' must still
+  // sign THEIR role's agreement, not the referral one.
+  if (r === 'consultancy') return 'consultancy';
+  if (r === 'referral') return 'referral';
+  if (r === 'auditor') return 'auditor';
+  if (r === 'regional_admin') return 'country_admin';
+  // Legacy fallback only: accounts promoted to a partner role before
+  // phase14/phase22 may still carry the identity on stakeholder_type.
+  const st = profile.stakeholder_type;
+  if (st === 'consultancy') return 'consultancy';
+  if (st === 'referral') return 'referral';
+  return null;
+}
+
 function requireText(value, field, { max = 500 } = {}) {
   const s = typeof value === 'string' ? value.trim() : '';
   if (!s) throw new ContractError(`${field} is required.`);
@@ -100,6 +124,11 @@ export async function getActiveTemplate(supabaseAdmin, partnerType = 'consultanc
 // version is published, so every signature stays anchored to its own text.
 export async function saveTemplate(supabaseAdmin, input, caller) {
   const partnerType = input?.partnerType || 'consultancy';
+  // Reject a mistyped partner_type before it publishes a template nobody can
+  // ever sign (partnerTypeForProfile only ever asks for the four known types).
+  if (!PARTNER_TYPES.includes(partnerType)) {
+    throw new ContractError('Unknown partner type.');
+  }
   const title = requireText(input?.title, 'Title', { max: 200 });
   const body = requireText(input?.body, 'Contract text', { max: 100000 });
   const termMonths = Number(input?.termMonths ?? 12);
@@ -320,9 +349,9 @@ export async function buildContractPdf(acceptance, org, profile) {
   return doc.save();
 }
 
-async function uploadPdf(supabaseAdmin, { profileId, version, bytes }) {
+async function uploadPdf(supabaseAdmin, { profileId, partnerType = 'consultancy', version, bytes }) {
   // First path segment is the owner id — the storage RLS policy keys off it.
-  const path = `${profileId}/consultancy-agreement-v${version}.pdf`;
+  const path = `${profileId}/${partnerType}-agreement-v${version}.pdf`;
   const { error } = await supabaseAdmin.storage
     .from(BUCKET)
     .upload(path, Buffer.from(bytes), {
@@ -346,7 +375,6 @@ export async function acceptContract(supabaseAdmin, input, caller, req) {
   if (!profileId) throw new ContractError('Not signed in.', 401);
 
   const signedName = requireText(input?.signedName, 'Full name', { max: 200 });
-  const partnerType = input?.partnerType || 'consultancy';
 
   if (input?.confirmed !== true) {
     throw new ContractError('You must confirm that you accept the agreement.');
@@ -360,10 +388,11 @@ export async function acceptContract(supabaseAdmin, input, caller, req) {
 
   if (!profile) throw new ContractError('Profile not found.', 404);
 
-  const isConsultancy = profile.role === 'consultancy'
-    || profile.stakeholder_type === 'consultancy';
-  if (partnerType === 'consultancy' && !isConsultancy) {
-    throw new ContractError('This agreement is for consultancy partners.', 403);
+  // The contract type is decided by the signer's role, not by the request — a
+  // user can only ever sign their own role's agreement.
+  const partnerType = partnerTypeForProfile(profile);
+  if (!partnerType) {
+    throw new ContractError('Your account does not have an agreement to sign.', 403);
   }
 
   const template = await getActiveTemplate(supabaseAdmin, partnerType);
@@ -378,6 +407,9 @@ export async function acceptContract(supabaseAdmin, input, caller, req) {
     template_id: template.id,
     partner_type: partnerType,
     version: template.version,
+    // String version label for the core_legal_signatures spec (phase30).
+    contract_version_label: `v${template.version}_UIL_NetSales`,
+    is_accepted: true,
     title_snapshot: template.title,
     body_snapshot: template.body,
     signed_name: signedName,
@@ -417,7 +449,7 @@ export async function acceptContract(supabaseAdmin, input, caller, req) {
     const org = await loadOrgSettings(supabaseAdmin);
     const bytes = await buildContractPdf(acceptance, org, profile);
     const storagePath = await uploadPdf(supabaseAdmin, {
-      profileId, version: acceptance.version, bytes,
+      profileId, partnerType, version: acceptance.version, bytes,
     });
     if (storagePath) {
       await supabaseAdmin
@@ -433,10 +465,26 @@ export async function acceptContract(supabaseAdmin, input, caller, req) {
   return { acceptance, alreadySigned: false };
 }
 
+// The IP recorded here is legal evidence, so it must not be the part of the
+// request the signer controls. `x-forwarded-for` is client-supplied and its
+// LEFTMOST entry is attacker-set (a signer can send any address); the real
+// client sits at the RIGHT end, appended by the platform's proxy. So:
+//   1. prefer `x-real-ip`, which Vercel's edge sets to the connecting IP and
+//      overwrites if a client tries to forge it;
+//   2. else take the LAST hop of x-forwarded-for (closest to our server);
+//   3. else the socket address.
 function clientIp(req) {
+  const realIp = req?.headers?.['x-real-ip'];
+  if (typeof realIp === 'string' && realIp.trim()) return realIp.trim().slice(0, 100);
+
   const fwd = req?.headers?.['x-forwarded-for'];
-  if (typeof fwd === 'string' && fwd) return fwd.split(',')[0].trim().slice(0, 100);
-  return req?.socket?.remoteAddress?.slice(0, 100) || null;
+  if (typeof fwd === 'string' && fwd.trim()) {
+    const hops = fwd.split(',').map(s => s.trim()).filter(Boolean);
+    if (hops.length) return hops[hops.length - 1].slice(0, 100);
+  }
+  // Never null: core_legal_signatures.client_ip is NOT NULL (phase30). An
+  // address we genuinely couldn't capture is recorded honestly as 'unknown'.
+  return req?.socket?.remoteAddress?.slice(0, 100) || 'unknown';
 }
 
 // ----------------------------------------------------------------------------
@@ -482,7 +530,18 @@ export async function stampEffectiveDate(supabaseAdmin, profileId, approvedAtIso
 // ----------------------------------------------------------------------------
 // What the signed-in partner needs to render the contract screen: the current
 // agreement, and their own signature if they have one.
-export async function getContractForPartner(supabaseAdmin, caller, partnerType = 'consultancy') {
+export async function getContractForPartner(supabaseAdmin, caller) {
+  // Derive the contract from the caller's role — the page never chooses it.
+  const { data: profile } = await supabaseAdmin
+    .from('profiles')
+    .select('role, stakeholder_type')
+    .eq('id', caller.id)
+    .maybeSingle();
+  const partnerType = partnerTypeForProfile(profile);
+  if (!partnerType) {
+    throw new ContractError('Your account does not have an agreement to sign.', 403);
+  }
+
   const template = await getActiveTemplate(supabaseAdmin, partnerType);
 
   const { data: acceptance } = await supabaseAdmin
@@ -500,6 +559,7 @@ export async function getContractForPartner(supabaseAdmin, caller, partnerType =
   }
 
   return {
+    partnerType,
     template: {
       id: template.id,
       version: template.version,

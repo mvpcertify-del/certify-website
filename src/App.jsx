@@ -390,9 +390,11 @@ function AppRoutes() {
               </ProtectedRoute>
             } />
 
-            {/* Consultancy partner agreement — electronic contract signing */}
+            {/* Partner agreement — electronic contract signing. One agreement
+                per partner role (client, 2 Aug); the server serves each role
+                its own contract, so all four partner roles share this route. */}
             <Route path="/partner/contract" element={
-              <ProtectedRoute allowedRoles={[ROLES.CONSULTANCY]}>
+              <ProtectedRoute allowedRoles={[ROLES.CONSULTANCY, ROLES.REFERRAL, ROLES.AUDITOR, ROLES.REGIONAL_ADMIN]}>
                 <PartnerContract />
               </ProtectedRoute>
             } />

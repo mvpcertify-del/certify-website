@@ -181,6 +181,23 @@
   opacity: 0.85;
 }
 
+/* Force-scroll affordances. */
+.pcontract__scroll-hint {
+  margin: 0.5rem 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+.pcontract__check--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pcontract__check--disabled input {
+  cursor: not-allowed;
+}
+
 .pcontract__body {
   font-size: var(--font-size-base);
   line-height: 1.7;

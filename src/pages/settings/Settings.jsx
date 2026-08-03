@@ -653,7 +653,7 @@ function GeneralTab() {
             <h3 className="settings__general-label">Platform Name</h3>
             <p className="settings__general-desc">The name displayed across the platform</p>
           </div>
-          <Input id="platform-name" defaultValue="Certify.cx" style={{ maxWidth: 250 }} />
+          <Input id="platform-name" defaultValue="Certify.cx™" style={{ maxWidth: 250 }} />
         </div>
         <div className="settings__general-item">
           <div>

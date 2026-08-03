@@ -1231,7 +1231,7 @@
       "invoiceDate": "Datum",
       "invoiceItem": "Position",
       "invoiceAmount": "Betrag",
-      "invoiceFooter": "Dies ist eine von Certify.cx erstellte Schätzung und keine Steuerrechnung."
+      "invoiceFooter": "Dies ist eine von Certify.cx™ erstellte Schätzung und keine Steuerrechnung."
     },
     "orgSizeQuestion": "Wie groß ist Ihr Unternehmen?",
     "employeesLabel": "Anzahl der Mitarbeiter",
@@ -1393,7 +1393,7 @@
     "loading": "Ihr Vertrag wird geladen...",
     "retry": "Erneut versuchen",
     "noneTitle": "Noch kein Vertrag veröffentlicht",
-    "noneBody": "Certify.cx hat für Ihren Kontotyp noch keinen Partnervertrag veröffentlicht. Wir benachrichtigen Sie, sobald er verfügbar ist.",
+    "noneBody": "Certify.cx™ hat für Ihren Kontotyp noch keinen Partnervertrag veröffentlicht. Wir benachrichtigen Sie, sobald er verfügbar ist.",
     "signedTitle": "Vertrag unterzeichnet",
     "signedSubtitle": "Sie haben die aktuelle Fassung dieses Vertrags angenommen.",
     "signedBy": "Unterzeichnet von",
@@ -1413,7 +1413,8 @@
     "namePlaceholder": "Ihr vollständiger rechtlicher Name",
     "confirmLabel": "Ich habe die Bedingungen dieses Vertrags gelesen und akzeptiere sie",
     "acceptButton": "Vertrag annehmen",
-    "submitting": "Wird gesendet..."
+    "submitting": "Wird gesendet...",
+    "scrollHint": "Bitte scrollen Sie zum Ende der Vereinbarung, um fortzufahren."
   },
   "adminConsultancies": {
     "title": "Beratungspartner",

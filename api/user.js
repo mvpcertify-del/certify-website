@@ -449,9 +449,7 @@ async function getContract(req, res) {
   if (error) return res.status(status).json({ error });
 
   try {
-    const data = await getContractForPartner(
-      supabaseAdmin, caller, req.body?.partnerType || 'consultancy',
-    );
+    const data = await getContractForPartner(supabaseAdmin, caller);
     return res.status(200).json(data);
   } catch (err) {
     return contractFailure(res, err, 'getContract');

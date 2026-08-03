@@ -17,7 +17,7 @@ export default function PrivacyPolicy() {
         <p className="legal-page__updated">Last updated: 29 June 2026</p>
 
         <p>
-          This Privacy Policy explains how Certify.cx (&quot;Certify.cx&quot;, &quot;we&quot;,
+          This Privacy Policy explains how Certify.cx™ (&quot;Certify.cx™&quot;, &quot;we&quot;,
           &quot;us&quot;) collects, uses, and protects your information when you use our
           certification management platform and related services (the &quot;Service&quot;).
           By using the Service you agree to the practices described here.

@@ -18,7 +18,7 @@ export default function TermsOfService() {
 
         <p>
           These Terms of Service (&quot;Terms&quot;) govern your access to and use of the
-          Certify.cx platform and related services (the &quot;Service&quot;). By creating
+          Certify.cx™ platform and related services (the &quot;Service&quot;). By creating
           an account or using the Service, you agree to these Terms.
         </p>
 
@@ -40,7 +40,7 @@ export default function TermsOfService() {
         <p>
           The Service facilitates communication between clients, certification
           bodies, and auditors. Certification decisions are made by the relevant
-          accredited certification bodies. Certify.cx provides the platform and
+          accredited certification bodies. Certify.cx™ provides the platform and
           does not itself issue accreditation.
         </p>
 
@@ -54,7 +54,7 @@ export default function TermsOfService() {
         <h2>5. Intellectual Property</h2>
         <p>
           The Service and its content (excluding your own data) are owned by
-          Certify.cx and its licensors. You retain ownership of the data and
+          Certify.cx™ and its licensors. You retain ownership of the data and
           documents you upload, and grant us the rights needed to operate the
           Service.
         </p>
@@ -68,7 +68,7 @@ export default function TermsOfService() {
 
         <h2>7. Limitation of Liability</h2>
         <p>
-          To the maximum extent permitted by law, Certify.cx will not be liable for
+          To the maximum extent permitted by law, Certify.cx™ will not be liable for
           any indirect, incidental, or consequential damages arising from your use
           of the Service.
         </p>
