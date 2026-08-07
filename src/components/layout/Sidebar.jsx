@@ -24,6 +24,7 @@ import {
   User,
   Bell,
   Gift,
+  Handshake,
   Link2,
   UserPlus,
   Globe,
@@ -90,6 +91,11 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     { path: '/cert-body/dashboard', labelKey: 'nav.myReviews', icon: ShieldCheck, kind: KIND_CREATE, permissions: [PERMISSIONS.REVIEW_AUDIT_REPORTS], allowedRoles: [ROLES.CERTIFICATION_BODY] },
     { path: '/admin/applications', labelKey: 'nav.applications', icon: FileCheck2, kind: adminCreates, permissions: [PERMISSIONS.VIEW_ALL_CERTIFICATIONS] },
     { path: '/admin/companies', labelKey: 'nav.companies', icon: Building2, kind: adminCreates, permissions: [PERMISSIONS.VIEW_COMPANIES] },
+    // Directly under Clients, where the client asked for it (7 Aug). This is the
+    // ADMIN board over referral partners — not /referrals, which is a partner's
+    // own dashboard. allowedRoles is pinned to the two roles the route accepts
+    // so the menu can never offer a link that then bounces on ProtectedRoute.
+    { path: '/admin/referral-partners', labelKey: 'nav.referralPartners', icon: Handshake, kind: KIND_VIEW, permissions: [PERMISSIONS.MANAGE_USERS], allowedRoles: [ROLES.SUPER_ADMIN, ROLES.REGIONAL_ADMIN] },
     { path: '/admin/regional-admins', labelKey: 'nav.regionalAdmins', icon: ShieldCheck, kind: adminCreates, permissions: [PERMISSIONS.CREATE_ADMINS] },
     { path: '/admin/auditors', labelKey: 'nav.auditors', icon: UserCheck, kind: adminCreates, permissions: [PERMISSIONS.MANAGE_AUDITORS] },
     { path: '/admin/cert-bodies', labelKey: 'nav.certBodies', icon: Award, kind: adminCreates, permissions: [PERMISSIONS.MANAGE_BODIES] },

@@ -17,7 +17,10 @@ const BOXES = [
   { key: 'certBodies',    icon: Building,         path: '/admin/cb-registry',                color: '#6366f1' },
   { key: 'auditors',      icon: UserCheck,        path: '/admin/auditors',                   color: '#f59e0b' },
   { key: 'consultancies', icon: Briefcase,        path: '/admin/consultancies',               color: '#0ea5e9' },
-  { key: 'referrals',     icon: Gift,             path: '/referrals',                        color: '#ec4899' },
+  // Points at the admin board, not /referrals. /referrals is the signed-in
+  // partner's OWN dashboard, so an admin clicking a box that counts 20 referral
+  // partners landed on their own empty referral page.
+  { key: 'referrals',     icon: Gift,             path: '/admin/referral-partners',          color: '#ec4899' },
   { key: 'sales',         icon: CircleDollarSign, path: '/admin/sales',                      color: '#10b981', currency: true },
 ];
 

@@ -1,0 +1,269 @@
+/* ============================================
+   Admin — Referral Partners
+   Deliberately mirrors AdminConsultancies.css: the two screens sit next to each
+   other in the menu and read as one board, so the stat strip, table and badge
+   shapes are the same. Only the accents differ (money due is a warning colour).
+   ============================================ */
+
+/* ---- Summary strip ---- */
+.adref__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--spacing-base);
+  margin-bottom: var(--spacing-lg);
+}
+
+.adref__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 18px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  min-width: 0;
+}
+
+.adref__stat-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.adref__stat-value {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  overflow-wrap: anywhere;
+}
+
+.adref__stat--money .adref__stat-value {
+  color: var(--color-accent);
+  font-size: var(--font-size-xl);
+}
+
+.adref__stat--due .adref__stat-value {
+  color: var(--color-warning);
+  font-size: var(--font-size-xl);
+}
+
+/* ---- Toolbar ---- */
+.adref__toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-base);
+  margin-bottom: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+/* The search box owns the free space; the refresh button keeps its own size. */
+.adref__search {
+  flex: 1 1 260px;
+  max-width: 380px;
+}
+
+/* Input renders inside .form-group, which carries a bottom margin meant for
+   stacked forms. In a one-line toolbar that margin misaligns the button. */
+.adref__search .form-group {
+  margin-bottom: 0;
+}
+
+.adref__loading {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.adref__alert {
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  margin-bottom: var(--spacing-base);
+}
+
+.adref__alert--error {
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger);
+  color: var(--color-danger);
+}
+
+/* ---- Empty state ---- */
+.adref__empty {
+  text-align: center;
+  padding: 60px var(--spacing-lg);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  color: var(--color-text-tertiary);
+}
+
+.adref__empty h3 {
+  font-size: var(--font-size-lg);
+  color: var(--color-text-primary);
+  margin-top: var(--spacing-base);
+  margin-bottom: var(--spacing-xs);
+}
+
+.adref__empty p {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* ---- Table ----
+   The wrapper owns the horizontal scroll so a wide table never pushes the page
+   sideways on a phone. */
+.adref__table-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+}
+
+.adref__table {
+  width: 100%;
+  min-width: 1040px;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.adref__table thead th {
+  text-align: start;
+  padding: 12px 16px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.adref__table tbody td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  vertical-align: top;
+}
+
+.adref__table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.adref__table tbody tr:hover {
+  background: var(--color-bg-surface-hover);
+}
+
+.adref__money {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.adref__money--due {
+  color: var(--color-warning);
+}
+
+.adref__muted {
+  color: var(--color-text-tertiary);
+}
+
+/* ---- Partner cell ---- */
+.adref__partner {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 180px;
+}
+
+.adref__partner-name {
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.adref__partner-sub {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+/* ---- Referral code ---- */
+.adref__code {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+/* ---- Commission rate ---- */
+.adref__rate {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.adref__rate-note {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+/* ---- Badges ---- */
+.adref__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.adref__badge--ok {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.adref__badge--warn {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.adref__badge--muted {
+  background: var(--color-neutral-bg);
+  color: var(--color-neutral);
+}
+
+.adref__footnote {
+  margin-top: var(--spacing-base);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  line-height: 1.6;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  .adref__summary {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+
+  .adref__stat-value {
+    font-size: var(--font-size-xl);
+  }
+
+  .adref__search {
+    max-width: 100%;
+  }
+}

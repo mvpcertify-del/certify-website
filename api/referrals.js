@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { verifySession } from './_verifyAdmin.js';
+import { verifySession, verifyAdmin } from './_verifyAdmin.js';
 import { referralClientInviteEmail } from './_emailTemplates.js';
 
 const supabaseAdmin = createClient(
@@ -32,6 +32,12 @@ const SIGNATURE_MAX_LEN = 600;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// The rate a referral partner earns when no per-partner rate is agreed.
+// Kept in step with REFERRAL_FLAT_COMMISSION_PERCENT in api/checkout.js, which
+// is what actually writes the commission — this constant only labels the
+// admin list, so a drift would mislead, not miscalculate.
+const REFERRAL_FLAT_COMMISSION_PERCENT = 10;
+
 // A partner can only act once their account is live. A pending/rejected partner
 // must not be able to send branded mail.
 const partnerActive = (caller) =>
@@ -48,6 +54,7 @@ export default async function handler(req, res) {
 
   try {
     if (action === 'list') return await listReferrals(req, res);
+    if (action === 'partner-list') return await listReferralPartners(req, res);
     if (action === 'mark-payout') return await markPayout(req, res);
     if (action === 'record') return await recordReferral(req, res);
     if (action === 'check-discount') return await checkDiscount(req, res);
@@ -111,6 +118,145 @@ async function listReferrals(req, res) {
   }));
 
   return res.status(200).json({ referrals: enriched });
+}
+
+// ---- Admin: the Referral Partners list -------------------------------------
+//
+// Feeds /admin/referral-partners (the sidebar entry under Clients). One row per
+// referral partner with their ledger rolled up: clients introduced, how many
+// converted, commission earned and how much of it is still unpaid.
+//
+// Auth: verifyAdmin — a verified Bearer token. The older actions in this file
+// trust a body-supplied `adminId`, which is forgeable; this one does not repeat
+// that. A country admin is scoped to their own region like every other admin
+// list view, and fails closed when their region is unset.
+//
+// Why the roll-up happens here rather than in a SQL view: the consultancy board
+// reads consultancy_kpi (phase23) because it also needs contract state. The
+// referral list needs no contract columns, and adding a view would mean running
+// a migration against a live database just to render a read-only table. The
+// referral ledger holds one row per introduced client, so the aggregate is
+// cheap in memory and can never disagree with the ledger.
+async function listReferralPartners(req, res) {
+  const { caller, error, status } = await verifyAdmin(req);
+  if (error) return res.status(status).json({ error });
+
+  let query = supabaseAdmin
+    .from('profiles')
+    .select('id, full_name, company_name, email, country, region, referral_code, is_active, approval_status, created_at, commission_percent_override')
+    .eq('role', 'referral')
+    // Consultancy partners have their own screen (/admin/consultancies) and sat
+    // on the referral role until phase 22, so without this they would be listed
+    // on both. `.neq` alone would silently drop rows whose stakeholder_type is
+    // NULL, because NULL <> 'consultancy' is NULL, not true — the same trap the
+    // Main Dashboard counter documents.
+    .or('stakeholder_type.is.null,stakeholder_type.neq.consultancy');
+
+  if (caller.role === 'regional_admin') {
+    query = query.eq('region', caller.region || '__no_region__');
+  }
+
+  const { data: partners, error: pErr } = await query;
+  if (pErr) {
+    console.error('listReferralPartners: profiles query failed:', pErr.message);
+    return res.status(500).json({ error: 'Could not load referral partners.' });
+  }
+
+  const ids = (partners || []).map((p) => p.id);
+
+  // `select('*')` on purpose: the columns this roll-up reads were added across
+  // several migrations (payout_status/paid_at in phase20, application_id in
+  // phase25). Naming them would make the whole screen 500 on an environment
+  // that is one migration behind, instead of just showing a zero.
+  let ledger = [];
+  if (ids.length > 0) {
+    const { data, error: rErr } = await supabaseAdmin
+      .from('referrals')
+      .select('*')
+      .in('referrer_id', ids);
+    if (rErr) {
+      console.error('listReferralPartners: referrals query failed:', rErr.message);
+      return res.status(500).json({ error: 'Could not load referral partners.' });
+    }
+    ledger = data || [];
+  }
+
+  const monthStart = new Date();
+  monthStart.setUTCDate(1);
+  monthStart.setUTCHours(0, 0, 0, 0);
+
+  const byPartner = new Map(ids.map((id) => [id, {
+    total_referrals: 0,
+    converted: 0,
+    pending: 0,
+    converted_this_month: 0,
+    total_commission: 0,
+    unpaid_commission: 0,
+    last_conversion_at: null,
+  }]));
+
+  for (const row of ledger) {
+    const agg = byPartner.get(row.referrer_id);
+    if (!agg) continue;
+
+    agg.total_referrals += 1;
+
+    if (row.status !== 'converted') {
+      agg.pending += 1;
+      continue;
+    }
+
+    agg.converted += 1;
+
+    const amount = Number(row.commission_amount) || 0;
+    agg.total_commission += amount;
+    // Anything not explicitly marked paid is still owed. Treating a missing
+    // payout_status as paid would under-report what the platform owes.
+    if (row.payout_status !== 'paid') agg.unpaid_commission += amount;
+
+    if (row.converted_at) {
+      const at = new Date(row.converted_at);
+      if (!Number.isNaN(at.getTime())) {
+        if (at >= monthStart) agg.converted_this_month += 1;
+        if (!agg.last_conversion_at || at > new Date(agg.last_conversion_at)) {
+          agg.last_conversion_at = row.converted_at;
+        }
+      }
+    }
+  }
+
+  const rows = (partners || []).map((p) => ({
+    profile_id: p.id,
+    full_name: p.full_name,
+    company_name: p.company_name,
+    email: p.email,
+    country: p.country,
+    region: p.region,
+    referral_code: p.referral_code,
+    is_active: p.is_active,
+    approval_status: p.approval_status,
+    joined_at: p.created_at,
+    // An agreed per-partner rate wins over the flat rate, exactly as
+    // getReferrerTier() in api/checkout.js resolves it when paying out.
+    commission_percent: p.commission_percent_override != null
+      ? Number(p.commission_percent_override)
+      : REFERRAL_FLAT_COMMISSION_PERCENT,
+    has_agreed_rate: p.commission_percent_override != null,
+    ...byPartner.get(p.id),
+  }));
+
+  // Best earners first; a partner with no conversions yet sorts by how many
+  // clients they have introduced, so an active newcomer is not buried.
+  rows.sort((a, b) =>
+    b.converted - a.converted ||
+    b.total_commission - a.total_commission ||
+    b.total_referrals - a.total_referrals
+  );
+
+  return res.status(200).json({
+    partners: rows,
+    defaultCommissionPercent: REFERRAL_FLAT_COMMISSION_PERCENT,
+  });
 }
 
 async function markPayout(req, res) {

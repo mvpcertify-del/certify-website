@@ -62,6 +62,7 @@ const AdminCountries = lazy(() => import('./pages/admin/AdminCountries'));
 const AdminCoupons = lazy(() => import('./pages/admin/AdminCoupons'));
 const AdminCommissionTiers = lazy(() => import('./pages/admin/AdminCommissionTiers'));
 const AdminConsultancies = lazy(() => import('./pages/admin/AdminConsultancies'));
+const AdminReferralPartners = lazy(() => import('./pages/admin/AdminReferralPartners'));
 const AdminBilling = lazy(() => import('./pages/admin/AdminBilling'));
 const CertificationBodiesRegistry = lazy(() => import('./pages/bodies/CertificationBodies'));
 const AdminCompanies = lazy(() => import('./pages/admin/AdminCompanies'));
@@ -324,6 +325,14 @@ function AppRoutes() {
             <Route path="/admin/consultancies" element={
               <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.REGIONAL_ADMIN]}>
                 <AdminConsultancies />
+              </ProtectedRoute>
+            } />
+
+            {/* Admin — Referral Partners (who they introduced, what they earned).
+                Distinct from /referrals, which is a partner's OWN dashboard. */}
+            <Route path="/admin/referral-partners" element={
+              <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.REGIONAL_ADMIN]}>
+                <AdminReferralPartners />
               </ProtectedRoute>
             } />
 
