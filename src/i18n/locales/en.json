@@ -1522,6 +1522,7 @@
     "colStatus": "Status",
     "noCode": "Not issued",
     "agreedRate": "Agreed rate",
+    "editTitle": "Edit referral partner",
     "footnote": "Referral partners earn {{percent}}% of the net sale unless an individual rate is agreed. Commission is credited when a referred client pays.",
     "status": {
       "pending": "Pending approval",

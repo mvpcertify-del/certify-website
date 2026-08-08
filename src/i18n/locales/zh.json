@@ -1495,6 +1495,7 @@
     "colStatus": "状态",
     "noCode": "尚未生成",
     "agreedRate": "约定比例",
+    "editTitle": "编辑推荐合作伙伴",
     "footnote": "除非另有约定比例，推荐伙伴可获得净销售额的 {{percent}}%。佣金在被推荐客户付款后计入。",
     "status": {
       "pending": "待审批",

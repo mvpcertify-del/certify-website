@@ -95,7 +95,11 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     // ADMIN board over referral partners — not /referrals, which is a partner's
     // own dashboard. allowedRoles is pinned to the two roles the route accepts
     // so the menu can never offer a link that then bounces on ProtectedRoute.
-    { path: '/admin/referral-partners', labelKey: 'nav.referralPartners', icon: Handshake, kind: KIND_VIEW, permissions: [PERMISSIONS.MANAGE_USERS], allowedRoles: [ROLES.SUPER_ADMIN, ROLES.REGIONAL_ADMIN] },
+    // Marked ⚡ from 8 Aug: the screen stopped being a read-only board that day
+    // and now edits, deactivates and deletes partners, exactly like Clients.
+    // `adminCreates` rather than a fixed ⚡ because a country admin still only
+    // gets View there — the same rule Clients above follows.
+    { path: '/admin/referral-partners', labelKey: 'nav.referralPartners', icon: Handshake, kind: adminCreates, permissions: [PERMISSIONS.MANAGE_USERS], allowedRoles: [ROLES.SUPER_ADMIN, ROLES.REGIONAL_ADMIN] },
     { path: '/admin/regional-admins', labelKey: 'nav.regionalAdmins', icon: ShieldCheck, kind: adminCreates, permissions: [PERMISSIONS.CREATE_ADMINS] },
     { path: '/admin/auditors', labelKey: 'nav.auditors', icon: UserCheck, kind: adminCreates, permissions: [PERMISSIONS.MANAGE_AUDITORS] },
     { path: '/admin/cert-bodies', labelKey: 'nav.certBodies', icon: Award, kind: adminCreates, permissions: [PERMISSIONS.MANAGE_BODIES] },

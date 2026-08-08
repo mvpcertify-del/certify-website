@@ -46,9 +46,16 @@ export const BRAND_ACCENT_RGB = Object.freeze({
 // Public URL of the same mark, for HTML emails. Email clients will not render
 // `cid:` or data-URI images reliably (Gmail web strips data URIs outright), so
 // a plain hosted https PNG is the only treatment that works everywhere.
-// APP_PUBLIC_URL is the existing env var used to build links in transactional
-// email; the literal fallback keeps the logo working if it is ever unset.
-export const BRAND_MARK_URL = `${(process.env.APP_PUBLIC_URL || 'https://certify.cx').replace(/\/+$/, '')}/brand-mark.png`;
+//
+// This is DELIBERATELY not derived from APP_PUBLIC_URL any more (8 Aug). That
+// var names whatever host the app is deployed behind and was set to
+// https://app.certify.cx — a hostname that does not resolve — so every
+// transactional email rendered a broken-image icon where the logo belongs, the
+// registration alert the client screenshotted included. The mark lives on the
+// public site and is not tied to the app host, so it gets its own var with a
+// verified default; set BRAND_MARK_URL only if the artwork ever moves.
+export const BRAND_MARK_URL = process.env.BRAND_MARK_URL
+  || 'https://certify.cx/brand-mark.png';
 
 // Raw PNG bytes for pdf-lib's `embedPng()`. Returns a fresh Buffer per call;
 // pdf-lib copies what it needs, so callers never share mutable state.

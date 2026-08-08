@@ -89,6 +89,37 @@
   color: var(--color-danger);
 }
 
+.adref__alert--success {
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success);
+  color: var(--color-success);
+}
+
+/* The banners carry an icon beside the text. */
+.adref__alert {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+/* ---- Edit dialog ----
+   Deliberately page-local rather than the admin-users__* classes the Clients
+   screen borrows: those live in AdminUsers.css, which only loads with the
+   lazily-imported User Management route, so an admin who came straight here
+   would get an unstyled form. Same look, no cross-page dependency. */
+.adref__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-base);
+}
+
+.adref__form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+
 /* ---- Empty state ---- */
 .adref__empty {
   text-align: center;
@@ -127,7 +158,10 @@
 
 .adref__table {
   width: 100%;
-  min-width: 1040px;
+  /* 1040px covered the eleven data columns; the action cluster added 8 Aug is
+     four 26px buttons plus gaps, so the table needs the extra room or the last
+     column squeezes the commission figures onto two lines. */
+  min-width: 1200px;
   border-collapse: collapse;
   font-size: var(--font-size-sm);
 }
@@ -190,6 +224,13 @@
   font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
   overflow-wrap: anywhere;
+}
+
+/* ---- Row actions ----
+   The four buttons stay on one line; wrapping them would change the row height
+   of a single row and break the alignment down the table. */
+.adref__actions {
+  white-space: nowrap;
 }
 
 /* ---- Referral code ---- */

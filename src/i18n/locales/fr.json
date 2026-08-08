@@ -1495,6 +1495,7 @@
     "colStatus": "Statut",
     "noCode": "Non attribué",
     "agreedRate": "Taux négocié",
+    "editTitle": "Modifier le partenaire d'apport",
     "footnote": "Les partenaires d'apport perçoivent {{percent}} % de la vente nette, sauf taux individuel convenu. La commission est créditée lorsque le client apporté paie.",
     "status": {
       "pending": "En attente d'approbation",

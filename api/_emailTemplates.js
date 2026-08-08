@@ -258,19 +258,36 @@ export function renewalReminderEmail({ name, companyName, isoStandard, certifica
 // Internal alert sent to admins (super + regional) when something needs their
 // attention — a new registration/lead, a payment, or a new certification
 // request. Plain, no-frills, links straight to the dashboard.
-export function adminAlertEmail({ title, message, actionUrl }) {
+// `details` is an optional [label, value] list rendered in the same bordered
+// summary box the payment and certificate emails use. Added 8 Aug: the new
+// registration alert said only "<name> (<email>) just registered", which does
+// not tell an admin what kind of account it is or which country it belongs to —
+// the two things that decide who has to act on it. Falsy values drop out, so a
+// caller can pass optional fields without conditionals.
+export function adminAlertEmail({ title, message, actionUrl, details = [] }) {
   const subject = `[${BRAND_TEXT}] ${title}`;
-  // title/message can carry user-supplied text (consultation form, guest
-  // contact details) — escape before embedding in HTML.
+  // title/message/details can carry user-supplied text (consultation form,
+  // guest contact details, a self-chosen company name) — escape every one of
+  // them before embedding in HTML.
+  // Guarded: this helper sits inside signup and payment paths, and a caller
+  // passing the wrong shape must degrade to "no details box", never throw and
+  // cost the admins their alert entirely.
+  const kept = (Array.isArray(details) ? details : [])
+    .filter((row) => Array.isArray(row) && row[1] != null && row[1] !== '');
+  const detailRows = kept.map(([label, value]) => [escapeHtml(label), escapeHtml(value)]);
   const html = layout({
     title: subject,
     bodyHtml: `
       ${heading(escapeHtml(title))}
       ${body(escapeHtml(message))}
+      ${detailsBox(detailRows)}
       ${actionUrl ? `<p style="margin:0 0 28px;">${button(actionUrl, 'Open dashboard')}</p>` : ''}
       ${muted(`You're receiving this because you're an administrator on ${BRAND_TEXT}.`)}`,
   });
-  const text = `[${BRAND_TEXT}] ${title}\n\n${message}\n\n${actionUrl || ''}\n\n— ${BRAND_TEXT}`;
+  const detailText = kept.length
+    ? `\n\n${kept.map(([label, value]) => `${label}: ${value}`).join('\n')}`
+    : '';
+  const text = `[${BRAND_TEXT}] ${title}\n\n${message}${detailText}\n\n${actionUrl || ''}\n\n— ${BRAND_TEXT}`;
   return { subject, html, text };
 }
 

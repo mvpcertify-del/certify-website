@@ -1,18 +1,24 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Gift, RefreshCw, Search } from 'lucide-react';
+import { Gift, RefreshCw, Search, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { apiPost } from '../../lib/apiClient';
 import { Button, Input } from '../../components/ui/FormElements';
+import Modal from '../../components/ui/Modal';
+import DetailModal from '../../components/ui/DetailModal';
+import RowActions from '../../components/ui/RowActions';
+import { ROLES } from '../../utils/roles';
 import './AdminReferralPartners.css';
 
 // Super Admin / Country Admin view over referral partners — the "Referral
 // Partners" entry the client asked for under Clients in the left menu (7 Aug).
 //
-// Read-only by design, matching the consultancy board next to it: nothing here
-// deactivates a partner or releases a payout. Deactivation stays in User
-// Management and payouts stay on the referral ledger, so this screen can be
-// shown to anyone who needs the numbers without widening what they can change.
+// 8 Aug: the client asked for the same four row actions Clients carries —
+// View, Edit, Deactivate, Delete — so the screen is no longer read-only. The
+// split follows Clients exactly: a Super Admin gets all four, every other admin
+// who can reach the list gets View alone. The actions are not a second way to
+// manage users; they call the same endpoints User Management does
+// (/api/user + /api/delete-user), which re-check the caller's rights server-side.
 //
 // The region scope is applied by the API (a country admin only ever receives
 // their own region's partners), not by this component — the browser must not be
@@ -20,12 +26,22 @@ import './AdminReferralPartners.css';
 export default function AdminReferralPartners() {
   const { t, i18n } = useTranslation();
   const { user, loading: authLoading } = useAuth();
+  const isSuperAdmin = user?.role === ROLES.SUPER_ADMIN;
 
   const [partners, setPartners] = useState([]);
   const [defaultPercent, setDefaultPercent] = useState(10);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [search, setSearch] = useState('');
+
+  // Row actions
+  const [showView, setShowView] = useState(false);
+  const [viewingPartner, setViewingPartner] = useState(null);
+  const [showEdit, setShowEdit] = useState(false);
+  const [editingPartner, setEditingPartner] = useState(null);
+  const [editForm, setEditForm] = useState({ full_name: '', email: '', company_name: '', country: '' });
+  const [saving, setSaving] = useState(false);
 
   const locale = i18n.language || undefined;
 
@@ -88,6 +104,8 @@ export default function AdminReferralPartners() {
     unpaid: acc.unpaid + (Number(p.unpaid_commission) || 0),
   }), { total: 0, converted: 0, commission: 0, unpaid: 0 }), [filtered]);
 
+  const partnerName = (p) => p?.full_name || p?.company_name || p?.email || '—';
+
   const renderStatusCell = (p) => {
     if (p.is_active === false) {
       return <span className="adref__badge adref__badge--muted">{t('common.inactive')}</span>;
@@ -101,6 +119,122 @@ export default function AdminReferralPartners() {
     }
     return <span className="adref__badge adref__badge--ok">{t('common.active')}</span>;
   };
+
+  // ---------------------------------------------------------------------
+  // Row actions — View / Edit / Deactivate / Delete
+  //
+  // Every write goes through the same service-role endpoint the Clients screen
+  // uses, so the authorization rules live in one place: /api/user re-verifies
+  // the Bearer token and refuses a target the caller may not manage, and
+  // /api/delete-user does its own ownership check before it clears the ~15
+  // tables that reference the user.
+  // ---------------------------------------------------------------------
+  const openView = (p) => {
+    setViewingPartner(p);
+    setShowView(true);
+  };
+
+  const openEdit = (p) => {
+    setEditingPartner(p);
+    setEditForm({
+      full_name: p.full_name || '',
+      email: p.email || '',
+      company_name: p.company_name || '',
+      country: p.country || '',
+    });
+    setError('');
+    setShowEdit(true);
+  };
+
+  const submitEdit = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (!editForm.full_name.trim() || !editForm.email.trim()) {
+      setError(t('admin.fillRequired'));
+      return;
+    }
+    setSaving(true);
+    try {
+      await apiPost('/api/user', {
+        action: 'update-profile',
+        userId: editingPartner.profile_id,
+        full_name: editForm.full_name,
+        email: editForm.email,
+        company_name: editForm.company_name || null,
+        country: editForm.country || null,
+      });
+      // Patch the row in place rather than refetching: only a Super Admin can
+      // reach this form and they are not region-scoped, so an edited country
+      // (which the API turns into a new `region`) cannot move the partner out
+      // of the list being shown.
+      setPartners((prev) => prev.map((p) =>
+        p.profile_id === editingPartner.profile_id ? { ...p, ...editForm } : p
+      ));
+      setShowEdit(false);
+      setSuccess(`${t('common.save')}: ${editForm.full_name || editForm.email}`);
+    } catch (err) {
+      setError(err.message);
+    }
+    setSaving(false);
+  };
+
+  const handleToggleActive = async (p) => {
+    setError('');
+    const next = !(p.is_active !== false);
+    try {
+      await apiPost('/api/user', { action: 'set-active', userId: p.profile_id, isActive: next });
+      setPartners((prev) => prev.map((x) =>
+        x.profile_id === p.profile_id ? { ...x, is_active: next } : x
+      ));
+      setSuccess(`${next ? t('common.activate') : t('common.deactivate')}: ${partnerName(p)}`);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleDelete = async (p) => {
+    setError('');
+    const name = partnerName(p);
+    // Deleting a partner also removes their referral ledger rows, so this one
+    // is confirmed before it is sent — same guard as the Clients screen.
+    if (!window.confirm(t('admin.deleteUserConfirm') + ` ${name}?`)) return;
+    try {
+      await apiPost('/api/delete-user', { userId: p.profile_id });
+      setPartners((prev) => prev.filter((x) => x.profile_id !== p.profile_id));
+      setSuccess(`${t('admin.successDeleted')} ${name}`);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  // The View popup reuses the table's own fields so the two can never disagree.
+  // DetailModal calls render(rawValue, row).
+  const detailColumns = [
+    { key: 'full_name', label: t('adminReferralPartners.colPartner'), render: (_, row) => partnerName(row) },
+    { key: 'email', label: t('auth.email'), render: (v) => v || '—' },
+    { key: 'company_name', label: t('admin.companyName'), render: (v) => v || '—' },
+    { key: 'country', label: t('adminReferralPartners.colCountry'), render: (v, row) => v || row.region || '—' },
+    {
+      key: 'referral_code',
+      label: t('adminReferralPartners.colCode'),
+      render: (v) => (v
+        ? <code className="adref__code" dir="ltr">{v}</code>
+        : <span className="adref__muted">{t('adminReferralPartners.noCode')}</span>),
+    },
+    { key: 'total_referrals', label: t('adminReferralPartners.colIntroduced'), render: formatInt },
+    { key: 'converted', label: t('adminReferralPartners.colConverted'), render: formatInt },
+    { key: 'converted_this_month', label: t('adminReferralPartners.colThisMonth'), render: formatInt },
+    { key: 'total_commission', label: t('adminReferralPartners.colCommission'), render: formatMoney },
+    { key: 'unpaid_commission', label: t('adminReferralPartners.colUnpaid'), render: formatMoney },
+    {
+      key: 'commission_percent',
+      label: t('adminReferralPartners.colRate'),
+      render: (v, row) => `${Number(v ?? defaultPercent).toLocaleString(locale, { maximumFractionDigits: 2 })}%`
+        + (row.has_agreed_rate ? ` — ${t('adminReferralPartners.agreedRate')}` : ''),
+    },
+    { key: 'joined_at', label: t('adminReferralPartners.colJoined'), render: formatDate },
+    { key: 'is_active', label: t('adminReferralPartners.colStatus'), render: (_, row) => renderStatusCell(row) },
+  ];
 
   if (authLoading || !user) {
     return <div className="page-container"><p>{t('common.loadingDashboard')}</p></div>;
@@ -150,7 +284,19 @@ export default function AdminReferralPartners() {
         </Button>
       </div>
 
-      {error && <div className="adref__alert adref__alert--error">{error}</div>}
+      {success && (
+        <div className="adref__alert adref__alert--success">
+          <CheckCircle size={16} />
+          <span>{success}</span>
+        </div>
+      )}
+
+      {error && !showEdit && (
+        <div className="adref__alert adref__alert--error">
+          <AlertCircle size={16} />
+          <span>{error}</span>
+        </div>
+      )}
 
       {loading ? (
         <p className="adref__loading">{t('adminReferralPartners.loading')}</p>
@@ -184,6 +330,7 @@ export default function AdminReferralPartners() {
                 <th>{t('adminReferralPartners.colRate')}</th>
                 <th>{t('adminReferralPartners.colJoined')}</th>
                 <th>{t('adminReferralPartners.colStatus')}</th>
+                <th>{t('dashboard.action')}</th>
               </tr>
             </thead>
             <tbody>
@@ -230,6 +377,29 @@ export default function AdminReferralPartners() {
                   </td>
                   <td>{formatDate(p.joined_at)}</td>
                   <td>{renderStatusCell(p)}</td>
+                  <td className="adref__actions">
+                    {/* View is available to every admin who can reach the list;
+                        only the Super Admin gets the three write actions, the
+                        same split the Clients screen applies. */}
+                    {isSuperAdmin ? (
+                      <RowActions
+                        isActive={p.is_active !== false}
+                        showView
+                        onView={() => openView(p)}
+                        onEdit={() => openEdit(p)}
+                        onToggle={() => handleToggleActive(p)}
+                        onDelete={() => handleDelete(p)}
+                      />
+                    ) : (
+                      <RowActions
+                        showView
+                        onView={() => openView(p)}
+                        showToggle={false}
+                        showEdit={false}
+                        showDelete={false}
+                      />
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -240,6 +410,67 @@ export default function AdminReferralPartners() {
       <p className="adref__footnote">
         {t('adminReferralPartners.footnote', { percent: defaultPercent })}
       </p>
+
+      {/* Edit partner */}
+      <Modal isOpen={showEdit} onClose={() => setShowEdit(false)} title={t('adminReferralPartners.editTitle')}>
+        <form onSubmit={submitEdit} className="adref__form">
+          {error && (
+            <div className="adref__alert adref__alert--error">
+              <AlertCircle size={16} /><span>{error}</span>
+            </div>
+          )}
+          {/* admin.fullName already carries its own asterisk. */}
+          <Input
+            label={t('admin.fullName')}
+            id="edit-partner-name"
+            name="full_name"
+            value={editForm.full_name}
+            onChange={(e) => setEditForm((p) => ({ ...p, full_name: e.target.value }))}
+            required
+          />
+          <Input
+            label={`${t('auth.email')} *`}
+            type="email"
+            id="edit-partner-email"
+            name="email"
+            value={editForm.email}
+            onChange={(e) => setEditForm((p) => ({ ...p, email: e.target.value }))}
+            required
+          />
+          <Input
+            label={t('admin.companyName')}
+            id="edit-partner-company"
+            name="company_name"
+            value={editForm.company_name}
+            onChange={(e) => setEditForm((p) => ({ ...p, company_name: e.target.value }))}
+          />
+          <Input
+            label={t('admin.country')}
+            id="edit-partner-country"
+            name="country"
+            placeholder={t('admin.countryPlaceholder')}
+            value={editForm.country}
+            onChange={(e) => setEditForm((p) => ({ ...p, country: e.target.value }))}
+          />
+          <div className="adref__form-actions">
+            <Button type="button" variant="ghost" size="md" onClick={() => setShowEdit(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button type="submit" variant="primary" size="md" loading={saving}>
+              {t('common.save')}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* View partner (read-only) */}
+      <DetailModal
+        isOpen={showView}
+        onClose={() => setShowView(false)}
+        title={viewingPartner ? partnerName(viewingPartner) : t('common.view')}
+        columns={detailColumns}
+        row={viewingPartner}
+      />
     </div>
   );
 }

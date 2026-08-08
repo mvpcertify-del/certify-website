@@ -9,9 +9,15 @@ import { sendViaResend } from './_resendClient.js';
 import { sendWhatsApp } from './_notifyWhatsApp.js';
 import { adminAlertEmail } from './_emailTemplates.js';
 
-const APP_PUBLIC_URL = (process.env.APP_PUBLIC_URL || '').replace(/\/$/, '');
+// An empty base built a relative "/dashboard" href, which is a dead link inside
+// an email client — every other module that links into the app already falls
+// back to the public site, so this one does too.
+const APP_PUBLIC_URL = (process.env.APP_PUBLIC_URL || 'https://certify.cx').replace(/\/$/, '');
 
-export async function notifyAdmins(supabaseAdmin, { title, message, region = null }) {
+// `details` is an optional [label, value] list shown as a summary box in the
+// email (see adminAlertEmail). The in-app notification stays a single line —
+// the notifications table has no room for structured fields.
+export async function notifyAdmins(supabaseAdmin, { title, message, region = null, details = [] }) {
   try {
     const { data: admins } = await supabaseAdmin
       .from('profiles')
@@ -35,6 +41,7 @@ export async function notifyAdmins(supabaseAdmin, { title, message, region = nul
     const { subject, html, text } = adminAlertEmail({
       title,
       message,
+      details,
       actionUrl: `${APP_PUBLIC_URL}/dashboard`,
     });
     await Promise.all(

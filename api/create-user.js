@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { notifyAdmins } from './_notifyAdmins.js';
 import { verifyAdmin } from './_verifyAdmin.js';
-import { getRegionFromCountry, getCreatableRoles } from '../src/utils/roles.js';
+import { getRegionFromCountry, getCreatableRoles, ROLE_LABELS } from '../src/utils/roles.js';
 import { sanitizeAuditorTags } from '../src/utils/auditorOptions.js';
 import { welcomeEmail } from './_emailTemplates.js';
 
@@ -13,6 +13,7 @@ const supabaseAdmin = createClient(
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL;
 const APP_PUBLIC_URL = process.env.APP_PUBLIC_URL || 'https://certify.cx';
+const BRAND_NAME = 'Certify.cx';
 
 // Email verification was removed for everyone (client, 25 Jul). New users are
 // created already-confirmed and are never sent a "verify your email" link, so
@@ -287,14 +288,32 @@ export default async function handler(req, res) {
     }
     const emailSendFailed = false;
 
-    // Alert admins to the new client registration / lead (best-effort).
+    // Alert admins to the new registration / lead (best-effort).
     // In the current funnel a registered email IS the lead, so this covers
     // both the "new lead" and "new registration" admin alerts.
-    if (assignedRole === 'client') {
+    //
+    // 8 Aug: also fires for a self-registered partner, auditor or CB. Those are
+    // registrations an admin has to act on (approve, assign, contract) and they
+    // went out silently before. The condition is widened, never narrowed — every
+    // alert that was sent before is still sent. An admin-created account stays
+    // silent for non-clients: the admin who typed the form does not need an
+    // email telling them about it.
+    if (assignedRole === 'client' || isSelfSignup) {
       await notifyAdmins(supabaseAdmin, {
         title: 'New registration',
-        message: `${displayName} (${email})${company_name ? ` — ${company_name}` : ''} just registered.`,
+        message: `${displayName} (${email}) just registered on ${BRAND_NAME}.`,
         region: resolvedRegion,
+        // The one-liner alone did not say what kind of account this is or where
+        // it is — the two things that decide which admin has to pick it up.
+        details: [
+          ['Name', displayName],
+          ['Email', email],
+          ['Registered as', ROLE_LABELS[assignedRole] || assignedRole],
+          ['Company', company_name || null],
+          ['Country', country || null],
+          ['Phone', resolvedPhone || null],
+          ['Registered on', new Date().toUTCString()],
+        ],
       });
     }
 

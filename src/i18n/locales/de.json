@@ -1495,6 +1495,7 @@
     "colStatus": "Status",
     "noCode": "Nicht vergeben",
     "agreedRate": "Vereinbarter Satz",
+    "editTitle": "Empfehlungspartner bearbeiten",
     "footnote": "Empfehlungspartner erhalten {{percent}} % des Nettoumsatzes, sofern kein individueller Satz vereinbart ist. Die Provision wird gutgeschrieben, sobald der vermittelte Kunde bezahlt.",
     "status": {
       "pending": "Freigabe ausstehend",

@@ -1495,6 +1495,7 @@
     "colStatus": "Estado",
     "noCode": "Não emitido",
     "agreedRate": "Taxa acordada",
+    "editTitle": "Editar parceiro de indicação",
     "footnote": "Os parceiros de indicação recebem {{percent}}% da venda líquida, salvo taxa individual acordada. A comissão é creditada quando o cliente indicado paga.",
     "status": {
       "pending": "Aguarda aprovação",

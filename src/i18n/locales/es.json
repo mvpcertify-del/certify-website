@@ -1522,6 +1522,7 @@
     "colStatus": "Estado",
     "noCode": "Sin emitir",
     "agreedRate": "Tarifa acordada",
+    "editTitle": "Editar socio de referidos",
     "footnote": "Los socios de referidos ganan el {{percent}} % de la venta neta salvo que se acuerde una tarifa individual. La comisión se acredita cuando el cliente referido paga.",
     "status": {
       "pending": "Pendiente de aprobación",
