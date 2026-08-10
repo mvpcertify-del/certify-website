@@ -61,6 +61,29 @@ export default async function handler(req, res) {
   }
 }
 
+// Country → region, with the admin-managed `countries` table winning over the
+// static map — the same precedence src/utils/roles.js#getRegionFromCountryAsync
+// applies in the browser. It matters because the organization-details modal used
+// to resolve the region itself and post it; now that only the server derives it,
+// deriving it from the static map alone would quietly move a client into a
+// different region than the one an admin configured for their country.
+async function resolveRegionFromCountry(country) {
+  if (!country) return null;
+  const name = String(country).trim();
+  if (!name) return null;
+  try {
+    const { data } = await supabaseAdmin
+      .from('countries')
+      .select('region_id')
+      .ilike('name', name)
+      .maybeSingle();
+    if (data?.region_id) return data.region_id;
+  } catch {
+    // Table missing or unreachable — fall through to the static map.
+  }
+  return getRegionFromCountry(name);
+}
+
 async function updateProfile(req, res) {
   const {
     userId, full_name, company_name,
@@ -179,7 +202,7 @@ async function updateProfile(req, res) {
   if (country !== undefined) {
     updates.country = country;
     if (region === undefined) {
-      const derived = getRegionFromCountry(country);
+      const derived = await resolveRegionFromCountry(country);
       if (derived) updates.region = derived;
     }
   }

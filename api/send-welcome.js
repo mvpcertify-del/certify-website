@@ -6,6 +6,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { welcomeEmail } from './_emailTemplates.js';
+import { DASHBOARD_URL } from './_appUrl.js';
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -15,7 +16,6 @@ const supabaseAdmin = createClient(
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL;
 const INTERNAL_SECRET = process.env.INTERNAL_WEBHOOK_SECRET;
-const APP_PUBLIC_URL = process.env.APP_PUBLIC_URL || '';
 
 async function sendViaResend({ to, subject, html, text }) {
   const resp = await fetch('https://api.resend.com/emails', {
@@ -79,11 +79,10 @@ export default async function handler(req, res) {
       return res.status(200).json({ skipped: 'pending_approval' });
     }
 
-    const dashboardUrl = `${APP_PUBLIC_URL.replace(/\/$/, '')}/dashboard`;
     const { subject, html, text } = welcomeEmail({
       name: profile.full_name,
       role: profile.role,
-      dashboardUrl,
+      dashboardUrl: DASHBOARD_URL,
     });
 
     await sendViaResend({ to: profile.email, subject, html, text });

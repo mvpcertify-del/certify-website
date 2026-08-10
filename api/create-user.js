@@ -4,6 +4,7 @@ import { verifyAdmin } from './_verifyAdmin.js';
 import { getRegionFromCountry, getCreatableRoles, ROLE_LABELS } from '../src/utils/roles.js';
 import { sanitizeAuditorTags } from '../src/utils/auditorOptions.js';
 import { welcomeEmail } from './_emailTemplates.js';
+import { DASHBOARD_URL } from './_appUrl.js';
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -12,7 +13,6 @@ const supabaseAdmin = createClient(
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL;
-const APP_PUBLIC_URL = process.env.APP_PUBLIC_URL || 'https://certify.cx';
 const BRAND_NAME = 'Certify.cx';
 
 // Email verification was removed for everyone (client, 25 Jul). New users are
@@ -26,7 +26,7 @@ async function sendWelcomeDirect({ email, name, role }) {
     const { subject, html, text } = welcomeEmail({
       name: name || null,
       role: role || 'client',
-      dashboardUrl: `${APP_PUBLIC_URL}/dashboard`,
+      dashboardUrl: DASHBOARD_URL,
     });
     await fetch('https://api.resend.com/emails', {
       method: 'POST',

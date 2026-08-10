@@ -9,7 +9,9 @@ import { Button } from '../../components/ui/FormElements';
 import { supabase } from '../../lib/supabase';
 import { REGIONS, ROLES } from '../../utils/roles';
 import { useAuth } from '../../contexts/AuthContext';
-import { getPriceForStandard } from '../../utils/pricing';
+import { getPriceForStandard, computeTotal, PACKAGE_LABEL } from '../../utils/pricing';
+import { ISO_CATALOG_LIST } from '../../utils/isoCatalog';
+import Modal from '../../components/ui/Modal';
 import './Dashboard.css';
 
 // Phase 1: hide the assigned Certification Body card from clients until we
@@ -73,6 +75,63 @@ export default function Dashboard() {
   const [fetchingDocs, setFetchingDocs] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [assignedCbRegistry, setAssignedCbRegistry] = useState(null);
+
+  // --- Certification picker on the "ready for certification" step (9 Aug) ---
+  // The client picks one or more standards, confirms them in a payment popup,
+  // and goes straight to checkout for the whole basket.
+  const [selectedStandards, setSelectedStandards] = useState([]); // ISO slugs
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [startingCheckout, setStartingCheckout] = useState(false);
+  const [checkoutError, setCheckoutError] = useState(null);
+
+  const toggleStandard = (slug) => {
+    setSelectedStandards(prev => (
+      prev.includes(slug) ? prev.filter(s => s !== slug) : [...prev, slug]
+    ));
+  };
+
+  // Keep the picked order — it decides which application the buyer registers
+  // against first after paying.
+  const chosenStandards = selectedStandards
+    .map(slug => ISO_CATALOG_LIST.find(iso => iso.slug === slug))
+    .filter(Boolean);
+
+  // Headline figure only: the org-size surcharges and any coupon are added on
+  // the checkout page, which recomputes with the same helper.
+  const basketTotals = computeTotal({ standardsCount: chosenStandards.length || 1 });
+
+  // Creates one application per chosen standard — a certification is audited
+  // and certified individually, so they cannot share a row — then hands the
+  // basket to the existing checkout page, which charges for all of them in a
+  // single payment.
+  const startCheckout = async () => {
+    if (!chosenStandards.length || startingCheckout) return;
+    setStartingCheckout(true);
+    setCheckoutError(null);
+    try {
+      const { data, error } = await supabase
+        .from('applications')
+        .insert(chosenStandards.map(iso => ({
+          client_id: user.id,
+          status: 'awaiting_registration',
+          selected_package: PACKAGE_LABEL,
+          recommended_iso: iso.code,
+          ...(user?.company_name ? { company_name: user.company_name } : {}),
+        })))
+        .select('id');
+
+      if (error) throw error;
+      const ids = (data || []).map(row => row.id).filter(Boolean);
+      if (!ids.length) throw new Error('No application was created.');
+
+      const [primary, ...rest] = ids;
+      navigate(`/client/checkout/${primary}${rest.length ? `?also=${rest.join(',')}` : ''}`);
+    } catch (err) {
+      console.error('Failed to start certification checkout:', err);
+      setCheckoutError(err.message || t('dashboard.checkoutStartFailed'));
+      setStartingCheckout(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -147,9 +206,25 @@ export default function Dashboard() {
   }, [user]);
 
   const [selectedAppId, setSelectedAppId] = useState(null);
+  // A row still at 'awaiting_registration' was created at the payment step and
+  // never paid for — an abandoned basket, not an application the client has
+  // started. Treating one as the active application filled the dashboard with a
+  // tracker stuck on step 1 and no way forward (the "Complete Payment" card only
+  // appears for 'awaiting_payment'), while hiding the certification picker the
+  // client needs in order to try again. They are still listed under Past
+  // Applications, so nothing is concealed.
+  const registeredApplications = clientApplications.filter(
+    a => a.status !== 'awaiting_registration'
+  );
   const activeApp = selectedAppId
-    ? clientApplications.find(a => a.id === selectedAppId) || clientApplications[0]
-    : clientApplications[0];
+    ? clientApplications.find(a => a.id === selectedAppId) || registeredApplications[0]
+    : registeredApplications[0];
+
+  // Everything except the one being viewed above. This used to drop the first
+  // row by position, which assumed the active application is always the newest —
+  // it no longer is, since an unpaid basket sorts first but is not shown as
+  // active, and it would otherwise vanish from this table entirely.
+  const pastApplications = clientApplications.filter(a => a.id !== activeApp?.id);
 
   // Client: reveal the assigned certification body only after payment is
   // completed. Online card/PayPal orders are marked 'paid' on the success
@@ -329,7 +404,7 @@ export default function Dashboard() {
 
       {isClient ? (
         <div className="dashboard__client-layout">
-          {!fetchingApps && clientApplications.length === 0 && seeksCertification ? (
+          {!fetchingApps && registeredApplications.length === 0 && seeksCertification ? (
             <div className="dashboard__empty-state" style={{ textAlign: 'center', padding: '40px', background: 'var(--surface-color)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)' }}>
               {gapScore == null ? (
                 <>
@@ -375,25 +450,94 @@ export default function Dashboard() {
                   <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>
                     {t('dashboard.readyForCertDesc')}
                   </p>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '24px', textAlign: 'left' }}>
-                    {[
-                      { name: 'ISO 9001', desc: 'Quality Management' },
-                      { name: 'ISO 14001', desc: 'Environmental Management' },
-                      { name: 'ISO 27001', desc: 'Information Security' },
-                      { name: 'ISO 45001', desc: 'Occupational Health & Safety' },
-                      { name: 'ISO 22000', desc: 'Food Safety Management' },
-                      { name: 'ISO 13485', desc: 'Medical Devices Quality' },
-                    ].map(iso => (
-                      <div key={iso.name} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 14px', background: 'var(--color-bg-primary)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
-                        <Award size={18} color="var(--color-success)" style={{ flexShrink: 0 }} />
-                        <div>
-                          <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{iso.name}</div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{iso.desc}</div>
-                        </div>
-                      </div>
-                    ))}
+                  {/* Every catalog standard, not the six that used to be typed
+                      out here by hand (client, 9 Aug: "All certificates should
+                      be displayed"). ISO_CATALOG is the same source the public
+                      pricing pages read, so the two can no longer drift. */}
+                  <p className="dashboard__picker-hint">{t('dashboard.selectCertsHint')}</p>
+                  <div className="dashboard__cert-picker">
+                    {ISO_CATALOG_LIST.map(iso => {
+                      const selected = selectedStandards.includes(iso.slug);
+                      return (
+                        <button
+                          key={iso.slug}
+                          type="button"
+                          role="checkbox"
+                          aria-checked={selected}
+                          onClick={() => toggleStandard(iso.slug)}
+                          className={`dashboard__cert-card${selected ? ' dashboard__cert-card--selected' : ''}`}
+                        >
+                          <span className="dashboard__cert-check" aria-hidden="true">
+                            {selected ? <CheckCircle2 size={18} /> : <Award size={18} />}
+                          </span>
+                          <span className="dashboard__cert-text">
+                            <span className="dashboard__cert-code">{iso.code}</span>
+                            <span className="dashboard__cert-desc">{t(iso.titleKey)}</span>
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
-                  <Button onClick={() => navigate('/client/apply')}>{t('dashboard.startCertApp')}</Button>
+                  <Button
+                    disabled={chosenStandards.length === 0}
+                    onClick={() => { setCheckoutError(null); setShowPaymentModal(true); }}
+                  >
+                    {chosenStandards.length > 1
+                      ? t('dashboard.startCertAppCount', { n: chosenStandards.length })
+                      : t('dashboard.startCertApp')}
+                  </Button>
+
+                  {/* Payment popup. It confirms exactly what is being bought
+                      and what it costs before any row is written; the checkout
+                      page behind it recomputes the same total server-side. */}
+                  <Modal
+                    isOpen={showPaymentModal}
+                    onClose={() => { if (!startingCheckout) setShowPaymentModal(false); }}
+                    title={t('dashboard.paymentModalTitle')}
+                    size="md"
+                  >
+                    <p className="dashboard__pay-intro">{t('dashboard.paymentModalDesc')}</p>
+
+                    <ul className="dashboard__pay-list">
+                      {chosenStandards.map(iso => (
+                        <li key={iso.slug} className="dashboard__pay-row">
+                          <span>
+                            <strong>{iso.code}</strong>
+                            <span className="dashboard__pay-sub">{t(iso.titleKey)}</span>
+                          </span>
+                          <span className="dashboard__pay-amount">
+                            ${basketTotals.perStandard.toLocaleString()}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <div className="dashboard__pay-total">
+                      <span>{t('payment.totalAmount')}</span>
+                      <strong>${basketTotals.subtotal.toLocaleString()}</strong>
+                    </div>
+
+                    <p className="dashboard__pay-note">{t('dashboard.paymentModalNote')}</p>
+
+                    {checkoutError && (
+                      <div className="dashboard__pay-error">
+                        <AlertCircle size={16} /> <span>{checkoutError}</span>
+                      </div>
+                    )}
+
+                    <div className="dashboard__pay-actions">
+                      <Button
+                        variant="secondary"
+                        onClick={() => setShowPaymentModal(false)}
+                        disabled={startingCheckout}
+                      >
+                        {t('common.cancel')}
+                      </Button>
+                      <Button onClick={startCheckout} loading={startingCheckout}>
+                        {t('dashboard.proceedToPayment')}
+                      </Button>
+                    </div>
+                  </Modal>
                 </>
               )}
             </div>
@@ -703,7 +847,7 @@ export default function Dashboard() {
                         </Button>
                       )}
                     ]}
-                    data={clientApplications.length > 1 ? clientApplications.slice(1) : clientApplications}
+                    data={pastApplications}
                     emptyMessage="No past applications found."
                   />
                 ) : (

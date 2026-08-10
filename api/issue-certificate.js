@@ -2,8 +2,9 @@ import { createClient } from '@supabase/supabase-js';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { sendViaResend } from './_resendClient.js';
 import { certificateIssuedEmail } from './_emailTemplates.js';
-
-const APP_PUBLIC_URL = (process.env.APP_PUBLIC_URL || '').replace(/\/$/, '');
+// Was built from APP_PUBLIC_URL, which is set to a host with no valid
+// certificate in the deployment — see api/_appUrl.js.
+import { APP_URL as APP_PUBLIC_URL } from './_appUrl.js';
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,

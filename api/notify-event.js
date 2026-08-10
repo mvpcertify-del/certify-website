@@ -27,13 +27,17 @@ import {
   certificateIssuedEmail,
   renewalReminderEmail,
 } from './_emailTemplates.js';
+import { APP_URL } from './_appUrl.js';
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY,
 );
 
-const APP_PUBLIC_URL = (process.env.APP_PUBLIC_URL || '').replace(/\/$/, '');
+// Was APP_PUBLIC_URL — an unset value built a relative "/dashboard" href (dead
+// inside a mail client) and the value that WAS set pointed at a host with no
+// valid certificate. See api/_appUrl.js.
+const APP_PUBLIC_URL = APP_URL;
 
 const STAFF_ROLES = new Set(['super_admin', 'regional_admin', 'auditor', 'certification_body']);
 const CLIENT_EVENTS = new Set(['payment_confirmed', 'application_received']);

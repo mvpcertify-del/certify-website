@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { verifySession, verifyAdmin } from './_verifyAdmin.js';
 import { referralClientInviteEmail } from './_emailTemplates.js';
+import { APP_URL } from './_appUrl.js';
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -9,7 +10,6 @@ const supabaseAdmin = createClient(
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL;
-const APP_PUBLIC_URL = process.env.APP_PUBLIC_URL || 'https://certify.cx';
 
 // An optional company-profile PDF / video link included in the invite. The
 // client asked for it but has not supplied the asset yet, so the email drops
@@ -463,7 +463,7 @@ async function sendClientInvite(req, res) {
     return res.status(500).json({ error: 'Could not send the invite. Please try again.' });
   }
 
-  const registrationUrl = `${APP_PUBLIC_URL}/checkout?ref=${encodeURIComponent(partner.referral_code)}`;
+  const registrationUrl = `${APP_URL}/checkout?ref=${encodeURIComponent(partner.referral_code)}`;
   const signature = partner.email_signature
     ? String(partner.email_signature).slice(0, SIGNATURE_MAX_LEN)
     : null;

@@ -7,10 +7,10 @@
 // (manual resend when the first send failed).
 
 import { verifyEmail } from './_emailTemplates.js';
+import { APP_URL } from './_appUrl.js';
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL;
-const APP_PUBLIC_URL = process.env.APP_PUBLIC_URL || '';
 
 /**
  * Generate a verify/magic link for `email` and email it via Resend.
@@ -41,7 +41,10 @@ export async function sendVerificationEmail({ supabaseAdmin, email, password, na
     type,
     email,
     options: {
-      redirectTo: `${APP_PUBLIC_URL.replace(/\/$/, '')}${safePath}`,
+      // Was built from APP_PUBLIC_URL, which pointed at a host with no valid
+      // certificate — so confirming an email dumped the new user on a browser
+      // security warning. See api/_appUrl.js.
+      redirectTo: `${APP_URL}${safePath}`,
     },
   };
   if (type === 'signup') {

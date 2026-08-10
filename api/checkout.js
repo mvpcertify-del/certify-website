@@ -419,6 +419,17 @@ async function resolveCoupon(couponCode) {
   return null;
 }
 
+// A multi-standard basket is charged once but stored as one application row per
+// certification, so each row records its own share of the money rather than the
+// whole order — `total_amount` is summed in revenue views, and repeating the
+// basket total on every row would inflate them by the size of the basket.
+// Rounded to cents, so an uneven split can differ from the charge by a few cents
+// in aggregate; the amount actually charged is the Stripe session, not this.
+function perApplicationAmount(total, count) {
+  const n = Math.max(1, Math.floor(Number(count) || 1));
+  return Math.round(((Number(total) || 0) / n) * 100) / 100;
+}
+
 // ---- Anonymous "pay first, register after" checkout ----
 // Creates the buyer's client account AT the payment step, records the order,
 // then either opens Stripe (card) or returns offline instructions (cash /
@@ -1221,6 +1232,7 @@ export default async function handler(req, res) {
     const {
       isoName,
       applicationId,
+      applicationIds,
       clientId,
       couponCode,
       employeeBands = 0,
@@ -1235,13 +1247,54 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid payment method' });
     }
 
-    // ---- 0. Recompute the buyer's price server-side ----
+    // ---- 0. Resolve which certifications this order covers ----
+    // Since 9 Aug the dashboard lets a client pick several standards at once.
+    // Each one is its own application row (each is audited and certified
+    // separately) but they are paid for in a single transaction. A request
+    // that sends only `applicationId` behaves exactly as before.
+    const requestedIds = [...new Set(
+      (Array.isArray(applicationIds) && applicationIds.length ? applicationIds : [applicationId])
+        .filter(id => typeof id === 'string' && id.trim())
+    )];
+
+    let orderApplications = [];
+    if (requestedIds.length > 1) {
+      const { data: rows, error: rowsErr } = await supabaseAdmin
+        .from('applications')
+        .select('id, client_id, recommended_iso')
+        .in('id', requestedIds);
+      if (rowsErr) {
+        console.error('checkout: could not load the order applications:', rowsErr);
+        return res.status(500).json({ error: 'Could not load your order. Please try again.' });
+      }
+      orderApplications = rows || [];
+      // Every row must exist AND belong to the buyer. Without this, a crafted
+      // basket could attach someone else's applications to this payment — and
+      // paying for a row is what unlocks it.
+      if (
+        !clientId
+        || orderApplications.length !== requestedIds.length
+        || orderApplications.some(a => a.client_id !== clientId)
+      ) {
+        return res.status(403).json({ error: 'Order not found for this account.' });
+      }
+      // Preserve the buyer's order so the Stripe description reads the same as
+      // the checkout page they just confirmed.
+      const byId = new Map(orderApplications.map(a => [a.id, a]));
+      orderApplications = requestedIds.map(id => byId.get(id));
+    }
+
+    // Counted from rows the server loaded itself, never from the request.
+    const standardsCount = Math.max(1, orderApplications.length || 1);
+
+    // ---- 0b. Recompute the buyer's price server-side ----
     // Never trust the client. The same helper feeds the UI total, so the
     // displayed amount and the charge always agree. Full payment only.
     const totals = computeTotal({
       standardSlug: isoName,
       employeeBands,
       locations: additionalLocations,
+      standardsCount,
     });
     const price = totals.subtotal;
 
@@ -1313,12 +1366,15 @@ export default async function handler(req, res) {
           .update({
             additional_employee_bands: Math.max(0, Math.floor(Number(employeeBands) || 0)),
             additional_locations: Math.max(0, Math.floor(Number(additionalLocations) || 0)),
-            total_amount: finalPrice,
+            // Each row carries its own share of the order, not the basket
+            // total — otherwise a three-standard order would be counted three
+            // times over in every revenue figure that sums this column.
+            total_amount: perApplicationAmount(finalPrice, standardsCount),
             payment_method: paymentMethod,
             payment_status: 'awaiting_verification',
             ...(coupon ? { coupon_code: coupon.code } : {}),
           })
-          .eq('id', applicationId)
+          .in('id', requestedIds)
           .eq('client_id', clientId)
           .select('id');
         if (offErr) throw offErr;
@@ -1327,7 +1383,7 @@ export default async function handler(req, res) {
         console.error('Offline order persistence error:', persistErr);
         return res.status(500).json({ error: 'Could not record your order. Please try again.' });
       }
-      if (!updated || updated.length === 0) {
+      if (!updated || updated.length !== requestedIds.length) {
         return res.status(403).json({ error: 'Order not found for this account.' });
       }
       return res.status(200).json({
@@ -1339,12 +1395,21 @@ export default async function handler(req, res) {
     }
 
     // ---- 4a. Stripe session (card / PayPal) — full one-time payment ----
+    const orderStandards = orderApplications
+      .map(a => a?.recommended_iso)
+      .filter(Boolean);
     const lineItem = {
       price_data: {
         currency: 'usd',
         product_data: {
-          name: `${isoName} - ${PACKAGE_LABEL} Package`,
-          description: 'One-Time Payment',
+          name: standardsCount > 1
+            ? `${standardsCount} ISO certifications - ${PACKAGE_LABEL} Package`
+            : `${isoName} - ${PACKAGE_LABEL} Package`,
+          // Stripe shows this under the item, so the buyer can see on the
+          // payment page itself exactly which standards they are paying for.
+          description: standardsCount > 1 && orderStandards.length
+            ? orderStandards.join(' · ')
+            : 'One-Time Payment',
         },
         unit_amount: Math.round(finalPrice * 100),
       },
@@ -1352,6 +1417,11 @@ export default async function handler(req, res) {
     };
 
     const baseUrl = process.env.VITE_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://certify.cx');
+    // The rest of the basket travels back from Stripe so the registration form
+    // can complete every application that was just paid for.
+    const alsoQuery = requestedIds.length > 1
+      ? `&also=${requestedIds.slice(1).join(',')}`
+      : '';
 
     const sessionConfig = {
       payment_method_types: stripeMethodTypesFor(paymentMethod),
@@ -1360,10 +1430,11 @@ export default async function handler(req, res) {
       // Allow coupons created directly in the Stripe dashboard to also work,
       // alongside our app-managed discount_coupons table.
       allow_promotion_codes: true,
-      success_url: `${baseUrl}/client/apply/${applicationId}?payment=success`,
+      success_url: `${baseUrl}/client/apply/${applicationId}?payment=success${alsoQuery}`,
       cancel_url: `${baseUrl}/client/checkout/${applicationId}?payment=cancelled`,
       metadata: {
         applicationId: applicationId,
+        applicationIds: requestedIds.join(','),
         clientId: clientId,
         paymentMethod,
         referralDiscount: referralRecord ? 'true' : 'false',
@@ -1379,18 +1450,19 @@ export default async function handler(req, res) {
     // ---- 4b. Persist surcharge counts + total to the application row ----
     // The applications table has additional_employee_bands /
     // additional_locations / total_amount columns (see Phase B migration).
-    if (applicationId) {
+    if (requestedIds.length) {
       try {
         await supabaseAdmin
           .from('applications')
           .update({
             additional_employee_bands: Math.max(0, Math.floor(Number(employeeBands) || 0)),
             additional_locations: Math.max(0, Math.floor(Number(additionalLocations) || 0)),
-            total_amount: totals.subtotal,
+            // Per row, not the basket total — see the offline branch above.
+            total_amount: perApplicationAmount(totals.subtotal, standardsCount),
             payment_method: paymentMethod,
             payment_status: 'pending',
           })
-          .eq('id', applicationId);
+          .in('id', requestedIds);
       } catch (persistErr) {
         console.error('Surcharge persistence error (non-blocking):', persistErr);
       }

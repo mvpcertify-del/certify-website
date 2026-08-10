@@ -2,8 +2,6 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Building2, X } from 'lucide-react';
 import { Input, Select, Button, Autocomplete } from './ui/FormElements';
-import { getRegionFromCountryAsync } from '../utils/roles';
-import { supabase } from '../lib/supabase';
 import { apiPost } from '../lib/apiClient';
 import './ProfileCompletionModal.css';
 
@@ -48,15 +46,17 @@ export default function ProfileCompletionModal({ user, onComplete, onSkip }) {
     }
     setSaving(true);
     try {
-      const region = await getRegionFromCountryAsync(formData.country, supabase);
-      // apiPost attaches the access token; /api/user now rejects anonymous
-      // profile writes. `region` is ignored for a self-edit and re-derived
-      // server-side from the country, which lands on the same value.
+      // `region` is deliberately NOT sent (9 Aug). It used to be derived here
+      // and posted alongside the country, but /api/user treats `region` as a
+      // privileged field: any non-super-admin who sends a value different from
+      // the stored one is refused with "Forbidden: only a super admin can
+      // change region" — which is every client filling this form in, so the
+      // organization details were never saved. The server derives region from
+      // `country` on its own, which is where the value was coming from anyway.
       await apiPost('/api/user', {
         action: 'update-profile',
         userId: user.id,
         company_name: formData.company_name,
-        region: region || null,
         activity: formData.activity,
         country: formData.country,
         number_of_employees: formData.number_of_employees,

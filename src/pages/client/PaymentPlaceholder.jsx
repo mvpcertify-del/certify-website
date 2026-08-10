@@ -34,7 +34,22 @@ export default function PaymentPlaceholder() {
   const { t } = useTranslation();
   const { user } = useAuth();
 
+  // A basket of certifications (9 Aug). The dashboard lets a client select
+  // several standards; each one is its own `applications` row because each is
+  // audited and certified separately, but they are paid for together. The
+  // route param is the first row — the one the buyer registers against after
+  // paying — and the rest ride in ?also=id,id.
+  const extraApplicationIds = (() => {
+    try {
+      const raw = new URLSearchParams(window.location.search).get('also') || '';
+      return raw.split(',').map(s => s.trim()).filter(Boolean);
+    } catch {
+      return [];
+    }
+  })();
+
   const [application, setApplication] = useState(null);
+  const [basket, setBasket] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [checkoutError, setCheckoutError] = useState(null);
@@ -71,14 +86,23 @@ export default function PaymentPlaceholder() {
     let isMounted = true;
     const fetchApp = async () => {
       try {
+        const ids = [applicationId, ...extraApplicationIds];
         const { data, error } = await supabase
           .from('applications')
           .select('*')
-          .eq('id', applicationId)
-          .single();
+          .in('id', ids);
 
         if (error) throw error;
-        if (isMounted) setApplication(data);
+        // Restore the order the buyer picked — `in()` does not preserve it —
+        // and drop any id that did not come back, so a stale or foreign id in
+        // ?also= silently shrinks the basket instead of being charged for.
+        const byId = new Map((data || []).map(row => [row.id, row]));
+        const ordered = ids.map(id => byId.get(id)).filter(Boolean);
+        if (!ordered.length) throw new Error('Application not found');
+        if (isMounted) {
+          setBasket(ordered);
+          setApplication(ordered[0]);
+        }
       } catch (err) {
         console.error('Failed to fetch application:', err);
       } finally {
@@ -88,6 +112,7 @@ export default function PaymentPlaceholder() {
 
     if (applicationId) fetchApp();
     return () => { isMounted = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applicationId]);
 
   // Check if client is eligible for referral discount
@@ -170,14 +195,24 @@ export default function PaymentPlaceholder() {
 
   const isoName = application?.recommended_iso || 'ISO 9001:2015';
   const packageLabel = application?.selected_package || PACKAGE_LABEL;
+  // Every standard in the basket, in the order the buyer picked them.
+  const basketStandards = basket.length
+    ? basket.map(row => row.recommended_iso || 'ISO 9001:2015')
+    : [isoName];
+  const basketIds = basket.length ? basket.map(row => row.id) : [applicationId];
+  // Carried through payment so the registration form afterwards updates every
+  // paid application, not just the first.
+  const alsoParam = basketIds.slice(1).join(',');
 
   // Full (one-time) payment only — computeTotal is the same helper used by
   // api/checkout.js so client and server stay aligned. Single-package model,
-  // so no tier is passed.
+  // so no tier is passed. The server recomputes from the application rows it
+  // loads itself, so a tampered basket cannot change the price.
   const totals = computeTotal({
     standardSlug: isoName,
     employeeBands,
     locations: additionalLocations,
+    standardsCount: basketStandards.length,
   });
   const originalPrice = totals.subtotal;
 
@@ -216,6 +251,9 @@ export default function PaymentPlaceholder() {
         body: JSON.stringify({
           isoName,
           applicationId,
+          // The whole basket. Older single-standard callers send only
+          // applicationId and the server falls back to it.
+          applicationIds: basketIds,
           clientId: user?.id,
           couponCode: coupon?.code || null,
           employeeBands,
@@ -351,7 +389,7 @@ export default function PaymentPlaceholder() {
               </div>
 
               <button
-                onClick={() => navigate(`/client/apply/${application.id}?payment=pending`)}
+                onClick={() => navigate(`/client/apply/${application.id}?payment=pending${alsoParam ? `&also=${alsoParam}` : ''}`)}
                 style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: 'white', border: 'none', borderRadius: '14px', fontSize: '1.05rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}
               >
                 {t('payment.continueToRegistration')} <ArrowRight size={18} />
@@ -454,7 +492,19 @@ export default function PaymentPlaceholder() {
               </div>
               <div>
                 <p style={{ margin: '0 0 2px 0', fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('payment.certStandard')}</p>
-                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'white' }}>{isoName} · {packageLabel}</h3>
+                {/* A multi-standard basket lists every certification being
+                    bought — the buyer must be able to check what they are
+                    paying for before they pay for it. */}
+                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'white' }}>
+                  {basketStandards.length > 1
+                    ? t('payment.certCount', { n: basketStandards.length })
+                    : `${isoName} · ${packageLabel}`}
+                </h3>
+                {basketStandards.length > 1 && (
+                  <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.45 }}>
+                    {basketStandards.join(' · ')}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -595,10 +645,14 @@ export default function PaymentPlaceholder() {
             <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent, #e2e8f0 20%, #e2e8f0 80%, transparent)', margin: '0 0 24px 0' }} />
 
             {/* LINE-ITEM BREAKDOWN — base + surcharges, only when surcharges apply */}
-            {(totals.employeeSurchargeTotal > 0 || totals.locationSurchargeTotal > 0) && (
+            {(totals.employeeSurchargeTotal > 0 || totals.locationSurchargeTotal > 0 || totals.count > 1) && (
               <div style={{ marginBottom: '16px', padding: '14px 18px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: '#475569', marginBottom: 6 }}>
-                  <span>{t('pricing.lineItem.base')}</span>
+                  <span>
+                    {totals.count > 1
+                      ? t('pricing.lineItem.baseEach', { n: totals.count, price: totals.perStandard.toLocaleString() })
+                      : t('pricing.lineItem.base')}
+                  </span>
                   <span style={{ fontWeight: 600 }}>${totals.base.toLocaleString()}</span>
                 </div>
                 {totals.employeeSurchargeTotal > 0 && (

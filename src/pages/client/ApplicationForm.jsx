@@ -45,6 +45,16 @@ export default function ApplicationForm() {
   const isUpdateMode = Boolean(applicationId);
   const paymentJustSucceeded = searchParams.get('payment') === 'success';
 
+  // A client can buy several certifications in one payment (dashboard picker,
+  // 9 Aug). Each is its own application row; the extra ids ride in ?also= and
+  // this one form completes all of them — the company details are the same for
+  // every standard the same organization is certifying against.
+  const alsoIds = (searchParams.get('also') || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
+  const paidApplicationIds = applicationId ? [applicationId, ...alsoIds] : [];
+
   // ISO can arrive from either router state (in-app navigation), a query param
   // (legacy OAuth round-trip), or the stub row when in UPDATE mode. There is a
   // single "Standard" package now, so the package label is fixed.
@@ -74,6 +84,7 @@ export default function ApplicationForm() {
 
   // Stub row fetched in UPDATE mode (carries selected_package + recommended_iso).
   const [stubApp, setStubApp] = useState(null);
+  const [paidStandards, setPaidStandards] = useState([]);
   const [loadingStub, setLoadingStub] = useState(isUpdateMode);
 
   const [clients, setClients] = useState([]);
@@ -89,12 +100,18 @@ export default function ApplicationForm() {
     if (!isUpdateMode || !user?.id) return;
     let cancelled = false;
     (async () => {
-      const { data, error: fetchError } = await supabase
+      const { data: rows, error: fetchError } = await supabase
         .from('applications')
         .select('id, client_id, selected_package, recommended_iso, status, company_name, industry, scope, employee_count, locations_count')
-        .eq('id', applicationId)
-        .maybeSingle();
+        .in('id', paidApplicationIds);
       if (cancelled) return;
+      const data = (rows || []).find(r => r.id === applicationId) || null;
+      // Show every standard that was paid for, in the order they were bought.
+      setPaidStandards(
+        paidApplicationIds
+          .map(id => (rows || []).find(r => r.id === id)?.recommended_iso)
+          .filter(Boolean)
+      );
       if (fetchError || !data) {
         setError(t('application.appNotFound') || 'Application not found.');
         setLoadingStub(false);
@@ -193,18 +210,24 @@ export default function ApplicationForm() {
         if (paymentJustSucceeded) {
           updatePayload.payment_status = 'paid';
         }
+        // Every application paid for in the same transaction gets the same
+        // company details and the same status. Row-level security still scopes
+        // this to the buyer's own rows, so an id added to ?also= by hand
+        // updates nothing.
         const { error: updateError } = await supabase
           .from('applications')
           .update(updatePayload)
-          .eq('id', applicationId);
+          .in('id', paidApplicationIds);
         if (updateError) throw updateError;
 
         // Fire the lifecycle emails once the paid application is registered.
         // Best-effort + fire-and-forget: a mail hiccup must never block the
         // customer's redirect to their dashboard.
         if (paymentJustSucceeded) {
-          apiPost('/api/notify-event', { applicationId, event: 'payment_confirmed' }).catch(() => {});
-          apiPost('/api/notify-event', { applicationId, event: 'application_received' }).catch(() => {});
+          paidApplicationIds.forEach((id) => {
+            apiPost('/api/notify-event', { applicationId: id, event: 'payment_confirmed' }).catch(() => {});
+            apiPost('/api/notify-event', { applicationId: id, event: 'application_received' }).catch(() => {});
+          });
         }
       } else {
         const insertPayload = {
@@ -313,7 +336,11 @@ export default function ApplicationForm() {
               <CheckCircle2 size={18}/>
               <span>
                 {t('application.applyingFor', { package: selectedPackage || 'Bronze' })}
-                {recommendedIso ? ` — ${recommendedIso}` : ''}
+                {/* A multi-standard purchase names every certification, not
+                    just the row this URL happens to point at. */}
+                {paidStandards.length > 1
+                  ? ` — ${paidStandards.join(' · ')}`
+                  : (recommendedIso ? ` — ${recommendedIso}` : '')}
               </span>
             </div>
           )}

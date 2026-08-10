@@ -68,11 +68,18 @@ export function employeeBandsFromCount(employeeCount) {
 
 // Single source of truth for the buyer's total, used by both the UI and
 // api/checkout.js so client and server agree. Full (one-time) payment only.
-//   employeeBands  cumulative 50-headcount bands above the included 10
-//   locations      additional sites beyond the included 1
+//   employeeBands   cumulative 50-headcount bands above the included 10
+//   locations       additional sites beyond the included 1
+//   standardsCount  how many certifications are being bought in this order
+//                   (9 Aug: the dashboard now lets a client select several).
+//                   Each certification is its own audit against the same
+//                   organization, so the org-size surcharges are charged per
+//                   certification, not once for the basket.
 // Returns:
 //   {
-//     base,                  // base package price
+//     count,                 // certifications in the order
+//     perStandard,           // list price of one certification
+//     base,                  // base package price × count
 //     employeeSurchargeTotal,// flat employee surcharge
 //     locationSurchargeTotal,// flat location surcharge
 //     subtotal,              // amount to charge (base + surcharges)
@@ -82,18 +89,24 @@ export function computeTotal({
   tier, // accepted but ignored (single-package model); kept for compatibility
   employeeBands = 0,
   locations = 0,
+  standardsCount = 1,
 }) {
-  const base = getPriceForStandard(standardSlug);
+  const perStandard = getPriceForStandard(standardSlug);
+  // Defaults to 1 so every existing single-standard call site is unchanged.
+  const count = Math.max(1, Number.isFinite(+standardsCount) ? Math.floor(+standardsCount) : 1);
+  const base = perStandard * count;
 
   const bands = Math.max(0, Number.isFinite(+employeeBands) ? Math.floor(+employeeBands) : 0);
   const locs  = Math.max(0, Number.isFinite(+locations)     ? Math.floor(+locations)     : 0);
 
-  const employeeSurchargeTotal = bands * SURCHARGE_PER_EMPLOYEE_BAND;
-  const locationSurchargeTotal = locs  * SURCHARGE_PER_LOCATION;
+  const employeeSurchargeTotal = bands * SURCHARGE_PER_EMPLOYEE_BAND * count;
+  const locationSurchargeTotal = locs  * SURCHARGE_PER_LOCATION * count;
 
   const subtotal = base + employeeSurchargeTotal + locationSurchargeTotal;
 
   return {
+    count,
+    perStandard,
     base,
     employeeSurchargeTotal,
     locationSurchargeTotal,
