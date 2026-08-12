@@ -287,6 +287,7 @@
     "auditorSectorsPlaceholder": "Sélectionner des secteurs…",
     "auditorCertificates": "Certificats",
     "auditorAuditLog": "Journal d’audit",
+    "auditorUploadCv": "Téléverser le CV",
     "mobileNumber": "Numéro de mobile",
     "auditorDocsSizeNote": "Chaque fichier doit faire {{max}} Mo maximum.",
     "validationAuditorQualifications": "Veuillez sélectionner au moins une norme et un niveau de certificat.",

@@ -110,9 +110,15 @@ export default function AdminAuditors() {
       docType: 'certificate', uploadAction: 'add-auditor-document',
     },
     {
-      key: 'audit_log', label: t('auth.auditorAuditLog'), type: 'file',
+      // Client, 12 Aug: "Replace the Audit Log to become - Upload CV". The
+      // auditor's own sign-up form has always asked for a CV and this one
+      // never did, so the second file slot becomes the CV rather than a
+      // second document type nobody was filling in. `cv` is already one of the
+      // doc_type values auditor_documents accepts (phase24 migration), so
+      // nothing changes in the database.
+      key: 'cv', label: t('auth.auditorUploadCv'), type: 'file',
       accept: FILE_ACCEPT,
-      docType: 'audit_log', uploadAction: 'add-auditor-document',
+      docType: 'cv', uploadAction: 'add-auditor-document',
     },
   ];
 

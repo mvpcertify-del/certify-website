@@ -32,7 +32,12 @@ export default function Reports() {
       setFetching(false);
     };
     fetchReports();
-  }, [user]);
+    // Keyed on the identity/role/region this query actually reads, not on the
+    // whole `user` object — Supabase replaces that object on every tab refocus
+    // (TOKEN_REFRESHED), which re-ran the fetch and flashed the list back to
+    // "Loading" each time the user came back from another window.
+  }, [user?.id, user?.role, user?.region]);
+
 
   if (!user || loading) return <div className="page-container"><p>{t('common.loading')}</p></div>;
 

@@ -301,6 +301,7 @@
     "auditorSectorsPlaceholder": "اختر القطاعات…",
     "auditorCertificates": "الشهادات",
     "auditorAuditLog": "سجل التدقيق",
+    "auditorUploadCv": "رفع السيرة الذاتية",
     "mobileNumber": "رقم الجوال",
     "auditorDocsSizeNote": "يجب ألا يتجاوز حجم كل ملف {{max}} ميجابايت.",
     "validationAuditorQualifications": "يرجى اختيار معيار واحد على الأقل ومستوى شهادة واحد.",

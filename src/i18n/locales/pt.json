@@ -287,6 +287,7 @@
     "auditorSectorsPlaceholder": "Selecione os setores…",
     "auditorCertificates": "Certificados",
     "auditorAuditLog": "Registro de auditorias",
+    "auditorUploadCv": "Enviar currículo",
     "mobileNumber": "Número de celular",
     "auditorDocsSizeNote": "Cada arquivo deve ter no máximo {{max}} MB.",
     "validationAuditorQualifications": "Selecione pelo menos uma norma e um nível de certificado.",

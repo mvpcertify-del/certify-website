@@ -1,30 +1,39 @@
 // -------------------------------------------------------
 // Certify.cx — Pricing
 //
-// SINGLE-PACKAGE, SINGLE-PRICE model. Every catalog standard is offered as ONE
-// all-inclusive "Standard" certification package at the SAME price — $999.
-// (The client dropped the old Bronze / Silver / Gold three-tier model and the
-// 12-month support/audit add-ons, then flattened the last remaining price
-// split: ISO 9001 / 14001 / 45001 used to be $799 and are now $999 like the
-// rest.)
+// SINGLE-PACKAGE model: every catalog standard is offered as ONE all-inclusive
+// "Standard" certification package. (The client dropped the old Bronze /
+// Silver / Gold three-tier model and the 12-month support/audit add-ons.)
+//
+// TWO price points, set by the client on 12 Aug:
+//   ISO 9001 / ISO 14001 / ISO 45001 ....... US$   999
+//   every other standard ................... US$ 1,999
+// The three cheaper standards are the high-volume management-system trio;
+// everything else (food safety, information security, AI, medical devices, …)
+// is a specialist audit and is priced accordingly. CORE_STANDARDS below is the
+// single place that split is expressed — nothing else in the app hard-codes a
+// number, so moving a standard between the two prices is a one-line change.
 //
 // The buyer's headline price covers an organization with up to 50
 // employees at 1 location. Additional 50-employee bands and additional
 // locations each add a flat surcharge. Payment is full (one-time) only —
 // installment/monthly plans were removed.
 //
-// Note on `tier`: the pricing engine is now tier-agnostic. Functions still
-// accept a `tier` argument for backward-compatibility with older call sites
-// and stored application rows, but it is ignored — the price is the single
-// package base plus surcharges.
+// Note on `tier`: the pricing engine is tier-agnostic. Functions still accept
+// a `tier` argument for backward-compatibility with older call sites and
+// stored application rows, but it is ignored.
 //
 // Discount/promo codes are applied on the payment gateway by
 // api/checkout.js — no geo or country-tier pricing here.
 // -------------------------------------------------------
 import { ISO_CATALOG, getIsoBySlug, getIsoByCode } from './isoCatalog.js';
 
-// Base certification price (USD, one-time). One price for every standard.
-const BASE_PRICE = 999;
+// Price of the three core management-system standards (USD, one-time).
+export const CORE_PRICE = 999;
+// Price of every other standard in the catalog.
+export const BASE_PRICE = 1999;
+// The standards that carry CORE_PRICE, by catalog slug.
+export const CORE_STANDARDS = new Set(['iso-9001', 'iso-14001', 'iso-45001']);
 
 // The one package everyone buys. Stored on applications.selected_package and
 // shown wherever a package name is displayed.
@@ -51,11 +60,16 @@ export function resolveStandardSlug(input) {
   return getIsoByCode(codeOnly)?.slug || null;
 }
 
-// One-time price for a standard. Tier-agnostic AND standard-agnostic: both
-// arguments are accepted for backward-compatibility with older call sites and
-// stored rows, but every standard is the same single package price.
-export function getPriceForStandard(_slug, _tier) {
-  return BASE_PRICE;
+// One-time price for a standard. Tier-agnostic — `tier` is accepted for
+// backward-compatibility with older call sites and stored rows, and ignored.
+//
+// Accepts a slug ('iso-9001'), a code ('ISO 9001') or a stored
+// `recommended_iso` value ('ISO 9001:2015'); resolveStandardSlug normalizes
+// all three. Anything unrecognized is priced at BASE_PRICE — the higher of the
+// two — so an unmapped standard can never be sold below its intended price.
+export function getPriceForStandard(slug, _tier) {
+  const resolved = resolveStandardSlug(slug);
+  return resolved && CORE_STANDARDS.has(resolved) ? CORE_PRICE : BASE_PRICE;
 }
 
 // Convert a buyer-entered headcount into a count of cumulative 50-employee
@@ -68,33 +82,49 @@ export function employeeBandsFromCount(employeeCount) {
 
 // Single source of truth for the buyer's total, used by both the UI and
 // api/checkout.js so client and server agree. Full (one-time) payment only.
-//   employeeBands   cumulative 50-headcount bands above the included 10
+//   standardSlug    the one standard being bought (single-certification order)
+//   standardSlugs   OR the full basket, in the buyer's chosen order. Since the
+//                   two price points were introduced (12 Aug) a basket can mix
+//                   $999 and $1,999 standards, so a count alone is no longer
+//                   enough to price one — pass the list whenever there is one.
+//   employeeBands   cumulative 50-headcount bands above the included 50
 //   locations       additional sites beyond the included 1
-//   standardsCount  how many certifications are being bought in this order
-//                   (9 Aug: the dashboard now lets a client select several).
+//   standardsCount  legacy fallback: how many of `standardSlug` are being
+//                   bought. Only consulted when `standardSlugs` is absent.
 //                   Each certification is its own audit against the same
 //                   organization, so the org-size surcharges are charged per
 //                   certification, not once for the basket.
 // Returns:
 //   {
 //     count,                 // certifications in the order
-//     perStandard,           // list price of one certification
-//     base,                  // base package price × count
+//     prices,                // list price of each, in basket order
+//     perStandard,           // price of the first/only one (legacy callers)
+//     uniformPrice,          // false when the basket mixes the two prices —
+//                            // a "N × $999" line item is then a lie
+//     base,                  // sum of the list prices
 //     employeeSurchargeTotal,// flat employee surcharge
 //     locationSurchargeTotal,// flat location surcharge
 //     subtotal,              // amount to charge (base + surcharges)
 //   }
 export function computeTotal({
   standardSlug,
+  standardSlugs,
   tier, // accepted but ignored (single-package model); kept for compatibility
   employeeBands = 0,
   locations = 0,
   standardsCount = 1,
 }) {
-  const perStandard = getPriceForStandard(standardSlug);
+  const basket = Array.isArray(standardSlugs) && standardSlugs.length ? standardSlugs : null;
   // Defaults to 1 so every existing single-standard call site is unchanged.
-  const count = Math.max(1, Number.isFinite(+standardsCount) ? Math.floor(+standardsCount) : 1);
-  const base = perStandard * count;
+  const count = basket
+    ? basket.length
+    : Math.max(1, Number.isFinite(+standardsCount) ? Math.floor(+standardsCount) : 1);
+
+  const items = basket || Array.from({ length: count }, () => standardSlug);
+  const prices = items.map(s => getPriceForStandard(s));
+  const base = prices.reduce((sum, p) => sum + p, 0);
+  const perStandard = prices[0];
+  const uniformPrice = prices.every(p => p === perStandard);
 
   const bands = Math.max(0, Number.isFinite(+employeeBands) ? Math.floor(+employeeBands) : 0);
   const locs  = Math.max(0, Number.isFinite(+locations)     ? Math.floor(+locations)     : 0);
@@ -106,7 +136,9 @@ export function computeTotal({
 
   return {
     count,
+    prices,
     perStandard,
+    uniformPrice,
     base,
     employeeSurchargeTotal,
     locationSurchargeTotal,

@@ -229,8 +229,14 @@
 /* ---- Row actions ----
    The four buttons stay on one line; wrapping them would change the row height
    of a single row and break the alignment down the table. */
-.adref__actions {
+/* Now the FIRST column (client, 12 Aug). `width: 1%` is the shrink-to-content
+   idiom for a table cell — without it the fixed-width icon row would claim an
+   equal share of a fourteen-column table and squeeze the partner name it now
+   sits beside. */
+.adref__actions,
+.adref__actions-col {
   white-space: nowrap;
+  width: 1%;
 }
 
 /* ---- Referral code ---- */

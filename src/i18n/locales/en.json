@@ -301,6 +301,7 @@
     "auditorSectorsPlaceholder": "Select sectors…",
     "auditorCertificates": "Certificates",
     "auditorAuditLog": "Audit Log",
+    "auditorUploadCv": "Upload CV",
     "mobileNumber": "Mobile Number",
     "auditorDocsSizeNote": "Each file must be {{max}} MB or smaller.",
     "validationAuditorQualifications": "Please select at least one standard and one level of certificate.",

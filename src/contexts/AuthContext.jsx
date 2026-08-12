@@ -38,6 +38,15 @@ export function AuthProvider({ children }) {
     // never flip the global `loading` flag again — see the auth listener below.
     let initialized = false;
 
+    // Started NOW, not after the session resolves. Every authenticated page
+    // used to wait on three requests in a row before rendering anything:
+    // getSession, then this, then the profile read. This one depends on
+    // neither of the others, so it runs alongside them and one full round trip
+    // comes off the wait. fetchProfile still awaits it before clearing
+    // `loading`, so the guarantee that permission overrides are installed
+    // before the first authenticated render is unchanged.
+    const overridesReady = loadPermissionOverrides();
+
     // If the visitor took the anonymous gap analysis before signing up, the
     // score is sitting in localStorage. Persist it into their profile the first
     // time we see them as a client without a saved score.
@@ -136,18 +145,22 @@ export function AuthProvider({ children }) {
       } catch (err) {
         console.error("Profile fetch error", err);
       } finally {
+        // hasPermission() must already reflect the runtime overrides by the
+        // time a route renders, so the two run in parallel but this one waits.
+        await overridesReady;
         if (mounted) setLoading(false);
         initialized = true;
       }
     };
 
     // 1. Initial Session Check
-    supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       if (mounted) setSession(currentSession);
-      await loadPermissionOverrides();
       if (currentSession?.user) {
         fetchProfile(currentSession.user);
       } else {
+        // Signed out: nothing is permission-gated, so don't hold the public
+        // pages behind the overrides request.
         if (mounted) setLoading(false);
       }
     });

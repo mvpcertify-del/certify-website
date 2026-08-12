@@ -97,8 +97,10 @@ export default function Dashboard() {
     .filter(Boolean);
 
   // Headline figure only: the org-size surcharges and any coupon are added on
-  // the checkout page, which recomputes with the same helper.
-  const basketTotals = computeTotal({ standardsCount: chosenStandards.length || 1 });
+  // the checkout page, which recomputes with the same helper. The basket is
+  // passed as a list of slugs rather than a count — since 12 Aug the catalog
+  // has two price points, so "3 certifications" no longer implies a price.
+  const basketTotals = computeTotal({ standardSlugs: chosenStandards.map(iso => iso.slug) });
 
   // Creates one application per chosen standard — a certification is audited
   // and certified individually, so they cannot share a row — then hands the
@@ -203,7 +205,12 @@ export default function Dashboard() {
       setFetchingApps(false);
     };
     fetchApps();
-  }, [user]);
+    // Keyed on the identity/role/region this query actually reads, not on the
+    // whole `user` object — Supabase replaces that object on every tab refocus
+    // (TOKEN_REFRESHED), which re-ran the fetch and flashed the list back to
+    // "Loading" each time the user came back from another window.
+  }, [user?.id, user?.role, user?.region]);
+
 
   const [selectedAppId, setSelectedAppId] = useState(null);
   // A row still at 'awaiting_registration' was created at the payment step and
@@ -474,6 +481,12 @@ export default function Dashboard() {
                             <span className="dashboard__cert-code">{iso.code}</span>
                             <span className="dashboard__cert-desc">{t(iso.titleKey)}</span>
                           </span>
+                          {/* The catalog has two price points, so the price
+                              belongs on the card the buyer is choosing from —
+                              not first revealed in the payment popup. */}
+                          <span className="dashboard__cert-price">
+                            ${getPriceForStandard(iso.slug).toLocaleString()}
+                          </span>
                         </button>
                       );
                     })}
@@ -499,14 +512,16 @@ export default function Dashboard() {
                     <p className="dashboard__pay-intro">{t('dashboard.paymentModalDesc')}</p>
 
                     <ul className="dashboard__pay-list">
-                      {chosenStandards.map(iso => (
+                      {chosenStandards.map((iso, idx) => (
                         <li key={iso.slug} className="dashboard__pay-row">
                           <span>
                             <strong>{iso.code}</strong>
                             <span className="dashboard__pay-sub">{t(iso.titleKey)}</span>
                           </span>
                           <span className="dashboard__pay-amount">
-                            ${basketTotals.perStandard.toLocaleString()}
+                            {/* Priced per row — a basket can mix the two price
+                                points, so one shared figure would be wrong. */}
+                            ${(basketTotals.prices[idx] ?? 0).toLocaleString()}
                           </span>
                         </li>
                       ))}

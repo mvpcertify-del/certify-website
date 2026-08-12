@@ -43,7 +43,12 @@ export default function AdminCompanies() {
 
   useEffect(() => {
     fetchCompanies();
-  }, [user, isRegionalAdmin]);
+    // Keyed on the identity/role/region this query actually reads, not on the
+    // whole `user` object — Supabase replaces that object on every tab refocus
+    // (TOKEN_REFRESHED), which re-ran the fetch and flashed the list back to
+    // "Loading" each time the user came back from another window.
+  }, [user?.id, user?.role, user?.region]);
+
 
   const fetchCompanies = async () => {
     setLoading(true);

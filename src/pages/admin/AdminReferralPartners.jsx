@@ -318,7 +318,15 @@ export default function AdminReferralPartners() {
         <div className="adref__table-wrap">
           <table className="adref__table">
             <thead>
+              {/* Actions lead, ahead of the partner's name (client, 12 Aug).
+                  This screen is the one they pointed at: fourteen columns wide,
+                  so the buttons used to sit past the right edge of the scroll
+                  area and the name had scrolled away by the time you reached
+                  them. This table is hand-written rather than a DataTable, so
+                  the order is moved here to match what DataTable now does for
+                  every other list. */}
               <tr>
+                <th className="adref__actions-col">{t('dashboard.action')}</th>
                 <th>{t('adminReferralPartners.colPartner')}</th>
                 <th>{t('adminReferralPartners.colCountry')}</th>
                 <th>{t('adminReferralPartners.colCode')}</th>
@@ -330,12 +338,34 @@ export default function AdminReferralPartners() {
                 <th>{t('adminReferralPartners.colRate')}</th>
                 <th>{t('adminReferralPartners.colJoined')}</th>
                 <th>{t('adminReferralPartners.colStatus')}</th>
-                <th>{t('dashboard.action')}</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((p) => (
                 <tr key={p.profile_id}>
+                  <td className="adref__actions">
+                    {/* View is available to every admin who can reach the list;
+                        only the Super Admin gets the three write actions, the
+                        same split the Clients screen applies. */}
+                    {isSuperAdmin ? (
+                      <RowActions
+                        isActive={p.is_active !== false}
+                        showView
+                        onView={() => openView(p)}
+                        onEdit={() => openEdit(p)}
+                        onToggle={() => handleToggleActive(p)}
+                        onDelete={() => handleDelete(p)}
+                      />
+                    ) : (
+                      <RowActions
+                        showView
+                        onView={() => openView(p)}
+                        showToggle={false}
+                        showEdit={false}
+                        showDelete={false}
+                      />
+                    )}
+                  </td>
                   <td>
                     <div className="adref__partner">
                       <span className="adref__partner-name">
@@ -377,29 +407,6 @@ export default function AdminReferralPartners() {
                   </td>
                   <td>{formatDate(p.joined_at)}</td>
                   <td>{renderStatusCell(p)}</td>
-                  <td className="adref__actions">
-                    {/* View is available to every admin who can reach the list;
-                        only the Super Admin gets the three write actions, the
-                        same split the Clients screen applies. */}
-                    {isSuperAdmin ? (
-                      <RowActions
-                        isActive={p.is_active !== false}
-                        showView
-                        onView={() => openView(p)}
-                        onEdit={() => openEdit(p)}
-                        onToggle={() => handleToggleActive(p)}
-                        onDelete={() => handleDelete(p)}
-                      />
-                    ) : (
-                      <RowActions
-                        showView
-                        onView={() => openView(p)}
-                        showToggle={false}
-                        showEdit={false}
-                        showDelete={false}
-                      />
-                    )}
-                  </td>
                 </tr>
               ))}
             </tbody>

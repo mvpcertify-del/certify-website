@@ -55,6 +55,16 @@
   white-space: nowrap;
 }
 
+/* The action cluster is the first column (see orderColumns in DataTable.jsx).
+   `width: 1%` on a table cell is the standard "shrink to content" idiom — it
+   stops a fixed icon row from claiming an equal share of the table width and
+   squeezing the name column it now sits beside. */
+.data-table__th--actions,
+.data-table__td--actions {
+  width: 1%;
+  white-space: nowrap;
+}
+
 .data-table__empty {
   padding: var(--spacing-2xl);
   text-align: center;

@@ -41,7 +41,29 @@ document.documentElement.setAttribute(
   storedTheme === 'light' ? 'light' : 'dark'
 );
 
+// Opens the TLS connection to Supabase while the app's own JavaScript is still
+// being parsed. Every authenticated page starts with a session check and a
+// profile read against this origin, and without the hint those requests pay for
+// DNS + TCP + TLS before the first byte moves. Cheap, and it removes a couple of
+// hundred milliseconds from the wait after the shell appears.
+;(() => {
+  const url = import.meta.env.VITE_SUPABASE_URL
+  if (!url) return
+  try {
+    const link = document.createElement('link')
+    link.rel = 'preconnect'
+    link.href = new URL(url).origin
+    link.crossOrigin = 'anonymous'
+    document.head.appendChild(link)
+  } catch { /* malformed URL — the app will fail louder elsewhere */ }
+})()
+
+let mounted = false
 function mount() {
+  if (mounted) return // the timeout and i18nReady race; only the first wins
+  mounted = true
+  // Hand the screen over from the static splash in index.html.
+  document.getElementById('app-splash')?.remove()
   createRoot(document.getElementById('root')).render(
     <StrictMode>
       <App />
@@ -52,4 +74,13 @@ function mount() {
 // Wait for the detected language bundle to load before first paint so the UI
 // renders directly in the right language (no English flash). If it somehow
 // fails, mount anyway with the bundled English fallback.
+//
+// The wait is capped. A visitor in an Arabic- or Hindi-speaking region needs a
+// separate ~90 kB locale chunk, fetched only AFTER the main bundle has run —
+// one more serial round trip with nothing on screen behind it. Past the cap we
+// mount in the bundled English and let the real language swap in when it
+// arrives (i18next is configured with useSuspense:false, so that re-render is
+// already handled). Better a moment of English than a longer blank page.
+const FIRST_PAINT_LANGUAGE_WAIT_MS = 1200
+setTimeout(mount, FIRST_PAINT_LANGUAGE_WAIT_MS)
 i18nReady.then(mount).catch(mount)

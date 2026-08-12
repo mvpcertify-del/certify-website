@@ -287,6 +287,7 @@
     "auditorSectorsPlaceholder": "क्षेत्र चुनें…",
     "auditorCertificates": "प्रमाणपत्र",
     "auditorAuditLog": "ऑडिट लॉग",
+    "auditorUploadCv": "CV अपलोड करें",
     "mobileNumber": "मोबाइल नंबर",
     "auditorDocsSizeNote": "प्रत्येक फ़ाइल {{max}} MB या उससे छोटी होनी चाहिए।",
     "validationAuditorQualifications": "कृपया कम से कम एक मानक और एक प्रमाणपत्र स्तर चुनें।",

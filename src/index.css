@@ -1,9 +1,18 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
 /* ============================================
    CERTIFY.CX — Design System
    Supabase-inspired dark theme
    ============================================ */
+
+/* The Inter webfont used to be pulled in here with
+   `@import url('https://fonts.googleapis.com/...')`. It is now loaded from
+   index.html instead — see the comment there. Briefly: a remote @import inside
+   a stylesheet is the slowest way to fetch anything. The browser cannot even
+   discover the font URL until this file has been downloaded AND parsed, and it
+   blocks the first paint while it goes off to a third-party origin. It was
+   costing every visitor two extra serial round trips before a single pixel
+   appeared, which is the main reason the site felt slow to open.
+   Do not reintroduce it. --font-family below already carries a system-font
+   fallback, so the page renders immediately either way. */
 
 :root {
   /* ---- Colors ---- */

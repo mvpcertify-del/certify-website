@@ -287,6 +287,7 @@
     "auditorSectorsPlaceholder": "Sektoren auswählen…",
     "auditorCertificates": "Zertifikate",
     "auditorAuditLog": "Auditprotokoll",
+    "auditorUploadCv": "Lebenslauf hochladen",
     "mobileNumber": "Mobilnummer",
     "auditorDocsSizeNote": "Jede Datei darf höchstens {{max}} MB groß sein.",
     "validationAuditorQualifications": "Bitte wählen Sie mindestens eine Norm und eine Zertifikatsstufe aus.",

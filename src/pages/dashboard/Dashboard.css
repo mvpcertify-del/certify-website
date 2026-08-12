@@ -515,6 +515,18 @@
   color: var(--text-muted, var(--color-text-secondary));
 }
 
+/* Price sits hard against the trailing edge of the card. `margin-inline-start`
+   rather than `margin-left` so Arabic (RTL) pushes it to the left instead of
+   stacking it against the standard's name. */
+.dashboard__cert-price {
+  margin-inline-start: auto;
+  flex-shrink: 0;
+  font-weight: 700;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  color: var(--color-text-primary);
+}
+
 /* --- Payment popup --- */
 .dashboard__pay-intro {
   margin: 0 0 var(--spacing-base);

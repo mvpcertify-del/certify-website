@@ -138,10 +138,15 @@ export default function ProfileManagementTable({
     setLoading(false);
   };
 
+  // Depends on the three fields fetchItems actually reads, not on the whole
+  // `user` object. Supabase hands AuthContext a fresh profile object every time
+  // the browser tab regains focus (TOKEN_REFRESHED), so `[user]` re-ran this
+  // query — and flipped the list back to "Loading…" — every single time the
+  // admin alt-tabbed away to copy something and came back.
   useEffect(() => {
     fetchItems();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, role]);
+  }, [user?.id, user?.role, user?.region, role]);
 
   const filtered = countryFilter.trim()
     ? items.filter(i => (i.country || '').toLowerCase().includes(countryFilter.trim().toLowerCase()))
@@ -251,12 +256,31 @@ export default function ProfileManagementTable({
     setShowView(true);
   };
 
-  const openCreate = () => {
+  const blankCreateForm = () => {
     const form = {};
     createFields.forEach(f => { form[f.key] = emptyValue(f); });
-    setCreateForm(form);
+    return form;
+  };
+
+  // Re-opening "Add" restores whatever was typed last time rather than handing
+  // back an empty form. Belt and braces for the client's 12 Aug report that the
+  // form kept "exiting" mid-way through a copy/paste and everything had to be
+  // retyped: Modal.jsx now stops the accidental dismissal itself, and this
+  // means even a deliberate one (the X, or Escape) is recoverable.
+  //
+  // The draft is cleared in exactly two places, both of them unambiguous: the
+  // Cancel button, and a successful create. Anything else keeps it.
+  const openCreate = () => {
+    setCreateForm(prev => (
+      createFields.some(f => !isFieldEmpty(f, prev?.[f.key])) ? prev : blankCreateForm()
+    ));
     setError('');
     setShowCreate(true);
+  };
+
+  const cancelCreate = () => {
+    setCreateForm(blankCreateForm());
+    setShowCreate(false);
   };
 
   const submitCreate = async (e) => {
@@ -292,6 +316,7 @@ export default function ProfileManagementTable({
         : [];
 
       setShowCreate(false);
+      setCreateForm(blankCreateForm()); // the draft is done with — see openCreate
       fetchItems();
 
       // The account is unusable until the user clicks the verification link, so
@@ -604,7 +629,7 @@ export default function ProfileManagementTable({
           )}
           {renderFields(createFields, createForm, setCreateForm, 'create')}
           <div className="admin-users__form-actions">
-            <Button type="button" variant="ghost" size="md" onClick={() => setShowCreate(false)}>
+            <Button type="button" variant="ghost" size="md" onClick={cancelCreate}>
               {t('common.cancel')}
             </Button>
             <Button type="submit" variant="primary" size="md" loading={saving}>

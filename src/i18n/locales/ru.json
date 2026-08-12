@@ -287,6 +287,7 @@
     "auditorSectorsPlaceholder": "Выберите секторы…",
     "auditorCertificates": "Сертификаты",
     "auditorAuditLog": "Журнал аудитов",
+    "auditorUploadCv": "Загрузить резюме",
     "mobileNumber": "Номер мобильного",
     "auditorDocsSizeNote": "Каждый файл должен быть не более {{max}} МБ.",
     "validationAuditorQualifications": "Выберите хотя бы один стандарт и один уровень сертификата.",

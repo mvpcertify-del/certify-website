@@ -287,6 +287,7 @@
     "auditorSectorsPlaceholder": "选择行业领域…",
     "auditorCertificates": "证书",
     "auditorAuditLog": "审核记录",
+    "auditorUploadCv": "上传简历",
     "mobileNumber": "手机号码",
     "auditorDocsSizeNote": "每个文件不得超过 {{max}} MB。",
     "validationAuditorQualifications": "请至少选择一项标准和一个证书级别。",

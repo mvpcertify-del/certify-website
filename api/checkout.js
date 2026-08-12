@@ -423,11 +423,24 @@ async function resolveCoupon(couponCode) {
 // certification, so each row records its own share of the money rather than the
 // whole order — `total_amount` is summed in revenue views, and repeating the
 // basket total on every row would inflate them by the size of the basket.
-// Rounded to cents, so an uneven split can differ from the charge by a few cents
-// in aggregate; the amount actually charged is the Stripe session, not this.
-function perApplicationAmount(total, count) {
-  const n = Math.max(1, Math.floor(Number(count) || 1));
-  return Math.round(((Number(total) || 0) / n) * 100) / 100;
+//
+// The split is weighted by each standard's list price, not even: since 12 Aug a
+// basket can mix $999 and $1,999 standards, and splitting a $2,998 order evenly
+// would book $1,499 against each — overstating the cheap certification and
+// understating the expensive one in every per-standard revenue figure.
+// Discounts and surcharges are spread in the same proportion. The last row
+// absorbs the rounding remainder so the shares always sum to the charge
+// exactly; the amount actually charged is the Stripe session, not this.
+function amountShares(total, prices) {
+  const amount = Number(total) || 0;
+  const weights = (Array.isArray(prices) && prices.length ? prices : [1]).map(p => Number(p) || 0);
+  const weightSum = weights.reduce((a, b) => a + b, 0);
+  const n = weights.length;
+  // All-zero weights (shouldn't happen) would divide by zero — split evenly.
+  const shares = weights.map(w => Math.round((amount * (weightSum ? w / weightSum : 1 / n)) * 100) / 100);
+  const drift = Math.round((amount - shares.reduce((a, b) => a + b, 0)) * 100) / 100;
+  shares[n - 1] = Math.round((shares[n - 1] + drift) * 100) / 100;
+  return shares;
 }
 
 // ---- Anonymous "pay first, register after" checkout ----
@@ -1258,7 +1271,7 @@ export default async function handler(req, res) {
     )];
 
     let orderApplications = [];
-    if (requestedIds.length > 1) {
+    if (requestedIds.length) {
       const { data: rows, error: rowsErr } = await supabaseAdmin
         .from('applications')
         .select('id, client_id, recommended_iso')
@@ -1271,30 +1284,55 @@ export default async function handler(req, res) {
       // Every row must exist AND belong to the buyer. Without this, a crafted
       // basket could attach someone else's applications to this payment — and
       // paying for a row is what unlocks it.
-      if (
-        !clientId
-        || orderApplications.length !== requestedIds.length
-        || orderApplications.some(a => a.client_id !== clientId)
-      ) {
+      //
+      // A single-application order is only held to this when the row actually
+      // came back, so any older call path that reaches here without a matching
+      // row still falls through to the request's own `isoName` as before.
+      const owned =
+        !!clientId
+        && orderApplications.length === requestedIds.length
+        && orderApplications.every(a => a.client_id === clientId);
+      if (!owned && requestedIds.length > 1) {
         return res.status(403).json({ error: 'Order not found for this account.' });
       }
-      // Preserve the buyer's order so the Stripe description reads the same as
-      // the checkout page they just confirmed.
-      const byId = new Map(orderApplications.map(a => [a.id, a]));
-      orderApplications = requestedIds.map(id => byId.get(id));
+      if (!owned) {
+        orderApplications = [];
+      } else {
+        // Preserve the buyer's order so the Stripe description reads the same
+        // as the checkout page they just confirmed.
+        const byId = new Map(orderApplications.map(a => [a.id, a]));
+        orderApplications = requestedIds.map(id => byId.get(id));
+      }
     }
-
-    // Counted from rows the server loaded itself, never from the request.
-    const standardsCount = Math.max(1, orderApplications.length || 1);
 
     // ---- 0b. Recompute the buyer's price server-side ----
     // Never trust the client. The same helper feeds the UI total, so the
     // displayed amount and the charge always agree. Full payment only.
+    //
+    // Which standards are in the order is read from the rows above, NOT from
+    // the request. Since 12 Aug the catalog has two price points, so `isoName`
+    // stopped being a cosmetic label: a buyer who sent 'iso-9001' while
+    // holding an ISO 27001 application would otherwise be charged $999 for a
+    // $1,999 certification. `isoName` is only used when no row was loaded.
+    //
+    // One entry per row, INCLUDING rows whose recommended_iso is blank — the
+    // priced list has to stay index-aligned with requestedIds, because the
+    // per-row money split below walks the two together. A blank standard falls
+    // through getPriceForStandard to the higher of the two prices, so a missing
+    // value can never undercharge.
+    const pricedStandards = orderApplications.length
+      ? orderApplications.map(a => a?.recommended_iso || null)
+      : [isoName];
+    // Same list with the blanks dropped — for display only (Stripe's line-item
+    // description), never for money.
+    const orderStandards = pricedStandards.filter(Boolean);
+    // Counted from rows the server loaded itself, never from the request.
+    const standardsCount = pricedStandards.length;
+
     const totals = computeTotal({
-      standardSlug: isoName,
+      standardSlugs: pricedStandards,
       employeeBands,
       locations: additionalLocations,
-      standardsCount,
     });
     const price = totals.subtotal;
 
@@ -1359,31 +1397,36 @@ export default async function handler(req, res) {
       if (!applicationId || !clientId) {
         return res.status(400).json({ error: 'Missing application or client reference' });
       }
-      let updated;
+      // Each row carries its own share of the order, not the basket total —
+      // otherwise a three-standard order would be counted three times over in
+      // every revenue figure that sums this column. One statement per row
+      // because the shares differ; the (id, client_id) scope and the
+      // "every row came back" check below are exactly as they were.
+      const offlineShares = amountShares(finalPrice, totals.prices);
+      const updated = [];
       try {
-        const { data, error: offErr } = await supabaseAdmin
-          .from('applications')
-          .update({
-            additional_employee_bands: Math.max(0, Math.floor(Number(employeeBands) || 0)),
-            additional_locations: Math.max(0, Math.floor(Number(additionalLocations) || 0)),
-            // Each row carries its own share of the order, not the basket
-            // total — otherwise a three-standard order would be counted three
-            // times over in every revenue figure that sums this column.
-            total_amount: perApplicationAmount(finalPrice, standardsCount),
-            payment_method: paymentMethod,
-            payment_status: 'awaiting_verification',
-            ...(coupon ? { coupon_code: coupon.code } : {}),
-          })
-          .in('id', requestedIds)
-          .eq('client_id', clientId)
-          .select('id');
-        if (offErr) throw offErr;
-        updated = data;
+        for (let i = 0; i < requestedIds.length; i++) {
+          const { data, error: offErr } = await supabaseAdmin
+            .from('applications')
+            .update({
+              additional_employee_bands: Math.max(0, Math.floor(Number(employeeBands) || 0)),
+              additional_locations: Math.max(0, Math.floor(Number(additionalLocations) || 0)),
+              total_amount: offlineShares[i],
+              payment_method: paymentMethod,
+              payment_status: 'awaiting_verification',
+              ...(coupon ? { coupon_code: coupon.code } : {}),
+            })
+            .eq('id', requestedIds[i])
+            .eq('client_id', clientId)
+            .select('id');
+          if (offErr) throw offErr;
+          if (data?.length) updated.push(data[0].id);
+        }
       } catch (persistErr) {
         console.error('Offline order persistence error:', persistErr);
         return res.status(500).json({ error: 'Could not record your order. Please try again.' });
       }
-      if (!updated || updated.length !== requestedIds.length) {
+      if (updated.length !== requestedIds.length) {
         return res.status(403).json({ error: 'Order not found for this account.' });
       }
       return res.status(200).json({
@@ -1395,9 +1438,6 @@ export default async function handler(req, res) {
     }
 
     // ---- 4a. Stripe session (card / PayPal) — full one-time payment ----
-    const orderStandards = orderApplications
-      .map(a => a?.recommended_iso)
-      .filter(Boolean);
     const lineItem = {
       price_data: {
         currency: 'usd',
@@ -1451,18 +1491,22 @@ export default async function handler(req, res) {
     // The applications table has additional_employee_bands /
     // additional_locations / total_amount columns (see Phase B migration).
     if (requestedIds.length) {
+      // Per row, not the basket total, and weighted by list price — see the
+      // offline branch above.
+      const shares = amountShares(totals.subtotal, totals.prices);
       try {
-        await supabaseAdmin
-          .from('applications')
-          .update({
-            additional_employee_bands: Math.max(0, Math.floor(Number(employeeBands) || 0)),
-            additional_locations: Math.max(0, Math.floor(Number(additionalLocations) || 0)),
-            // Per row, not the basket total — see the offline branch above.
-            total_amount: perApplicationAmount(totals.subtotal, standardsCount),
-            payment_method: paymentMethod,
-            payment_status: 'pending',
-          })
-          .in('id', requestedIds);
+        for (let i = 0; i < requestedIds.length; i++) {
+          await supabaseAdmin
+            .from('applications')
+            .update({
+              additional_employee_bands: Math.max(0, Math.floor(Number(employeeBands) || 0)),
+              additional_locations: Math.max(0, Math.floor(Number(additionalLocations) || 0)),
+              total_amount: shares[i],
+              payment_method: paymentMethod,
+              payment_status: 'pending',
+            })
+            .eq('id', requestedIds[i]);
+        }
       } catch (persistErr) {
         console.error('Surcharge persistence error (non-blocking):', persistErr);
       }

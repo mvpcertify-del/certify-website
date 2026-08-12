@@ -33,6 +33,35 @@
     <meta name="theme-color" content="#171717" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
 
+    <!-- ==== Fonts, and why they are loaded from here =======================
+         Inter used to be pulled in by `@import url(...)` at the top of
+         src/index.css. That is the slowest possible way to load a font:
+         the browser has to download and parse the whole stylesheet before it
+         can even SEE the font URL, then make two more round trips to Google
+         (one for the CSS, one for the .woff2) — all of it blocking the first
+         paint. On a slow or filtered connection that alone was seconds of
+         blank white page, and it is the main reason the site "took a long
+         time to open".
+
+         Now: preconnect opens the TLS handshake to both Google origins while
+         the app's own JavaScript is still downloading, and media="print"
+         means the stylesheet does NOT block rendering — the onload handler
+         promotes it to "all" the moment it arrives. Text paints immediately
+         in the system-font fallback declared by --font-family and swaps to
+         Inter when it lands (the URL already carries &display=swap).
+    ==================================================================== -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+    </noscript>
+
     <title>Certify.cx™ - ISO Certification Platform</title>
     <meta name="description" content="Certify.cx™ — ISO Certification Marketplace. Apply for ISO certifications, manage audits, and streamline your compliance workflow." />
     <meta name="google" content="notranslate" />
@@ -63,9 +92,57 @@
     <meta name="twitter:title" content="Certify.cx™ - ISO Certification Platform" />
     <meta name="twitter:description" content="Certify.cx™ — ISO Certification Marketplace. Apply for ISO certifications, manage audits, and streamline your compliance workflow." />
     <meta name="twitter:image" content="https://certify.cx/brand-mark.png" />
+
+    <!-- ==== First-paint splash ============================================
+         Everything above is a few kilobytes of HTML that arrives in the first
+         network round trip; React does not appear until its JavaScript has
+         downloaded, parsed and mounted. Until now that gap was a plain white
+         rectangle, so a perfectly healthy two-second load was indistinguishable
+         from a broken site — which is what "Certify.cx is taking long time to
+         open" describes.
+
+         This paints the brand mark and a spinner immediately. It is inline on
+         purpose: a splash that needed its own stylesheet would arrive at the
+         same time as the app and be pointless. main.jsx removes it on mount.
+
+         The background is picked from the same data-theme attribute main.jsx
+         sets before React starts, so there is no flash of the wrong theme.
+    ==================================================================== -->
+    <style>
+      #app-splash {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        background: #171717;
+        z-index: 2147483647;
+      }
+      :root[data-theme='light'] #app-splash { background: #ffffff; }
+      #app-splash img { width: 56px; height: 54px; opacity: 0.95; }
+      #app-splash span {
+        display: block;
+        width: 22px;
+        height: 22px;
+        border: 2px solid rgba(62, 207, 142, 0.25);
+        border-top-color: #3ecf8e;
+        border-radius: 50%;
+        animation: app-splash-spin 0.7s linear infinite;
+      }
+      @keyframes app-splash-spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) {
+        #app-splash span { animation-duration: 2s; }
+      }
+    </style>
   </head>
   <body translate="no" class="notranslate">
     <div id="root"></div>
+    <div id="app-splash" role="status" aria-label="Loading Certify.cx">
+      <img src="/brand-mark.png" alt="" />
+      <span></span>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

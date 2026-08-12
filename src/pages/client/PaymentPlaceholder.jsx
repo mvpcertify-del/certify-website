@@ -196,9 +196,15 @@ export default function PaymentPlaceholder() {
   const isoName = application?.recommended_iso || 'ISO 9001:2015';
   const packageLabel = application?.selected_package || PACKAGE_LABEL;
   // Every standard in the basket, in the order the buyer picked them.
+  //
+  // A row with no recommended_iso stays null rather than defaulting to
+  // ISO 9001. api/checkout.js prices an unknown standard at the higher of the
+  // two prices, and this page must show the number the buyer is actually about
+  // to be charged — defaulting to the cheap standard here would quote $999 and
+  // then take $1,999.
   const basketStandards = basket.length
-    ? basket.map(row => row.recommended_iso || 'ISO 9001:2015')
-    : [isoName];
+    ? basket.map(row => row.recommended_iso || null)
+    : [application?.recommended_iso || null];
   const basketIds = basket.length ? basket.map(row => row.id) : [applicationId];
   // Carried through payment so the registration form afterwards updates every
   // paid application, not just the first.
@@ -208,11 +214,13 @@ export default function PaymentPlaceholder() {
   // api/checkout.js so client and server stay aligned. Single-package model,
   // so no tier is passed. The server recomputes from the application rows it
   // loads itself, so a tampered basket cannot change the price.
+  // The whole basket is priced, not one standard × a count: since 12 Aug the
+  // catalog has two price points, so a mixed basket has no single unit price.
   const totals = computeTotal({
     standardSlug: isoName,
+    standardSlugs: basketStandards,
     employeeBands,
     locations: additionalLocations,
-    standardsCount: basketStandards.length,
   });
   const originalPrice = totals.subtotal;
 
@@ -502,7 +510,9 @@ export default function PaymentPlaceholder() {
                 </h3>
                 {basketStandards.length > 1 && (
                   <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.45 }}>
-                    {basketStandards.join(' · ')}
+                    {/* Blanks are dropped here, not defaulted — this is the
+                        display copy; the priced list keeps them as null. */}
+                    {basketStandards.filter(Boolean).join(' · ')}
                   </p>
                 )}
               </div>
@@ -649,8 +659,13 @@ export default function PaymentPlaceholder() {
               <div style={{ marginBottom: '16px', padding: '14px 18px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: '#475569', marginBottom: 6 }}>
                   <span>
+                    {/* "3 × $999" only holds when every standard in the basket
+                        costs the same. A mixed basket falls back to a plain
+                        count — the per-standard figures are listed above it. */}
                     {totals.count > 1
-                      ? t('pricing.lineItem.baseEach', { n: totals.count, price: totals.perStandard.toLocaleString() })
+                      ? (totals.uniformPrice
+                          ? t('pricing.lineItem.baseEach', { n: totals.count, price: totals.perStandard.toLocaleString() })
+                          : t('payment.certCount', { n: totals.count }))
                       : t('pricing.lineItem.base')}
                   </span>
                   <span style={{ fontWeight: 600 }}>${totals.base.toLocaleString()}</span>
