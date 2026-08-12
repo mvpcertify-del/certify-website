@@ -218,7 +218,35 @@ Applied to every list in the platform, not only the six you named:
 | Country Admins | Moved |
 | Users (this is where Investors are listed) | Moved |
 | CB Registry, Accreditation Bodies, Countries, Discount Coupons, Commission Tiers, Applications, form-field settings | Moved |
-| **Consultancies** | **No change — this screen has no action icons at all.** It is a performance table (targets, commission, contract status) with no per-row buttons to move. Tell me if you want the same four actions added there. |
+| Consultancies | **Added** — see below |
+
+### Consultancies (follow-up, same day)
+
+This screen had no action icons at all, so there was nothing to move. You asked
+for them to be added, and they now are: **View, Edit, Activate/Deactivate and
+Delete**, in the first column, exactly as on Referral Partners.
+
+Two things worth knowing about it:
+
+- **The screen was deliberately read-only before, and the reason behind that has
+  not been discarded.** The rule was that the platform must never deactivate a
+  partner by itself — the "At risk" flag is something a person looks at and
+  decides on, not an automatic switch. That is still true. All that has changed
+  is that the person can now act right next to the numbers they just read,
+  instead of memorising a name and going to find it in User Management.
+  Deactivating is still a deliberate click, and deleting still asks first.
+  The note at the top of the screen has been reworded to match, in all nine
+  languages.
+
+- **Deactivating a partner clears their "At risk" flag on the spot**, because
+  that flag is defined as *active and quiet for three months* — leaving it lit
+  after you have just acted on it would keep them in the count you were working
+  through.
+
+Who gets what follows the rest of the platform: a Super Admin gets all four
+actions, and any other admin who can open the screen gets View only. Every
+action calls the same endpoints User Management uses, which re-check the
+caller's rights on the server rather than trusting the browser.
 
 Two notes:
 
@@ -254,6 +282,7 @@ so any list added in future gets it automatically and none can be forgotten.
 | `api/ai-chat.js` | Sara's price list corrected |
 | `src/components/ui/DataTable.jsx` + `.css` | actions column drawn first |
 | `src/pages/admin/AdminReferralPartners.jsx` + `.css` | same, for its hand-built table |
+| `src/pages/admin/AdminConsultancies.jsx` + `.css` | the four row actions added, actions column first |
 
 **No database migration is required.**
 
@@ -277,7 +306,9 @@ customers, because I could not exercise them here:
 2. **The Add Auditor form** — select text in a field, drag the mouse outside the
    dialog and release. The form should stay open.
 3. **The action icons** — open Referral Partners and confirm the four icons and
-   the partner's name are both visible without scrolling.
+   the partner's name are both visible without scrolling. On **Consultancies**,
+   check the four new icons work end to end: View opens the detail popup, Edit
+   saves, Deactivate flips the status, Delete asks before it acts.
 4. **How fast it opens** — worth a before/after look, ideally on a phone
    connection rather than office wi-fi, since that is where the font fix pays
    off most.

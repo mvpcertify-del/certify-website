@@ -65,11 +65,26 @@
 }
 
 .adcon__alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 10px 14px;
   border-radius: var(--radius-md);
   font-size: var(--font-size-sm);
   line-height: 1.5;
   margin-bottom: var(--spacing-base);
+}
+
+/* The icons carry the meaning alongside the colour, so the banners stay
+   readable to anyone who cannot separate the red from the green. */
+.adcon__alert svg {
+  flex-shrink: 0;
+}
+
+.adcon__alert--ok {
+  background: var(--color-accent-light);
+  border: 1px solid rgba(62, 207, 142, 0.35);
+  color: var(--color-accent-text);
 }
 
 .adcon__alert--error {
@@ -220,6 +235,16 @@
 .adcon__money {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+
+/* ---- Row actions ----
+   The first column (client, 12 Aug). `width: 1%` is the shrink-to-content
+   idiom for a table cell: without it the fixed-width icon row would claim an
+   equal share of the table and squeeze the partner name it sits beside. */
+.adcon__actions,
+.adcon__actions-col {
+  white-space: nowrap;
+  width: 1%;
 }
 
 /* ---- Partner cell ---- */

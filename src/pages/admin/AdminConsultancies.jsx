@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  AlertCircle,
   AlertTriangle,
   Briefcase,
+  CheckCircle,
   FileText,
   FileWarning,
   Info,
@@ -14,15 +16,30 @@ import { useAuth } from '../../contexts/AuthContext';
 import { apiPost } from '../../lib/apiClient';
 import { ROLES } from '../../utils/roles';
 import { Button, Input } from '../../components/ui/FormElements';
+import Modal from '../../components/ui/Modal';
+import DetailModal from '../../components/ui/DetailModal';
+import RowActions from '../../components/ui/RowActions';
 import './AdminConsultancies.css';
 
 // Super Admin / Country Admin view over consultancy partners.
 //
 // Two tabs:
-//  - Performance: read-only KPI board from the `consultancy_kpi` view. There is
-//    deliberately NO deactivate control here — the product decision was that the
-//    system never auto-deactivates a partner, and a human must review before
-//    pulling access. Deactivation stays in User Management.
+//  - Performance: the KPI board from the `consultancy_kpi` view, plus the same
+//    four row actions the Clients and Referral Partners screens carry — View,
+//    Edit, Activate/Deactivate, Delete (client, 12 Aug).
+//
+//    This screen used to be read-only on purpose, and the reasoning has NOT
+//    been thrown away: the system still never deactivates a partner by itself.
+//    `at_risk` is a flag for a human to look at, nothing more. What changed is
+//    only that the human can now act on it here, next to the numbers they just
+//    read, instead of memorising a name and going to find it in User
+//    Management. Deactivation remains an explicit, deliberate click.
+//
+//    Every write goes through the same service-role endpoints User Management
+//    uses (/api/user + /api/delete-user), which re-verify the caller's Bearer
+//    token and refuse a target they may not manage. As on Referral Partners,
+//    a Super Admin gets all four actions and every other admin who can reach
+//    the list gets View alone.
 //  - Agreement: the partner contract template. Super admin only; saving
 //    publishes a NEW version rather than editing a signed one in place.
 
@@ -41,6 +58,15 @@ export default function AdminConsultancies() {
   const [target, setTarget] = useState(5);
   const [kpiLoading, setKpiLoading] = useState(true);
   const [kpiError, setKpiError] = useState('');
+  const [kpiSuccess, setKpiSuccess] = useState('');
+
+  // ---- Row actions (Performance tab) ----
+  const [showView, setShowView] = useState(false);
+  const [viewingPartner, setViewingPartner] = useState(null);
+  const [showEdit, setShowEdit] = useState(false);
+  const [editingPartner, setEditingPartner] = useState(null);
+  const [editForm, setEditForm] = useState({ full_name: '', email: '', company_name: '', country: '' });
+  const [savingPartner, setSavingPartner] = useState(false);
 
   // ---- Agreement tab state ----
   const [template, setTemplate] = useState(null);
@@ -216,6 +242,96 @@ export default function AdminConsultancies() {
     );
   };
 
+  // ---------------------------------------------------------------------
+  // Row actions — View / Edit / Activate-Deactivate / Delete
+  //
+  // Rows come from the `consultancy_kpi` view, so the profile's primary key is
+  // `profile_id`, not `id`. Every write below targets that.
+  // ---------------------------------------------------------------------
+  const partnerName = (p) => p?.company_name || p?.full_name || p?.email || '—';
+
+  const openView = (p) => {
+    setViewingPartner(p);
+    setShowView(true);
+  };
+
+  const openEdit = (p) => {
+    setEditingPartner(p);
+    setEditForm({
+      full_name: p.full_name || '',
+      email: p.email || '',
+      company_name: p.company_name || '',
+      country: p.country || '',
+    });
+    setKpiError('');
+    setShowEdit(true);
+  };
+
+  const submitEdit = async (e) => {
+    e.preventDefault();
+    setKpiError('');
+    if (!editForm.full_name.trim() || !editForm.email.trim()) {
+      setKpiError(t('admin.fillRequired'));
+      return;
+    }
+    setSavingPartner(true);
+    try {
+      await apiPost('/api/user', {
+        action: 'update-profile',
+        userId: editingPartner.profile_id,
+        full_name: editForm.full_name,
+        email: editForm.email,
+        company_name: editForm.company_name || null,
+        country: editForm.country || null,
+      });
+      // Patched in place rather than refetched: only a Super Admin reaches this
+      // form and they are not region-scoped, so an edited country (which the
+      // API turns into a new `region`) cannot move the partner off this list.
+      setPartners((prev) => prev.map((p) =>
+        p.profile_id === editingPartner.profile_id ? { ...p, ...editForm } : p
+      ));
+      setShowEdit(false);
+      setKpiSuccess(`${t('common.save')}: ${editForm.company_name || editForm.full_name || editForm.email}`);
+    } catch (err) {
+      setKpiError(err.message);
+    }
+    setSavingPartner(false);
+  };
+
+  const handleToggleActive = async (p) => {
+    setKpiError('');
+    const next = !(p.is_active !== false);
+    try {
+      await apiPost('/api/user', { action: 'set-active', userId: p.profile_id, isActive: next });
+      // `at_risk` is defined as "active AND quiet for three months", so a
+      // partner who has just been deactivated is no longer at risk — leaving
+      // the flag on would keep them in the count the admin just acted on.
+      setPartners((prev) => prev.map((x) =>
+        x.profile_id === p.profile_id
+          ? { ...x, is_active: next, at_risk: next ? x.at_risk : false }
+          : x
+      ));
+      setKpiSuccess(`${next ? t('common.activate') : t('common.deactivate')}: ${partnerName(p)}`);
+    } catch (err) {
+      setKpiError(err.message);
+    }
+  };
+
+  const handleDelete = async (p) => {
+    setKpiError('');
+    const name = partnerName(p);
+    // Deleting a partner also removes their referral ledger rows and their
+    // signed contract, so this is confirmed before it is sent.
+    if (!window.confirm(t('admin.deleteUserConfirm') + ` ${name}?`)) return;
+    try {
+      await apiPost('/api/delete-user', { userId: p.profile_id });
+      setPartners((prev) => prev.filter((x) => x.profile_id !== p.profile_id));
+      setKpiSuccess(`${t('admin.successDeleted')} ${name}`);
+    } catch (err) {
+      setKpiError(err.message);
+    }
+  };
+
   const renderStatusCell = (p) => {
     if (p.is_active === false) {
       return <span className="adcon__badge adcon__badge--muted">{t('common.inactive')}</span>;
@@ -229,6 +345,31 @@ export default function AdminConsultancies() {
     }
     return <span className="adcon__badge adcon__badge--ok">{t('common.active')}</span>;
   };
+
+  // The View popup reuses the table's own renderers so the two can never
+  // disagree, and adds the figures the table has no room for. DetailModal
+  // calls render(rawValue, row).
+  const detailColumns = [
+    { key: 'company_name', label: t('admin.companyName'), render: (v, row) => v || row.full_name || '—' },
+    { key: 'full_name', label: t('admin.fullName'), render: (v) => v || '—' },
+    { key: 'email', label: t('auth.email'), render: (v) => v || '—' },
+    { key: 'country', label: t('admin.country'), render: (v, row) => v || row.region || '—' },
+    { key: 'paying_clients_this_month', label: t('adminConsultancies.colThisMonth'), render: formatInt },
+    { key: 'paying_clients_last_3_months', label: t('adminConsultancies.colLast3'), render: formatInt },
+    { key: 'total_paying_clients', label: t('adminConsultancies.colTotalClients'), render: formatInt },
+    { key: 'total_commission', label: t('adminConsultancies.colTotalCommission'), render: formatMoney },
+    {
+      key: 'commission_percent',
+      label: t('adminConsultancies.colCommissionPct'),
+      render: (v) => (v == null
+        ? '—'
+        : `${Number(v).toLocaleString(locale, { maximumFractionDigits: 2 })}%`),
+    },
+    { key: 'last_conversion_at', label: t('adminConsultancies.detailLastConversion'), render: formatDate },
+    { key: 'joined_at', label: t('adminConsultancies.detailJoined'), render: formatDate },
+    { key: 'contract_accepted_at', label: t('adminConsultancies.colContract'), render: (_, row) => renderContractCell(row) },
+    { key: 'is_active', label: t('adminConsultancies.colStatus'), render: (_, row) => renderStatusCell(row) },
+  ];
 
   if (authLoading || !user) {
     return <div className="page-container"><p>{t('common.loadingDashboard')}</p></div>;
@@ -300,7 +441,18 @@ export default function AdminConsultancies() {
             </Button>
           </div>
 
-          {kpiError && <div className="adcon__alert adcon__alert--error">{kpiError}</div>}
+          {/* The edit dialog carries its own copy of the error, so hide the
+              page-level banner while it is open rather than showing both. */}
+          {kpiError && !showEdit && (
+            <div className="adcon__alert adcon__alert--error">
+              <AlertCircle size={16} /><span>{kpiError}</span>
+            </div>
+          )}
+          {kpiSuccess && (
+            <div className="adcon__alert adcon__alert--ok">
+              <CheckCircle size={16} /><span>{kpiSuccess}</span>
+            </div>
+          )}
 
           {kpiLoading ? (
             <p className="adcon__loading">{t('adminConsultancies.loading')}</p>
@@ -314,7 +466,10 @@ export default function AdminConsultancies() {
             <div className="adcon__table-wrap">
               <table className="adcon__table">
                 <thead>
+                  {/* Actions lead, ahead of the partner (client, 12 Aug) — the
+                      same order DataTable now applies to every other list. */}
                   <tr>
+                    <th className="adcon__actions-col">{t('dashboard.action')}</th>
                     <th>{t('adminConsultancies.colPartner')}</th>
                     <th>{t('adminConsultancies.colCountry')}</th>
                     <th>{t('adminConsultancies.colThisMonth')}</th>
@@ -333,6 +488,29 @@ export default function AdminConsultancies() {
                     const pct = Math.max(0, Math.min(100, Math.round((done / goal) * 100)));
                     return (
                       <tr key={p.profile_id} className={p.at_risk ? 'adcon__row--risk' : ''}>
+                        <td className="adcon__actions">
+                          {/* View is available to every admin who can reach the
+                              list; only the Super Admin gets the three write
+                              actions, the same split Referral Partners uses. */}
+                          {isSuperAdmin ? (
+                            <RowActions
+                              isActive={p.is_active !== false}
+                              showView
+                              onView={() => openView(p)}
+                              onEdit={() => openEdit(p)}
+                              onToggle={() => handleToggleActive(p)}
+                              onDelete={() => handleDelete(p)}
+                            />
+                          ) : (
+                            <RowActions
+                              showView
+                              onView={() => openView(p)}
+                              showToggle={false}
+                              showEdit={false}
+                              showDelete={false}
+                            />
+                          )}
+                        </td>
                         <td>
                           <div className="adcon__partner">
                             <span className="adcon__partner-company">
@@ -456,6 +634,70 @@ export default function AdminConsultancies() {
           )}
         </section>
       )}
+
+      {/* Edit partner. Only the profile fields are editable here — the KPI
+          figures are derived from the referral ledger and must not be typed
+          over. The commission rate stays on Commission Tiers, which is where
+          it is set for every partner type. */}
+      <Modal isOpen={showEdit} onClose={() => setShowEdit(false)} title={t('common.edit')}>
+        <form onSubmit={submitEdit} className="adcon__card">
+          {kpiError && (
+            <div className="adcon__alert adcon__alert--error">
+              <AlertCircle size={16} /><span>{kpiError}</span>
+            </div>
+          )}
+          {/* admin.fullName already carries its own asterisk. */}
+          <Input
+            label={t('admin.fullName')}
+            id="edit-consultancy-name"
+            name="full_name"
+            value={editForm.full_name}
+            onChange={(e) => setEditForm((p) => ({ ...p, full_name: e.target.value }))}
+            required
+          />
+          <Input
+            label={`${t('auth.email')} *`}
+            type="email"
+            id="edit-consultancy-email"
+            name="email"
+            value={editForm.email}
+            onChange={(e) => setEditForm((p) => ({ ...p, email: e.target.value }))}
+            required
+          />
+          <Input
+            label={t('admin.companyName')}
+            id="edit-consultancy-company"
+            name="company_name"
+            value={editForm.company_name}
+            onChange={(e) => setEditForm((p) => ({ ...p, company_name: e.target.value }))}
+          />
+          <Input
+            label={t('admin.country')}
+            id="edit-consultancy-country"
+            name="country"
+            placeholder={t('admin.countryPlaceholder')}
+            value={editForm.country}
+            onChange={(e) => setEditForm((p) => ({ ...p, country: e.target.value }))}
+          />
+          <div className="adcon__form-actions">
+            <Button type="button" variant="ghost" size="md" onClick={() => setShowEdit(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button type="submit" variant="primary" size="md" loading={savingPartner}>
+              {t('common.save')}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* View partner (read-only) */}
+      <DetailModal
+        isOpen={showView}
+        onClose={() => setShowView(false)}
+        title={viewingPartner ? partnerName(viewingPartner) : t('common.view')}
+        columns={detailColumns}
+        row={viewingPartner}
+      />
     </div>
   );
 }
