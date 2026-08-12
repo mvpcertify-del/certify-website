@@ -2,12 +2,16 @@ import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import DataTable from '../../components/ui/DataTable';
 import Modal from '../../components/ui/Modal';
+import DetailModal from '../../components/ui/DetailModal';
 import StatusBadge from '../../components/ui/StatusBadge';
+import RowActions from '../../components/ui/RowActions';
 import { Button, Input, Select } from '../../components/ui/FormElements';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROLES } from '../../utils/roles';
-import { Plus, Search, Pencil, Trash2, Copy, Check, Link2, RefreshCw } from 'lucide-react';
+// Pencil/Trash2 were dropped with the hand-rolled action buttons — RowActions
+// owns those icons now. RefreshCw is still used by the "regenerate code" button.
+import { Plus, Search, Copy, Check, Link2, RefreshCw } from 'lucide-react';
 
 const EMPTY = {
   code: '',
@@ -76,6 +80,10 @@ export default function AdminCoupons() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [copiedId, setCopiedId] = useState(null);
+  // Read-only View popup — the first of the four row actions (client, 12 Aug:
+  // "now I see only 3 Deactivate, Edit, Delete (View) Is missing").
+  const [showView, setShowView] = useState(false);
+  const [viewingRow, setViewingRow] = useState(null);
 
   const isAmountType = formData.discount_type === 'amount';
 
@@ -316,54 +324,19 @@ export default function AdminCoupons() {
     columns.push({
       key: 'actions',
       label: t('common.actions') || 'Actions',
+      // This screen used to hand-roll its own three buttons, which is how it
+      // drifted out of step with the rest of the admin area — it was the only
+      // list with no View. Switched to the shared RowActions so it can never
+      // drift again, and so all four icons are present (client, 12 Aug).
       render: (_, row) => (
-        <div style={{ display: 'flex', gap: 6 }}>
-          <button
-            type="button"
-            title={row.is_active ? t('common.deactivate') : t('common.activate')}
-            onClick={() => toggleActive(row)}
-            style={{
-              background: 'transparent',
-              border: '1px solid var(--color-border)',
-              borderRadius: 6,
-              padding: 6,
-              cursor: 'pointer',
-              color: 'var(--color-text-secondary)',
-            }}
-          >
-            <RefreshCw size={14} />
-          </button>
-          <button
-            type="button"
-            title={t('common.edit') || 'Edit'}
-            onClick={() => openEdit(row)}
-            style={{
-              background: 'transparent',
-              border: '1px solid var(--color-border)',
-              borderRadius: 6,
-              padding: 6,
-              cursor: 'pointer',
-              color: 'var(--color-text-secondary)',
-            }}
-          >
-            <Pencil size={14} />
-          </button>
-          <button
-            type="button"
-            title={t('common.delete') || 'Delete'}
-            onClick={() => handleDelete(row)}
-            style={{
-              background: 'transparent',
-              border: '1px solid rgba(239,68,68,0.4)',
-              borderRadius: 6,
-              padding: 6,
-              cursor: 'pointer',
-              color: '#ef4444',
-            }}
-          >
-            <Trash2 size={14} />
-          </button>
-        </div>
+        <RowActions
+          isActive={!!row.is_active}
+          showView
+          onView={() => { setViewingRow(row); setShowView(true); }}
+          onToggle={() => toggleActive(row)}
+          onEdit={() => openEdit(row)}
+          onDelete={() => handleDelete(row)}
+        />
       ),
     });
   }
@@ -635,6 +608,16 @@ export default function AdminCoupons() {
           </div>
         </form>
       </Modal>
+
+      {/* View (read-only). DetailModal reuses the table's own columns and drops
+          the actions one, so the popup can never disagree with the list. */}
+      <DetailModal
+        isOpen={showView}
+        onClose={() => setShowView(false)}
+        title={viewingRow?.code || t('common.view')}
+        columns={columns}
+        row={viewingRow}
+      />
     </div>
   );
 }

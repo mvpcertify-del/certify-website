@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import DataTable from '../../components/ui/DataTable';
 import Modal from '../../components/ui/Modal';
+import DetailModal from '../../components/ui/DetailModal';
 import { Button, Input, Select } from '../../components/ui/FormElements';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
@@ -30,6 +31,10 @@ export default function AdminCountries() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [autoAssigning, setAutoAssigning] = useState(false);
+  // Read-only View popup — the first of the four row actions (client, 12 Aug:
+  // "now I see only 3 Deactivate, Edit, Delete (View) Is missing").
+  const [showView, setShowView] = useState(false);
+  const [viewingRow, setViewingRow] = useState(null);
 
   const fetchData = async () => {
     setFetching(true);
@@ -205,6 +210,8 @@ export default function AdminCountries() {
       render: (_, row) => (
         <RowActions
           isActive={row.is_active !== false}
+          showView
+          onView={() => { setViewingRow(row); setShowView(true); }}
           onToggle={() => toggleActive(row)}
           onEdit={() => openEdit(row)}
           onDelete={() => handleDelete(row)}
@@ -320,6 +327,16 @@ export default function AdminCountries() {
           </div>
         </form>
       </Modal>
+
+      {/* View (read-only). DetailModal reuses the table's own columns and drops
+          the actions one, so the popup can never disagree with the list. */}
+      <DetailModal
+        isOpen={showView}
+        onClose={() => setShowView(false)}
+        title={viewingRow?.name || t('common.view')}
+        columns={columns}
+        row={viewingRow}
+      />
     </div>
   );
 }

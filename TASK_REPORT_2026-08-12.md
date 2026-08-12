@@ -248,6 +248,30 @@ actions, and any other admin who can open the screen gets View only. Every
 action calls the same endpoints User Management uses, which re-check the
 caller's rights on the server rather than trusting the browser.
 
+### The missing View icon (follow-up, same day)
+
+> *"I checked the SA login, but 4 Icons should be activated on left side, now I
+> see only 3 Deactivate, Edit, Delete (View) Is missing for all"*
+
+Correct, and now fixed. Six screens were showing three icons instead of four:
+
+**Countries · Accreditation Bodies · Commission Tiers · Discount Coupons ·
+User Fields · Application Fields**
+
+These are the configuration screens rather than the people screens, and they had
+never been given a View action — the eye icon is optional in the shared
+component and they simply never asked for it. All six now open a read-only
+detail popup that lists every column of that row.
+
+Discount Coupons was the root of the drift: it was the one screen that had
+written its own three buttons by hand instead of using the shared action
+cluster, which is exactly why it fell behind. It now uses the shared one like
+everything else, so it cannot drift again.
+
+I also swept every list in the codebase to confirm none is left without a View —
+twelve screens use the shared action cluster and all twelve now request all four
+icons.
+
 Two notes:
 
 - There is no separate **Investors** screen. Investors are a category of user
