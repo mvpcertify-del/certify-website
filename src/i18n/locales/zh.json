@@ -620,6 +620,7 @@
     "addReferral": "添加客户",
     "addReferralHint": "输入您推荐的客户信息。在其注册之前，将在您的列表中显示为待处理。",
     "referralAdded": "已添加客户",
+    "extraFieldsNotSaved": "客户已添加，但 WhatsApp 号码和网站尚无法保存。请联系管理员执行待处理的数据库更新。",
     "noSelfReferral": "You can't refer yourself.",
     "alreadyReferred": "You've already referred this email.",
     "yourDiscountCode": "您的折扣码",

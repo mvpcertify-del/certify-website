@@ -634,6 +634,7 @@
     "addReferral": "إضافة عميل",
     "addReferralHint": "أدخل بيانات العميل الذي تحيله. سيظهر في قائمتك كمعلّق حتى يقوم بالتسجيل.",
     "referralAdded": "تمت إضافة العميل",
+    "extraFieldsNotSaved": "تمت إضافة العميل، لكن تعذّر حتّى الآن حفظ رقم واتساب والموقع الإلكتروني. يرجى الطلب من المسؤول تطبيق تحديث قاعدة البيانات المعلّق.",
     "noSelfReferral": "You can't refer yourself.",
     "alreadyReferred": "You've already referred this email.",
     "yourDiscountCode": "رمز الخصم الخاص بك",

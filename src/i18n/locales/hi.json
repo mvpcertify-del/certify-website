@@ -620,6 +620,7 @@
     "addReferral": "क्लाइंट जोड़ें",
     "addReferralHint": "जिस क्लाइंट को आप रेफर कर रहे हैं उसका विवरण दर्ज करें। साइन अप करने तक वह आपकी सूची में लंबित दिखेगा।",
     "referralAdded": "क्लाइंट जोड़ा गया",
+    "extraFieldsNotSaved": "क्लाइंट जोड दिया गया, लेकिन WhatsApp नंबर और वेबसाइट अभी सहेजे नहीं जा सके। कृपया अपने प्रशासक से लंबित डेटाबेस अपडेट लागू करने के लिए कहें।",
     "noSelfReferral": "You can't refer yourself.",
     "alreadyReferred": "You've already referred this email.",
     "yourDiscountCode": "आपका डिस्काउंट कोड",

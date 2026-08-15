@@ -620,6 +620,7 @@
     "addReferral": "Kunde hinzufügen",
     "addReferralHint": "Geben Sie die Daten des Kunden ein, den Sie empfehlen. Er erscheint in Ihrer Liste als ausstehend, bis er sich registriert.",
     "referralAdded": "Kunde hinzugefügt",
+    "extraFieldsNotSaved": "Der Kunde wurde hinzugefügt, aber die WhatsApp-Nummer und die Website konnten noch nicht gespeichert werden. Bitten Sie Ihren Administrator, das ausstehende Datenbank-Update einzuspielen.",
     "noSelfReferral": "You can't refer yourself.",
     "alreadyReferred": "You've already referred this email.",
     "yourDiscountCode": "Ihr Rabattcode",

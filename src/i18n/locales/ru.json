@@ -620,6 +620,7 @@
     "addReferral": "Добавить клиента",
     "addReferralHint": "Введите данные клиента, которого вы приглашаете. Он будет отображаться в списке как ожидающий до регистрации.",
     "referralAdded": "Клиент добавлен",
+    "extraFieldsNotSaved": "Клиент добавлен, но номер WhatsApp и сайт пока не удалось сохранить. Попросите администратора применить ожидающее обновление базы данных.",
     "noSelfReferral": "You can't refer yourself.",
     "alreadyReferred": "You've already referred this email.",
     "yourDiscountCode": "Ваш промокод",

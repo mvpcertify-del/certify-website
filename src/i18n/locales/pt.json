@@ -620,6 +620,7 @@
     "addReferral": "Adicionar Cliente",
     "addReferralHint": "Insira os dados do cliente que está a indicar. Aparecerá na sua lista como pendente até se registar.",
     "referralAdded": "Cliente adicionado",
+    "extraFieldsNotSaved": "O cliente foi adicionado, mas o número de WhatsApp e o site ainda não puderam ser guardados. Peça ao seu administrador para aplicar a atualização pendente da base de dados.",
     "noSelfReferral": "You can't refer yourself.",
     "alreadyReferred": "You've already referred this email.",
     "yourDiscountCode": "Seu Código de Desconto",

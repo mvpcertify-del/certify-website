@@ -620,6 +620,7 @@
     "addReferral": "Ajouter un client",
     "addReferralHint": "Saisissez les coordonnées du client que vous parrainez. Il apparaîtra dans votre liste comme en attente jusqu à son inscription.",
     "referralAdded": "Client ajouté",
+    "extraFieldsNotSaved": "Le client a été ajouté, mais le numéro WhatsApp et le site web n’ont pas encore pu être enregistrés. Demandez à votre administrateur d’appliquer la mise à jour de base de données en attente.",
     "noSelfReferral": "You can't refer yourself.",
     "alreadyReferred": "You've already referred this email.",
     "yourDiscountCode": "Votre Code de Réduction",

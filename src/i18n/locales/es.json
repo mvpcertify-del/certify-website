@@ -634,6 +634,7 @@
     "addReferral": "Agregar Cliente",
     "addReferralHint": "Ingrese los datos del cliente que está refiriendo. Aparecerá en su lista como pendiente hasta que se registre.",
     "referralAdded": "Cliente agregado",
+    "extraFieldsNotSaved": "El cliente se agregó, pero aún no se pudieron guardar el número de WhatsApp ni el sitio web. Pida a su administrador que aplique la actualización pendiente de la base de datos.",
     "noSelfReferral": "You can't refer yourself.",
     "alreadyReferred": "You've already referred this email.",
     "yourDiscountCode": "Tu Código de Descuento",

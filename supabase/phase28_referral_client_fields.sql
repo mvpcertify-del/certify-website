@@ -26,6 +26,12 @@ COMMENT ON COLUMN public.referrals.referred_website IS
   'The referred client company website, entered by the referral partner. '
   'Optional, free text.';
 
+-- PostgREST serves the API from a cached copy of the schema and refreshes it
+-- on its own schedule, so an ALTER TABLE alone can leave inserts failing with
+-- "Could not find the '...' column ... in the schema cache" for minutes after
+-- the migration succeeded. Ask for the reload explicitly.
+NOTIFY pgrst, 'reload schema';
+
 -- =====================================================================
 -- Verification
 -- =====================================================================

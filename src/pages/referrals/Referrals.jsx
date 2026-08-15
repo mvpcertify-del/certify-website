@@ -32,6 +32,9 @@ export default function Referrals() {
   const [signature, setSignature] = useState(user?.email_signature || '');
   const [signatureSaving, setSignatureSaving] = useState(false);
   const [success, setSuccess] = useState('');
+  // Shown when the client WAS saved but something optional about it was not.
+  // Separate from `success` so a partial save never reads as a clean one.
+  const [notice, setNotice] = useState('');
 
   // The partner's real, stored code (phase25 profiles.referral_code).
   //
@@ -118,21 +121,51 @@ export default function Referrals() {
     }
 
     setSaving(true);
+    setNotice('');
     try {
-      // Insert is enforced by RLS to referrer_id = auth.uid().
-      const { data, error } = await supabase
+      // The row the partner actually filled in. Insert is enforced by RLS to
+      // referrer_id = auth.uid().
+      const row = {
+        referrer_id: user.id,
+        referred_email: email,
+        referred_name: addForm.referred_name.trim(),
+        referred_company: addForm.referred_company.trim() || null,
+        referred_whatsapp: addForm.referred_whatsapp.trim() || null,
+        referred_website: addForm.referred_website.trim() || null,
+        status: 'pending',
+      };
+
+      const insert = (payload) => supabase
         .from('referrals')
-        .insert({
-          referrer_id: user.id,
-          referred_email: email,
-          referred_name: addForm.referred_name.trim(),
-          referred_company: addForm.referred_company.trim() || null,
-          referred_whatsapp: addForm.referred_whatsapp.trim() || null,
-          referred_website: addForm.referred_website.trim() || null,
-          status: 'pending',
-        })
+        .insert(payload)
         .select()
         .single();
+
+      let { data, error } = await insert(row);
+
+      // If the database has not yet had phase28 applied, referred_whatsapp /
+      // referred_website do not exist and PostgREST rejects the WHOLE row with
+      // PGRST204 — so the partner cannot add any client at all, which is what
+      // the client reported on 15 Aug. Those two fields are optional contact
+      // details; losing the referral over them is far worse than saving it
+      // without them, so retry with the core fields and say plainly what was
+      // dropped. Once HOTFIX_2026-08-15_referral_columns.sql has been run this
+      // branch is dead code.
+      const missingOptionalColumn =
+        error &&
+        (error.code === 'PGRST204' || /schema cache/i.test(error.message || '')) &&
+        /referred_whatsapp|referred_website/.test(error.message || '');
+
+      if (missingOptionalColumn) {
+        const { referred_whatsapp, referred_website, ...core } = row;
+        const retry = await insert(core);
+        if (!retry.error && (referred_whatsapp || referred_website)) {
+          setNotice(t('referrals.extraFieldsNotSaved'));
+        }
+        data = retry.data;
+        error = retry.error;
+      }
+
       if (error) throw error;
       setReferrals(prev => [data, ...prev]);
       setSuccess(`${t('referrals.referralAdded')}: ${addForm.referred_name.trim()}`);
@@ -295,6 +328,14 @@ export default function Referrals() {
         <div className="admin-users__success">
           <CheckCircle size={16} />
           <span>{success}</span>
+        </div>
+      )}
+
+      {/* The client was saved, but not everything about it was. */}
+      {notice && (
+        <div className="referrals__notice">
+          <AlertCircle size={16} />
+          <span>{notice}</span>
         </div>
       )}
 
