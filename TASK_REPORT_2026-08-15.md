@@ -122,20 +122,38 @@ which ones have already been run. A feature can therefore be fully built,
 reviewed and deployed, and still be broken in production because one manual step
 in a different system was missed — with no warning anywhere until a user hits it.
 
-Three files in the project are in this position today, having been added over the
-last few weeks:
+I checked the whole codebase for the same class of problem: every database
+column the application writes does have a migration file written for it, so
+nothing else is missing from the *project*. But that check can only prove the
+file exists — not that it was ever run, which is exactly what caught us here.
+The only way to know that is to ask the database.
 
-| File | What it adds | Confirmed applied? |
+### A file that asks it
+
+New file: **`supabase/CHECK_migrations_applied.sql`**
+
+Paste it into the SQL Editor and it lists every recent migration with `APPLIED`
+or `MISSING` beside it. It is completely read-only — it creates, changes and
+deletes nothing, and is safe to run on the live site at any time.
+
+Run it whenever the site behaves strangely after a deploy. It turns "something
+is broken and nobody knows why" into a one-line answer.
+
+### Two migrations still to confirm
+
+| File | What it adds | Status |
 |---|---|---|
-| `phase28_referral_client_fields.sql` | WhatsApp + website on a referral | **No — this is today's outage** |
-| `phase29_partner_agreements_all_roles.sql` | Agreements for referral / country admin / auditor | Unknown |
-| `phase30_core_legal_signatures.sql` | The legal signature ledger in the specified shape | Unknown |
+| `phase28_referral_client_fields.sql` | WhatsApp + website on a referral | **Applied 15 Aug — today's fix** |
+| `phase29_partner_agreements_all_roles.sql` | Agreements for referral / country admin / auditor | Run the check above |
+| `phase30_core_legal_signatures.sql` | The legal signature ledger in the specified shape | Run the check above |
 
-I would recommend running all three now, in that order. All are written to be
-safe to run repeatedly, so applying one that is already in place costs nothing.
-If phase29 or phase30 has not been applied, the Partner Agreement and signature
-features will fail the same way the moment someone uses them — and it is far
-better to find that out now than from a partner's screenshot.
+Both are safe to run: phase29's three inserts are each guarded so they cannot
+duplicate an agreement that already exists, and phase30 was verified against the
+application code before recommending it — it requires every signature to carry
+an IP address, and the code already guarantees one. If either has not been
+applied, the Partner Agreement and signature features will fail the same way the
+moment somebody uses them, so it is worth confirming now rather than from a
+partner's screenshot.
 
 Longer term, this is worth a small permanent fix: a table that records which
 migrations have run, so a deploy can say plainly "database is 2 versions behind"
