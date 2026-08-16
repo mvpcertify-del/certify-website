@@ -33,7 +33,9 @@ WITH col(phase, detail, tbl, cname) AS (
     ('phase28', 'referrals.referred_website',        'referrals',            'referred_website'),
     ('phase30', 'contract_acceptances.is_accepted',  'contract_acceptances', 'is_accepted'),
     ('phase30', 'contract_acceptances.contract_version_label',
-                                                     'contract_acceptances', 'contract_version_label')
+                                                     'contract_acceptances', 'contract_version_label'),
+    ('phase31', 'applications.employee_count',       'applications',         'employee_count'),
+    ('phase31', 'applications.locations_count',      'applications',         'locations_count')
   ) AS v(phase, detail, tbl, cname)
 ),
 rel(phase, detail, objname) AS (

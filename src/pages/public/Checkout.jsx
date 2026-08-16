@@ -2,11 +2,16 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  Shield, CreditCard, Banknote, Landmark, Lock, CheckCircle2, Copy,
+  CreditCard, Banknote, Landmark, Lock, CheckCircle2, Copy,
   ArrowRight, Mail, AlertCircle, MailCheck, Ticket, X, ChevronDown,
+  Users, MapPin, Minus, Plus, Pencil,
 } from 'lucide-react';
-import { computeTotal, applyCoupon, PACKAGE_LABEL } from '../../utils/pricing';
-import { getIsoBySlug } from '../../utils/isoCatalog';
+import {
+  computeTotal, applyCoupon, PACKAGE_LABEL, getPriceForStandard,
+  employeeBandsFromCount, INCLUDED_EMPLOYEES, INCLUDED_LOCATIONS,
+  EMPLOYEES_PER_BAND, SURCHARGE_PER_EMPLOYEE_BAND, SURCHARGE_PER_LOCATION,
+} from '../../utils/pricing';
+import { getIsoBySlug, ISO_CATALOG_LIST } from '../../utils/isoCatalog';
 import {
   PAYMENT_METHODS, isOfflineMethod, BANK_TRANSFER_DETAILS, CASH_DETAILS,
 } from '../../config/paymentMethods';
@@ -16,6 +21,49 @@ import BackButton from '../../components/ui/BackButton';
 import './Checkout.css';
 
 const METHOD_ICONS = { CreditCard, Banknote, Landmark };
+
+// Clamp a free-typed value to a non-negative integer with a floor.
+function clampInt(value, min) {
+  const n = Math.floor(Number(value));
+  if (!Number.isFinite(n)) return min;
+  return Math.max(min, n);
+}
+
+// Numeric stepper for headcount / site count. Declared at module scope so its
+// <input> keeps focus across the parent's re-renders (same reason as the one in
+// PricingCalculator — this page re-renders on every keystroke in the form).
+function Stepper({ value, onChange, min, step = 1, decLabel, incLabel }) {
+  return (
+    <div className="checkout__stepper">
+      <button
+        type="button"
+        className="checkout__step-btn"
+        onClick={() => onChange(clampInt(value - step, min))}
+        disabled={value <= min}
+        aria-label={decLabel}
+      >
+        <Minus size={15} />
+      </button>
+      <input
+        type="number"
+        min={min}
+        inputMode="numeric"
+        className="checkout__step-input"
+        value={value}
+        onChange={(e) => onChange(e.target.value === '' ? '' : clampInt(e.target.value, min))}
+        onBlur={(e) => onChange(clampInt(e.target.value, min))}
+      />
+      <button
+        type="button"
+        className="checkout__step-btn"
+        onClick={() => onChange(clampInt((Number(value) || min) + step, min))}
+        aria-label={incLabel}
+      >
+        <Plus size={15} />
+      </button>
+    </div>
+  );
+}
 
 // -------------------------------------------------------
 // Public pay-first checkout.
@@ -39,9 +87,20 @@ export default function Checkout() {
 
 function CheckoutForm() {
   const { t } = useTranslation();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const isoSlug = searchParams.get('iso') || 'iso-9001';
+  // Which standard is being bought.
+  //
+  // A partner's invite link carries only ?ref=CODE — it names no standard. This
+  // page used to fall back to 'iso-9001', so every referred client landed on a
+  // payment page for a certification they had never chosen (reported 16 Aug).
+  // When no standard is named we now ASK for one instead of choosing on the
+  // buyer's behalf; ?iso= deep links from the ISO landing pages are unchanged.
+  const isoParam = searchParams.get('iso');
+  const paramSlug = getIsoBySlug(isoParam || '') ? isoParam : null;
+  const [chosenSlug, setChosenSlug] = useState(paramSlug);
+  const [pickerOpen, setPickerOpen] = useState(!paramSlug);
+
   const staff = Math.max(0, Math.floor(Number(searchParams.get('staff')) || 0));
   const locations = Math.max(0, Math.floor(Number(searchParams.get('locations')) || 0));
   const cancelled = searchParams.get('cancelled') === '1';
@@ -52,13 +111,34 @@ function CheckoutForm() {
   // single link works whichever of the two the partner was given.
   const referralCode = (searchParams.get('ref') || searchParams.get('coupon') || '').trim();
 
+  const isoSlug = chosenSlug || 'iso-9001';
   const isoConfig = getIsoBySlug(isoSlug);
   const isoCode = isoConfig?.code || 'ISO 9001';
   const packageLabel = PACKAGE_LABEL;
 
+  // Organization size. The buyer types real numbers — total headcount and total
+  // sites — because that is what they know about their own company; the
+  // surcharge bands are derived from them. The summary note has always claimed
+  // "additional employees and locations can be added below", but there was
+  // nothing below to add them with: the two values could only ever arrive as
+  // URL parameters nothing in the app produced, so every order was priced as a
+  // 50-employee single-site organization.
+  //
+  // Seeded from the legacy ?staff= (bands) and ?locations= (extra sites)
+  // parameters so any old link still resolves to the same price.
+  const [employeeCount, setEmployeeCount] = useState(
+    () => INCLUDED_EMPLOYEES + staff * EMPLOYEES_PER_BAND
+  );
+  const [locationCount, setLocationCount] = useState(
+    () => INCLUDED_LOCATIONS + locations
+  );
+
+  const employeeBands = employeeBandsFromCount(employeeCount);
+  const additionalLocations = Math.max(0, clampInt(locationCount, INCLUDED_LOCATIONS) - INCLUDED_LOCATIONS);
+
   const totals = useMemo(
-    () => computeTotal({ standardSlug: isoSlug, employeeBands: staff, locations }),
-    [isoSlug, staff, locations]
+    () => computeTotal({ standardSlug: isoSlug, employeeBands, locations: additionalLocations }),
+    [isoSlug, employeeBands, additionalLocations]
   );
 
   const [form, setForm] = useState({ name: '', email: '', company: '', phone: '', country: '' });
@@ -147,6 +227,17 @@ function CheckoutForm() {
     setCouponError('');
   };
 
+  // Record the choice in the URL too, so a refresh, a back button or a
+  // cancelled Stripe return lands the buyer back on the standard they picked
+  // rather than on the picker again. The partner's ?ref= is preserved.
+  const selectStandard = (slug) => {
+    setChosenSlug(slug);
+    setPickerOpen(false);
+    const next = new URLSearchParams(searchParams);
+    next.set('iso', slug);
+    setSearchParams(next, { replace: true });
+  };
+
   const offlineSelected = isOfflineMethod(paymentMethod);
   const setField = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -179,6 +270,7 @@ function CheckoutForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    if (!chosenSlug) { setPickerOpen(true); return; }
     if (!form.name.trim()) { setError(t('checkout.errName')); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) { setError(t('checkout.errEmail')); return; }
 
@@ -190,8 +282,14 @@ function CheckoutForm() {
         body: JSON.stringify({
           action: 'guest-checkout',
           isoName: isoSlug,
-          employeeBands: staff,
-          additionalLocations: locations,
+          employeeBands,
+          additionalLocations,
+          // The raw figures too: the server re-derives the surcharge bands from
+          // these (never trusting the ones above) and stores the real numbers on
+          // the application, so the auditor and CB see the organization the
+          // buyer actually described.
+          employeeCount: clampInt(employeeCount, 1),
+          locationCount: clampInt(locationCount, INCLUDED_LOCATIONS),
           paymentMethod,
           couponCode: coupon?.code || null,
           // Sent separately from the coupon: the server applies whichever of
@@ -283,6 +381,68 @@ function CheckoutForm() {
     );
   }
 
+  // -------- STANDARD PICKER --------
+  // Shown when the link named no standard (a partner's ?ref= link, or the bare
+  // /checkout URL), and whenever the buyer asks to change their choice. The
+  // partner's discount is announced here so it is visibly not tied to any one
+  // certification — it applies to whichever the buyer picks.
+  if (pickerOpen) {
+    return (
+      <div className="checkout">
+        <header className="checkout__topbar">
+          <BrandLogo size={26} />
+          <LanguageSwitcher variant="landing" />
+        </header>
+
+        {chosenSlug
+          ? <button type="button" className="checkout__picker-back" onClick={() => setPickerOpen(false)}>
+              <ArrowRight size={15} style={{ transform: 'rotate(180deg)' }} /> {t('common.back')}
+            </button>
+          : <BackButton />}
+
+        <div className="checkout__picker">
+          <h1 className="checkout__title">{t('checkout.chooseStandardTitle')}</h1>
+          <p className="checkout__subtitle">{t('checkout.chooseStandardDesc')}</p>
+
+          {coupon && (
+            <div className="checkout__alert checkout__alert--success">
+              <Ticket size={16} />
+              <span>{t('checkout.couponAnyStandard', { code: coupon.code, label: discountLabel })}</span>
+            </div>
+          )}
+
+          <div className="checkout__iso-grid">
+            {ISO_CATALOG_LIST.map((iso) => {
+              const listPrice = getPriceForStandard(iso.slug);
+              const { total: afterDiscount } = applyCoupon(listPrice, coupon);
+              const active = iso.slug === chosenSlug;
+              return (
+                <button
+                  key={iso.slug}
+                  type="button"
+                  className={`checkout__iso-card ${active ? 'checkout__iso-card--active' : ''}`}
+                  onClick={() => selectStandard(iso.slug)}
+                >
+                  <span className="checkout__iso-code">{iso.code}</span>
+                  <span className="checkout__iso-name">{t(iso.titleKey)}</span>
+                  <span className="checkout__iso-price">
+                    {coupon && afterDiscount < listPrice && (
+                      <s className="checkout__iso-was">${listPrice.toLocaleString()}</s>
+                    )}
+                    ${money(afterDiscount)}
+                  </span>
+                  <span className="checkout__iso-go">{t('checkout.selectStandard')} <ArrowRight size={14} /></span>
+                </button>
+              );
+            })}
+          </div>
+
+          <p className="checkout__summary-note checkout__picker-note">{t('pricing.disclaimer')}</p>
+        </div>
+      </div>
+    );
+  }
+
   // -------- CHECKOUT FORM --------
   return (
     <div className="checkout">
@@ -300,24 +460,35 @@ function CheckoutForm() {
           <div className="checkout__summary-iso">
             <span className="checkout__summary-code">{isoCode}</span>
             <span className="checkout__summary-pkg">{packageLabel} {t('checkout.package')}</span>
+            <button type="button" className="checkout__summary-change" onClick={() => setPickerOpen(true)}>
+              <Pencil size={12} /> {t('checkout.changeStandard')}
+            </button>
           </div>
           <div className="checkout__lines">
             <div className="checkout__line">
               <span>{t('pricing.lineItem.base')}</span>
               <span>${totals.base.toLocaleString()}</span>
             </div>
-            {totals.employeeSurchargeTotal > 0 && (
-              <div className="checkout__line">
-                <span>{t('checkout.extraEmployees')}</span>
-                <span>+${totals.employeeSurchargeTotal.toLocaleString()}</span>
-              </div>
-            )}
-            {totals.locationSurchargeTotal > 0 && (
-              <div className="checkout__line">
-                <span>{t('checkout.extraLocations')}</span>
-                <span>+${totals.locationSurchargeTotal.toLocaleString()}</span>
-              </div>
-            )}
+            {/* Always shown, whether or not they cost anything — the buyer needs
+                to see the org size the quote is based on, not just the extras. */}
+            <div className="checkout__line">
+              <span>{t('pricing.employeesLabel')}</span>
+              <span>
+                {clampInt(employeeCount, 1).toLocaleString()}
+                {totals.employeeSurchargeTotal > 0
+                  ? ` · +$${totals.employeeSurchargeTotal.toLocaleString()}`
+                  : ` · ${t('pricing.calculator.included')}`}
+              </span>
+            </div>
+            <div className="checkout__line">
+              <span>{t('pricing.locationsLabel')}</span>
+              <span>
+                {clampInt(locationCount, INCLUDED_LOCATIONS).toLocaleString()}
+                {totals.locationSurchargeTotal > 0
+                  ? ` · +$${totals.locationSurchargeTotal.toLocaleString()}`
+                  : ` · ${t('pricing.calculator.included')}`}
+              </span>
+            </div>
             {coupon && (
               <div className="checkout__line checkout__line--discount">
                 <span>{t('coupons.discount')} ({discountLabel})</span>
@@ -381,6 +552,50 @@ function CheckoutForm() {
               <AlertCircle size={16} /> {t('checkout.cancelledNote')}
             </div>
           )}
+
+          {/* Organization size — drives the quoted total live */}
+          <h2 className="checkout__section-label">{t('pricing.orgSize')}</h2>
+          <div className="checkout__org">
+            <div className="checkout__org-field">
+              <span className="checkout__org-label">
+                <Users size={15} /> {t('pricing.employeesLabel')}
+              </span>
+              <Stepper
+                value={employeeCount}
+                onChange={setEmployeeCount}
+                min={1}
+                step={EMPLOYEES_PER_BAND}
+                decLabel={t('pricing.decreaseEmployees')}
+                incLabel={t('pricing.increaseEmployees')}
+              />
+              <small className="checkout__org-hint">
+                {t('checkout.employeesHint', {
+                  included: INCLUDED_EMPLOYEES,
+                  band: EMPLOYEES_PER_BAND,
+                  amount: `$${SURCHARGE_PER_EMPLOYEE_BAND.toLocaleString()}`,
+                })}
+              </small>
+            </div>
+
+            <div className="checkout__org-field">
+              <span className="checkout__org-label">
+                <MapPin size={15} /> {t('pricing.locationsLabel')}
+              </span>
+              <Stepper
+                value={locationCount}
+                onChange={setLocationCount}
+                min={INCLUDED_LOCATIONS}
+                decLabel={t('pricing.decreaseLocations')}
+                incLabel={t('pricing.increaseLocations')}
+              />
+              <small className="checkout__org-hint">
+                {t('checkout.locationsHint', {
+                  included: INCLUDED_LOCATIONS,
+                  amount: `$${SURCHARGE_PER_LOCATION.toLocaleString()}`,
+                })}
+              </small>
+            </div>
+          </div>
 
           {/* Contact details */}
           <h2 className="checkout__section-label">{t('checkout.contactTitle')}</h2>

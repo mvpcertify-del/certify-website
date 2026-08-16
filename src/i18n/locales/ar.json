@@ -179,6 +179,7 @@
     "freeGapAnalysis": "تحليل الفجوة المجاني"
   },
   "auth": {
+    "sendingResetLink": "جارٍ الإرسال…",
     "welcomeBack": "مرحباً بعودتك",
     "signInSubtitle": "سجّل الدخول إلى حسابك في Certify.cx™",
     "continueWithGoogle": "المتابعة مع Google",
@@ -1315,6 +1316,13 @@
     "noPayments": "No payments recorded yet. [DRAFT]"
   },
   "checkout": {
+    "chooseStandardTitle": "اختر شهادتك",
+    "chooseStandardDesc": "اختر المواصفة التي تريد الحصول على شهادة بها. يمكنك تغييرها قبل الدفع.",
+    "selectStandard": "اختيار",
+    "changeStandard": "تغيير",
+    "couponAnyStandard": "كود الخصم {{code}} ({{label}}) ينطبق على جميع الشهادات أدناه.",
+    "employeesHint": "أول {{included}} مشمولون. كل {{band}} موظف إضافي يضيف {{amount}}.",
+    "locationsHint": "الموقع الأول مشمول ({{included}}). كل موقع إضافي يضيف {{amount}}.",
     "title": "أكمل عملية الشراء",
     "subtitle": "ادفع بأمان واحصل على وصول فوري إلى لوحة التحكم.",
     "orderSummary": "ملخص الطلب",

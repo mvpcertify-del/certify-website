@@ -179,6 +179,7 @@
     "freeGapAnalysis": "Free Gap Analysis"
   },
   "auth": {
+    "sendingResetLink": "Sending…",
     "welcomeBack": "Welcome back",
     "signInSubtitle": "Log in to your Certify.cx™ account",
     "continueWithGoogle": "Continue with Google",
@@ -1315,6 +1316,13 @@
     "noPayments": "No payments recorded yet."
   },
   "checkout": {
+    "chooseStandardTitle": "Choose your certification",
+    "chooseStandardDesc": "Pick the standard you want to be certified against. You can change it before you pay.",
+    "selectStandard": "Select",
+    "changeStandard": "Change",
+    "couponAnyStandard": "Your discount code {{code}} ({{label}}) applies to every certification below.",
+    "employeesHint": "First {{included}} included. Each further {{band}} employees add {{amount}}.",
+    "locationsHint": "First {{included}} included. Each additional location adds {{amount}}.",
     "title": "Complete your purchase",
     "subtitle": "Pay securely and get instant access to your dashboard.",
     "orderSummary": "Order summary",

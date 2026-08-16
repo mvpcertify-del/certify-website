@@ -52,11 +52,15 @@ export function Textarea({ label, error, id, ...props }) {
 }
 
 export function Button({ children, variant = 'primary', size = 'md', loading = false, fullWidth = false, ...props }) {
+  // `disabled` is applied AFTER {...props}, not before. Spreading a `disabled`
+  // of undefined over an earlier one un-disabled the button, so `loading` never
+  // actually blocked a second click and every form using this component could
+  // be double-submitted while its first request was still in flight.
   return (
     <button
       className={`form-btn form-btn--${variant} form-btn--${size} ${fullWidth ? 'form-btn--full' : ''}`}
-      disabled={loading || props.disabled}
       {...props}
+      disabled={loading || props.disabled || false}
     >
       {loading && <Loader2 size={16} className="form-btn__spinner" />}
       {children}

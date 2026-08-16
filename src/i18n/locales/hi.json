@@ -179,6 +179,7 @@
     "freeGapAnalysis": "Free Gap Analysis"
   },
   "auth": {
+    "sendingResetLink": "भेजा जा रहा है…",
     "welcomeBack": "वापस स्वागत है",
     "signInSubtitle": "अपने Certify.cx™ खाते में साइन इन करें",
     "continueWithGoogle": "Google से जारी रखें",
@@ -1288,6 +1289,13 @@
     "noPayments": "No payments recorded yet. [DRAFT]"
   },
   "checkout": {
+    "chooseStandardTitle": "अपना प्रमाणन चुनें",
+    "chooseStandardDesc": "वह मानक चुनें जिसके लिए आप प्रमाणित होना चाहते हैं। आप भुगतान से पहले इसे बदल सकते हैं।",
+    "selectStandard": "चुनें",
+    "changeStandard": "बदलें",
+    "couponAnyStandard": "आपका छूट कोड {{code}} ({{label}}) नीचे दिए गए सभी प्रमाणनों पर लागू होता है।",
+    "employeesHint": "पहले {{included}} शामिल हैं। हर अतिरिक्त {{band}} कर्मचारियों पर {{amount}} जुड़ता है।",
+    "locationsHint": "पहला स्थान शामिल है ({{included}})। हर अतिरिक्त स्थान पर {{amount}} जुड़ता है।",
     "title": "अपनी खरीद पूरी करें",
     "subtitle": "सुरक्षित रूप से भुगतान करें और अपने डैशबोर्ड तक तुरंत पहुँच पाएं।",
     "orderSummary": "ऑर्डर सारांश",

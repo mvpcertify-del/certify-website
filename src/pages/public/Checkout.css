@@ -463,3 +463,169 @@
   :root:not([data-theme="light"]) .checkout { background: linear-gradient(135deg, #0b1120 0%, #111827 100%); }
 }
 :root[data-theme="dark"] .checkout { background: linear-gradient(135deg, #0b1120 0%, #111827 100%); }
+
+/* -------------------------------------------------------
+   Standard picker — shown when the link named no certification
+   (a partner's ?ref= link) or when the buyer asks to change it.
+   ------------------------------------------------------- */
+.checkout__picker {
+  max-width: 1000px;
+  margin: 0 auto;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 28px 26px 26px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.07);
+}
+.checkout__picker-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 1000px;
+  margin: 0 auto 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #475569;
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 0;
+}
+.checkout__picker-note { margin-top: 18px; }
+
+.checkout__iso-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+.checkout__iso-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: start;
+  padding: 16px 16px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+.checkout__iso-card:hover {
+  border-color: var(--color-accent, #10b981);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.12);
+  transform: translateY(-2px);
+}
+.checkout__iso-card--active {
+  border-color: var(--color-accent, #10b981);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+.checkout__iso-code { font-size: 1.02rem; font-weight: 800; color: #0f172a; letter-spacing: -0.01em; }
+.checkout__iso-name {
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.45;
+  min-height: 2.2em;
+}
+.checkout__iso-price {
+  margin-top: 6px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #059669;
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+.checkout__iso-was { font-size: 0.82rem; font-weight: 600; color: #94a3b8; }
+.checkout__iso-go {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--color-accent, #059669);
+}
+
+.checkout__alert--success { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; }
+
+/* ---- "Change" affordance on the order summary ---- */
+.checkout__summary-change {
+  align-self: flex-start;
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--color-accent, #059669);
+}
+.checkout__summary-change:hover { text-decoration: underline; }
+
+/* -------------------------------------------------------
+   Organization size — headcount and sites, priced live.
+   ------------------------------------------------------- */
+.checkout__org {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+.checkout__org-field { display: flex; flex-direction: column; gap: 7px; }
+.checkout__org-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #334155;
+}
+.checkout__org-hint { font-size: 0.72rem; color: #94a3b8; line-height: 1.45; }
+
+.checkout__stepper {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+.checkout__step-btn {
+  width: 38px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  border: none;
+  cursor: pointer;
+  color: #475569;
+}
+.checkout__step-btn:hover:not(:disabled) { background: #eef2f7; color: #0f172a; }
+.checkout__step-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.checkout__step-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  border-inline: 1px solid #e2e8f0;
+  padding: 10px 8px;
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  background: #fff;
+  -moz-appearance: textfield;
+}
+.checkout__step-input:focus { outline: none; background: #f8fafc; }
+.checkout__step-input::-webkit-outer-spin-button,
+.checkout__step-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+@media (max-width: 520px) {
+  .checkout__org { grid-template-columns: 1fr; }
+  .checkout__picker { padding: 22px 18px; }
+  .checkout__iso-grid { grid-template-columns: 1fr; }
+}

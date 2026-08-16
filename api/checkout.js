@@ -4,7 +4,10 @@ import { createClient } from '@supabase/supabase-js';
 // applyCoupon is no longer imported directly: every pricing path now goes
 // through bestDiscount, which resolves a coupon and the referral discount
 // against the same subtotal and picks whichever saves the buyer more.
-import { computeTotal, bestDiscount, PACKAGE_LABEL } from '../src/utils/pricing.js';
+import {
+  computeTotal, bestDiscount, PACKAGE_LABEL,
+  employeeBandsFromCount, INCLUDED_LOCATIONS,
+} from '../src/utils/pricing.js';
 import { getIsoBySlug } from '../src/utils/isoCatalog.js';
 import { isOfflineMethod, stripeMethodTypesFor, PAYMENT_METHOD_IDS } from '../src/config/paymentMethods.js';
 import { getRegionFromCountry } from '../src/utils/roles.js';
@@ -454,6 +457,12 @@ async function guestCheckoutHandler(req, res) {
       isoName, // ISO slug (e.g. 'iso-9001')
       employeeBands = 0,
       additionalLocations = 0,
+      // Raw organization size as the buyer typed it on the checkout form.
+      // Preferred over the two derived values above when present: the bands are
+      // a pricing detail the client computes for display, and a client-computed
+      // price input is never trusted.
+      employeeCount,
+      locationCount,
       paymentMethod = 'card',
       couponCode,
       referralCode,
@@ -481,7 +490,22 @@ async function guestCheckoutHandler(req, res) {
     // entirely — which is why no partner had ever been paid for a sale made
     // through this funnel, and why the advertised "referred clients get 10%
     // off" never actually applied here.
-    const totals = computeTotal({ standardSlug: isoName, employeeBands, locations: additionalLocations });
+    //
+    // Organization size: re-derive the surcharge bands from the raw headcount
+    // and site count whenever the form sent them, so the charge follows what
+    // the buyer described rather than a number the browser worked out.
+    const rawEmployees = Number.isFinite(+employeeCount) && +employeeCount > 0
+      ? Math.floor(+employeeCount) : null;
+    const rawLocations = Number.isFinite(+locationCount) && +locationCount > 0
+      ? Math.floor(+locationCount) : null;
+    const bands = rawEmployees !== null
+      ? employeeBandsFromCount(rawEmployees)
+      : Math.max(0, Math.floor(Number(employeeBands) || 0));
+    const extraLocations = rawLocations !== null
+      ? Math.max(0, rawLocations - INCLUDED_LOCATIONS)
+      : Math.max(0, Math.floor(Number(additionalLocations) || 0));
+
+    const totals = computeTotal({ standardSlug: isoName, employeeBands: bands, locations: extraLocations });
 
     const typed = await resolveCheckoutCode(couponCode);
     // Only resolve the link code if the typed one produced nothing useful, so
@@ -568,8 +592,13 @@ async function guestCheckoutHandler(req, res) {
         status: 'awaiting_registration',
         selected_package: selectedPackage,
         recommended_iso: recommendedIso,
-        additional_employee_bands: Math.max(0, Math.floor(Number(employeeBands) || 0)),
-        additional_locations: Math.max(0, Math.floor(Number(additionalLocations) || 0)),
+        additional_employee_bands: bands,
+        additional_locations: extraLocations,
+        // The organization as the buyer described it, kept alongside the
+        // pricing bands — the auditor and CB need the real numbers, not the
+        // billing approximation of them.
+        ...(rawEmployees !== null ? { employee_count: rawEmployees } : {}),
+        ...(rawLocations !== null ? { locations_count: rawLocations } : {}),
         total_amount: finalPrice,
         payment_method: paymentMethod,
         payment_status: offline ? 'awaiting_verification' : 'pending',
@@ -620,7 +649,17 @@ async function guestCheckoutHandler(req, res) {
       // {CHECKOUT_SESSION_ID} is verified server-side on the success page before
       // we unlock the account, so this redirect cannot be forged.
       success_url: `${baseUrl}/checkout/success?app=${applicationId}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/checkout?iso=${encodeURIComponent(isoName)}&cancelled=1`,
+      // Carry the whole order back on cancel. Previously only the standard
+      // survived, so a buyer who backed out of Stripe returned to a reset form
+      // — org size gone, and the partner's referral code gone with it, which
+      // cost the partner the commission on the retry.
+      cancel_url: `${baseUrl}/checkout?${new URLSearchParams({
+        iso: isoName || '',
+        staff: String(bands),
+        locations: String(extraLocations),
+        ...(usedReferralCode ? { ref: usedReferralCode } : {}),
+        cancelled: '1',
+      }).toString()}`,
       metadata: { applicationId, clientId: userId, guest: 'true', paymentMethod, couponCode: coupon?.code || '', discountAmount: String(discountAmount) },
     });
 

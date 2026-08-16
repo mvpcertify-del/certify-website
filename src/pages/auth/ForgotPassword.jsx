@@ -17,12 +17,27 @@ export default function ForgotPassword() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    const address = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) {
+      setError(t('checkout.errEmail'));
+      return;
+    }
+
     setLoading(true);
-    const result = await resetPassword(email);
-    if (result.success) {
-      setSent(true);
-    } else {
-      setError(result.error);
+    try {
+      const result = await resetPassword(address);
+      if (result.success) {
+        setSent(true);
+      } else {
+        // This branch used to be invisible: the error was stored and never
+        // rendered, so a rejected request (most often Supabase's one-per-minute
+        // rate limit after a double click) left the button doing nothing at all
+        // — which is exactly how it was reported on 16 Aug. Say what happened.
+        setError(result.error || t('checkout.errGeneric'));
+      }
+    } catch (err) {
+      setError(err?.message || t('checkout.errGeneric'));
     }
     setLoading(false);
   };
@@ -62,8 +77,15 @@ export default function ForgotPassword() {
           required
         />
 
+        {error && (
+          <div className="auth-form__error" role="alert">
+            <AlertCircle size={16} />
+            <span>{error}</span>
+          </div>
+        )}
+
         <Button type="submit" variant="primary" size="lg" fullWidth loading={loading}>
-          {t('auth.sendResetLink')}
+          {loading ? t('auth.sendingResetLink') : t('auth.sendResetLink')}
         </Button>
       </form>
 

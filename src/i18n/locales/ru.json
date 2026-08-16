@@ -179,6 +179,7 @@
     "freeGapAnalysis": "Free Gap Analysis"
   },
   "auth": {
+    "sendingResetLink": "Отправка…",
     "welcomeBack": "С возвращением",
     "signInSubtitle": "Войдите в свою учётную запись Certify.cx™",
     "continueWithGoogle": "Продолжить с Google",
@@ -1288,6 +1289,13 @@
     "noPayments": "No payments recorded yet. [DRAFT]"
   },
   "checkout": {
+    "chooseStandardTitle": "Выберите сертификацию",
+    "chooseStandardDesc": "Выберите стандарт, по которому хотите пройти сертификацию. Его можно изменить до оплаты.",
+    "selectStandard": "Выбрать",
+    "changeStandard": "Изменить",
+    "couponAnyStandard": "Ваш промокод {{code}} ({{label}}) действует на все сертификации ниже.",
+    "employeesHint": "Первые {{included}} включены. Каждые следующие {{band}} сотрудников добавляют {{amount}}.",
+    "locationsHint": "Первая площадка включена ({{included}}). Каждая дополнительная площадка добавляет {{amount}}.",
     "title": "Завершите покупку",
     "subtitle": "Оплатите безопасно и получите мгновенный доступ к панели управления.",
     "orderSummary": "Сводка заказа",

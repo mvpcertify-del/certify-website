@@ -179,6 +179,7 @@
     "freeGapAnalysis": "Free Gap Analysis"
   },
   "auth": {
+    "sendingResetLink": "发送中…",
     "welcomeBack": "欢迎回来",
     "signInSubtitle": "登录您的 Certify.cx™ 账户",
     "continueWithGoogle": "使用 Google 继续",
@@ -1288,6 +1289,13 @@
     "noPayments": "No payments recorded yet. [DRAFT]"
   },
   "checkout": {
+    "chooseStandardTitle": "选择您的认证",
+    "chooseStandardDesc": "选择您希望认证的标准。付款前可以更改。",
+    "selectStandard": "选择",
+    "changeStandard": "更改",
+    "couponAnyStandard": "您的折扣码 {{code}}（{{label}}）适用于以下所有认证。",
+    "employeesHint": "前 {{included}} 名已包含。每增加 {{band}} 名员工加收 {{amount}}。",
+    "locationsHint": "第一个地点已包含（{{included}}）。每增加一个地点加收 {{amount}}。",
     "title": "完成购买",
     "subtitle": "安全付款，立即访问您的仪表板。",
     "orderSummary": "订单摘要",
