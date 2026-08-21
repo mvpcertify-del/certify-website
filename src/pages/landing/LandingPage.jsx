@@ -7,6 +7,8 @@ import {
   ShieldCheck, BrainCircuit, CreditCard,
 } from 'lucide-react';
 import { ISO_CATALOG_LIST } from '../../utils/isoCatalog';
+import { COMPLIANCE_AUDIT_LIST } from '../../utils/complianceAudits';
+import ComplianceLogo from '../../components/ui/ComplianceLogo';
 import SaraChatWidget from '../../components/sara/SaraChatWidget';
 import PublicNav from '../../components/layout/PublicNav';
 import BrandLogo from '../../components/ui/BrandLogo';
@@ -154,6 +156,40 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ---- Compliance Audits (sits directly below the ISO standards) ---- */}
+      {/* These are audit/advisory engagements, not accredited ISO certifications,
+          so the cards carry no price and no "Apply now" link — see
+          utils/complianceAudits.js for why they are a separate catalog. */}
+      <section className="landing__section landing__section--compliance" id="compliance-audits">
+        <div className="landing__section-inner">
+          <div className="landing__section-header">
+            <span className="landing__section-tag">{t('compliance.tag')}</span>
+            <h2 className="landing__section-title">{t('compliance.title')}</h2>
+            <p className="landing__section-desc">{t('compliance.desc')}</p>
+          </div>
+          <div className="landing__standards">
+            {COMPLIANCE_AUDIT_LIST.map((audit) => (
+              <div
+                key={audit.id}
+                className="landing__standard-card landing__standard-card--static"
+                style={{ '--card-accent': audit.logo.color }}
+              >
+                <div className="landing__standard-logo">
+                  <ComplianceLogo
+                    lines={audit.logo.lines}
+                    color={audit.logo.color}
+                    title={t(audit.titleKey)}
+                    size={44}
+                  />
+                </div>
+                <h3 className="landing__standard-title">{t(audit.titleKey)}</h3>
+                <p className="landing__standard-desc">{t(audit.descKey)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ---- Benefits ---- */}
       <section className="landing__section" id="benefits">
         <div className="landing__section-inner">
@@ -197,6 +233,7 @@ export default function LandingPage() {
               <h4 className="landing__footer-heading">{t('landing.footerProduct')}</h4>
               <a href="#how-it-works" className="landing__footer-link">{t('nav.howItWorks')}</a>
               <a href="#standards" className="landing__footer-link">{t('landing.footerISOStandards')}</a>
+              <a href="#compliance-audits" className="landing__footer-link">{t('compliance.title')}</a>
               <a href="#benefits" className="landing__footer-link">{t('nav.benefits')}</a>
               <Link to="/certifications" className="landing__footer-link">{t('landing.footerGetCertified')}</Link>
             </div>

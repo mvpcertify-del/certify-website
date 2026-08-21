@@ -1566,5 +1566,26 @@
     "alreadyInvoiced": "já faturada",
     "emailOptInHint": "Deixe desativado, a menos que pretenda enviar o e-mail ao cliente agora. O PDF é sempre salvo e pode ser baixado e enviado depois.",
     "downloadFailed": "Não foi possível baixar o documento."
+  },
+  "compliance": {
+    "tag": "Além da ISO",
+    "title": "Auditorias de Conformidade",
+    "desc": "Auditorias independentes e consultoria para os enquadramentos regulamentares que os seus clientes exigem.",
+    "socTitle": "Exames SOC",
+    "socDesc": "Exames SOC 1, SOC 2 e SOC 3 para organizações que necessitam de garantia independente sobre os controlos de relato financeiro ou sobre a segurança dos dados e das operações.",
+    "gdprTitle": "Conformidade com o RGPD",
+    "gdprDesc": "Consultoria sobre o Regulamento Geral sobre a Proteção de Dados da UE: avaliação do tratamento de dados e implementação da conformidade para organizações que tratam dados pessoais da UE.",
+    "pciTitle": "Conformidade com PCI DSS",
+    "pciDesc": "Conformidade com o Padrão de Segurança de Dados da Indústria de Cartões de Pagamento para comerciantes e prestadores de serviços que tratam dados de titulares de cartões.",
+    "ccpaTitle": "Conformidade com CCPA e CPRA",
+    "ccpaDesc": "Conformidade com a Lei de Privacidade do Consumidor da Califórnia e a Lei de Direitos de Privacidade da Califórnia para empresas que tratam dados de consumidores da Califórnia.",
+    "hitrustTitle": "Certificação HITRUST",
+    "hitrustDesc": "Preparação para o HITRUST CSF e apoio à certificação para organizações de saúde e os seus fornecedores.",
+    "hipaaTitle": "Conformidade com HIPAA/HITECH",
+    "hipaaDesc": "Conformidade com a regulamentação de saúde: proteção da informação clínica dos doentes e cumprimento dos requisitos de notificação de violações da HIPAA/HITECH.",
+    "pentestTitle": "Testes de Intrusão",
+    "pentestDesc": "Ações de hacking ético que simulam ataques reais para identificar e corrigir vulnerabilidades antes de serem exploradas.",
+    "soxTitle": "Testes SOX ITGC",
+    "soxDesc": "Testes de Controlos Gerais de TI para empresas cotadas em bolsa que cumprem os requisitos da Lei Sarbanes-Oxley sobre sistemas de relato financeiro."
   }
 }

@@ -1566,5 +1566,26 @@
     "alreadyInvoiced": "déjà facturée",
     "emailOptInHint": "Laissez cette option désactivée sauf si vous comptez envoyer l’e-mail au client maintenant. Le PDF est toujours enregistré et peut être téléchargé et envoyé plus tard.",
     "downloadFailed": "Le document n’a pas pu être téléchargé."
+  },
+  "compliance": {
+    "tag": "Au-delà de l'ISO",
+    "title": "Audits de Conformité",
+    "desc": "Audits indépendants et conseil sur les cadres réglementaires que vos clients exigent.",
+    "socTitle": "Examens SOC",
+    "socDesc": "Examens SOC 1, SOC 2 et SOC 3 pour les organisations ayant besoin d'une assurance indépendante sur les contrôles d'information financière ou sur la sécurité des données et des opérations.",
+    "gdprTitle": "Conformité au RGPD",
+    "gdprDesc": "Conseil sur le Règlement général sur la protection des données de l'UE : évaluation des traitements et mise en conformité pour les organisations traitant des données personnelles européennes.",
+    "pciTitle": "Conformité PCI DSS",
+    "pciDesc": "Conformité à la norme de sécurité des données de l'industrie des cartes de paiement pour les commerçants et prestataires traitant des données de porteurs de cartes.",
+    "ccpaTitle": "Conformité CCPA et CPRA",
+    "ccpaDesc": "Conformité au California Consumer Privacy Act et au California Privacy Rights Act pour les entreprises traitant des données de consommateurs californiens.",
+    "hitrustTitle": "Certification HITRUST",
+    "hitrustDesc": "Préparation au référentiel HITRUST CSF et accompagnement à la certification pour les organisations de santé et leurs fournisseurs.",
+    "hipaaTitle": "Conformité HIPAA/HITECH",
+    "hipaaDesc": "Conformité à la réglementation de santé : protection des informations médicales des patients et respect des obligations de notification des violations HIPAA/HITECH.",
+    "pentestTitle": "Tests d'Intrusion",
+    "pentestDesc": "Missions de piratage éthique simulant des attaques réelles afin d'identifier et de corriger les vulnérabilités avant qu'elles ne soient exploitées.",
+    "soxTitle": "Tests SOX ITGC",
+    "soxDesc": "Tests des contrôles généraux informatiques pour les sociétés cotées soumises aux exigences de la loi Sarbanes-Oxley sur les systèmes d'information financière."
   }
 }

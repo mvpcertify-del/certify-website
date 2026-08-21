@@ -1566,5 +1566,26 @@
     "alreadyInvoiced": "bereits fakturiert",
     "emailOptInHint": "Lassen Sie dies aus, sofern Sie dem Kunden nicht jetzt sofort eine E-Mail senden möchten. Das PDF wird immer gespeichert und kann später heruntergeladen und versendet werden.",
     "downloadFailed": "Das Dokument konnte nicht heruntergeladen werden."
+  },
+  "compliance": {
+    "tag": "Über ISO hinaus",
+    "title": "Compliance-Audits",
+    "desc": "Unabhängige Audits und Beratung zu den regulatorischen Rahmenwerken, nach denen Ihre Kunden fragen.",
+    "socTitle": "SOC-Prüfungen",
+    "socDesc": "SOC-1-, SOC-2- und SOC-3-Prüfungen für Organisationen, die eine unabhängige Beurteilung ihrer Rechnungslegungskontrollen oder ihrer Daten- und Betriebssicherheit benötigen.",
+    "gdprTitle": "DSGVO-Compliance",
+    "gdprDesc": "Beratung zur EU-Datenschutz-Grundverordnung: Bewertung der Datenverarbeitung und Umsetzung der Compliance für Organisationen, die personenbezogene Daten aus der EU verarbeiten.",
+    "pciTitle": "PCI-DSS-Compliance",
+    "pciDesc": "Compliance mit dem Payment Card Industry Data Security Standard für Händler und Dienstleister, die Karteninhaberdaten verarbeiten.",
+    "ccpaTitle": "CCPA- und CPRA-Compliance",
+    "ccpaDesc": "Compliance mit dem California Consumer Privacy Act und dem California Privacy Rights Act für Unternehmen, die Daten kalifornischer Verbraucher verarbeiten.",
+    "hitrustTitle": "HITRUST-Zertifizierung",
+    "hitrustDesc": "HITRUST-CSF-Readiness und Zertifizierungsbegleitung für Organisationen im Gesundheitswesen und deren Lieferanten.",
+    "hipaaTitle": "HIPAA/HITECH-Compliance",
+    "hipaaDesc": "Compliance mit Gesundheitsvorschriften: Schutz von Patientendaten und Erfüllung der Meldepflichten bei Datenschutzverletzungen nach HIPAA/HITECH.",
+    "pentestTitle": "Penetrationstests",
+    "pentestDesc": "Ethical-Hacking-Einsätze, die reale Angriffe simulieren, um Schwachstellen zu finden und zu beheben, bevor sie ausgenutzt werden.",
+    "soxTitle": "SOX-ITGC-Tests",
+    "soxDesc": "Prüfung der allgemeinen IT-Kontrollen für börsennotierte Unternehmen zur Erfüllung der Sarbanes-Oxley-Anforderungen an Systeme der Finanzberichterstattung."
   }
 }

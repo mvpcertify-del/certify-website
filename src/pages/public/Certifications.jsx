@@ -5,6 +5,8 @@ import {
   Activity, Stethoscope, ShieldCheck, BrainCircuit, ArrowRight,
 } from 'lucide-react';
 import { ISO_CATALOG_LIST } from '../../utils/isoCatalog';
+import { COMPLIANCE_AUDIT_LIST } from '../../utils/complianceAudits';
+import ComplianceLogo from '../../components/ui/ComplianceLogo';
 import PublicNav from '../../components/layout/PublicNav';
 import BackButton from '../../components/ui/BackButton';
 import './Certifications.css';
@@ -53,6 +55,35 @@ export default function Certifications() {
             </Link>
           );
         })}
+      </div>
+
+      {/* ---- Compliance Audits, directly below the ISO listing ---- */}
+      {/* No /iso/:slug target and no price: these are audit engagements, not
+          accredited certifications, so the cards do not link into checkout. */}
+      <div className="certs__section-header" id="compliance-audits">
+        <h2 className="certs__section-title">{t('compliance.title')}</h2>
+        <p className="certs__section-desc">{t('compliance.desc')}</p>
+      </div>
+
+      <div className="certs__grid">
+        {COMPLIANCE_AUDIT_LIST.map((audit) => (
+          <div
+            key={audit.id}
+            className="certs__card certs__card--static"
+            style={{ '--card-accent': audit.logo.color }}
+          >
+            <div className="certs__card-logo">
+              <ComplianceLogo
+                lines={audit.logo.lines}
+                color={audit.logo.color}
+                title={t(audit.titleKey)}
+                size={48}
+              />
+            </div>
+            <h3 className="certs__card-name">{t(audit.titleKey)}</h3>
+            <p className="certs__card-desc">{t(audit.descKey)}</p>
+          </div>
+        ))}
       </div>
 
       <div className="certs__footer">

@@ -1593,5 +1593,26 @@
     "alreadyInvoiced": "ya facturada",
     "emailOptInHint": "Déjalo desactivado a menos que quieras enviar el correo al cliente ahora mismo. El PDF siempre se guarda y puede descargarse y enviarse después.",
     "downloadFailed": "No se pudo descargar el documento."
+  },
+  "compliance": {
+    "tag": "Más allá de ISO",
+    "title": "Auditorías de Cumplimiento",
+    "desc": "Auditorías independientes y asesoramiento para los marcos normativos que sus clientes le exigen.",
+    "socTitle": "Exámenes SOC",
+    "socDesc": "Exámenes SOC 1, SOC 2 y SOC 3 para organizaciones que necesitan garantía independiente sobre los controles de información financiera o sobre la seguridad de los datos y las operaciones.",
+    "gdprTitle": "Cumplimiento del RGPD",
+    "gdprDesc": "Asesoramiento sobre el Reglamento General de Protección de Datos de la UE: evaluación del tratamiento de datos e implantación del cumplimiento para organizaciones que manejan datos personales de la UE.",
+    "pciTitle": "Cumplimiento de PCI DSS",
+    "pciDesc": "Cumplimiento del Estándar de Seguridad de Datos de la Industria de Tarjetas de Pago para comercios y proveedores de servicios que manejan datos de titulares de tarjetas.",
+    "ccpaTitle": "Cumplimiento de CCPA y CPRA",
+    "ccpaDesc": "Cumplimiento de la Ley de Privacidad del Consumidor de California y de la Ley de Derechos de Privacidad de California para empresas que manejan datos de consumidores de California.",
+    "hitrustTitle": "Certificación HITRUST",
+    "hitrustDesc": "Preparación para HITRUST CSF y apoyo a la certificación para organizaciones sanitarias y sus proveedores.",
+    "hipaaTitle": "Cumplimiento de HIPAA/HITECH",
+    "hipaaDesc": "Cumplimiento de la normativa sanitaria: protección de la información médica del paciente y cumplimiento de los requisitos de notificación de brechas de HIPAA/HITECH.",
+    "pentestTitle": "Pruebas de Penetración",
+    "pentestDesc": "Ejercicios de hacking ético que simulan ataques reales para identificar y corregir vulnerabilidades antes de que sean explotadas.",
+    "soxTitle": "Pruebas SOX ITGC",
+    "soxDesc": "Pruebas de Controles Generales de TI para empresas cotizadas que deben cumplir los requisitos de la Ley Sarbanes-Oxley sobre los sistemas de información financiera."
   }
 }

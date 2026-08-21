@@ -1593,5 +1593,26 @@
     "alreadyInvoiced": "already invoiced",
     "emailOptInHint": "Leave this off unless you intend to email the client right now. The PDF is always saved and can be downloaded and sent later.",
     "downloadFailed": "The document could not be downloaded."
+  },
+  "compliance": {
+    "tag": "Beyond ISO",
+    "title": "Compliance Audits",
+    "desc": "Independent audit and advisory engagements for the regulatory frameworks your customers ask about.",
+    "socTitle": "SOC Examinations",
+    "socDesc": "SOC 1, SOC 2 and SOC 3 examinations for organizations that need independent assurance over financial reporting controls or data security and operations.",
+    "gdprTitle": "GDPR Compliance",
+    "gdprDesc": "EU General Data Protection Regulation advisory — data processing assessment and compliance implementation for organizations handling EU personal data.",
+    "pciTitle": "PCI DSS Compliance",
+    "pciDesc": "Payment Card Industry Data Security Standard compliance for merchants and service providers handling cardholder data.",
+    "ccpaTitle": "CCPA & CPRA Compliance",
+    "ccpaDesc": "California Consumer Privacy Act and California Privacy Rights Act compliance for businesses handling California consumer data.",
+    "hitrustTitle": "HITRUST Certification",
+    "hitrustDesc": "HITRUST CSF readiness and certification support for healthcare organizations and their vendors.",
+    "hipaaTitle": "HIPAA/HITECH Compliance",
+    "hipaaDesc": "Healthcare regulation compliance — protecting patient health information and meeting HIPAA/HITECH breach notification requirements.",
+    "pentestTitle": "Penetration Testing",
+    "pentestDesc": "Ethical hacking engagements that simulate real-world attacks to identify and remediate vulnerabilities before they are exploited.",
+    "soxTitle": "SOX ITGC Testing",
+    "soxDesc": "IT General Controls testing for publicly traded companies meeting Sarbanes-Oxley requirements over financial reporting systems."
   }
 }

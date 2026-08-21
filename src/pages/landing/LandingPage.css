@@ -164,6 +164,13 @@
   background: var(--color-bg-secondary);
 }
 
+/* Compliance Audits sits between two sections that share its background: the
+   dark ISO block above and the light Benefits block below. The rule keeps the
+   boundary with Benefits visible instead of the two merging into one slab. */
+.landing__section--compliance {
+  border-bottom: 1px solid var(--color-border);
+}
+
 .landing__section-inner {
   max-width: 1200px;
   margin: 0 auto;
@@ -299,8 +306,30 @@
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
 }
 
+/* Compliance Audit cards reuse the standard-card shell but are not links, so
+   they must not lift on hover — that movement promises a click target that
+   does not exist. Must stay AFTER the rule above: equal specificity, so source
+   order decides. */
+.landing__standard-card--static {
+  cursor: default;
+}
+
+.landing__standard-card--static:hover {
+  border-color: var(--color-border);
+  transform: none;
+  box-shadow: none;
+}
+
 .landing__standard-icon {
   color: var(--card-accent);
+  margin-bottom: var(--spacing-base);
+}
+
+/* The Compliance Audit badge paints its own background, so unlike the ISO
+   icon it needs no tint behind it — just the same vertical rhythm. `flex`
+   keeps the inline SVG from picking up the line-box descender gap. */
+.landing__standard-logo {
+  display: flex;
   margin-bottom: var(--spacing-base);
 }
 

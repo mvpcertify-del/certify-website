@@ -76,6 +76,28 @@
   padding: 0 var(--spacing-lg);
 }
 
+/* Heading for the Compliance Audits block that follows the ISO grid. */
+.certs__section-header {
+  max-width: 1120px;
+  margin: var(--spacing-2xl) auto 0;
+  padding: 0 var(--spacing-lg) var(--spacing-lg);
+  text-align: center;
+}
+
+.certs__section-title {
+  font-size: var(--font-size-xl);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 var(--spacing-sm);
+}
+
+.certs__section-desc {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
 .certs__card {
   display: flex;
   flex-direction: column;
@@ -93,6 +115,24 @@
   transform: translateY(-3px);
 }
 
+/* Compliance cards are not links, so they must not lift on hover the way the
+   ISO cards do — that movement reads as "click me" and there is nowhere to go.
+   The description also loses the gap that the ISO cards leave for their CTA.
+   These must stay AFTER .certs__card:hover: the two hover rules have equal
+   specificity, so source order is what decides the winner. */
+.certs__card--static {
+  cursor: default;
+}
+
+.certs__card--static:hover {
+  border-color: var(--color-border);
+  transform: none;
+}
+
+.certs__card--static .certs__card-desc {
+  margin-bottom: 0;
+}
+
 .certs__card-icon {
   width: 48px;
   height: 48px;
@@ -102,6 +142,16 @@
   justify-content: center;
   background: color-mix(in srgb, var(--card-accent, var(--color-accent)) 14%, transparent);
   color: var(--card-accent, var(--color-accent));
+  margin-bottom: var(--spacing-base);
+}
+
+/* Compliance badges are self-coloured, so they skip the tinted tile that sits
+   behind the ISO icons — but keep the same 48px footprint and spacing so the
+   two grids line up. */
+.certs__card-logo {
+  display: flex;
+  width: 48px;
+  height: 48px;
   margin-bottom: var(--spacing-base);
 }
 

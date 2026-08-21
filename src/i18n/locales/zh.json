@@ -1566,5 +1566,26 @@
     "alreadyInvoiced": "已开票",
     "emailOptInHint": "除非您现在就要给客户发邮件，否则请保持关闭。PDF 始终会保存，之后可下载并发送。",
     "downloadFailed": "无法下载该文档。"
+  },
+  "compliance": {
+    "tag": "超越 ISO",
+    "title": "合规审计",
+    "desc": "针对客户所关注的监管框架，提供独立审计与咨询服务。",
+    "socTitle": "SOC 审验",
+    "socDesc": "面向需要对财务报告控制或数据安全与运营获得独立鉴证的组织，提供 SOC 1、SOC 2 与 SOC 3 审验。",
+    "gdprTitle": "GDPR 合规",
+    "gdprDesc": "欧盟《通用数据保护条例》咨询——为处理欧盟个人数据的组织提供数据处理评估与合规实施。",
+    "pciTitle": "PCI DSS 合规",
+    "pciDesc": "为处理持卡人数据的商户与服务提供商提供支付卡行业数据安全标准合规服务。",
+    "ccpaTitle": "CCPA 与 CPRA 合规",
+    "ccpaDesc": "为处理加州消费者数据的企业提供《加州消费者隐私法》与《加州隐私权法》合规服务。",
+    "hitrustTitle": "HITRUST 认证",
+    "hitrustDesc": "为医疗机构及其供应商提供 HITRUST CSF 就绪评估与认证支持。",
+    "hipaaTitle": "HIPAA/HITECH 合规",
+    "hipaaDesc": "医疗法规合规——保护患者健康信息，并满足 HIPAA/HITECH 的数据泄露通知要求。",
+    "pentestTitle": "渗透测试",
+    "pentestDesc": "通过模拟真实攻击的道德黑客测试，在漏洞被利用之前发现并修复它们。",
+    "soxTitle": "SOX ITGC 测试",
+    "soxDesc": "为上市公司提供 IT 一般控制测试，以满足《萨班斯-奥克斯利法案》对财务报告系统的要求。"
   }
 }
