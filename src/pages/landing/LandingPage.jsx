@@ -172,15 +172,10 @@ export default function LandingPage() {
               <div
                 key={audit.id}
                 className="landing__standard-card landing__standard-card--static"
-                style={{ '--card-accent': audit.logo.color }}
+                style={{ '--card-accent': audit.accent }}
               >
                 <div className="landing__standard-logo">
-                  <ComplianceLogo
-                    lines={audit.logo.lines}
-                    color={audit.logo.color}
-                    title={t(audit.titleKey)}
-                    size={44}
-                  />
+                  <ComplianceLogo src={audit.logo} title={t(audit.titleKey)} size={56} />
                 </div>
                 <h3 className="landing__standard-title">{t(audit.titleKey)}</h3>
                 <p className="landing__standard-desc">{t(audit.descKey)}</p>

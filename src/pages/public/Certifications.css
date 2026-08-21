@@ -145,13 +145,10 @@
   margin-bottom: var(--spacing-base);
 }
 
-/* Compliance badges are self-coloured, so they skip the tinted tile that sits
-   behind the ISO icons — but keep the same 48px footprint and spacing so the
-   two grids line up. */
+/* The compliance logo brings its own white plate and sizes itself, so this
+   wrapper only supplies the spacing that .certs__card-icon would have. */
 .certs__card-logo {
   display: flex;
-  width: 48px;
-  height: 48px;
   margin-bottom: var(--spacing-base);
 }
 

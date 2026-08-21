@@ -69,32 +69,51 @@ untouched: same twelve standards, same prices, same links.
 
 ## The logos
 
-Each card carries its own badge, and each is drawn by the site itself rather
-than being a picture file — so it stays sharp at any size, on any screen, and
-adds nothing to page weight. Colours follow each framework's usual palette.
-**A preview of all eight, on both the dark and light theme, was sent to you
-alongside this report** (`compliance-logos-preview.html` — open it in any
-browser).
+Each card carries the framework's own logo, **the same eight marks used on
+kaleshaco.com/services**, as you asked. **A preview of all eight, on both the
+dark and the light theme, was sent to you alongside this report**
+(`compliance-logos-preview.html` — open it in any browser).
 
-### The one thing you should know about them
+| Card | Mark | Owner |
+|---|---|---|
+| SOC Examinations | AICPA SOC seal | AICPA |
+| GDPR Compliance | EU circle-of-stars GDPR mark | European Union |
+| PCI DSS Compliance | PCI DSS Compliant mark | PCI Security Standards Council |
+| CCPA & CPRA Compliance | CCPA / CPRA shields | State of California |
+| HITRUST Certification | HITRUST wordmark | HITRUST Alliance |
+| HIPAA/HITECH Compliance | HIPAA caduceus | US Dept. of Health & Human Services |
+| Penetration Testing | Security testing mark | — generic, not a trademark |
+| SOX ITGC Testing | SOX shield | — generic, not a trademark |
 
-These are **our own wordmark badges, not the official logos** of AICPA, the PCI
-Security Standards Council, HITRUST, or the US Department of Health.
+The files are **copied into Certify.cx rather than linked to the other site**.
+Linking would have meant every visitor's browser fetching eight images from
+kaleshaco.com, and all eight cards going blank the day that site reorganises its
+files. At 3.7–10.4 KB each they add about 57 KB in total, which is less than one
+photograph.
 
-That was deliberate, and it protects you. Most of those marks are trademarks
-that only a firm the owning body has **licensed or accredited** may display.
-Putting the real AICPA SOC seal on Certify.cx would be a claim that AICPA has
-authorised Certify.cx to perform SOC examinations. If that authorisation is not
-in place, the mark is a legal exposure rather than a design detail — and it is
-the kind that surfaces at the worst possible moment, when a large client's legal
-team reviews the site.
+**One display detail worth knowing:** all eight source files are JPEGs with a
+solid white background, not cut-out transparent images. On the reference site
+that is invisible because its cards are white. Certify.cx has a dark theme,
+where a bare white-backed image would sit on the card as a hard white rectangle.
+So each logo is placed on a deliberate white plate with a little padding — on
+the light theme you cannot tell, and on the dark theme it reads as an intentional
+logo plate. You can see both in the preview.
 
-So the badges say what the service is without borrowing anyone's seal.
+### One thing I still owe you as a straight answer
 
-**If Certify.cx already holds any of those accreditations, tell me which ones
-and send me the logo files the body gave you** — I will swap those specific
-badges for the official artwork and leave the rest as they are. The code is
-built so that is a one-line change per logo.
+Six of the eight are **third-party trademarks** — AICPA, PCI SSC, HITRUST
+Alliance, HHS and the EU own their marks. Several of them may only be displayed
+by a firm the owning body has **licensed or accredited**. Displaying the AICPA
+SOC seal, for instance, reads as a claim that AICPA has authorised Certify.cx to
+perform SOC examinations.
+
+I have used them because you asked for them directly, and it is your call to
+make, not mine. But I would not be doing my job if I did not say it once,
+plainly: **if Certify.cx does not hold those accreditations, this is the kind of
+thing that surfaces when a large client's legal team reviews the site.** Worth a
+five-minute check with whoever handles your legal side. If any need to come off,
+tell me which and it is a one-line change per logo — the file records who owns
+each mark so it is easy to audit.
 
 ---
 
@@ -152,8 +171,9 @@ re-implementing it.
 
 | File | Change |
 |---|---|
-| `src/utils/complianceAudits.js` | **New** — the eight services, their badges and their text keys |
-| `src/components/ui/ComplianceLogo.jsx` | **New** — draws the badge for each card |
+| `src/utils/complianceAudits.js` | **New** — the eight services, their logos and their text keys |
+| `src/assets/compliance/*.jpg` (8 files) | **New** — the eight framework logos, ~57 KB in total |
+| `src/components/ui/ComplianceLogo.jsx` + `.css` | **New** — renders each logo on its white plate |
 | `src/pages/landing/LandingPage.jsx` | The new section below the ISO standards, plus the footer link |
 | `src/pages/landing/LandingPage.css` | Styling for the new section and badges |
 | `src/pages/public/Certifications.jsx` | The same eight below the ISO grid |
@@ -178,8 +198,11 @@ Checked here:
 - The four changed and new code files are structurally intact (bracket balance
   verified).
 - No unused imports left behind in either page.
-- The badge sizing was checked against its longest label (HITRUST, seven
-  characters) so no text overflows its badge.
+- All eight logo files are present in the project and each one is actually used
+  by a card — no broken image, no orphan file.
+- Each logo is set to scale inside its plate rather than being cropped, which
+  matters because the eight differ in shape (HIPAA and SOX are wide, GDPR and
+  the AICPA seal are square).
 
 **Not checked here, and I want to be straight about it:** this machine has no
 Node.js installed, so I cannot run the build or open the site. The checks above

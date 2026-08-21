@@ -16,60 +16,92 @@
 // So there is no `slug`-based route here on purpose — `id` is a stable key for
 // React lists and for whatever enquiry flow these gain later.
 //
-// `logo.lines` / `logo.color` drive <ComplianceLogo>, which draws an ORIGINAL
-// wordmark badge. These are not the official AICPA / PCI SSC / HITRUST / HHS
-// marks — see the note at the top of components/ui/ComplianceLogo.jsx for why.
-// Colours are chosen to echo each framework's usual palette while staying
-// legible against white text (all are AA or better at this text size).
+// `logo` is the framework's own mark, matching the reference site the client
+// asked us to follow (kaleshaco.com/services). They are imported rather than
+// hot-linked so the cards do not break when that site reorganises its assets,
+// and so Vite fingerprints and caches them like any other bundled image.
+//
+// NOTE: these are third-party trademarks (AICPA, PCI SSC, HITRUST Alliance,
+// HHS and others). Several may only be displayed by a firm the owning body has
+// licensed or accredited. Displaying them is the client's decision, taken
+// knowingly; `regulator` records who owns each mark so that is easy to audit.
+//
+// All eight are JPEGs with a solid white background, not transparent PNGs, so
+// they are rendered on a white tile — see components/ui/ComplianceLogo.jsx.
+
+import socLogo from '../assets/compliance/soc.jpg';
+import gdprLogo from '../assets/compliance/gdpr.jpg';
+import pciLogo from '../assets/compliance/pci-dss.jpg';
+import ccpaLogo from '../assets/compliance/ccpa-cpra.jpg';
+import hitrustLogo from '../assets/compliance/hitrust.jpg';
+import hipaaLogo from '../assets/compliance/hipaa.jpg';
+import pentestLogo from '../assets/compliance/pentesting.jpg';
+import soxLogo from '../assets/compliance/sox.jpg';
 
 export const COMPLIANCE_AUDITS = {
   soc: {
     id: 'soc',
     titleKey: 'compliance.socTitle',
     descKey: 'compliance.socDesc',
-    logo: { lines: ['SOC'], color: '#1F5FA9' },
+    logo: socLogo,
+    accent: '#1F5FA9',
+    regulator: 'AICPA — SOC for Service Organizations',
   },
   gdpr: {
     id: 'gdpr',
     titleKey: 'compliance.gdprTitle',
     descKey: 'compliance.gdprDesc',
-    logo: { lines: ['GDPR'], color: '#003399' },
+    logo: gdprLogo,
+    accent: '#003399',
+    regulator: 'EU General Data Protection Regulation (GDPR)',
   },
   'pci-dss': {
     id: 'pci-dss',
     titleKey: 'compliance.pciTitle',
     descKey: 'compliance.pciDesc',
-    logo: { lines: ['PCI', 'DSS'], color: '#14657D' },
+    logo: pciLogo,
+    accent: '#14657D',
+    regulator: 'PCI Security Standards Council',
   },
   'ccpa-cpra': {
     id: 'ccpa-cpra',
     titleKey: 'compliance.ccpaTitle',
     descKey: 'compliance.ccpaDesc',
-    logo: { lines: ['CCPA', 'CPRA'], color: '#A3242C' },
+    logo: ccpaLogo,
+    accent: '#5B6BE0',
+    regulator: 'CCPA / CPRA (State of California)',
   },
   hitrust: {
     id: 'hitrust',
     titleKey: 'compliance.hitrustTitle',
     descKey: 'compliance.hitrustDesc',
-    logo: { lines: ['HITRUST'], color: '#7A2230' },
+    logo: hitrustLogo,
+    accent: '#7A2230',
+    regulator: 'HITRUST Alliance',
   },
   hipaa: {
     id: 'hipaa',
     titleKey: 'compliance.hipaaTitle',
     descKey: 'compliance.hipaaDesc',
-    logo: { lines: ['HIPAA'], color: '#005EA2' },
+    logo: hipaaLogo,
+    accent: '#1F2937',
+    regulator: 'HIPAA / HITECH (US Dept. of Health & Human Services)',
   },
   'penetration-testing': {
     id: 'penetration-testing',
     titleKey: 'compliance.pentestTitle',
     descKey: 'compliance.pentestDesc',
-    logo: { lines: ['PEN', 'TEST'], color: '#5B3BA6' },
+    logo: pentestLogo,
+    accent: '#1F2937',
+    regulator: 'Vulnerability & Penetration Testing',
   },
   'sox-itgc': {
     id: 'sox-itgc',
     titleKey: 'compliance.soxTitle',
     descKey: 'compliance.soxDesc',
-    logo: { lines: ['SOX'], color: '#0F6B5C' },
+    logo: soxLogo,
+    accent: '#78BE20',
+    regulator: 'Sarbanes-Oxley Act (SOX)',
   },
 };
 

@@ -325,9 +325,10 @@
   margin-bottom: var(--spacing-base);
 }
 
-/* The Compliance Audit badge paints its own background, so unlike the ISO
-   icon it needs no tint behind it — just the same vertical rhythm. `flex`
-   keeps the inline SVG from picking up the line-box descender gap. */
+/* The compliance logo brings its own white plate and sizes itself, so this
+   wrapper only supplies the vertical rhythm .landing__standard-icon would
+   have. `flex` also stops the inline-block image picking up the line-box
+   descender gap under the plate. */
 .landing__standard-logo {
   display: flex;
   margin-bottom: var(--spacing-base);

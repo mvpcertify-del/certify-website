@@ -70,15 +70,10 @@ export default function Certifications() {
           <div
             key={audit.id}
             className="certs__card certs__card--static"
-            style={{ '--card-accent': audit.logo.color }}
+            style={{ '--card-accent': audit.accent }}
           >
             <div className="certs__card-logo">
-              <ComplianceLogo
-                lines={audit.logo.lines}
-                color={audit.logo.color}
-                title={t(audit.titleKey)}
-                size={48}
-              />
+              <ComplianceLogo src={audit.logo} title={t(audit.titleKey)} size={56} />
             </div>
             <h3 className="certs__card-name">{t(audit.titleKey)}</h3>
             <p className="certs__card-desc">{t(audit.descKey)}</p>
