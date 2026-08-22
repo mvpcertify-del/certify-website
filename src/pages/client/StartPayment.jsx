@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { AlertCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
-import { getIsoBySlug } from '../../utils/isoCatalog';
-import { PACKAGE_LABEL } from '../../utils/pricing';
+import { PACKAGE_LABEL, resolveOrderStandardCode } from '../../utils/pricing';
+import { isComplianceStandard } from '../../utils/complianceServices';
 import BrandLogo from '../../components/ui/BrandLogo';
 import './StartPayment.css';
 
@@ -34,8 +34,16 @@ export default function StartPayment() {
   // to the payment page so its steppers pre-fill and the price matches.
   const staff = searchParams.get('staff') || '';
   const locations = searchParams.get('locations') || '';
-  const isoConfig = getIsoBySlug(isoSlug);
-  const recommendedIso = isoConfig?.code || 'ISO 9001:2015';
+  // Resolves an ISO slug OR a compliance-audit slug ('soc', 'sox-itgc', …).
+  // This used to be getIsoBySlug(...)?.code, which returned nothing for a
+  // compliance service and fell through to the default — so a logged-in client
+  // who clicked "Proceed to payment" on SOC Examinations would have had an
+  // ISO 9001 application created and been charged for that instead.
+  const recommendedIso = resolveOrderStandardCode(isoSlug) || 'ISO 9001:2015';
+  // Where "back to pricing" goes: the two catalogs have different detail pages.
+  const detailPath = isComplianceStandard(isoSlug)
+    ? `/compliance/${isoSlug}`
+    : `/iso/${isoSlug}`;
   // Single-package model: everyone gets the one "Standard" package.
   const selectedPackage = PACKAGE_LABEL;
 
@@ -94,7 +102,7 @@ export default function StartPayment() {
             </div>
             <h1 className="start-payment__title">{t('payment.preparingError')}</h1>
             <p className="start-payment__subtitle">{error}</p>
-            <Link to={`/iso/${isoSlug}`} className="start-payment__btn">
+            <Link to={detailPath} className="start-payment__btn">
               {t('payment.backToPricing')}
             </Link>
           </>

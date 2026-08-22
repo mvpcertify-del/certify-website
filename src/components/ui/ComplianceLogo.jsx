@@ -6,12 +6,11 @@ import './ComplianceLogo.css';
 // Renders the framework logo shown on each Compliance Audit card, matching the
 // reference site the client asked us to follow (kaleshaco.com/services).
 //
-// The eight source files are JPEGs with a solid white background rather than
-// transparent PNGs. On the reference site that is invisible because its cards
-// are white; Certify.cx has a dark theme, where a bare white-backed JPEG would
-// sit on the card as a hard white rectangle. So the logo always gets an
-// explicit white tile with padding: on light backgrounds it is imperceptible,
-// on dark ones it reads as a deliberate logo plate instead of an artefact.
+// The marks originally arrived as white-background JPEGs, which meant every
+// logo sat on the dark cards inside a hard white rectangle. The client asked
+// for that white area to go, so the eight files were re-cut: the white AROUND
+// each mark is now transparent (see ComplianceLogo.css for how the dark theme
+// keeps the dark marks legible without putting a plate back).
 //
 // `alt` is intentionally the service name rather than the logo's own wording —
 // a screen reader announcing "AICPA SOC logo" tells the user less than

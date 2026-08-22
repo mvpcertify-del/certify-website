@@ -1,113 +1,72 @@
 // ============================================
-// Certify.cx — Compliance Audit Catalog
+// Certify.cx — Compliance Audit catalog (UI)
 // ============================================
-// The eight non-ISO compliance audit services, shown in their own
-// "Compliance Audits" section directly below the ISO standards on:
+// The eight compliance audit services WITH their logos, for use by React
+// components only:
 //  - the public landing page (/)
 //  - the public certifications listing (/certifications)
+//  - the service page (/compliance/:slug)
 //
-// Deliberately a separate catalog from ISO_CATALOG rather than extra entries
-// inside it. These are advisory/audit engagements, not accredited ISO
-// certifications: they have no /iso/:slug page, no price in utils/pricing.js
-// and no checkout SKU. Adding them to ISO_CATALOG would have put them into the
-// checkout standard picker, the application form and the auditor's standard
-// list, where they would be sold with an ISO price and no way to deliver them.
+// The service data itself — id, slug, code, price, text keys — lives in
+// utils/complianceServices.js, which imports no images. That split is load
+// bearing: utils/pricing.js prices these services and is imported by
+// api/checkout.js, which runs in Node, and Node cannot import a .png. Import
+// THIS file from components; import complianceServices.js from anything that
+// might run server-side.
 //
-// So there is no `slug`-based route here on purpose — `id` is a stable key for
-// React lists and for whatever enquiry flow these gain later.
+// The logos are the frameworks' own marks, matching the reference site the
+// client asked us to follow (kaleshaco.com/services). They are bundled rather
+// than hot-linked so the cards do not break when that site reorganises its
+// assets, and so Vite fingerprints and caches them like any other image.
 //
-// `logo` is the framework's own mark, matching the reference site the client
-// asked us to follow (kaleshaco.com/services). They are imported rather than
-// hot-linked so the cards do not break when that site reorganises its assets,
-// and so Vite fingerprints and caches them like any other bundled image.
+// They arrived as white-background JPEGs and were re-cut on 22 Aug at the
+// client's request: the white AROUND each mark is now transparent, so no white
+// plate sits behind the logo on the dark theme. See ComplianceLogo.css for how
+// the dark marks stay legible without one.
 //
 // NOTE: these are third-party trademarks (AICPA, PCI SSC, HITRUST Alliance,
 // HHS and others). Several may only be displayed by a firm the owning body has
 // licensed or accredited. Displaying them is the client's decision, taken
 // knowingly; `regulator` records who owns each mark so that is easy to audit.
-//
-// All eight are JPEGs with a solid white background, not transparent PNGs, so
-// they are rendered on a white tile — see components/ui/ComplianceLogo.jsx.
 
-import socLogo from '../assets/compliance/soc.jpg';
-import gdprLogo from '../assets/compliance/gdpr.jpg';
-import pciLogo from '../assets/compliance/pci-dss.jpg';
-import ccpaLogo from '../assets/compliance/ccpa-cpra.jpg';
-import hitrustLogo from '../assets/compliance/hitrust.jpg';
-import hipaaLogo from '../assets/compliance/hipaa.jpg';
-import pentestLogo from '../assets/compliance/pentesting.jpg';
-import soxLogo from '../assets/compliance/sox.jpg';
+import { COMPLIANCE_SERVICES, getComplianceBySlug } from './complianceServices.js';
 
-export const COMPLIANCE_AUDITS = {
-  soc: {
-    id: 'soc',
-    titleKey: 'compliance.socTitle',
-    descKey: 'compliance.socDesc',
-    logo: socLogo,
-    accent: '#1F5FA9',
-    regulator: 'AICPA — SOC for Service Organizations',
-  },
-  gdpr: {
-    id: 'gdpr',
-    titleKey: 'compliance.gdprTitle',
-    descKey: 'compliance.gdprDesc',
-    logo: gdprLogo,
-    accent: '#003399',
-    regulator: 'EU General Data Protection Regulation (GDPR)',
-  },
-  'pci-dss': {
-    id: 'pci-dss',
-    titleKey: 'compliance.pciTitle',
-    descKey: 'compliance.pciDesc',
-    logo: pciLogo,
-    accent: '#14657D',
-    regulator: 'PCI Security Standards Council',
-  },
-  'ccpa-cpra': {
-    id: 'ccpa-cpra',
-    titleKey: 'compliance.ccpaTitle',
-    descKey: 'compliance.ccpaDesc',
-    logo: ccpaLogo,
-    accent: '#5B6BE0',
-    regulator: 'CCPA / CPRA (State of California)',
-  },
-  hitrust: {
-    id: 'hitrust',
-    titleKey: 'compliance.hitrustTitle',
-    descKey: 'compliance.hitrustDesc',
-    logo: hitrustLogo,
-    accent: '#7A2230',
-    regulator: 'HITRUST Alliance',
-  },
-  hipaa: {
-    id: 'hipaa',
-    titleKey: 'compliance.hipaaTitle',
-    descKey: 'compliance.hipaaDesc',
-    logo: hipaaLogo,
-    accent: '#1F2937',
-    regulator: 'HIPAA / HITECH (US Dept. of Health & Human Services)',
-  },
-  'penetration-testing': {
-    id: 'penetration-testing',
-    titleKey: 'compliance.pentestTitle',
-    descKey: 'compliance.pentestDesc',
-    logo: pentestLogo,
-    accent: '#1F2937',
-    regulator: 'Vulnerability & Penetration Testing',
-  },
-  'sox-itgc': {
-    id: 'sox-itgc',
-    titleKey: 'compliance.soxTitle',
-    descKey: 'compliance.soxDesc',
-    logo: soxLogo,
-    accent: '#78BE20',
-    regulator: 'Sarbanes-Oxley Act (SOX)',
-  },
+import socLogo from '../assets/compliance/soc.png';
+import gdprLogo from '../assets/compliance/gdpr.png';
+import pciLogo from '../assets/compliance/pci-dss.png';
+import ccpaLogo from '../assets/compliance/ccpa-cpra.png';
+import hitrustLogo from '../assets/compliance/hitrust.png';
+import hipaaLogo from '../assets/compliance/hipaa.png';
+import pentestLogo from '../assets/compliance/pentesting.png';
+import soxLogo from '../assets/compliance/sox.png';
+
+const LOGOS = {
+  soc: socLogo,
+  gdpr: gdprLogo,
+  'pci-dss': pciLogo,
+  'ccpa-cpra': ccpaLogo,
+  hitrust: hitrustLogo,
+  hipaa: hipaaLogo,
+  'penetration-testing': pentestLogo,
+  'sox-itgc': soxLogo,
 };
+
+export const COMPLIANCE_AUDITS = Object.fromEntries(
+  Object.entries(COMPLIANCE_SERVICES).map(([id, service]) => [
+    id,
+    { ...service, logo: LOGOS[id] || null },
+  ])
+);
 
 // Order matters — it is the order the client approved, reading left to right.
 export const COMPLIANCE_AUDIT_LIST = Object.values(COMPLIANCE_AUDITS);
 
 export function getComplianceAuditById(id) {
   return COMPLIANCE_AUDITS[id] || null;
+}
+
+// Same lookup by URL slug, for /compliance/:slug. Slug and id are the same
+// string; both names exist so call sites read the way they mean.
+export function getComplianceAuditBySlug(slug) {
+  return getComplianceBySlug(slug) ? COMPLIANCE_AUDITS[slug] : null;
 }

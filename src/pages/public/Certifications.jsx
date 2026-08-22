@@ -58,8 +58,9 @@ export default function Certifications() {
       </div>
 
       {/* ---- Compliance Audits, directly below the ISO listing ---- */}
-      {/* No /iso/:slug target and no price: these are audit engagements, not
-          accredited certifications, so the cards do not link into checkout. */}
+      {/* These link to /compliance/:slug rather than /iso/:slug — a separate
+          catalog with its own page, but the same price card and the same
+          checkout at the end of it. */}
       <div className="certs__section-header" id="compliance-audits">
         <h2 className="certs__section-title">{t('compliance.title')}</h2>
         <p className="certs__section-desc">{t('compliance.desc')}</p>
@@ -67,9 +68,10 @@ export default function Certifications() {
 
       <div className="certs__grid">
         {COMPLIANCE_AUDIT_LIST.map((audit) => (
-          <div
+          <Link
             key={audit.id}
-            className="certs__card certs__card--static"
+            to={`/compliance/${audit.slug}`}
+            className="certs__card"
             style={{ '--card-accent': audit.accent }}
           >
             <div className="certs__card-logo">
@@ -77,7 +79,10 @@ export default function Certifications() {
             </div>
             <h3 className="certs__card-name">{t(audit.titleKey)}</h3>
             <p className="certs__card-desc">{t(audit.descKey)}</p>
-          </div>
+            <span className="certs__card-cta">
+              {t('compliance.viewDetails')} <ArrowRight size={14} />
+            </span>
+          </Link>
         ))}
       </div>
 

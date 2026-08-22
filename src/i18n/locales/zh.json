@@ -1290,6 +1290,7 @@
   },
   "checkout": {
     "chooseStandardTitle": "选择您的认证",
+    "isoGroupTitle": "ISO 标准",
     "chooseStandardDesc": "选择您希望认证的标准。付款前可以更改。",
     "selectStandard": "选择",
     "changeStandard": "更改",
@@ -1586,6 +1587,28 @@
     "pentestTitle": "渗透测试",
     "pentestDesc": "通过模拟真实攻击的道德黑客测试，在漏洞被利用之前发现并修复它们。",
     "soxTitle": "SOX ITGC 测试",
-    "soxDesc": "为上市公司提供 IT 一般控制测试，以满足《萨班斯-奥克斯利法案》对财务报告系统的要求。"
+    "soxDesc": "为上市公司提供 IT 一般控制测试，以满足《萨班斯-奥克斯利法案》对财务报告系统的要求。",
+    "viewDetails": "查看详情与价格",
+    "detailTag": "合规审计",
+    "regulatorLabel": "标准所有方",
+    "overviewTitle": "关于本服务",
+    "includedTitle": "服务内容",
+    "included1": "召开范围确认会议，明确审计覆盖范围",
+    "included2": "对照该标准的完整控制项进行差距评估",
+    "included3": "针对每一项差距提供书面整改建议",
+    "included4": "由独立评估师执行的正式评估",
+    "included5": "最终报告及可向客户出示的鉴证函",
+    "processTitle": "流程说明",
+    "step1": "付款并创建账户",
+    "step2": "范围确认与证据收集",
+    "step3": "独立评估",
+    "step4": "报告与鉴证",
+    "priceTitle": "一次性服务费",
+    "priceNote": "适用于 1 个地点、50 名以内员工的组织。规模更大的组织和额外地点可在结账时添加。",
+    "cta": "前往付款",
+    "notFoundTitle": "未找到该服务",
+    "notFoundDesc": "此地址下未找到合规审计服务。",
+    "backToAll": "全部合规审计"
+
   }
 }

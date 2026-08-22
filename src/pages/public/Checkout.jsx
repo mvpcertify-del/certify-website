@@ -13,6 +13,9 @@ import {
 } from '../../utils/pricing';
 import { getIsoBySlug, ISO_CATALOG_LIST } from '../../utils/isoCatalog';
 import {
+  getComplianceBySlug, COMPLIANCE_SERVICE_LIST,
+} from '../../utils/complianceServices';
+import {
   PAYMENT_METHODS, isOfflineMethod, BANK_TRANSFER_DETAILS, CASH_DETAILS,
 } from '../../config/paymentMethods';
 import LanguageSwitcher from '../../components/LanguageSwitcher';
@@ -96,8 +99,16 @@ function CheckoutForm() {
   // payment page for a certification they had never chosen (reported 16 Aug).
   // When no standard is named we now ASK for one instead of choosing on the
   // buyer's behalf; ?iso= deep links from the ISO landing pages are unchanged.
+  //
+  // ?iso= also carries a compliance-audit slug ('soc', 'sox-itgc', …) since
+  // 22 Aug, when those eight became buyable. The parameter keeps its old name
+  // so every ISO link already in the wild — and every partner's ?ref= link —
+  // still resolves; what it names is now "the thing being bought", not
+  // necessarily an ISO standard.
   const isoParam = searchParams.get('iso');
-  const paramSlug = getIsoBySlug(isoParam || '') ? isoParam : null;
+  const paramSlug = (getIsoBySlug(isoParam || '') || getComplianceBySlug(isoParam || ''))
+    ? isoParam
+    : null;
   const [chosenSlug, setChosenSlug] = useState(paramSlug);
   const [pickerOpen, setPickerOpen] = useState(!paramSlug);
 
@@ -112,7 +123,9 @@ function CheckoutForm() {
   const referralCode = (searchParams.get('ref') || searchParams.get('coupon') || '').trim();
 
   const isoSlug = chosenSlug || 'iso-9001';
-  const isoConfig = getIsoBySlug(isoSlug);
+  // Either catalog. The compliance lookup has to come second only because the
+  // ISO one is the far more common case — the two slug spaces do not overlap.
+  const isoConfig = getIsoBySlug(isoSlug) || getComplianceBySlug(isoSlug);
   const isoCode = isoConfig?.code || 'ISO 9001';
   const packageLabel = PACKAGE_LABEL;
 
@@ -381,6 +394,33 @@ function CheckoutForm() {
     );
   }
 
+  // One card in the picker. Takes an entry from EITHER catalog — an ISO
+  // standard or a compliance audit — because both expose the same slug/code/
+  // titleKey shape and both price through getPriceForStandard.
+  const renderStandardCard = (item) => {
+    const listPrice = getPriceForStandard(item.slug);
+    const { total: afterDiscount } = applyCoupon(listPrice, coupon);
+    const active = item.slug === chosenSlug;
+    return (
+      <button
+        key={item.slug}
+        type="button"
+        className={`checkout__iso-card ${active ? 'checkout__iso-card--active' : ''}`}
+        onClick={() => selectStandard(item.slug)}
+      >
+        <span className="checkout__iso-code">{item.code}</span>
+        <span className="checkout__iso-name">{t(item.titleKey)}</span>
+        <span className="checkout__iso-price">
+          {coupon && afterDiscount < listPrice && (
+            <s className="checkout__iso-was">${listPrice.toLocaleString()}</s>
+          )}
+          ${money(afterDiscount)}
+        </span>
+        <span className="checkout__iso-go">{t('checkout.selectStandard')} <ArrowRight size={14} /></span>
+      </button>
+    );
+  };
+
   // -------- STANDARD PICKER --------
   // Shown when the link named no standard (a partner's ?ref= link, or the bare
   // /checkout URL), and whenever the buyer asks to change their choice. The
@@ -411,30 +451,18 @@ function CheckoutForm() {
             </div>
           )}
 
+          {/* Two catalogs, one picker. The compliance audits joined it on
+              22 Aug when they became buyable; the card markup is shared
+              because both catalogs expose the same three fields (slug, code,
+              titleKey) and are priced through the same helper. */}
+          <h2 className="checkout__picker-group">{t('checkout.isoGroupTitle')}</h2>
           <div className="checkout__iso-grid">
-            {ISO_CATALOG_LIST.map((iso) => {
-              const listPrice = getPriceForStandard(iso.slug);
-              const { total: afterDiscount } = applyCoupon(listPrice, coupon);
-              const active = iso.slug === chosenSlug;
-              return (
-                <button
-                  key={iso.slug}
-                  type="button"
-                  className={`checkout__iso-card ${active ? 'checkout__iso-card--active' : ''}`}
-                  onClick={() => selectStandard(iso.slug)}
-                >
-                  <span className="checkout__iso-code">{iso.code}</span>
-                  <span className="checkout__iso-name">{t(iso.titleKey)}</span>
-                  <span className="checkout__iso-price">
-                    {coupon && afterDiscount < listPrice && (
-                      <s className="checkout__iso-was">${listPrice.toLocaleString()}</s>
-                    )}
-                    ${money(afterDiscount)}
-                  </span>
-                  <span className="checkout__iso-go">{t('checkout.selectStandard')} <ArrowRight size={14} /></span>
-                </button>
-              );
-            })}
+            {ISO_CATALOG_LIST.map(renderStandardCard)}
+          </div>
+
+          <h2 className="checkout__picker-group">{t('compliance.title')}</h2>
+          <div className="checkout__iso-grid">
+            {COMPLIANCE_SERVICE_LIST.map(renderStandardCard)}
           </div>
 
           <p className="checkout__summary-note checkout__picker-note">{t('pricing.disclaimer')}</p>

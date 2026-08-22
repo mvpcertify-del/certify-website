@@ -1290,6 +1290,7 @@
   },
   "checkout": {
     "chooseStandardTitle": "Choisissez votre certification",
+    "isoGroupTitle": "Normes ISO",
     "chooseStandardDesc": "Sélectionnez la norme selon laquelle vous souhaitez être certifié. Vous pouvez la modifier avant de payer.",
     "selectStandard": "Sélectionner",
     "changeStandard": "Modifier",
@@ -1586,6 +1587,28 @@
     "pentestTitle": "Tests d'Intrusion",
     "pentestDesc": "Missions de piratage éthique simulant des attaques réelles afin d'identifier et de corriger les vulnérabilités avant qu'elles ne soient exploitées.",
     "soxTitle": "Tests SOX ITGC",
-    "soxDesc": "Tests des contrôles généraux informatiques pour les sociétés cotées soumises aux exigences de la loi Sarbanes-Oxley sur les systèmes d'information financière."
+    "soxDesc": "Tests des contrôles généraux informatiques pour les sociétés cotées soumises aux exigences de la loi Sarbanes-Oxley sur les systèmes d'information financière.",
+    "viewDetails": "Voir les détails et le prix",
+    "detailTag": "Audit de conformité",
+    "regulatorLabel": "Propriétaire du référentiel",
+    "overviewTitle": "À propos de cette prestation",
+    "includedTitle": "Ce qui est inclus",
+    "included1": "Une séance de cadrage pour définir précisément le périmètre de l'audit",
+    "included2": "Une analyse d'écarts par rapport à l'ensemble des exigences du référentiel",
+    "included3": "Des recommandations écrites pour chaque écart identifié",
+    "included4": "L'évaluation formelle, réalisée par un évaluateur indépendant",
+    "included5": "Un rapport final et une attestation à partager avec vos clients",
+    "processTitle": "Comment ça marche",
+    "step1": "Payez et créez votre compte",
+    "step2": "Cadrage et collecte des preuves",
+    "step3": "Évaluation indépendante",
+    "step4": "Rapport et attestation",
+    "priceTitle": "Honoraires uniques",
+    "priceNote": "Couvre les organisations jusqu'à 50 employés sur 1 site. Les organisations plus grandes et les sites supplémentaires sont ajoutés au paiement.",
+    "cta": "Passer au paiement",
+    "notFoundTitle": "Prestation introuvable",
+    "notFoundDesc": "Nous n'avons trouvé aucun audit de conformité à cette adresse.",
+    "backToAll": "Tous les audits de conformité"
+
   }
 }

@@ -157,9 +157,10 @@ export default function LandingPage() {
       </section>
 
       {/* ---- Compliance Audits (sits directly below the ISO standards) ---- */}
-      {/* These are audit/advisory engagements, not accredited ISO certifications,
-          so the cards carry no price and no "Apply now" link — see
-          utils/complianceAudits.js for why they are a separate catalog. */}
+      {/* A separate catalog from the ISO standards (see
+          utils/complianceServices.js), but since 22 Aug they sell the same way:
+          each card opens /compliance/:slug, which carries the content, the
+          price and the same payment gateway the ISO pages use. */}
       <section className="landing__section landing__section--compliance" id="compliance-audits">
         <div className="landing__section-inner">
           <div className="landing__section-header">
@@ -169,9 +170,10 @@ export default function LandingPage() {
           </div>
           <div className="landing__standards">
             {COMPLIANCE_AUDIT_LIST.map((audit) => (
-              <div
+              <Link
                 key={audit.id}
-                className="landing__standard-card landing__standard-card--static"
+                to={`/compliance/${audit.slug}`}
+                className="landing__standard-card landing__standard-card--clickable"
                 style={{ '--card-accent': audit.accent }}
               >
                 <div className="landing__standard-logo">
@@ -179,7 +181,10 @@ export default function LandingPage() {
                 </div>
                 <h3 className="landing__standard-title">{t(audit.titleKey)}</h3>
                 <p className="landing__standard-desc">{t(audit.descKey)}</p>
-              </div>
+                <span className="landing__standard-cta">
+                  {t('compliance.viewDetails')} <ArrowRight size={14} />
+                </span>
+              </Link>
             ))}
           </div>
         </div>

@@ -306,19 +306,10 @@
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
 }
 
-/* Compliance Audit cards reuse the standard-card shell but are not links, so
-   they must not lift on hover — that movement promises a click target that
-   does not exist. Must stay AFTER the rule above: equal specificity, so source
-   order decides. */
-.landing__standard-card--static {
-  cursor: default;
-}
-
-.landing__standard-card--static:hover {
-  border-color: var(--color-border);
-  transform: none;
-  box-shadow: none;
-}
+/* The .landing__standard-card--static rules that used to sit here are gone:
+   the compliance cards were display-only until 22 Aug and were held back from
+   lifting on hover. They open /compliance/:slug now and use the same
+   --clickable shell as the ISO cards. */
 
 .landing__standard-icon {
   color: var(--card-accent);

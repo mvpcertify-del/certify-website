@@ -1,0 +1,277 @@
+/* Compliance Audit service page (/compliance/:slug).
+   Laid out to match the public certifications pages: same surfaces, same
+   radii, same spacing scale. --card-accent is set inline from the service so
+   the mark's own colour carries through the page. */
+
+.compliance-page {
+  min-height: 100vh;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  padding-bottom: var(--spacing-2xl);
+}
+
+.compliance-page__container {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+}
+
+/* ---- Hero ---- */
+.compliance-page__hero {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-xl) 0 var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.compliance-page__hero-text {
+  min-width: 0;
+}
+
+.compliance-page__tag {
+  display: inline-block;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--card-accent, var(--color-accent));
+  background: color-mix(in srgb, var(--card-accent, var(--color-accent)) 14%, transparent);
+  padding: 5px 11px;
+  border-radius: var(--radius-full);
+  margin-bottom: var(--spacing-sm);
+}
+
+.compliance-page__title {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 var(--spacing-sm);
+}
+
+.compliance-page__regulator {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.compliance-page__regulator-label {
+  color: var(--color-text-tertiary);
+  margin-inline-end: 6px;
+}
+
+.compliance-page__regulator-label::after {
+  content: ':';
+}
+
+/* ---- Body: content beside the price card ---- */
+.compliance-page__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--spacing-xl);
+  align-items: start;
+  padding-top: var(--spacing-xl);
+}
+
+.compliance-page__section {
+  margin-bottom: var(--spacing-xl);
+}
+
+.compliance-page__section-title {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  margin: 0 0 var(--spacing-base);
+}
+
+.compliance-page__lead {
+  font-size: var(--font-size-base);
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.compliance-page__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+.compliance-page__list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: var(--font-size-base);
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
+.compliance-page__list svg {
+  flex: 0 0 auto;
+  margin-top: 3px;
+  color: var(--color-accent);
+}
+
+.compliance-page__steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--spacing-md);
+  counter-reset: step;
+}
+
+.compliance-page__steps li {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+}
+
+.compliance-page__step-num {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--card-accent, var(--color-accent));
+  background: color-mix(in srgb, var(--card-accent, var(--color-accent)) 16%, transparent);
+}
+
+/* ---- Price card ---- */
+.compliance-page__price-card {
+  position: sticky;
+  top: calc(var(--topbar-height) + var(--spacing-lg));
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-xl);
+  text-align: center;
+}
+
+.compliance-page__price-tag {
+  display: inline-block;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--card-accent, var(--color-accent));
+  margin-bottom: var(--spacing-sm);
+}
+
+.compliance-page__price-title {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--spacing-sm);
+}
+
+.compliance-page__price {
+  font-size: var(--font-size-3xl);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: var(--spacing-sm);
+}
+
+.compliance-page__price-note {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin: 0 0 var(--spacing-lg);
+}
+
+.compliance-page__cta {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px var(--spacing-lg);
+  border: none;
+  border-radius: var(--radius-lg);
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.compliance-page__cta:hover {
+  background: var(--color-accent-hover);
+}
+
+
+/* ---- Not found ---- */
+.compliance-page__notfound {
+  text-align: center;
+  padding: var(--spacing-2xl) var(--spacing-lg);
+  color: var(--color-text-secondary);
+}
+
+.compliance-page__notfound svg {
+  color: var(--color-text-tertiary);
+  margin-bottom: var(--spacing-base);
+}
+
+.compliance-page__notfound h2 {
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-sm);
+}
+
+.compliance-page__btn {
+  display: inline-block;
+  margin-top: var(--spacing-lg);
+  padding: 10px var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* ---- Footer ---- */
+.compliance-page__footer {
+  text-align: center;
+  margin-top: var(--spacing-xl);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+}
+
+.compliance-page__back-link {
+  display: inline-block;
+  margin-bottom: var(--spacing-sm);
+  color: var(--color-accent);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.compliance-page__back-link:hover {
+  text-decoration: underline;
+}
+
+/* Below ~880px the price card stops being a sidebar and moves under the
+   content. `position: sticky` has to be cleared with it — a sticky element in
+   a single-column flow pins itself over the text as the page scrolls. */
+@media (max-width: 880px) {
+  .compliance-page__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .compliance-page__price-card {
+    position: static;
+  }
+
+  .compliance-page__hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

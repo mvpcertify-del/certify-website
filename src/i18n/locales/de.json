@@ -1290,6 +1290,7 @@
   },
   "checkout": {
     "chooseStandardTitle": "Wählen Sie Ihre Zertifizierung",
+    "isoGroupTitle": "ISO-Normen",
     "chooseStandardDesc": "Wählen Sie die Norm, nach der Sie zertifiziert werden möchten. Sie können sie vor der Zahlung ändern.",
     "selectStandard": "Auswählen",
     "changeStandard": "Ändern",
@@ -1586,6 +1587,28 @@
     "pentestTitle": "Penetrationstests",
     "pentestDesc": "Ethical-Hacking-Einsätze, die reale Angriffe simulieren, um Schwachstellen zu finden und zu beheben, bevor sie ausgenutzt werden.",
     "soxTitle": "SOX-ITGC-Tests",
-    "soxDesc": "Prüfung der allgemeinen IT-Kontrollen für börsennotierte Unternehmen zur Erfüllung der Sarbanes-Oxley-Anforderungen an Systeme der Finanzberichterstattung."
+    "soxDesc": "Prüfung der allgemeinen IT-Kontrollen für börsennotierte Unternehmen zur Erfüllung der Sarbanes-Oxley-Anforderungen an Systeme der Finanzberichterstattung.",
+    "viewDetails": "Details & Preis ansehen",
+    "detailTag": "Compliance-Audit",
+    "regulatorLabel": "Inhaber des Rahmenwerks",
+    "overviewTitle": "Über diese Leistung",
+    "includedTitle": "Im Preis enthalten",
+    "included1": "Ein Scoping-Termin, in dem der genaue Prüfumfang festgelegt wird",
+    "included2": "Eine Gap-Analyse gegen den vollständigen Kontrollkatalog des Rahmenwerks",
+    "included3": "Schriftliche Empfehlungen zur Behebung jeder festgestellten Lücke",
+    "included4": "Die formale Prüfung durch einen unabhängigen Prüfer",
+    "included5": "Ein Abschlussbericht und ein Bestätigungsschreiben für Ihre Kunden",
+    "processTitle": "So läuft es ab",
+    "step1": "Bezahlen und Konto anlegen",
+    "step2": "Scoping und Nachweiserhebung",
+    "step3": "Unabhängige Prüfung",
+    "step4": "Bericht und Bestätigung",
+    "priceTitle": "Einmaliges Honorar",
+    "priceNote": "Gilt für Organisationen mit bis zu 50 Mitarbeitenden an 1 Standort. Größere Organisationen und weitere Standorte werden beim Bezahlen ergänzt.",
+    "cta": "Weiter zur Zahlung",
+    "notFoundTitle": "Leistung nicht gefunden",
+    "notFoundDesc": "Unter dieser Adresse konnten wir kein Compliance-Audit finden.",
+    "backToAll": "Alle Compliance-Audits"
+
   }
 }

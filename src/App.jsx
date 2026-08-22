@@ -79,6 +79,10 @@ const RegisterLanding = lazy(() => import('./pages/register/RegisterLanding'));
 // Public ISO Certification Landing (Shareable ISO Links)
 const IsoLanding = lazy(() => import('./pages/iso/IsoLanding'));
 
+// Public Compliance Audit service page — the non-ISO counterpart to
+// /iso/:slug (SOC, GDPR, PCI DSS, HIPAA, …). Content, price and checkout.
+const ComplianceLanding = lazy(() => import('./pages/compliance/ComplianceLanding'));
+
 // Dashboard Pages
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'));
 const MainDashboard = lazy(() => import('./pages/dashboard/MainDashboard'));
@@ -125,6 +129,9 @@ function AppRoutes() {
 
           {/* ---- Public ISO Certification Landing (per-ISO shareable links) ---- */}
           <Route path="/iso/:slug" element={<IsoLanding />} />
+
+          {/* ---- Public Compliance Audit service pages ---- */}
+          <Route path="/compliance/:slug" element={<ComplianceLanding />} />
 
           {/* ---- Public anonymous Gap Analysis quiz ---- */}
           <Route path="/gap-analysis" element={<PublicGapAnalysis />} />

@@ -27,6 +27,11 @@
 // api/checkout.js — no geo or country-tier pricing here.
 // -------------------------------------------------------
 import { ISO_CATALOG, getIsoBySlug, getIsoByCode } from './isoCatalog.js';
+// Data only — complianceServices.js imports no images, so this stays safe to
+// pull into api/checkout.js, which runs in Node. Never swap it for
+// complianceAudits.js here: that one imports .png files and would break the
+// checkout API at import time.
+import { resolveComplianceService } from './complianceServices.js';
 
 // Price of the three core management-system standards (USD, one-time).
 export const CORE_PRICE = 999;
@@ -68,8 +73,31 @@ export function resolveStandardSlug(input) {
 // all three. Anything unrecognized is priced at BASE_PRICE — the higher of the
 // two — so an unmapped standard can never be sold below its intended price.
 export function getPriceForStandard(slug, _tier) {
+  // Compliance audits (SOC, GDPR, PCI DSS, …) carry their own price and are
+  // checked first. They resolve from either their slug ('sox-itgc', which is
+  // what the ?iso= link carries) or their stored code ('SOX ITGC', which is
+  // what applications.recommended_iso holds and what the server re-prices from
+  // on every later call).
+  const compliance = resolveComplianceService(slug);
+  if (compliance) return compliance.price;
+
   const resolved = resolveStandardSlug(slug);
   return resolved && CORE_STANDARDS.has(resolved) ? CORE_PRICE : BASE_PRICE;
+}
+
+// Turn whatever named the order — an ISO slug, an ISO code, a compliance slug
+// or a compliance code — into the display code stored on
+// applications.recommended_iso and printed on the Stripe line item. Returns
+// null when nothing recognizes it, so callers keep their own fallback.
+//
+// Used by api/checkout.js so a compliance order is recorded as 'SOX ITGC'
+// rather than the raw 'sox-itgc' slug: the slug would still price correctly,
+// but every human-facing surface (the admin's new-order alert, the buyer's
+// Stripe receipt, the invoice) would show a URL fragment.
+export function resolveOrderStandardCode(input) {
+  const compliance = resolveComplianceService(input);
+  if (compliance) return compliance.code;
+  return getIsoBySlug(input)?.code || null;
 }
 
 // Convert a buyer-entered headcount into a count of cumulative 50-employee

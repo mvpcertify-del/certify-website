@@ -7,8 +7,12 @@ import { createClient } from '@supabase/supabase-js';
 import {
   computeTotal, bestDiscount, PACKAGE_LABEL,
   employeeBandsFromCount, INCLUDED_LOCATIONS,
+  // Resolves an ISO slug/code OR a compliance-audit slug/code to the display
+  // code stored on the application. Compliance audits (SOC, PCI DSS, …) are
+  // sold through this same handler since 22 Aug; without this they would be
+  // recorded and receipted under their raw URL slug.
+  resolveOrderStandardCode,
 } from '../src/utils/pricing.js';
-import { getIsoBySlug } from '../src/utils/isoCatalog.js';
 import { isOfflineMethod, stripeMethodTypesFor, PAYMENT_METHOD_IDS } from '../src/config/paymentMethods.js';
 import { getRegionFromCountry } from '../src/utils/roles.js';
 import { sendVerificationEmail } from './_sendVerificationEmail.js';
@@ -583,7 +587,7 @@ async function guestCheckoutHandler(req, res) {
 
     // ---- 3. Create the application (company registration completed post-payment) ----
     const selectedPackage = PACKAGE_LABEL;
-    const recommendedIso = getIsoBySlug(isoName)?.code || isoName || 'ISO 9001:2015';
+    const recommendedIso = resolveOrderStandardCode(isoName) || isoName || 'ISO 9001:2015';
     const offline = isOfflineMethod(paymentMethod);
     const { data: appRow, error: appErr } = await supabaseAdmin
       .from('applications')
@@ -1482,8 +1486,8 @@ export default async function handler(req, res) {
         currency: 'usd',
         product_data: {
           name: standardsCount > 1
-            ? `${standardsCount} ISO certifications - ${PACKAGE_LABEL} Package`
-            : `${isoName} - ${PACKAGE_LABEL} Package`,
+            ? `${standardsCount} certifications - ${PACKAGE_LABEL} Package`
+            : `${resolveOrderStandardCode(isoName) || isoName} - ${PACKAGE_LABEL} Package`,
           // Stripe shows this under the item, so the buyer can see on the
           // payment page itself exactly which standards they are paying for.
           description: standardsCount > 1 && orderStandards.length

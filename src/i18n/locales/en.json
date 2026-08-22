@@ -1317,6 +1317,7 @@
   },
   "checkout": {
     "chooseStandardTitle": "Choose your certification",
+    "isoGroupTitle": "ISO Standards",
     "chooseStandardDesc": "Pick the standard you want to be certified against. You can change it before you pay.",
     "selectStandard": "Select",
     "changeStandard": "Change",
@@ -1613,6 +1614,28 @@
     "pentestTitle": "Penetration Testing",
     "pentestDesc": "Ethical hacking engagements that simulate real-world attacks to identify and remediate vulnerabilities before they are exploited.",
     "soxTitle": "SOX ITGC Testing",
-    "soxDesc": "IT General Controls testing for publicly traded companies meeting Sarbanes-Oxley requirements over financial reporting systems."
+    "soxDesc": "IT General Controls testing for publicly traded companies meeting Sarbanes-Oxley requirements over financial reporting systems.",
+    "viewDetails": "View details & pricing",
+    "detailTag": "Compliance Audit",
+    "regulatorLabel": "Framework owner",
+    "overviewTitle": "About this engagement",
+    "includedTitle": "What's included",
+    "included1": "A scoping session to agree exactly what the audit covers",
+    "included2": "A gap assessment against the framework's full control set",
+    "included3": "Written remediation guidance for every gap we raise",
+    "included4": "The formal assessment, carried out by an independent assessor",
+    "included5": "A final report and attestation letter you can share with customers",
+    "processTitle": "How it works",
+    "step1": "Pay and create your account",
+    "step2": "Scoping and evidence collection",
+    "step3": "Independent assessment",
+    "step4": "Report and attestation",
+    "priceTitle": "One-time engagement fee",
+    "priceNote": "Covers an organization of up to 50 employees at 1 location. Larger organizations and additional sites are added at checkout.",
+    "cta": "Proceed to payment",
+    "notFoundTitle": "Service not found",
+    "notFoundDesc": "We could not find a compliance audit at this address.",
+    "backToAll": "All compliance audits"
+
   }
 }

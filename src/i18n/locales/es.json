@@ -1317,6 +1317,7 @@
   },
   "checkout": {
     "chooseStandardTitle": "Elige tu certificación",
+    "isoGroupTitle": "Normas ISO",
     "chooseStandardDesc": "Selecciona la norma con la que quieres certificarte. Puedes cambiarla antes de pagar.",
     "selectStandard": "Seleccionar",
     "changeStandard": "Cambiar",
@@ -1613,6 +1614,28 @@
     "pentestTitle": "Pruebas de Penetración",
     "pentestDesc": "Ejercicios de hacking ético que simulan ataques reales para identificar y corregir vulnerabilidades antes de que sean explotadas.",
     "soxTitle": "Pruebas SOX ITGC",
-    "soxDesc": "Pruebas de Controles Generales de TI para empresas cotizadas que deben cumplir los requisitos de la Ley Sarbanes-Oxley sobre los sistemas de información financiera."
+    "soxDesc": "Pruebas de Controles Generales de TI para empresas cotizadas que deben cumplir los requisitos de la Ley Sarbanes-Oxley sobre los sistemas de información financiera.",
+    "viewDetails": "Ver detalles y precio",
+    "detailTag": "Auditoría de cumplimiento",
+    "regulatorLabel": "Titular del marco",
+    "overviewTitle": "Sobre este servicio",
+    "includedTitle": "Qué incluye",
+    "included1": "Una sesión de alcance para acordar exactamente qué cubre la auditoría",
+    "included2": "Una evaluación de brechas frente al conjunto completo de controles del marco",
+    "included3": "Orientación escrita de remediación para cada brecha detectada",
+    "included4": "La evaluación formal, realizada por un evaluador independiente",
+    "included5": "Un informe final y una carta de certificación que puede compartir con sus clientes",
+    "processTitle": "Cómo funciona",
+    "step1": "Pague y cree su cuenta",
+    "step2": "Alcance y recopilación de evidencias",
+    "step3": "Evaluación independiente",
+    "step4": "Informe y certificación",
+    "priceTitle": "Tarifa única del servicio",
+    "priceNote": "Cubre organizaciones de hasta 50 empleados en 1 ubicación. Las organizaciones más grandes y las ubicaciones adicionales se añaden en el pago.",
+    "cta": "Continuar al pago",
+    "notFoundTitle": "Servicio no encontrado",
+    "notFoundDesc": "No hemos encontrado ninguna auditoría de cumplimiento en esta dirección.",
+    "backToAll": "Todas las auditorías de cumplimiento"
+
   }
 }

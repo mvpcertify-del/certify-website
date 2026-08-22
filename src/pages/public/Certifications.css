@@ -115,23 +115,9 @@
   transform: translateY(-3px);
 }
 
-/* Compliance cards are not links, so they must not lift on hover the way the
-   ISO cards do — that movement reads as "click me" and there is nowhere to go.
-   The description also loses the gap that the ISO cards leave for their CTA.
-   These must stay AFTER .certs__card:hover: the two hover rules have equal
-   specificity, so source order is what decides the winner. */
-.certs__card--static {
-  cursor: default;
-}
-
-.certs__card--static:hover {
-  border-color: var(--color-border);
-  transform: none;
-}
-
-.certs__card--static .certs__card-desc {
-  margin-bottom: 0;
-}
+/* The .certs__card--static rules that used to sit here are gone: the compliance
+   cards were display-only until 22 Aug, so they were held back from lifting on
+   hover. They are links now and lift like every other card. */
 
 .certs__card-icon {
   width: 48px;

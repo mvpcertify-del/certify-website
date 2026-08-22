@@ -493,6 +493,29 @@
 }
 .checkout__picker-note { margin-top: 18px; }
 
+/* Group heading above each catalog in the picker — "ISO Standards" and
+   "Compliance Audits". Added 22 Aug when the compliance audits became
+   buyable: with two catalogs in one list, an unlabelled run of twenty cards
+   gives the buyer no way to tell which kind of thing they are choosing.
+   The picker is a light panel (#fff above) regardless of theme, so these
+   colours are literals to match its neighbours rather than theme variables. */
+.checkout__picker-group {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  margin: 26px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.checkout__picker-group:first-of-type {
+  margin-top: 18px;
+  padding-top: 0;
+  border-top: none;
+}
+
 .checkout__iso-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));

@@ -1290,6 +1290,7 @@
   },
   "checkout": {
     "chooseStandardTitle": "Escolha a sua certificação",
+    "isoGroupTitle": "Normas ISO",
     "chooseStandardDesc": "Selecione a norma pela qual quer ser certificado. Pode alterá-la antes de pagar.",
     "selectStandard": "Selecionar",
     "changeStandard": "Alterar",
@@ -1586,6 +1587,28 @@
     "pentestTitle": "Testes de Intrusão",
     "pentestDesc": "Ações de hacking ético que simulam ataques reais para identificar e corrigir vulnerabilidades antes de serem exploradas.",
     "soxTitle": "Testes SOX ITGC",
-    "soxDesc": "Testes de Controlos Gerais de TI para empresas cotadas em bolsa que cumprem os requisitos da Lei Sarbanes-Oxley sobre sistemas de relato financeiro."
+    "soxDesc": "Testes de Controlos Gerais de TI para empresas cotadas em bolsa que cumprem os requisitos da Lei Sarbanes-Oxley sobre sistemas de relato financeiro.",
+    "viewDetails": "Ver detalhes e preço",
+    "detailTag": "Auditoria de conformidade",
+    "regulatorLabel": "Proprietário do referencial",
+    "overviewTitle": "Sobre este serviço",
+    "includedTitle": "O que está incluído",
+    "included1": "Uma sessão de âmbito para definir exatamente o que a auditoria cobre",
+    "included2": "Uma avaliação de lacunas face ao conjunto completo de controlos do referencial",
+    "included3": "Orientação escrita de correção para cada lacuna identificada",
+    "included4": "A avaliação formal, realizada por um avaliador independente",
+    "included5": "Um relatório final e uma carta de atestação para partilhar com os seus clientes",
+    "processTitle": "Como funciona",
+    "step1": "Pague e crie a sua conta",
+    "step2": "Âmbito e recolha de evidências",
+    "step3": "Avaliação independente",
+    "step4": "Relatório e atestação",
+    "priceTitle": "Honorário único",
+    "priceNote": "Abrange organizações até 50 colaboradores em 1 localização. Organizações maiores e localizações adicionais são acrescentadas no pagamento.",
+    "cta": "Avançar para o pagamento",
+    "notFoundTitle": "Serviço não encontrado",
+    "notFoundDesc": "Não encontrámos nenhuma auditoria de conformidade neste endereço.",
+    "backToAll": "Todas as auditorias de conformidade"
+
   }
 }
