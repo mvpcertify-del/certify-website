@@ -100,6 +100,7 @@
     "users": "Utilisateurs",
     "shareableLinks": "Liens partageables",
     "outreachDocs": "Notes d'information",
+    "messages": "Messages",
     "registrations": "Inscriptions",
     "referrals": "Referral",
     "myProfile": "Mon profil",
@@ -672,6 +673,22 @@
     "readFailed": "Impossible de lire le fichier",
     "pdfOnly": "Seuls les fichiers PDF peuvent être téléversés",
     "tooLarge": "Le document doit faire moins de {{max}} Mo"
+  },
+  "messages": {
+    "title": "Messages",
+    "subtitle": "Réponses des clients aux e-mails envoyés depuis ce tableau de bord.",
+    "none": "Aucune conversation pour le moment",
+    "noneHint": "Lorsqu'un client répond à une proposition ou à une invitation envoyée depuis le tableau de bord, sa réponse apparaît ici.",
+    "threads": "{{n}} conversations",
+    "selectThread": "Choisissez une conversation pour la lire",
+    "readOnly": "Lecture seule",
+    "client": "Client",
+    "you": "Vous",
+    "replyPlaceholder": "Rédigez votre réponse…",
+    "replyHint": "Envoyé depuis support@certify.cx. Sa réponse reviendra ici.",
+    "send": "Envoyer",
+    "replySent": "Réponse envoyée",
+    "replyFailed": "Impossible d'envoyer la réponse"
   },
   "register": {
     "invalidType": "Type d'inscription invalide",

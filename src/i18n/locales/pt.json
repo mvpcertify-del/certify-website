@@ -100,6 +100,7 @@
     "users": "Usuários",
     "shareableLinks": "Links Compartilháveis",
     "outreachDocs": "Notas informativas",
+    "messages": "Mensagens",
     "registrations": "Cadastros",
     "referrals": "Referral",
     "myProfile": "Meu Perfil",
@@ -672,6 +673,22 @@
     "readFailed": "Não foi possível ler o ficheiro",
     "pdfOnly": "Só é possível carregar ficheiros PDF",
     "tooLarge": "O documento deve ter menos de {{max}} MB"
+  },
+  "messages": {
+    "title": "Mensagens",
+    "subtitle": "Respostas de clientes aos e-mails enviados a partir deste painel.",
+    "none": "Ainda não há conversas",
+    "noneHint": "Quando um cliente responder a uma proposta ou convite enviado a partir do painel, a resposta aparecerá aqui.",
+    "threads": "{{n}} conversas",
+    "selectThread": "Escolha uma conversa para a ler",
+    "readOnly": "Apenas leitura",
+    "client": "Cliente",
+    "you": "Você",
+    "replyPlaceholder": "Escreva a sua resposta…",
+    "replyHint": "Enviado de support@certify.cx. A resposta volta para aqui.",
+    "send": "Enviar",
+    "replySent": "Resposta enviada",
+    "replyFailed": "Não foi possível enviar a resposta"
   },
   "register": {
     "invalidType": "Tipo de Cadastro Inválido",

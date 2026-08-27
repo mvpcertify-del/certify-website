@@ -100,6 +100,7 @@
     "users": "Benutzer",
     "shareableLinks": "Teilbare Links",
     "outreachDocs": "Infoblätter",
+    "messages": "Nachrichten",
     "registrations": "Registrierungen",
     "referrals": "Referral",
     "myProfile": "Mein Profil",
@@ -672,6 +673,22 @@
     "readFailed": "Datei konnte nicht gelesen werden",
     "pdfOnly": "Es können nur PDF-Dateien hochgeladen werden",
     "tooLarge": "Das Dokument muss kleiner als {{max}} MB sein"
+  },
+  "messages": {
+    "title": "Nachrichten",
+    "subtitle": "Antworten von Kunden auf die aus diesem Dashboard gesendeten E-Mails.",
+    "none": "Noch keine Konversationen",
+    "noneHint": "Sobald ein Kunde auf ein Angebot oder eine Einladung aus dem Dashboard antwortet, erscheint die Antwort hier.",
+    "threads": "{{n}} Konversationen",
+    "selectThread": "Wählen Sie eine Konversation zum Lesen",
+    "readOnly": "Nur Lesen",
+    "client": "Kunde",
+    "you": "Sie",
+    "replyPlaceholder": "Schreiben Sie Ihre Antwort …",
+    "replyHint": "Wird von support@certify.cx gesendet. Die Antwort kommt hierher zurück.",
+    "send": "Senden",
+    "replySent": "Antwort gesendet",
+    "replyFailed": "Antwort konnte nicht gesendet werden"
   },
   "register": {
     "invalidType": "Ungültiger Registrierungstyp",

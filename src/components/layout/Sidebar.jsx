@@ -40,6 +40,7 @@ import {
   Search,
   Zap,
   Paperclip,
+  MessagesSquare,
 } from 'lucide-react';
 import BrandLogo from '../ui/BrandLogo';
 import LanguageSwitcher from '../LanguageSwitcher';
@@ -127,6 +128,11 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     // partners (phase 22) both get the partner dashboard here — same screen,
     // different commercial terms. Admins manage referrals via Commission Tiers.
     { path: '/referrals', labelKey: 'nav.referrals', icon: Gift, kind: KIND_CREATE, permissions: [PERMISSIONS.VIEW_REFERRALS], allowedRoles: [ROLES.REFERRAL, ROLES.CONSULTANCY] },
+    // Client replies to partner mail. Visible to the partner who owns the
+    // thread and to the admins the client named — a regional admin is included
+    // deliberately, and gated on VIEW_DASHBOARD rather than VIEW_REFERRALS,
+    // which that role does not hold.
+    { path: '/messages', labelKey: 'nav.messages', icon: MessagesSquare, kind: KIND_CREATE, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN, ROLES.REGIONAL_ADMIN, ROLES.REFERRAL, ROLES.CONSULTANCY] },
     { path: '/partner/contract', labelKey: 'nav.partnerContract', icon: FileSignature, kind: KIND_CREATE, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.CONSULTANCY, ROLES.REFERRAL, ROLES.AUDITOR, ROLES.REGIONAL_ADMIN] },
     { path: '/profile', labelKey: 'nav.myProfile', icon: User, kind: KIND_CREATE, permissions: [PERMISSIONS.MANAGE_SETTINGS] },
     // Read-only apart from marking a notification read.

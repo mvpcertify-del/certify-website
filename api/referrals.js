@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { verifySession, verifyAdmin } from './_verifyAdmin.js';
 import { referralClientInviteEmail, partnerOutreachEmail } from './_emailTemplates.js';
 import { getOutreachCopy } from './_outreachCopy.js';
+import { ensureConversation, appendMessage, discardConversation } from './_conversations.js';
 import { ISO_CATALOG } from '../src/utils/isoCatalog.js';
 import { APP_URL } from './_appUrl.js';
 
@@ -12,6 +13,16 @@ const supabaseAdmin = createClient(
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL;
+
+// The client's 27 Aug instruction was explicit: partner mail goes out "using
+// support@certify.cx being the communication introductory email with Clients".
+// Both partner letters therefore send from the SUPPORT identity, not the
+// generic noreply transactional one — mirroring api/_resendClient.js, which
+// already resolves the same three-step fallback for business mail.
+const PARTNER_FROM_EMAIL =
+  process.env.RESEND_SUPPORT_FROM_EMAIL ||
+  process.env.RESEND_FROM_EMAIL ||
+  'Certify.cx Support <support@certify.cx>';
 
 // An optional company-profile PDF / video link included in the invite. The
 // client asked for it but has not supplied the asset yet, so the email drops
@@ -461,7 +472,7 @@ async function sendClientInvite(req, res) {
   // Partner's own details for the email body + reply-to.
   const { data: partner } = await supabaseAdmin
     .from('profiles')
-    .select('full_name, email, company_name, referral_code, email_signature')
+    .select('full_name, email, company_name, referral_code, email_signature, region')
     .eq('id', caller.id)
     .maybeSingle();
 
@@ -500,8 +511,21 @@ async function sendClientInvite(req, res) {
     signature,
   });
 
-  // From is the Certify.cx domain (SPF/DKIM aligned, stays out of spam);
-  // Reply-To is the partner, so the client's reply reaches them directly.
+  // The invite shares the proposal's thread with this lead, so a partner who
+  // sends both is not left with two half-conversations in their inbox.
+  const thread = await ensureConversation(supabaseAdmin, {
+    referrerId: caller.id,
+    referralId: referral.id,
+    leadEmail: recipient,
+    leadName: referral.referred_name || null,
+    subject,
+    region: partner.region || null,
+  });
+
+  // From is the SUPPORT identity on the Certify.cx domain (SPF/DKIM aligned,
+  // stays out of spam). Reply-To is the thread address once inbound email is
+  // configured, and the partner's own address until then — either way the
+  // client's reply reaches a person.
   const resp = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -509,9 +533,9 @@ async function sendClientInvite(req, res) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: RESEND_FROM_EMAIL,
+      from: PARTNER_FROM_EMAIL,
       to: [recipient],
-      reply_to: partner.email || undefined,
+      reply_to: thread?.replyTo || partner.email || undefined,
       subject,
       html,
       text,
@@ -524,7 +548,19 @@ async function sendClientInvite(req, res) {
     // Release the reservation so a genuine failure does not permanently consume
     // one of the client's few allowed invites.
     await supabaseAdmin.from('referral_invites').delete().eq('id', reservation.id);
+    if (thread?.created) await discardConversation(supabaseAdmin, thread.conversation.id);
     return res.status(502).json({ error: 'Could not send the email. Please try again.' });
+  }
+
+  if (thread?.conversation?.id) {
+    await appendMessage(supabaseAdmin, thread.conversation.id, {
+      direction: 'outbound',
+      fromEmail: partner.email || null,
+      fromName: partner.full_name || null,
+      toEmail: recipient,
+      subject,
+      bodyText: text,
+    });
   }
 
   return res.status(200).json({ ok: true, sentTo: recipient });
@@ -587,7 +623,7 @@ async function sendOutreach(req, res) {
 
   const { data: partner } = await supabaseAdmin
     .from('profiles')
-    .select('full_name, email, company_name, referral_code, email_signature')
+    .select('full_name, email, company_name, referral_code, email_signature, region')
     .eq('id', caller.id)
     .maybeSingle();
 
@@ -675,6 +711,20 @@ async function sendOutreach(req, res) {
     attachmentName: attachment?.filename || null,
   });
 
+  // Open (or re-use) the thread this letter belongs to, so the client's reply
+  // comes back into the dashboard rather than into the partner's own mailbox.
+  // Returns null until inbound email is configured — in which case the letter
+  // still goes out, with the partner as Reply-To exactly as before.
+  const thread = await ensureConversation(supabaseAdmin, {
+    referrerId: caller.id,
+    referralId: referral.id,
+    leadEmail: recipient,
+    leadName: referral.referred_company || referral.referred_name || null,
+    standardSlug: iso.slug,
+    subject,
+    region: partner.region || null,
+  });
+
   const resp = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -682,11 +732,11 @@ async function sendOutreach(req, res) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: RESEND_FROM_EMAIL,
+      from: PARTNER_FROM_EMAIL,
       to: [recipient],
-      // Until the inbound reply path exists (the client's point 2), a reply
-      // still has to reach a human, and the partner is that human.
-      reply_to: partner.email || undefined,
+      // The thread address when inbound is live; the partner's own address
+      // otherwise, so a reply always reaches a human either way.
+      reply_to: thread?.replyTo || partner.email || undefined,
       subject,
       html,
       text,
@@ -698,13 +748,29 @@ async function sendOutreach(req, res) {
     const detail = await resp.text().catch(() => '');
     console.error('send-outreach: Resend failed', resp.status, detail);
     await supabaseAdmin.from('referral_invites').delete().eq('id', reservation.id);
+    // Only a thread opened FOR this send is removed. One that already existed
+    // holds real history and stays.
+    if (thread?.created) await discardConversation(supabaseAdmin, thread.conversation.id);
     return res.status(502).json({ error: 'Could not send the email. Please try again.' });
+  }
+
+  // Filed after a confirmed send, so the thread shows what actually went out.
+  if (thread?.conversation?.id) {
+    await appendMessage(supabaseAdmin, thread.conversation.id, {
+      direction: 'outbound',
+      fromEmail: partner.email || null,
+      fromName: partner.full_name || null,
+      toEmail: recipient,
+      subject,
+      bodyText: text,
+    });
   }
 
   return res.status(200).json({
     ok: true,
     sentTo: recipient,
     attached: Boolean(attachment),
+    threaded: Boolean(thread),
   });
 }
 

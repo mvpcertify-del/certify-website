@@ -100,6 +100,7 @@
     "users": "المستخدمون",
     "shareableLinks": "روابط المشاركة",
     "outreachDocs": "المذكرات التعريفية",
+    "messages": "الرسائل",
     "registrations": "التسجيلات",
     "referrals": "Referral",
     "myProfile": "ملفي الشخصي",
@@ -686,6 +687,22 @@
     "readFailed": "تعذّرت قراءة الملف",
     "pdfOnly": "يمكن رفع ملفات PDF فقط",
     "tooLarge": "يجب أن يكون حجم المستند أقل من {{max}} ميغابايت"
+  },
+  "messages": {
+    "title": "الرسائل",
+    "subtitle": "ردود العملاء على الرسائل المُرسلة من لوحة التحكم.",
+    "none": "لا توجد محادثات بعد",
+    "noneHint": "عندما يرد عميل على عرض أو دعوة أُرسلت من لوحة التحكم، سيظهر رده هنا.",
+    "threads": "{{n}} محادثات",
+    "selectThread": "اختر محادثة لقراءتها",
+    "readOnly": "للقراءة فقط",
+    "client": "العميل",
+    "you": "أنت",
+    "replyPlaceholder": "اكتب ردك…",
+    "replyHint": "يُرسل من support@certify.cx، ويعود رده إلى هنا.",
+    "send": "إرسال",
+    "replySent": "تم إرسال الرد",
+    "replyFailed": "تعذّر إرسال الرد"
   },
   "register": {
     "invalidType": "نوع تسجيل غير صالح",

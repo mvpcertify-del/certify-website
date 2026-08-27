@@ -100,6 +100,7 @@
     "users": "用户",
     "shareableLinks": "可分享链接",
     "outreachDocs": "简介文件",
+    "messages": "消息",
     "registrations": "注册申请",
     "referrals": "Referral",
     "myProfile": "我的资料",
@@ -672,6 +673,22 @@
     "readFailed": "无法读取文件",
     "pdfOnly": "只能上传 PDF 文件",
     "tooLarge": "文件必须小于 {{max}} MB"
+  },
+  "messages": {
+    "title": "消息",
+    "subtitle": "客户对本面板所发邮件的回复。",
+    "none": "暂无会话",
+    "noneHint": "当客户回复从面板发出的提案或邀请时，回复会显示在这里。",
+    "threads": "{{n}} 个会话",
+    "selectThread": "选择一个会话以阅读",
+    "readOnly": "只读",
+    "client": "客户",
+    "you": "您",
+    "replyPlaceholder": "写下您的回复…",
+    "replyHint": "由 support@certify.cx 发出，对方的回复会回到这里。",
+    "send": "发送",
+    "replySent": "回复已发送",
+    "replyFailed": "无法发送回复"
   },
   "register": {
     "invalidType": "无效的注册类型",

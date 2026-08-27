@@ -100,6 +100,7 @@
     "users": "Users",
     "shareableLinks": "Shareable Links",
     "outreachDocs": "Briefing Documents",
+    "messages": "Messages",
     "registrations": "Registrations",
     "referrals": "Referral",
     "myProfile": "My Profile",
@@ -686,6 +687,22 @@
     "readFailed": "Could not read the file",
     "pdfOnly": "Only PDF files can be uploaded",
     "tooLarge": "The document must be under {{max}} MB"
+  },
+  "messages": {
+    "title": "Messages",
+    "subtitle": "Client replies to the emails sent from this dashboard.",
+    "none": "No conversations yet",
+    "noneHint": "When a client replies to a proposal or an invite sent from the dashboard, the reply appears here.",
+    "threads": "{{n}} conversations",
+    "selectThread": "Choose a conversation to read it",
+    "readOnly": "Read only",
+    "client": "Client",
+    "you": "You",
+    "replyPlaceholder": "Write your reply…",
+    "replyHint": "Sent from support@certify.cx. Their answer comes back here.",
+    "send": "Send",
+    "replySent": "Reply sent",
+    "replyFailed": "Could not send the reply"
   },
   "register": {
     "invalidType": "Invalid Registration Type",

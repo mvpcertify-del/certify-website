@@ -1,0 +1,329 @@
+/* Partner inbox (phase33): thread list beside the open conversation. */
+
+.messages {
+  display: grid;
+  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+  gap: var(--spacing-md);
+  align-items: start;
+}
+
+/* One column on narrow screens. The list comes first so a tap on a thread
+   scrolls naturally down into it. */
+@media (max-width: 860px) {
+  .messages { grid-template-columns: 1fr; }
+}
+
+/* ---- Thread list ---- */
+
+.messages__list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-card);
+  overflow: hidden;
+  /* The list scrolls inside itself rather than stretching the page, so the
+     open conversation stays where it is while the list is browsed. */
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.messages__list-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0.9rem;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-tertiary);
+  /* Stays put while the list scrolls under it. */
+  position: sticky;
+  top: 0;
+  background: var(--color-bg-card);
+  z-index: 1;
+}
+
+.messages__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: #0a1f17;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.messages__thread {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+  padding: 0.8rem 0.9rem;
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  background: transparent;
+  color: inherit;
+  text-align: start;
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.messages__thread:hover { background: var(--color-bg-page); }
+
+/* The active thread is marked on its leading edge, which works in both
+   directions once the page is flipped for Arabic. */
+.messages__thread.is-active {
+  background: var(--color-bg-page);
+  box-shadow: inset 3px 0 0 var(--color-accent);
+}
+
+[dir="rtl"] .messages__thread.is-active {
+  box-shadow: inset -3px 0 0 var(--color-accent);
+}
+
+.messages__thread.is-unread .messages__thread-who { font-weight: 700; }
+
+.messages__thread-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.messages__thread-who {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  font-size: 0.86rem;
+  color: var(--color-text-primary);
+  /* A lead name or address can be long; it must not push the timestamp out. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.messages__thread-who svg { flex: 0 0 auto; }
+
+.messages__thread-when {
+  flex: 0 0 auto;
+  font-size: 0.72rem;
+  color: var(--color-text-tertiary);
+}
+
+.messages__thread-sub {
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+  /* Two lines of subject, then clipped. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.messages__thread-tag {
+  align-self: flex-start;
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-page);
+  border: 1px solid var(--color-border);
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+}
+
+/* ---- Conversation pane ---- */
+
+.messages__pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 320px;
+  max-height: 70vh;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-card);
+  overflow: hidden;
+}
+
+.messages__pane-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.messages__pane-head h2 {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.messages__pane-head p {
+  margin: 0.15rem 0 0;
+  font-size: 0.78rem;
+  color: var(--color-text-tertiary);
+  overflow-wrap: anywhere;
+}
+
+.messages__readonly {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex: 0 0 auto;
+  padding: 0.22rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  color: var(--color-text-tertiary);
+}
+
+.messages__scroll {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.messages__msg {
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-page);
+  max-width: 88%;
+}
+
+/* Inbound sits at the start of the line, outbound at the end — the usual
+   read of a conversation, and it flips correctly for Arabic because these are
+   logical properties rather than left/right. */
+.messages__msg--inbound { align-self: flex-start; }
+
+.messages__msg--outbound {
+  align-self: flex-end;
+  background: var(--color-bg-card);
+  border-color: var(--color-accent);
+}
+
+.messages__msg-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.messages__msg-from {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.messages__msg-when {
+  font-size: 0.7rem;
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
+}
+
+.messages__msg-subject {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.messages__msg-body {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  /* The stored body is plain text with real newlines; this is what makes them
+     visible without turning user input into <br> tags. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ---- Reply box ---- */
+
+.messages__reply {
+  border-top: 1px solid var(--color-border);
+  padding: 0.85rem 1rem;
+}
+
+.messages__sent {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  color: var(--color-accent);
+}
+
+.messages__reply-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-page);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.messages__reply-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.messages__reply-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.messages__reply-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--color-text-tertiary);
+}
+
+/* ---- Empty states ---- */
+
+.messages__empty,
+.messages__placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 3rem 1.5rem;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-tertiary);
+  text-align: center;
+}
+
+.messages__placeholder { border: 0; flex: 1 1 auto; }
+
+.messages__empty p,
+.messages__placeholder p { margin: 0; font-size: 0.9rem; }
+
+.messages__empty-hint { font-size: 0.8rem !important; max-width: 46ch; line-height: 1.6; }

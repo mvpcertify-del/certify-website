@@ -69,6 +69,7 @@ const AdminCompanies = lazy(() => import('./pages/admin/AdminCompanies'));
 const ApplicationDetails = lazy(() => import('./pages/admin/ApplicationDetails'));
 const ShareableLinks = lazy(() => import('./pages/admin/ShareableLinks'));
 const AdminOutreachDocs = lazy(() => import('./pages/admin/AdminOutreachDocs'));
+const Messages = lazy(() => import('./pages/messages/Messages'));
 const RegistrationRequests = lazy(() => import('./pages/admin/RegistrationRequests'));
 const AdminPermissions = lazy(() => import('./pages/admin/AdminPermissions'));
 const AdminUserFields = lazy(() => import('./pages/admin/AdminUserFields'));
@@ -414,6 +415,24 @@ function AppRoutes() {
             <Route path="/referrals" element={
               <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_REFERRALS}>
                 <Referrals />
+              </ProtectedRoute>
+            } />
+
+            {/* Partner inbox — client replies to partner mail (phase33).
+                The route only decides WHO may open the page; WHICH threads they
+                see is decided by the RLS policies, so a Country Admin and a
+                partner can share this route safely.
+
+                Gated by ROLE, not by VIEW_REFERRALS. A regional admin does NOT
+                hold that permission — so gating on it would have locked the
+                Country Admin out of the very inbox the client named them for,
+                while RLS happily returned their region's threads to a page
+                they could never open. */}
+            <Route path="/messages" element={
+              <ProtectedRoute allowedRoles={[
+                ROLES.SUPER_ADMIN, ROLES.REGIONAL_ADMIN, ROLES.REFERRAL, ROLES.CONSULTANCY,
+              ]}>
+                <Messages />
               </ProtectedRoute>
             } />
 

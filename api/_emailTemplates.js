@@ -695,3 +695,44 @@ export function partnerOutreachEmail({
 
   return { subject, html, text };
 }
+
+// ---------------------------------------------------------------------------
+// Referral partner -> lead: a reply typed in the dashboard (phase33)
+// ---------------------------------------------------------------------------
+// Deliberately plain. The proposal letter is a designed piece of marketing; a
+// reply in an ongoing conversation is correspondence, and wrapping a two-line
+// answer in a branded card with a call-to-action button reads as an automated
+// blast rather than a person replying.
+//
+// So: the same envelope as the rest of the platform's mail, the partner's
+// words, their signature, and nothing else. `bodyText` is typed by the partner
+// and escaped before it becomes HTML; newlines are preserved with white-space
+// rather than by building <br> tags out of user input.
+export function partnerReplyEmail({ bodyText, signature, partnerName }) {
+  const safeBody = escapeHtml(bodyText || '');
+
+  const signatureBlock = (signature || partnerName)
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:26px 0 0;border-top:1px solid ${BORDER};">
+        <tr><td style="padding:18px 0 0;">
+          <p style="margin:0;font-size:13px;line-height:1.7;color:${TEXT_SECONDARY};white-space:pre-line;">${escapeHtml(signature || partnerName)}</p>
+        </td></tr>
+      </table>`
+    : '';
+
+  // The subject is chosen by the caller (it continues the original thread), so
+  // the title here is only what a browser tab or an accessibility tree reads.
+  const html = layout({
+    title: 'Reply',
+    preheader: (bodyText || '').slice(0, 140),
+    bodyHtml: `
+      <p style="margin:0;font-size:15px;line-height:1.7;color:${TEXT_SECONDARY};white-space:pre-line;">${safeBody}</p>
+      ${signatureBlock}`,
+  });
+
+  const text = [
+    bodyText || '',
+    ...(signature || partnerName ? ['', signature || partnerName] : []),
+  ].join('\n');
+
+  return { html, text };
+}
