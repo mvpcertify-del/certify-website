@@ -54,6 +54,9 @@ const supabaseAdmin = createClient(
 
 const INBOUND_WEBHOOK_SECRET = process.env.INBOUND_WEBHOOK_SECRET;
 
+// Used to pull the message body back (see fetchBody). The same key that sends.
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+
 // Vercel hands the body already parsed for application/json. Signature
 // verification needs the EXACT bytes that were signed, so the raw stream is
 // preferred and the re-serialised object is only a fallback.
@@ -104,6 +107,43 @@ function firstAddress(field) {
 // rather than assuming one.
 function unwrap(payload) {
   return payload?.data && typeof payload.data === 'object' ? payload.data : payload;
+}
+
+// Fetch the message body.
+//
+// Resend's `email.received` webhook carries METADATA ONLY — from, to, cc,
+// subject, and a list of attachments. The body is deliberately not in the
+// payload (it keeps a large message from having to fit through a serverless
+// function's request limit), and is retrieved separately by id:
+//
+//   GET https://api.resend.com/emails/receiving/{email_id}
+//
+// So a reply filed straight from the webhook would be an empty message with a
+// subject line and nothing under it. This is the call that makes the inbox
+// show what the client actually wrote.
+//
+// Best-effort: a failure here is logged and the message is still filed with
+// whatever the webhook did carry. A reply that arrives with a subject and no
+// body at least tells the partner someone answered; dropping it entirely
+// because one HTTP call failed would be worse.
+async function fetchBody(emailId) {
+  if (!emailId || !RESEND_API_KEY) return null;
+  try {
+    const resp = await fetch(`https://api.resend.com/emails/receiving/${encodeURIComponent(emailId)}`, {
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}` },
+    });
+    if (!resp.ok) {
+      console.error('inbound-email: body fetch failed', resp.status, await resp.text().catch(() => ''));
+      return null;
+    }
+    const full = await resp.json();
+    // text/plain only. `html` is deliberately ignored — see the column comment
+    // in phase33: it is a stranger's markup headed for an admin's screen.
+    return full?.text || full?.data?.text || null;
+  } catch (err) {
+    console.error('inbound-email: body fetch threw', err?.message);
+    return null;
+  }
 }
 
 export default async function handler(req, res) {
@@ -186,9 +226,11 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, matched: false });
     }
 
-    // text/plain only. See the column comment in phase33: inbound HTML is a
-    // stranger's markup headed for an admin's screen.
-    const bodyText = msg?.text || msg?.plain || msg?.body_plain || null;
+    // Some providers put the body in the webhook; Resend does not, and needs a
+    // second call for it. Both are handled — the payload is checked first so
+    // no needless request is made when the text is already here.
+    const emailId = msg?.email_id || msg?.emailId || msg?.id || null;
+    const bodyText = msg?.text || msg?.plain || msg?.body_plain || await fetchBody(emailId);
 
     const appended = await appendMessage(supabaseAdmin, conversation.id, {
       direction: 'inbound',
@@ -197,7 +239,9 @@ export default async function handler(req, res) {
       toEmail: to.email,
       subject: msg?.subject || conversation.subject,
       bodyText,
-      providerMessageId: msg?.message_id || msg?.messageId || msg?.id || payload?.id || null,
+      // The provider's own id for this message, which is what makes a
+      // redelivery a no-op rather than a duplicate reply.
+      providerMessageId: emailId || msg?.message_id || msg?.messageId || payload?.id || null,
     });
 
     // A redelivery of something already filed. Acknowledged without notifying
