@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Check, ArrowRight, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -18,13 +18,24 @@ import './PricingTiers.css';
 // renders identically.
 export default function PricingTiers({ variant = 'full', standardSlug = 'iso-9001', standardCode = null }) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { t } = useTranslation();
   const { user } = useAuth();
 
   const price = computeTotal({ standardSlug }).subtotal;
 
+  // Carry a referral code across the hop to checkout.
+  //
+  // `ref` is only ever READ on /checkout and /signup, so a visitor who landed
+  // on /iso/:slug?ref=CODE and pressed this button arrived at checkout with the
+  // code stripped — and the partner who sent them was credited with nothing.
+  // Nothing linked to /iso/:slug?ref= until the partner outreach letter did
+  // (phase32), which is why it never surfaced before; it would have silently
+  // lost every sale that letter produced.
   const startCheckout = () => {
     const params = new URLSearchParams({ iso: standardSlug });
+    const ref = (searchParams.get('ref') || '').trim();
+    if (ref) params.set('ref', ref);
     const qs = params.toString();
     if (user?.role === ROLES.CLIENT) {
       // Logged-in clients keep the existing bootstrap → Stripe path.

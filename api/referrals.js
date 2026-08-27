@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { verifySession, verifyAdmin } from './_verifyAdmin.js';
-import { referralClientInviteEmail } from './_emailTemplates.js';
+import { referralClientInviteEmail, partnerOutreachEmail } from './_emailTemplates.js';
+import { getOutreachCopy } from './_outreachCopy.js';
+import { ISO_CATALOG } from '../src/utils/isoCatalog.js';
 import { APP_URL } from './_appUrl.js';
 
 const supabaseAdmin = createClient(
@@ -59,6 +61,7 @@ export default async function handler(req, res) {
     if (action === 'record') return await recordReferral(req, res);
     if (action === 'check-discount') return await checkDiscount(req, res);
     if (action === 'send-client-invite') return await sendClientInvite(req, res);
+    if (action === 'send-outreach') return await sendOutreach(req, res);
     if (action === 'save-signature') return await saveSignature(req, res);
     return res.status(400).json({ error: 'Unknown action' });
   } catch (error) {
@@ -368,6 +371,41 @@ async function checkDiscount(req, res) {
   return res.status(200).json({ hasDiscount: !!referral });
 }
 
+// ---- Partner send caps, shared by BOTH partner letters ----------------------
+//
+// Returns a message when the send must be refused, or null when it may proceed.
+//
+// Shared on purpose. There are now two letters a partner can send — the phase27
+// registration invite and the phase32 standard proposal — and they both leave
+// over the same certify.cx domain. Counting them separately would hand each
+// partner two independent daily allowances and double the volume one account
+// can push before anything notices, which is precisely the failure the caps
+// exist to prevent. `referral_invites` logs both (see its `kind` column), so a
+// single pair of queries bounds the pair of letters.
+async function checkSendCaps(referrerId, recipient) {
+  const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+  const { count: dailyCount } = await supabaseAdmin
+    .from('referral_invites')
+    .select('id', { count: 'exact', head: true })
+    .eq('referrer_id', referrerId)
+    .gte('sent_at', dayAgo);
+  if ((dailyCount || 0) >= INVITE_DAILY_CAP) {
+    return `Daily email limit reached (${INVITE_DAILY_CAP}). Please try again tomorrow.`;
+  }
+
+  const { count: recipientCount } = await supabaseAdmin
+    .from('referral_invites')
+    .select('id', { count: 'exact', head: true })
+    .eq('referrer_id', referrerId)
+    .eq('referred_email', recipient);
+  if ((recipientCount || 0) >= INVITE_PER_RECIPIENT_CAP) {
+    return `You have already emailed this contact ${INVITE_PER_RECIPIENT_CAP} times.`;
+  }
+
+  return null;
+}
+
 // ---- Referral partner sends an invite email to a client they added ----------
 //
 // Auth: the caller's Bearer JWT (verifySession), NOT a body-supplied id. The
@@ -417,24 +455,8 @@ async function sendClientInvite(req, res) {
   }
 
   // ---- Two caps, checked before anything is sent ----
-  const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const { count: dailyCount } = await supabaseAdmin
-    .from('referral_invites')
-    .select('id', { count: 'exact', head: true })
-    .eq('referrer_id', caller.id)
-    .gte('sent_at', dayAgo);
-  if ((dailyCount || 0) >= INVITE_DAILY_CAP) {
-    return res.status(429).json({ error: `Daily invite limit reached (${INVITE_DAILY_CAP}). Please try again tomorrow.` });
-  }
-
-  const { count: recipientCount } = await supabaseAdmin
-    .from('referral_invites')
-    .select('id', { count: 'exact', head: true })
-    .eq('referrer_id', caller.id)
-    .eq('referred_email', recipient);
-  if ((recipientCount || 0) >= INVITE_PER_RECIPIENT_CAP) {
-    return res.status(429).json({ error: `This client has already been invited ${INVITE_PER_RECIPIENT_CAP} times.` });
-  }
+  const capError = await checkSendCaps(caller.id, recipient);
+  if (capError) return res.status(429).json({ error: capError });
 
   // Partner's own details for the email body + reply-to.
   const { data: partner } = await supabaseAdmin
@@ -506,6 +528,184 @@ async function sendClientInvite(req, res) {
   }
 
   return res.status(200).json({ ok: true, sentTo: recipient });
+}
+
+// ---- Referral partner sends the standard proposal to one of their leads -----
+//
+// The client's 27 Aug request: a partner picks a lead they have already added,
+// picks the standard they want to pitch, and the platform sends the proposal
+// letter with that standard's briefing document attached.
+//
+// Auth and ownership are identical to sendClientInvite and for the same
+// reasons: the caller is identified by their Bearer JWT, never by a body field,
+// and the referral row must be theirs. A partner cannot mail an arbitrary
+// address, and cannot mail another partner's lead.
+//
+// What differs from the invite: a standard, an optional "they already hold X"
+// line, and a file attachment.
+async function sendOutreach(req, res) {
+  const auth = await verifySession(req);
+  if (auth.error) return res.status(auth.status).json({ error: 'Please sign in again' });
+  const caller = auth.caller;
+
+  if (!partnerActive(caller)) {
+    return res.status(403).json({ error: 'Only approved referral partners can send proposals' });
+  }
+
+  if (!RESEND_API_KEY || !RESEND_FROM_EMAIL) {
+    return res.status(503).json({ error: 'Email is not configured on the server' });
+  }
+
+  const { referralId, standardSlug, existingCert } = req.body || {};
+  if (!referralId) return res.status(400).json({ error: 'Missing referral reference' });
+
+  // The slug must satisfy BOTH catalogues: ISO_CATALOG (it is a standard the
+  // site actually sells, so the call-to-action link resolves) and the outreach
+  // copy (there is a paragraph written for it). Checking one and not the other
+  // yields either a letter with a hole in it or a button leading to a 404.
+  const iso = standardSlug ? ISO_CATALOG[standardSlug] : null;
+  const copy = getOutreachCopy(standardSlug);
+  if (!iso || !copy) return res.status(400).json({ error: 'Please choose a standard' });
+
+  const { data: referral } = await supabaseAdmin
+    .from('referrals')
+    .select('id, referrer_id, referred_email, referred_name, referred_company')
+    .eq('id', referralId)
+    .maybeSingle();
+
+  if (!referral || referral.referrer_id !== caller.id) {
+    return res.status(404).json({ error: 'Referral not found' });
+  }
+
+  const recipient = String(referral.referred_email || '').trim().toLowerCase();
+  if (!EMAIL_RE.test(recipient)) {
+    return res.status(400).json({ error: 'This referral has no valid email address' });
+  }
+
+  const capError = await checkSendCaps(caller.id, recipient);
+  if (capError) return res.status(429).json({ error: capError });
+
+  const { data: partner } = await supabaseAdmin
+    .from('profiles')
+    .select('full_name, email, company_name, referral_code, email_signature')
+    .eq('id', caller.id)
+    .maybeSingle();
+
+  if (!partner?.referral_code) {
+    return res.status(400).json({ error: 'Your referral code is not ready yet. Please refresh and try again.' });
+  }
+
+  // Free text typed by the partner ("ISO 9001"), so it is bounded and stripped
+  // of newlines before it reaches a mail header-adjacent context. The template
+  // HTML-escapes it as well; this is the length and shape guard, that is the
+  // markup guard.
+  const heldCert = existingCert
+    ? String(existingCert).replace(/[\r\n]+/g, ' ').trim().slice(0, 60)
+    : null;
+
+  // ---- The attachment, if this standard has one ----
+  //
+  // A standard with no uploaded document sends the letter WITHOUT one rather
+  // than with somebody else's. `attachmentName` is passed to the template only
+  // when the bytes are actually in hand, so the letter can never claim "I have
+  // attached a briefing note" over an email that carries no attachment.
+  let attachment = null;
+  const { data: asset } = await supabaseAdmin
+    .from('outreach_assets')
+    .select('file_name, storage_path')
+    .eq('standard_slug', standardSlug)
+    .maybeSingle();
+
+  if (asset?.storage_path) {
+    const { data: blob, error: dlErr } = await supabaseAdmin.storage
+      .from('outreach-assets')
+      .download(asset.storage_path);
+    if (dlErr || !blob) {
+      // Worth knowing about — it means the row and the bucket disagree — but
+      // not worth failing the partner's send over. The letter still stands up
+      // on its own without the brochure.
+      console.error('send-outreach: attachment download failed', standardSlug, dlErr?.message);
+    } else {
+      const buf = Buffer.from(await blob.arrayBuffer());
+      attachment = { filename: asset.file_name, content: buf.toString('base64') };
+    }
+  }
+
+  // ---- RESERVE, then send ----
+  // Same ordering as the invite, for the same reason: logging first means a
+  // race can only over-count (stricter), while send-then-log lets concurrent
+  // requests all read count<cap and all send.
+  const { data: reservation, error: reserveErr } = await supabaseAdmin
+    .from('referral_invites')
+    .insert({
+      referrer_id: caller.id,
+      referral_id: referral.id,
+      referred_email: recipient,
+      kind: 'outreach',
+      standard_slug: standardSlug,
+    })
+    .select('id')
+    .single();
+  if (reserveErr) {
+    console.error('send-outreach: reservation failed', reserveErr?.message);
+    return res.status(500).json({ error: 'Could not send the proposal. Please try again.' });
+  }
+
+  // The call to action lands on the standard's own page — which names the price
+  // and carries the payment gateway — with the partner's code attached, so a
+  // sale that starts from this letter is credited to the partner who sent it.
+  const ctaUrl = `${APP_URL}/iso/${iso.slug}?ref=${encodeURIComponent(partner.referral_code)}`;
+
+  const signature = partner.email_signature
+    ? String(partner.email_signature).slice(0, SIGNATURE_MAX_LEN)
+    : null;
+
+  const { subject, html, text } = partnerOutreachEmail({
+    clientName: referral.referred_name,
+    // The letter addresses an ORGANIZATION, so the company name leads and the
+    // contact's name is the fallback — "a proposal for Acme Ltd" reads as
+    // business correspondence; "a proposal for John Smith" reads as spam.
+    orgName: referral.referred_company || referral.referred_name,
+    standardSlug: iso.slug,
+    standardCode: iso.code,
+    existingCert: heldCert,
+    ctaUrl,
+    signature,
+    partnerName: partner.full_name,
+    attachmentName: attachment?.filename || null,
+  });
+
+  const resp = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: RESEND_FROM_EMAIL,
+      to: [recipient],
+      // Until the inbound reply path exists (the client's point 2), a reply
+      // still has to reach a human, and the partner is that human.
+      reply_to: partner.email || undefined,
+      subject,
+      html,
+      text,
+      ...(attachment ? { attachments: [attachment] } : {}),
+    }),
+  });
+
+  if (!resp.ok) {
+    const detail = await resp.text().catch(() => '');
+    console.error('send-outreach: Resend failed', resp.status, detail);
+    await supabaseAdmin.from('referral_invites').delete().eq('id', reservation.id);
+    return res.status(502).json({ error: 'Could not send the email. Please try again.' });
+  }
+
+  return res.status(200).json({
+    ok: true,
+    sentTo: recipient,
+    attached: Boolean(attachment),
+  });
 }
 
 // ---- Referral partner saves their email signature ---------------------------

@@ -8,7 +8,8 @@ import StatusBadge from '../../components/ui/StatusBadge';
 import Modal from '../../components/ui/Modal';
 import { Input, Button } from '../../components/ui/FormElements';
 import { apiPost } from '../../lib/apiClient';
-import { Link2, Copy, Check, Users, DollarSign, UserPlus, Gift, Plus, AlertCircle, CheckCircle, Mail, PenLine } from 'lucide-react';
+import { ISO_CATALOG_LIST } from '../../utils/isoCatalog';
+import { Link2, Copy, Check, Users, DollarSign, UserPlus, Gift, Plus, AlertCircle, CheckCircle, Mail, PenLine, Send, Paperclip } from 'lucide-react';
 import './Referrals.css';
 
 export default function Referrals() {
@@ -31,6 +32,18 @@ export default function Referrals() {
   const [showSignature, setShowSignature] = useState(false);
   const [signature, setSignature] = useState(user?.email_signature || '');
   const [signatureSaving, setSignatureSaving] = useState(false);
+
+  // ---- The standard proposal letter (phase32) ----
+  // A second, different letter from the invite above: it pitches ONE named
+  // standard and carries that standard's briefing document as an attachment.
+  // Which standards HAVE a document is admin-managed and changes without a
+  // deploy, so it is read at runtime rather than assumed.
+  const [proposalRow, setProposalRow] = useState(null);
+  const [proposalStandard, setProposalStandard] = useState('');
+  const [proposalExisting, setProposalExisting] = useState('');
+  const [proposalSending, setProposalSending] = useState(false);
+  const [proposedIds, setProposedIds] = useState(() => new Set());
+  const [assetSlugs, setAssetSlugs] = useState(() => new Set());
   const [success, setSuccess] = useState('');
   // Shown when the client WAS saved but something optional about it was not.
   // Separate from `success` so a partial save never reads as a clean one.
@@ -79,6 +92,19 @@ export default function Referrals() {
       .eq('is_active', true)
       .order('min_conversions', { ascending: true })
       .then(({ data }) => setTiers(data || []));
+  }, []);
+
+  // Which standards have a briefing document to attach. Read directly (the
+  // table's RLS grants SELECT to any signed-in user) because this answers a
+  // presentational question — it tells the partner what will be attached
+  // BEFORE they send. The server does its own lookup at send time and does not
+  // trust this; a stale set here changes what the form says, never what goes
+  // out.
+  useEffect(() => {
+    supabase
+      .from('outreach_assets')
+      .select('standard_slug')
+      .then(({ data }) => setAssetSlugs(new Set((data || []).map(a => a.standard_slug))));
   }, []);
 
   const handleCopy = async () => {
@@ -194,6 +220,43 @@ export default function Referrals() {
     }
   };
 
+  // Open the proposal composer for one lead. The standard resets each time
+  // rather than remembering the last pick — the previous lead's standard is
+  // exactly the wrong default for the next one, and a pre-filled wrong answer
+  // is what gets sent by accident.
+  const openProposal = (row) => {
+    setProposalRow(row);
+    setProposalStandard('');
+    setProposalExisting('');
+    setAddError('');
+  };
+
+  const handleSendProposal = async () => {
+    if (!proposalRow || !proposalStandard) return;
+    if (!codeReady) { setSuccess(''); setAddError(t('referrals.codePending')); return; }
+    setProposalSending(true);
+    setAddError('');
+    try {
+      const res = await apiPost('/api/referrals', {
+        action: 'send-outreach',
+        referralId: proposalRow.id,
+        standardSlug: proposalStandard,
+        existingCert: proposalExisting.trim() || null,
+      });
+      setProposedIds(prev => new Set(prev).add(proposalRow.id));
+      setSuccess(`${t('referrals.proposalSent')}: ${proposalRow.referred_email}`);
+      // The server is the authority on whether a document actually went with
+      // it. Saying so matters: the partner is about to tell this lead "see the
+      // attached briefing note" on a follow-up call.
+      if (!res?.attached) setNotice(t('referrals.proposalNoAttachment'));
+      setProposalRow(null);
+    } catch (err) {
+      setAddError(err.message || t('referrals.proposalFailed'));
+    } finally {
+      setProposalSending(false);
+    }
+  };
+
   const handleSaveSignature = async () => {
     setSignatureSaving(true);
     setAddError('');
@@ -301,6 +364,27 @@ export default function Referrals() {
             onClick={() => handleSendInvite(row)}
           >
             {already ? <><Check size={15} /> {t('referrals.inviteResend')}</> : <><Mail size={15} /> {t('referrals.sendInvite')}</>}
+          </Button>
+        );
+      },
+    },
+    {
+      key: 'proposal',
+      label: t('referrals.proposal'),
+      render: (_val, row) => {
+        // A converted client has already bought; pitching them a standard they
+        // are mid-certification on reads as a mistake, so the column goes quiet
+        // exactly where the invite column does.
+        if (row.status === 'converted') return <span style={{ color: 'var(--color-text-tertiary)' }}>—</span>;
+        const already = proposedIds.has(row.id);
+        return (
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={!row.referred_email}
+            onClick={() => openProposal(row)}
+          >
+            {already ? <><Check size={15} /> {t('referrals.proposalResend')}</> : <><Send size={15} /> {t('referrals.sendProposal')}</>}
           </Button>
         );
       },
@@ -531,6 +615,90 @@ export default function Referrals() {
             </Button>
           </div>
         </form>
+      </Modal>
+
+      {/* Standard proposal composer (phase32).
+          The partner chooses which standard to pitch and, optionally, names a
+          certification the organization already holds — the one fact the
+          letter's opening paragraph turns on. Everything else is fixed copy;
+          there is no free-text body, on purpose, because this letter goes out
+          over the company's own domain under the company's own name. */}
+      <Modal
+        isOpen={Boolean(proposalRow)}
+        onClose={() => setProposalRow(null)}
+        title={t('referrals.sendProposal')}
+      >
+        <p className="referral-link-card__hint" style={{ marginTop: 0 }}>
+          {t('referrals.proposalHint', {
+            name: proposalRow?.referred_company || proposalRow?.referred_name || '',
+            email: proposalRow?.referred_email || '',
+          })}
+        </p>
+
+        <label className="referral-field-label" htmlFor="proposal-standard">
+          {t('referrals.proposalStandard')}
+        </label>
+        <select
+          id="proposal-standard"
+          className="referral-select"
+          value={proposalStandard}
+          onChange={(e) => setProposalStandard(e.target.value)}
+        >
+          <option value="">{t('referrals.proposalStandardPlaceholder')}</option>
+          {ISO_CATALOG_LIST.map((iso) => (
+            <option key={iso.slug} value={iso.slug}>
+              {iso.code} — {t(iso.titleKey)}
+            </option>
+          ))}
+        </select>
+
+        {/* Tell the partner what will actually be attached BEFORE they send,
+            not after. A standard with no uploaded briefing note still sends —
+            the letter simply does not mention an attachment. */}
+        {proposalStandard && (
+          <p className="referral-attach-note">
+            <Paperclip size={14} />
+            <span>
+              {assetSlugs.has(proposalStandard)
+                ? t('referrals.proposalWillAttach')
+                : t('referrals.proposalNoDoc')}
+            </span>
+          </p>
+        )}
+
+        <Input
+          label={t('referrals.proposalExisting')}
+          id="proposal-existing"
+          name="proposal_existing"
+          placeholder={t('referrals.proposalExistingPlaceholder')}
+          value={proposalExisting}
+          onChange={(e) => setProposalExisting(e.target.value)}
+          maxLength={60}
+        />
+        <p className="referral-link-card__hint" style={{ marginTop: '-6px' }}>
+          {t('referrals.proposalExistingHint')}
+        </p>
+
+        {addError && (
+          <div className="admin-users__error" style={{ marginTop: '12px' }}>
+            <AlertCircle size={16} /><span>{addError}</span>
+          </div>
+        )}
+
+        <div className="modal-actions" style={{ marginTop: '16px' }}>
+          <Button variant="outline" size="md" onClick={() => setProposalRow(null)}>
+            {t('common.cancel')}
+          </Button>
+          <Button
+            variant="primary"
+            size="md"
+            loading={proposalSending}
+            disabled={!proposalStandard || proposalSending}
+            onClick={handleSendProposal}
+          >
+            <Send size={16} /> {t('referrals.proposalSend')}
+          </Button>
+        </div>
       </Modal>
 
       {/* Email signature editor — appended to every client invite this partner

@@ -8,6 +8,13 @@
 // Design follows the in-app brand: light surface, the client's official mark.
 
 import { BRAND_MARK_URL, BRAND_MARK_ASPECT, BRAND_ACCENT_HEX } from './_brandAsset.js';
+import {
+  SENDER,
+  SENDER_MARK_URL,
+  SENDER_MARK_WIDTH,
+  SENDER_MARK_HEIGHT,
+  getOutreachCopy,
+} from './_outreachCopy.js';
 
 const BRAND_TEXT = 'Certify.cx';
 const SUPPORT_EMAIL = 'support@certify.cx';
@@ -63,7 +70,14 @@ const logoMark = (size = 36) => `
 // `preheader` is the hidden inbox-preview line (so the preview is never blank);
 // it defaults to the title. The card is fluid (width:100% capped at 560px) and
 // the <style> media queries collapse padding / stack the button on phones.
-const layout = ({ title, bodyHtml, preheader }) => `<!DOCTYPE html>
+//
+// `headerHtml` / `footerHtml` override the Certify.cx letterhead and footer.
+// They exist for ONE caller: the referral partner's outreach letter, which the
+// client wrote under their own WCA GLOBAL identity (see api/_outreachCopy.js).
+// Everything else — every transactional email — omits them and gets the
+// Certify.cx mark, which is what the client's brand rule requires. Passing them
+// is a deliberate act, not a default.
+const layout = ({ title, bodyHtml, preheader, headerHtml, footerHtml }) => `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -89,21 +103,21 @@ const layout = ({ title, bodyHtml, preheader }) => `<!DOCTYPE html>
     <tr><td align="center" class="ccx-wrap" style="padding:40px 16px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="ccx-card" style="max-width:560px;background:${CARD_BG};border-radius:16px;border:1px solid ${BORDER};box-shadow:0 4px 24px rgba(16,24,40,0.06);overflow:hidden;">
         <tr><td class="ccx-head" style="padding:28px 36px 24px;border-bottom:1px solid ${BORDER};">
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+          ${headerHtml || `<table role="presentation" cellpadding="0" cellspacing="0" border="0">
             <tr>
               <td style="padding-right:12px;vertical-align:middle;">${logoMark(36)}</td>
               <td style="vertical-align:middle;">${wordmark(22)}</td>
             </tr>
-          </table>
+          </table>`}
         </td></tr>
         <tr><td class="ccx-body" style="padding:36px;">${bodyHtml}</td></tr>
         <tr><td class="ccx-foot" style="padding:24px 36px;border-top:1px solid ${BORDER};background:#fafbfd;">
-          <p style="margin:0;font-size:13px;line-height:1.6;color:${TEXT_SECONDARY};">
+          ${footerHtml || `<p style="margin:0;font-size:13px;line-height:1.6;color:${TEXT_SECONDARY};">
             Need help? Reach us at <a href="mailto:${SUPPORT_EMAIL}" style="color:${ACCENT_ON_WHITE};text-decoration:none;font-weight:500;">${SUPPORT_EMAIL}</a>.
           </p>
           <p style="margin:8px 0 0;font-size:12px;line-height:1.5;color:${TEXT_TERTIARY};">
             ${BRAND_TEXT}™ — ISO certification, simplified.
-          </p>
+          </p>`}
         </td></tr>
       </table>
     </td></tr>
@@ -515,6 +529,169 @@ export function referralClientInviteEmail({
     ``,
     `— ${BRAND_TEXT}`,
   ].filter(Boolean).join('\n');
+
+  return { subject, html, text };
+}
+
+// ---------------------------------------------------------------------------
+// Referral partner -> lead: the standard proposal letter (phase32)
+// ---------------------------------------------------------------------------
+// The client sent a real letter one of their partners had written to a
+// university, and asked for it to become a button in every partner's
+// dashboard. This renders that letter.
+//
+// It is NOT the phase27 invite. The invite says "here is a registration link
+// and your discount code"; this one makes a case for ONE named standard and
+// carries that standard's briefing document as a file attachment. A partner
+// working a lead may well send this first and the invite later.
+//
+// THREE THINGS ARE DELIBERATE HERE AND SHOULD NOT BE "TIDIED UP":
+//
+//  1. The letterhead and footer are WCA GLOBAL, not Certify.cx. That is the
+//     identity the client wrote the sample under. The footer still names
+//     Certify.cx as the sending platform, because the mail leaves the
+//     certify.cx domain and a recipient is entitled to see who actually sent
+//     it — hiding that is what gets a domain reported rather than replied to.
+//
+//  2. Every interpolated value is escapeHtml'd. `orgName`, `clientName` and
+//     `existingCert` are typed by a partner into a form; `signature` is stored
+//     profile text. None of it is trusted markup.
+//
+//  3. The call to action points at the standard's own page on Certify.cx with
+//     the partner's referral code attached — NOT at wca-global.com, which is
+//     where the sample pointed. The sample's link led to a brochure site with
+//     nothing to buy; this one lands on the page that names the price and
+//     carries the payment gateway, and the ?ref= is what credits the sale to
+//     the partner who sent the letter. The wca-global.com link is kept too,
+//     lower down, because the client's copy asks for it.
+export function partnerOutreachEmail({
+  clientName,
+  orgName,
+  standardSlug,
+  standardCode,
+  existingCert,
+  ctaUrl,
+  signature,
+  partnerName,
+  attachmentName,
+}) {
+  const copy = getOutreachCopy(standardSlug);
+  const title = copy?.title || '';
+  const pitch = copy?.pitch || '';
+
+  const org = escapeHtml(orgName || 'your organization');
+  const code = escapeHtml(standardCode || '');
+  const named = title ? `${code} &ndash; ${escapeHtml(title)}` : code;
+
+  // "Dear Sir/ Madam," is the sample's own salutation and stays the default:
+  // these leads are cold, and a wrong first name reads worse than none.
+  const salutation = clientName
+    ? `Dear ${escapeHtml(clientName)},`
+    : 'Dear Sir/ Madam,';
+
+  // The opening differs on one fact: whether this organization already holds a
+  // certification worth congratulating. The sample assumed it always does
+  // ("commend you for the successful acquisition of ISO 9001") — untrue for
+  // most leads, and an opening line that congratulates someone on something
+  // they never did is worse than no opening line at all.
+  const opening = existingCert
+    ? `${body(`On behalf of <strong style="color:${TEXT_PRIMARY};">${escapeHtml(SENDER.name)}</strong>, I would like to sincerely commend ${org} for the successful acquisition of ${escapeHtml(existingCert)} certification. This is a significant achievement and demonstrates the organization&rsquo;s commitment to quality management, continuous improvement, and excellence in service delivery.`)}
+       ${body(`Building on this achievement, we would like to encourage ${org} to consider implementing and pursuing ${named}.`)}`
+    : body(`On behalf of <strong style="color:${TEXT_PRIMARY};">${escapeHtml(SENDER.name)}</strong>, I would like to introduce ${named}, and to encourage ${org} to consider implementing and pursuing it.`);
+
+  const attachmentRow = attachmentName
+    ? body(`I have attached a short briefing note on ${code} &mdash; <em>${escapeHtml(attachmentName)}</em> &mdash; which sets out the requirements and the certification route in more detail.`)
+    : '';
+
+  const signatureBlock = signature
+    ? `<p style="margin:0 0 4px;font-size:14px;line-height:1.7;color:${TEXT_SECONDARY};white-space:pre-line;">${escapeHtml(signature)}</p>`
+    : `<p style="margin:0 0 4px;font-size:14px;line-height:1.7;color:${TEXT_SECONDARY};">${escapeHtml(partnerName || '')}</p>`;
+
+  const headerHtml = `<table role="presentation" cellpadding="0" cellspacing="0" border="0">
+    <tr><td style="vertical-align:middle;">
+      <img src="${SENDER_MARK_URL}" width="${SENDER_MARK_WIDTH}" height="${SENDER_MARK_HEIGHT}" alt="${escapeHtml(SENDER.name)}" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" />
+    </td></tr>
+  </table>`;
+
+  const footerHtml = `
+    <p style="margin:0;font-size:12px;line-height:1.6;color:${TEXT_SECONDARY};font-style:italic;">${escapeHtml(SENDER.taglineA)}</p>
+    <p style="margin:6px 0 0;font-size:12px;line-height:1.6;color:${TEXT_SECONDARY};font-style:italic;">${escapeHtml(SENDER.taglineB)}</p>
+    <p style="margin:6px 0 0;font-size:12px;line-height:1.6;color:${TEXT_SECONDARY};font-style:italic;">${escapeHtml(SENDER.taglineC)}</p>
+    <p style="margin:14px 0 0;font-size:12px;line-height:1.5;color:${TEXT_TERTIARY};">
+      Sent via ${BRAND_TEXT} on behalf of ${escapeHtml(SENDER.name)}. Reply to this email to reach us, or write to
+      <a href="mailto:${SUPPORT_EMAIL}" style="color:${ACCENT_ON_WHITE};text-decoration:none;">${SUPPORT_EMAIL}</a>.
+    </p>`;
+
+  // The Subject HEADER is plain text and must stay raw — an escaped one would
+  // show "&#39;" in the recipient's inbox. The <title> and the hidden preheader
+  // are HTML and must not, because `orgName` is free text typed by a partner.
+  const subject = `Proposal to Consider ${standardCode} Certification for ${orgName || 'your organization'}`;
+
+  const html = layout({
+    title: escapeHtml(subject),
+    preheader: escapeHtml(`${standardCode} certification for ${orgName || 'your organization'} — a short proposal from ${SENDER.name}.`),
+    headerHtml,
+    footerHtml,
+    bodyHtml: `
+      ${body(salutation)}
+      ${body('I hope this email finds you well.')}
+      ${opening}
+      ${pitch ? body(escapeHtml(pitch)) : ''}
+      ${body(`As ${escapeHtml(SENDER.name)}, we would be pleased to support ${org} throughout this process. Our team can provide guidance on the ${code} implementation process, assess your current systems against the standard, identify any gaps, and support you in preparing for certification.`)}
+      ${body(`We would also be glad to prepare and share a proposal and quotation for the ${code} certification process for your consideration, based on your specific requirements and scope.`)}
+      ${attachmentRow}
+      ${body('We would appreciate an opportunity to engage with the Management or the relevant team to discuss this further and explore how we can support you in taking this important next step.')}
+      <p style="margin:0 0 12px;">${button(ctaUrl, `View ${standardCode} details &amp; pricing`)}</p>
+      ${linkFallback(ctaUrl)}
+      ${body(`You can also read more about us at <a href="${SENDER.siteUrl}" style="color:${ACCENT_ON_WHITE};text-decoration:none;font-weight:500;">${escapeHtml(SENDER.site)}</a>.`)}
+      ${body(`Thank you for your commitment to quality and organizational excellence. We look forward to the opportunity to work with ${org}.`)}
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:28px 0 0;border-top:1px solid ${BORDER};">
+        <tr><td style="padding:18px 0 0;">
+          <p style="margin:0 0 10px;font-size:14px;line-height:1.7;color:${TEXT_SECONDARY};">Kind regards,</p>
+          ${signatureBlock}
+          <p style="margin:10px 0 0;font-size:13px;font-weight:700;color:${TEXT_PRIMARY};">${escapeHtml(SENDER.name)}</p>
+        </td></tr>
+      </table>`,
+  });
+
+  const text = [
+    clientName ? `Dear ${clientName},` : 'Dear Sir/ Madam,',
+    ``,
+    `I hope this email finds you well.`,
+    ``,
+    existingCert
+      ? `On behalf of ${SENDER.name}, I would like to sincerely commend ${orgName || 'your organization'} for the successful acquisition of ${existingCert} certification. This is a significant achievement and demonstrates the organization's commitment to quality management, continuous improvement, and excellence in service delivery.\n\nBuilding on this achievement, we would like to encourage ${orgName || 'your organization'} to consider implementing and pursuing ${standardCode}${title ? ` - ${title}` : ''}.`
+      : `On behalf of ${SENDER.name}, I would like to introduce ${standardCode}${title ? ` - ${title}` : ''}, and to encourage ${orgName || 'your organization'} to consider implementing and pursuing it.`,
+    ``,
+    pitch,
+    ``,
+    `As ${SENDER.name}, we would be pleased to support ${orgName || 'your organization'} throughout this process. Our team can provide guidance on the ${standardCode} implementation process, assess your current systems against the standard, identify any gaps, and support you in preparing for certification.`,
+    ``,
+    `We would also be glad to prepare and share a proposal and quotation for the ${standardCode} certification process for your consideration, based on your specific requirements and scope.`,
+    ...(attachmentName
+      ? [``, `I have attached a short briefing note on ${standardCode} (${attachmentName}) which sets out the requirements and the certification route in more detail.`]
+      : []),
+    ``,
+    `We would appreciate an opportunity to engage with the Management or the relevant team to discuss this further and explore how we can support you in taking this important next step.`,
+    ``,
+    `Details and pricing: ${ctaUrl}`,
+    `More about us: ${SENDER.siteUrl}`,
+    ``,
+    `Thank you for your commitment to quality and organizational excellence. We look forward to the opportunity to work with ${orgName || 'your organization'}.`,
+    ``,
+    `Kind regards,`,
+    ...(signature || partnerName ? [signature || partnerName] : []),
+    SENDER.name,
+    ``,
+    SENDER.taglineA,
+    SENDER.taglineB,
+    SENDER.taglineC,
+    ``,
+    `Sent via ${BRAND_TEXT} on behalf of ${SENDER.name}. Reply to this email to reach us, or write to ${SUPPORT_EMAIL}.`,
+    // Blank strings above are intentional paragraph breaks, so this array is
+    // joined as-is — no .filter(Boolean), which would collapse the letter into
+    // one unreadable block.
+  ].join('\n');
 
   return { subject, html, text };
 }

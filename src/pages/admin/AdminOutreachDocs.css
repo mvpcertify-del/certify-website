@@ -1,0 +1,141 @@
+/* Outreach briefing documents — Super Admin (phase32).
+   One card per ISO standard; the empty ones are shown deliberately, because a
+   missing document is the thing this page exists to surface. */
+
+.outreach-docs__count {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 var(--spacing-md);
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.outreach-docs__success {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.75rem 0.9rem;
+  margin-bottom: var(--spacing-md);
+  border: 1px solid rgba(62, 207, 142, 0.35);
+  border-radius: var(--radius-md);
+  background: rgba(62, 207, 142, 0.08);
+  color: var(--color-text-primary);
+  font-size: 0.88rem;
+}
+
+.outreach-docs__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.outreach-doc {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-card);
+}
+
+/* A filled card is marked on its leading edge rather than by a different
+   background: the grid is scanned for GAPS, and a colour-swapped surface makes
+   the empty ones read as the anomaly when they are the normal starting state. */
+.outreach-doc--filled {
+  border-inline-start: 3px solid var(--color-accent);
+}
+
+.outreach-doc__head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.outreach-doc__code {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.outreach-doc__name {
+  font-size: 0.8rem;
+  color: var(--color-text-tertiary);
+}
+
+.outreach-doc__file {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-page);
+  color: var(--color-text-secondary);
+}
+
+.outreach-doc__file-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.outreach-doc__file-name {
+  font-size: 0.82rem;
+  color: var(--color-text-primary);
+  /* Filenames arrive from an upload and are frequently long with no spaces;
+     without this the card stretches the whole grid column out of alignment. */
+  overflow-wrap: anywhere;
+}
+
+.outreach-doc__file-size {
+  font-size: 0.75rem;
+  color: var(--color-text-tertiary);
+}
+
+.outreach-doc__empty {
+  margin: 0;
+  padding: 0.6rem 0.7rem;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  color: var(--color-text-tertiary);
+}
+
+.outreach-doc__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+/* Styled label standing in for the un-styleable native file input. */
+.outreach-doc__upload {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-page);
+  color: var(--color-text-primary);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.outreach-doc__upload:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.outreach-doc__upload.is-busy {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.outreach-doc__upload input {
+  display: none;
+}

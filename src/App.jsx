@@ -68,6 +68,7 @@ const CertificationBodiesRegistry = lazy(() => import('./pages/bodies/Certificat
 const AdminCompanies = lazy(() => import('./pages/admin/AdminCompanies'));
 const ApplicationDetails = lazy(() => import('./pages/admin/ApplicationDetails'));
 const ShareableLinks = lazy(() => import('./pages/admin/ShareableLinks'));
+const AdminOutreachDocs = lazy(() => import('./pages/admin/AdminOutreachDocs'));
 const RegistrationRequests = lazy(() => import('./pages/admin/RegistrationRequests'));
 const AdminPermissions = lazy(() => import('./pages/admin/AdminPermissions'));
 const AdminUserFields = lazy(() => import('./pages/admin/AdminUserFields'));
@@ -347,6 +348,16 @@ function AppRoutes() {
             <Route path="/admin/shareable-links" element={
               <ProtectedRoute requiredPermission={PERMISSIONS.MANAGE_USERS}>
                 <ShareableLinks />
+              </ProtectedRoute>
+            } />
+
+            {/* Admin — Outreach briefing documents (phase32).
+                Super Admin only: this decides what leaves the platform as an
+                attachment under the company's name, globally. A regional admin
+                changing it would change every other region's mail too. */}
+            <Route path="/admin/outreach-docs" element={
+              <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}>
+                <AdminOutreachDocs />
               </ProtectedRoute>
             } />
 

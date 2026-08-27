@@ -39,6 +39,7 @@ import {
   ClipboardCheck,
   Search,
   Zap,
+  Paperclip,
 } from 'lucide-react';
 import BrandLogo from '../ui/BrandLogo';
 import LanguageSwitcher from '../LanguageSwitcher';
@@ -114,6 +115,10 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     { path: '/admin/users', labelKey: 'nav.users', icon: Users, kind: KIND_CREATE, permissions: [PERMISSIONS.CREATE_ADMINS, PERMISSIONS.MANAGE_AUDITORS] },
     // Read-only apart from one per-ISO visibility toggle — not document entry.
     { path: '/admin/shareable-links', labelKey: 'nav.shareableLinks', icon: Link2, kind: KIND_VIEW, permissions: [PERMISSIONS.MANAGE_USERS] },
+    // The briefing document a partner's proposal letter attaches, one per ISO
+    // standard. Super Admin only — it is what goes out under the company name
+    // to every region at once.
+    { path: '/admin/outreach-docs', labelKey: 'nav.outreachDocs', icon: Paperclip, kind: KIND_CREATE, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN] },
     { path: '/admin/registrations', labelKey: 'nav.registrations', icon: UserPlus, kind: KIND_CREATE, permissions: [PERMISSIONS.MANAGE_USERS] },
     { path: '/admin/permissions', labelKey: 'nav.permissions', icon: KeyRound, kind: KIND_CREATE, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN] },
     { path: '/admin/user-fields', labelKey: 'nav.userFields', icon: FormInput, kind: KIND_CREATE, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN] },

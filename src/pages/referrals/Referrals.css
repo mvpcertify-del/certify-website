@@ -194,3 +194,73 @@
   flex-shrink: 0;
   margin-top: 2px;
 }
+
+/* ---------------------------------------------------------------------------
+   Standard proposal composer (phase32)
+   --------------------------------------------------------------------------- */
+
+.referral-field-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+/* Matches .referral-signature-input rather than inventing a second field look.
+   `appearance: none` is what lets the border and background above actually
+   apply — a native <select> ignores most of them, and on a dark theme the
+   untouched control renders as a light-grey system widget in the middle of a
+   dark modal. */
+.referral-select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.75rem 2.2rem 0.75rem 0.85rem;
+  margin-bottom: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-page);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  appearance: none;
+  /* Chevron drawn as an inline SVG data URI: no network request, no icon
+     component inside a native control (which cannot host one). */
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238a93a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+}
+
+/* The dropdown list itself is painted by the OS, which does not inherit the
+   page theme — without this the options are black-on-white inside a dark UI. */
+.referral-select option {
+  background: var(--color-bg-card);
+  color: var(--color-text-primary);
+}
+
+.referral-select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+[dir="rtl"] .referral-select {
+  padding: 0.75rem 0.85rem 0.75rem 2.2rem;
+  background-position: left 0.75rem center;
+}
+
+/* Says what will be attached, before the send rather than after it. */
+.referral-attach-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  margin: -0.5rem 0 var(--spacing-md);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.referral-attach-note svg {
+  flex: 0 0 auto;
+  margin-top: 0.15rem;
+}
