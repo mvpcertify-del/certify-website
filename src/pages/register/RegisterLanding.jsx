@@ -1,6 +1,6 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { getStakeholderType, getStakeholderSlugs } from '../../utils/stakeholderTypes';
+import { getStakeholderType, getStakeholderCopy } from '../../utils/stakeholderTypes';
 import {
   Award, Briefcase, Gift, Building2, UserCheck, TrendingUp,
   CheckCircle, BookOpen, ArrowRight,
@@ -35,6 +35,9 @@ export default function RegisterLanding() {
   }
 
   const IconComponent = ICON_MAP[config.icon] || Building2;
+  // Title, description, benefits and rules all come from the locale file, so
+  // this page reads in the visitor's language rather than always in English.
+  const copy = getStakeholderCopy(config, t);
 
   return (
     <div className="reg-landing">
@@ -47,8 +50,8 @@ export default function RegisterLanding() {
           <div className="reg-landing__hero-icon" style={{ background: `${config.color}18`, color: config.color }}>
             <IconComponent size={40} />
           </div>
-          <h1 className="reg-landing__hero-title">{config.title}</h1>
-          <p className="reg-landing__hero-desc">{config.description}</p>
+          <h1 className="reg-landing__hero-title">{copy.title}</h1>
+          <p className="reg-landing__hero-desc">{copy.description}</p>
           <button
             className="reg-landing__btn reg-landing__btn--primary reg-landing__btn--lg"
             onClick={() => navigate(`/signup?type=${config.id}`)}
@@ -64,7 +67,7 @@ export default function RegisterLanding() {
             {t('register.benefits')}
           </h2>
           <div className="reg-landing__cards">
-            {config.benefits.map((benefit, i) => (
+            {copy.benefits.map((benefit, i) => (
               <div key={i} className="reg-landing__card">
                 <div className="reg-landing__card-num" style={{ color: config.color }}>{String(i + 1).padStart(2, '0')}</div>
                 <p className="reg-landing__card-text">{benefit}</p>
@@ -80,7 +83,7 @@ export default function RegisterLanding() {
             {t('register.rulesRegulations')}
           </h2>
           <div className="reg-landing__rules">
-            {config.rules.map((rule, i) => (
+            {copy.rules.map((rule, i) => (
               <div key={i} className="reg-landing__rule">
                 <div className="reg-landing__rule-dot" style={{ background: config.color }} />
                 <p className="reg-landing__rule-text">{rule}</p>
@@ -93,14 +96,14 @@ export default function RegisterLanding() {
         <div className="reg-landing__cta">
           <h3 className="reg-landing__cta-title">{t('register.readyToStart')}</h3>
           <p className="reg-landing__cta-desc">
-            {t('register.joinCertifyCX', { article: config.singularTitle === 'Investor' ? 'an' : 'a', type: config.singularTitle })}
+            {t('register.joinCertifyCX', { article: config.id === 'investor' ? 'an' : 'a', type: copy.singularTitle })}
           </p>
           <div className="reg-landing__cta-actions">
             <button
               className="reg-landing__btn reg-landing__btn--primary reg-landing__btn--lg"
               onClick={() => navigate(`/signup?type=${config.id}`)}
             >
-              {t('register.registerAs', { type: config.singularTitle })} <ArrowRight size={18} />
+              {t('register.registerAs', { type: copy.singularTitle })} <ArrowRight size={18} />
             </button>
             <Link to="/login" className="reg-landing__btn reg-landing__btn--secondary">
               {t('register.alreadyHaveAccount')}

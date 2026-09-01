@@ -1,11 +1,14 @@
 .sidebar {
   position: fixed;
   top: 0;
-  left: 0;
+  /* Logical, not `left`/`border-right`: Arabic flips the whole shell, and the
+     sidebar has to move with it rather than be patched back by a [dir="rtl"]
+     override that can fall out of step. */
+  inset-inline-start: 0;
   bottom: 0;
   width: var(--sidebar-width);
   background: var(--color-bg-secondary);
-  border-right: 1px solid var(--color-border);
+  border-inline-end: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   z-index: 100;
@@ -243,15 +246,22 @@
 /* ---- Mobile ---- */
 @media (max-width: 1023px) {
   .sidebar {
+    /* transform has no logical form, so the off-screen direction is the one
+       thing that still needs an explicit RTL twin. */
     transform: translateX(-100%);
     width: var(--sidebar-width);
+  }
+
+  [dir="rtl"] .sidebar {
+    transform: translateX(100%);
   }
 
   .sidebar--collapsed {
     width: var(--sidebar-width);
   }
 
-  .sidebar--open {
+  .sidebar--open,
+  [dir="rtl"] .sidebar--open {
     transform: translateX(0);
   }
 

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { ROLES } from '../../utils/roles';
-import { STAKEHOLDER_TYPES } from '../../utils/stakeholderTypes';
+import { STAKEHOLDER_TYPES, getStakeholderCopy } from '../../utils/stakeholderTypes';
 import {
   UserPlus, CheckCircle2, XCircle, Clock, Search,
   Building2, Mail, MapPin, Globe2, Filter,
@@ -72,7 +72,11 @@ export default function RegistrationRequests() {
   };
 
   const getStakeholderLabel = (type) => {
-    return STAKEHOLDER_TYPES[type]?.singularTitle || type || 'Unknown';
+    const config = STAKEHOLDER_TYPES[type];
+    // Fall back to the raw stakeholder_type for a value this build does not
+    // know about (an older row, a type since removed) rather than showing a
+    // blank badge.
+    return config ? getStakeholderCopy(config, t).singularTitle : (type || t('common.unknown'));
   };
 
   const getStakeholderColor = (type) => {

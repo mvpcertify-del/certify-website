@@ -2,24 +2,29 @@
   min-height: 100vh;
 }
 
+/* The gutter that keeps the page clear of the fixed sidebar.
+   `margin-inline-start`, not `margin-left`: the sidebar sits on the right in
+   Arabic, and a physical margin left the whole page underneath it there. */
 .dashboard-layout__content {
-  margin-left: var(--sidebar-width);
+  margin-inline-start: var(--sidebar-width);
   margin-top: var(--topbar-height);
   min-height: calc(100vh - var(--topbar-height));
-  transition: margin-left var(--transition-slow);
+  transition: margin-inline-start var(--transition-slow);
   background: var(--color-bg-primary);
 }
 
 .dashboard-layout--collapsed .dashboard-layout__content {
-  margin-left: 68px;
+  margin-inline-start: 68px;
 }
 
 @media (max-width: 1023px) {
+  /* The sidebar becomes an overlay drawer below this width, so it no longer
+     reserves space in the flow. */
   .dashboard-layout__content {
-    margin-left: 0;
+    margin-inline-start: 0;
   }
 
   .dashboard-layout--collapsed .dashboard-layout__content {
-    margin-left: 0;
+    margin-inline-start: 0;
   }
 }

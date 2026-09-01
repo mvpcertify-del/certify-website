@@ -50,7 +50,7 @@
     "submitting": "提交中…",
     "add": "Add",
     "create": "Create",
-    "clear": "Clear [DRAFT]",
+    "clear": "清除",
     "gotIt": "Got it",
     "accessDenied": "拒绝访问。",
     "allStatuses": "所有状态",
@@ -109,8 +109,8 @@
     "permissions": "角色与权限",
     "userFields": "自定义用户字段",
     "applicationFields": "自定义申请字段",
-    "mainDashboard": "Main Dashboard [DRAFT]",
-    "sales": "Sales [DRAFT]",
+    "mainDashboard": "主控制台",
+    "sales": "销售",
     "menu": "菜单",
     "signUp": "注册",
     "partnerContract": "合作伙伴协议",
@@ -263,6 +263,20 @@
     "validationEmail": "请输入有效的电子邮箱地址",
     "validationName": "请输入您的姓名",
     "simpleHeroTitle": "使用您的 Gmail 或电子邮件注册",
+    "chooseTypeTitle": "您希望以何种身份加入？",
+    "chooseTypeSubtitle": "请选择账户类型以继续。",
+    "roleClient": "客户",
+    "roleClientDesc": "申请 ISO 认证，并从申请到批准全程跟踪。",
+    "roleAuditor": "审核员",
+    "roleAuditorDesc": "为全球各地的组织开展 ISO 审核。",
+    "roleAffiliate": "推广伙伴",
+    "roleAffiliateDesc": "每推荐一位客户即可获得 10% 佣金。",
+    "roleConsultant": "顾问",
+    "roleConsultantDesc": "以专业合作伙伴身份指导组织获得 ISO 认证。",
+    "roleCertBody": "认证机构",
+    "roleCertBodyDesc": "以获认可的机构身份合作，提供 ISO 认证。",
+    "roleInvestor": "投资者",
+    "roleInvestorDesc": "探索与 CertifyCX 的投资机会。",
     "enterYourEmail": "输入您的电子邮箱",
     "yourName": "您的姓名",
     "yourNamePlaceholder": "全名",
@@ -736,8 +750,8 @@
     "passwordMinLength": "密码长度至少为 6 个字符",
     "noPermissionCreate": "您无权创建此角色",
     "successCreated": "成功创建",
-    "createdButEmailFailed": "[DRAFT] 账户已创建，但验证邮件发送失败。请使用“重新发送验证邮件”，以便用户登录。",
-    "verificationResent": "[DRAFT] 验证邮件已发送至",
+    "createdButEmailFailed": "账户已创建，但验证邮件发送失败。请使用“重新发送验证”，以便该用户能够登录。",
+    "verificationResent": "验证邮件已发送至",
     "noPermissionAssign": "您无权分配此角色",
     "roleUpdated": "已将 {{name}} 的角色更新为 {{role}}",
     "failedDelete": "删除用户失败",
@@ -901,7 +915,7 @@
     "selectStandard": "Select ISO standard",
     "package": "Package",
     "applicationCreated": "Application created",
-    "filteredBy": "Filtered by [DRAFT]",
+    "filteredBy": "筛选条件",
     "clientApproved": "Client approved — access link sent",
     "approveClientAccess": "Approve & grant dashboard access",
     "clientAwaitingApproval": "This client has paid and is awaiting your approval.",
@@ -917,7 +931,8 @@
     "paymentStatus_paidWith": "已付款 — {{method}}",
     "filesSelected": "已选择 {{count}} 个文件 — 每个最大 {{max}} MB。",
     "docUploadPartialFailed": "已保存，但有 {{count}} 个文档未能上传（{{files}}）。文件不得超过 {{max}} MB — 请在编辑表单中重试。",
-    "paymentReceived": "已收到付款"
+    "paymentReceived": "已收到付款",
+    "roleLabel": "角色：{{role}}"
   },
   "certBody": {
     "addBody": "添加认证机构",
@@ -935,6 +950,9 @@
     "selectISO": "选择 ISO 标准…",
     "iafCodes": "IAF 行业代码",
     "selectIAF": "选择 IAF 代码…",
+    "iafCodesPerStandard": "各标准的 IAF 行业代码",
+    "iafSelectStandardsFirst": "请先在上方选择 ISO 标准，才能分配 IAF 代码。",
+    "address": "地址",
     "pricing": "定价",
     "pricingPerStandard": "按 ISO 标准定价",
     "pricingSelectStandardsFirst": "请在上方选择 ISO 标准以配置定价。",
@@ -956,15 +974,25 @@
     "confirmDelete": "您确定要删除“{{name}}”吗？",
     "deleteFailed": "删除认证机构失败",
     "saveFailed": "保存认证机构失败",
+    "importBody": "导入认证机构",
+    "importIntro": "粘贴从认可范围表复制的数据——每行一项，或以逗号分隔。系统会自动将各项与现有列表进行匹配。",
+    "pasteABs": "认可机构（名称或缩写，每行一个）",
+    "pasteCountries": "覆盖国家（每行一个或以逗号分隔）",
+    "pasteISO": "ISO 标准（每行一个）",
+    "pasteIAF": "IAF 行业代码（数字或“代码 — 名称”，每行一个）",
+    "matched": "已匹配 {{count}} 项",
+    "notFound": "未找到 {{count}} 项",
+    "importNoName": "请输入机构名称",
+    "importNoAB": "未匹配到任何认可机构——至少需要一个",
     "surveillance1": "Surveillance 1",
     "surveillance2": "Surveillance 2",
     "pricingRequired": "Please enter Initial, Surveillance 1 and Surveillance 2 prices for each selected standard.",
-    "pricingInvalid": "Prices must be valid, non-negative numbers. [DRAFT]",
-    "loadPartial": "Some certification-body details could not be loaded — a database update may be pending. Basic fields are still editable. [DRAFT]",
-    "loadFailed": "Failed to load certification bodies [DRAFT]",
-    "autoSaving": "Saving… [DRAFT]",
-    "autoSaved": "All changes saved [DRAFT]",
-    "autoSaveError": "Auto-save failed — click Save to retry. [DRAFT]"
+    "pricingInvalid": "价格必须为有效的非负数。",
+    "loadPartial": "部分认证机构信息无法加载——数据库更新可能尚未完成。基本字段仍可编辑。",
+    "loadFailed": "加载认证机构失败",
+    "autoSaving": "正在保存…",
+    "autoSaved": "所有更改已保存",
+    "autoSaveError": "自动保存失败——请点击“保存”重试。"
   },
   "countries": {
     "title": "国家/地区",
@@ -1038,7 +1066,9 @@
     "regionalAdmin": "Country Admin",
     "auditor": "审核员",
     "certificationBody": "认证机构",
-    "client": "客户"
+    "client": "客户",
+    "referral": "推荐合作伙伴",
+    "consultancy": "咨询机构"
   },
   "regions": {
     "asia": "亚洲",
@@ -1310,32 +1340,32 @@
     "packageCta": "Get Certified"
   },
   "mainDash": {
-    "title": "Main Dashboard [DRAFT]",
-    "welcome": "Welcome back, {{name}} [DRAFT]",
-    "clients": "Clients [DRAFT]",
-    "clientsDesc": "View and manage client companies [DRAFT]",
-    "certBodies": "Certification Bodies [DRAFT]",
-    "certBodiesDesc": "Manage the certification body registry [DRAFT]",
-    "auditors": "Auditors [DRAFT]",
-    "auditorsDesc": "Manage auditors [DRAFT]",
-    "consultancies": "Consultancies [DRAFT]",
-    "consultanciesDesc": "View consultancy partners [DRAFT]",
-    "referrals": "Referrals [DRAFT]",
-    "referralsDesc": "Referral partners and commissions [DRAFT]",
-    "sales": "Sales [DRAFT]",
-    "salesDesc": "Revenue and payments [DRAFT]"
+    "title": "主控制台",
+    "welcome": "欢迎回来，{{name}}",
+    "clients": "客户",
+    "clientsDesc": "查看并管理客户企业",
+    "certBodies": "认证机构",
+    "certBodiesDesc": "管理认证机构名录",
+    "auditors": "审核员",
+    "auditorsDesc": "管理审核员",
+    "consultancies": "咨询机构",
+    "consultanciesDesc": "查看咨询合作伙伴",
+    "referrals": "推荐",
+    "referralsDesc": "推荐合作伙伴与佣金",
+    "sales": "销售",
+    "salesDesc": "收入与付款"
   },
   "sales": {
-    "title": "Sales [DRAFT]",
-    "subtitle": "Revenue and recent transactions [DRAFT]",
-    "totalRevenue": "Total Revenue [DRAFT]",
-    "paidCount": "Paid Transactions [DRAFT]",
-    "pendingAmount": "Pending Amount [DRAFT]",
-    "client": "Client [DRAFT]",
-    "amount": "Amount [DRAFT]",
-    "type": "Type [DRAFT]",
-    "date": "Date [DRAFT]",
-    "noPayments": "No payments recorded yet. [DRAFT]"
+    "title": "销售",
+    "subtitle": "收入与近期交易",
+    "totalRevenue": "总收入",
+    "paidCount": "已付款交易",
+    "pendingAmount": "待付金额",
+    "client": "客户",
+    "amount": "金额",
+    "type": "类型",
+    "date": "日期",
+    "noPayments": "尚无付款记录。"
   },
   "checkout": {
     "chooseStandardTitle": "选择您的认证",
@@ -1658,6 +1688,121 @@
     "notFoundTitle": "未找到该服务",
     "notFoundDesc": "此地址下未找到合规审计服务。",
     "backToAll": "全部合规审计"
-
+  },
+  "stakeholder": {
+    "certificationBody": {
+      "title": "认证机构",
+      "singular": "认证机构",
+      "desc": "作为获得认可的认证机构与 CertifyCX 合作，为我们不断增长的客户群体提供 ISO 认证服务。",
+      "benefits": [
+        "接触不断增长的 ISO 认证客户群",
+        "简化的审核管理与排期工具",
+        "数字证书签发与追踪",
+        "一体化的合规报告面板",
+        "覆盖多个地区的更广市场触达"
+      ],
+      "rules": [
+        "必须是获相关认可机构承认的认证机构",
+        "遵守 ISO/IEC 17021 对管理体系认证的要求",
+        "严格保持公正性与保密标准",
+        "遵循 CertifyCX 平台准则与服务水平协议",
+        "按时提交审核报告与认证决定"
+      ]
+    },
+    "consultancy": {
+      "title": "咨询机构",
+      "singular": "咨询机构",
+      "desc": "以咨询合作伙伴身份加入 CertifyCX，以专业指导帮助组织获得 ISO 认证。",
+      "benefits": [
+        "对接寻求 ISO 认证指导的企业",
+        "使用平台工具管理客户项目",
+        "通过可验证的客户成果建立口碑",
+        "从我们不断扩大的网络中获得推荐",
+        "在平台上直接与认证机构协作"
+      ],
+      "rules": [
+        "须具备 ISO 管理体系方面的相关行业经验",
+        "保持专业操守与职业道德标准",
+        "向客户提供准确、诚实的指导",
+        "遵守 CertifyCX 平台条款与条件",
+        "对所有客户信息严格保密"
+      ]
+    },
+    "referral": {
+      "title": "推荐",
+      "singular": "推荐合作伙伴",
+      "desc": "向 CertifyCX 推荐客户即可赚取 10% 佣金。被推荐的客户首次购买可享 9 折优惠！",
+      "benefits": [
+        "每笔成功推荐赚取 10% 佣金",
+        "您推荐的客户购买时享有 10% 折扣",
+        "推荐数量不设上限",
+        "在面板中实时追踪推荐与收益",
+        "佣金直接支付至您的银行账户"
+      ],
+      "rules": [
+        "推荐佣金为折扣后销售金额的 10%",
+        "被推荐客户成功付款后发放佣金",
+        "款项人工处理——收到邮件通知后请发送您的银行信息",
+        "不允许自我推荐",
+        "每位被推荐客户只能关联一位推荐人"
+      ]
+    },
+    "client": {
+      "title": "客户",
+      "singular": "客户",
+      "desc": "通过 CertifyCX 申请 ISO 认证，让从申请到批准的整个流程更加顺畅。",
+      "benefits": [
+        "简便的 ISO 认证在线申请流程",
+        "实时追踪您的认证状态",
+        "使用差距分析工具为审核做好准备",
+        "可选择多项 ISO 标准（9001、14001、45001、22000）",
+        "灵活的付款方式——按月或一次性付清"
+      ],
+      "rules": [
+        "注册时提供准确的公司与联系信息",
+        "在认证过程中配合指派的审核员",
+        "持续保持已认证管理体系的合规性",
+        "管理体系如有重大变更须通知 CertifyCX",
+        "按所选方案及时支付认证费用"
+      ]
+    },
+    "auditor": {
+      "title": "审核员",
+      "singular": "审核员",
+      "desc": "以认证审核员身份加入 CertifyCX，为全球各地的组织开展 ISO 审核。",
+      "benefits": [
+        "获得跨多个地区的审核任务",
+        "通过平台管理审核日程与报告",
+        "建立您的专业档案与业绩记录",
+        "与认证机构无缝协作",
+        "灵活参与——承接符合您专长的审核"
+      ],
+      "rules": [
+        "须持有相关审核员资质（如受过 ISO 19011 培训）",
+        "在所有审核中保持独立性与客观性",
+        "在约定期限内提交审核报告",
+        "遵循 CertifyCX 的审核规程与报告标准",
+        "对所有审核发现与客户信息保密"
+      ]
+    },
+    "investor": {
+      "title": "投资者",
+      "singular": "投资者",
+      "desc": "探索与 CertifyCX 的投资机会——数字化 ISO 认证管理的未来。",
+      "benefits": [
+        "市场增长——全球 ISO 认证需求持续上升",
+        "具备经常性收入模式的可扩展 SaaS 平台",
+        "多地区布局，具备扩张潜力",
+        "客户获取成本低，单位经济效益良好",
+        "可查阅详尽的业务指标与增长报告"
+      ],
+      "rules": [
+        "投资咨询须经尽职调查流程",
+        "所分享的一切财务信息严格保密",
+        "投资条款须经协商并达成双方一致",
+        "遵守适用的证券与投资法规",
+        "如需详细方案，请联系 CertifyCX 团队：mvpcertify@gmail.com"
+      ]
+    }
   }
 }

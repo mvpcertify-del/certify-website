@@ -411,12 +411,15 @@ sup.brand-tm {
   margin-right: 1px;
 }
 
-[dir="rtl"] .sidebar {
-  left: auto;
-  right: 0;
-  border-right: none;
-  border-left: 1px solid var(--color-border);
-}
+/* The sidebar, topbar and content gutter are no longer patched here. They use
+   logical properties (inset-inline-start / margin-inline-start / border-inline-end)
+   in their own files and flip on their own.
+
+   The rules that used to live here targeted `.dashboard-layout__main`, a class
+   that does not exist — the real one is `.dashboard-layout__content`. So in
+   Arabic the page kept a 260px gutter on the LEFT, where there is no sidebar,
+   and none on the right, where there is: the menu sat on top of the cards.
+   That was the bug in the 1 Sep screenshots. */
 
 [dir="rtl"] .sidebar__collapse-btn {
   transform: rotate(180deg);
@@ -424,24 +427,6 @@ sup.brand-tm {
 
 [dir="rtl"] .sidebar--collapsed .sidebar__collapse-btn {
   transform: rotate(0deg);
-}
-
-[dir="rtl"] .dashboard-layout__main {
-  margin-left: 0;
-  margin-right: var(--sidebar-width);
-}
-
-[dir="rtl"] .dashboard-layout__main--expanded {
-  margin-right: 60px;
-}
-
-[dir="rtl"] .topbar {
-  left: 0;
-  right: var(--sidebar-width);
-}
-
-[dir="rtl"] .topbar--expanded {
-  right: 60px;
 }
 
 [dir="rtl"] .sidebar__link-icon {
@@ -466,14 +451,3 @@ sup.brand-tm {
   left: -50%;
 }
 
-@media (max-width: 768px) {
-  [dir="rtl"] .dashboard-layout__main {
-    margin-right: 0;
-  }
-  [dir="rtl"] .topbar {
-    right: 0;
-  }
-  [dir="rtl"] .sidebar--open {
-    right: 0;
-  }
-}

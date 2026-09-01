@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { STAKEHOLDER_TYPES } from '../../utils/stakeholderTypes';
+import { STAKEHOLDER_TYPES, getStakeholderCopy, getStakeholderRoleLabel } from '../../utils/stakeholderTypes';
 import { ISO_CATALOG_LIST } from '../../utils/isoCatalog';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
@@ -70,16 +70,22 @@ export default function ShareableLinks() {
 
   const handleWhatsApp = (type) => {
     const link = getStakeholderLink(type);
-    const article = type.singularTitle === 'Investor' ? 'an' : 'a';
-    const text = `${t('admin.joinCertifyCXMsg', { article, type: type.singularTitle })}\n\n${type.description}\n\n${t('admin.registerHere')} ${link}`;
+    const copy = getStakeholderCopy(type, t);
+    // `article` only means anything in English ("a" vs "an Investor"); the
+    // other locales ignore the placeholder in their own phrasing.
+    const article = type.id === 'investor' ? 'an' : 'a';
+    const text = `${t('admin.joinCertifyCXMsg', { article, type: copy.singularTitle })}\n\n${copy.description}\n\n${t('admin.registerHere')} ${link}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   const handleEmail = (type) => {
     const link = getStakeholderLink(type);
-    const article = type.singularTitle === 'Investor' ? 'an' : 'a';
-    const subject = `${t('admin.invitationSubject')} ${type.title}`;
-    const body = `${t('admin.hello')}\n\n${t('admin.invitationBody', { article, type: type.singularTitle })}\n\n${type.description}\n\n${t('admin.learnMore')}\n${link}\n\n${t('admin.bestRegards')}\n${t('admin.certifyCXTeam')}`;
+    const copy = getStakeholderCopy(type, t);
+    // `article` only means anything in English ("a" vs "an Investor"); the
+    // other locales ignore the placeholder in their own phrasing.
+    const article = type.id === 'investor' ? 'an' : 'a';
+    const subject = `${t('admin.invitationSubject')} ${copy.title}`;
+    const body = `${t('admin.hello')}\n\n${t('admin.invitationBody', { article, type: copy.singularTitle })}\n\n${copy.description}\n\n${t('admin.learnMore')}\n${link}\n\n${t('admin.bestRegards')}\n${t('admin.certifyCXTeam')}`;
     window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
   };
 
@@ -138,6 +144,10 @@ export default function ShareableLinks() {
           const cardId = `s-${type.id}`;
           const isCopied = copiedId === cardId;
           const link = getStakeholderLink(type);
+          // Translated card copy. This used to be English literals in
+          // src/utils/stakeholderTypes.js, so an Arabic viewer got an Arabic
+          // shell wrapped around English cards (client, 1 Sep).
+          const copy = getStakeholderCopy(type, t);
 
           return (
             <div key={type.id} className="share-links__card">
@@ -146,12 +156,14 @@ export default function ShareableLinks() {
                   <IconComponent size={22} />
                 </div>
                 <div>
-                  <h3 className="share-links__card-title">{type.title}</h3>
-                  <span className="share-links__card-role">Role: {type.role.replace('_', ' ')}</span>
+                  <h3 className="share-links__card-title">{copy.title}</h3>
+                  <span className="share-links__card-role">
+                    {t('admin.roleLabel', { role: getStakeholderRoleLabel(type, t) })}
+                  </span>
                 </div>
               </div>
 
-              <p className="share-links__card-desc">{type.description}</p>
+              <p className="share-links__card-desc">{copy.description}</p>
 
               <div className="share-links__card-link">
                 <Link2 size={14} />
@@ -162,7 +174,7 @@ export default function ShareableLinks() {
                 <button
                   className={`share-links__action-btn ${isCopied ? 'share-links__action-btn--copied' : ''}`}
                   onClick={() => handleCopyStakeholder(type)}
-                  title="Copy link"
+                  title={t('common.copy')}
                 >
                   {isCopied ? <Check size={16} /> : <Copy size={16} />}
                   {isCopied ? t('common.copied') : t('common.copy')}
@@ -248,7 +260,7 @@ export default function ShareableLinks() {
                 <button
                   className={`share-links__action-btn ${isCopied ? 'share-links__action-btn--copied' : ''}`}
                   onClick={() => handleCopyIso(iso)}
-                  title="Copy link"
+                  title={t('common.copy')}
                   disabled={!active}
                 >
                   {isCopied ? <Check size={16} /> : <Copy size={16} />}

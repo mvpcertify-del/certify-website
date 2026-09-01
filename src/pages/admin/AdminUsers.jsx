@@ -7,7 +7,7 @@ import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
 import { ROLES, ROLE_LABELS, getCreatableRoles, getDisplayRoleLabel } from '../../utils/roles';
-import { STAKEHOLDER_TYPES } from '../../utils/stakeholderTypes';
+import { STAKEHOLDER_TYPES, getStakeholderCopy } from '../../utils/stakeholderTypes';
 import { supabase } from '../../lib/supabase';
 import { apiPost } from '../../lib/apiClient';
 import RowActions from '../../components/ui/RowActions';
@@ -16,9 +16,12 @@ import DetailModal from '../../components/ui/DetailModal';
 // Client-role stakeholder variants an admin can pick when creating a client.
 // 'client' is the default (regular company client). The rest reuse the `client`
 // role but carry a distinguishing `stakeholder_type` on the profile.
-const CLIENT_STAKEHOLDER_OPTIONS = Object.values(STAKEHOLDER_TYPES)
-  .filter(st => st.role === 'client')
-  .map(st => ({ value: st.id, label: st.singularTitle }));
+// Only the configs live here, not their labels — the label is translated at
+// render time. Baking it into a module-level constant would freeze whichever
+// language happened to be active when the bundle first evaluated, and the list
+// would then stay in that language after a switch.
+const CLIENT_STAKEHOLDER_TYPES = Object.values(STAKEHOLDER_TYPES)
+  .filter(st => st.role === 'client');
 import { UserPlus, AlertCircle, CheckCircle, Shield } from 'lucide-react';
 import './AdminUsers.css';
 
@@ -434,8 +437,10 @@ export default function AdminUsers() {
               onChange={handleCreateChange}
             >
               <option value="">{t('admin.selectStakeholderType')}</option>
-              {CLIENT_STAKEHOLDER_OPTIONS.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              {CLIENT_STAKEHOLDER_TYPES.map(st => (
+                <option key={st.id} value={st.id}>
+                  {getStakeholderCopy(st, t).singularTitle}
+                </option>
               ))}
             </Select>
           )}

@@ -50,7 +50,7 @@
     "submitting": "जमा किया जा रहा है...",
     "add": "Add",
     "create": "Create",
-    "clear": "Clear [DRAFT]",
+    "clear": "साफ़ करें",
     "gotIt": "Got it",
     "accessDenied": "पहुँच अस्वीकृत।",
     "allStatuses": "सभी स्थितियाँ",
@@ -109,8 +109,8 @@
     "permissions": "भूमिकाएं और अनुमतियां",
     "userFields": "कस्टम उपयोगकर्ता फ़ील्ड",
     "applicationFields": "कस्टम ऐप फ़ील्ड",
-    "mainDashboard": "Main Dashboard [DRAFT]",
-    "sales": "Sales [DRAFT]",
+    "mainDashboard": "मुख्य डैशबोर्ड",
+    "sales": "बिक्री",
     "menu": "मेन्यू",
     "signUp": "साइन अप करें",
     "partnerContract": "साझेदार अनुबंध",
@@ -263,6 +263,20 @@
     "validationEmail": "कृपया एक वैध ईमेल पता दर्ज करें",
     "validationName": "कृपया अपना नाम दर्ज करें",
     "simpleHeroTitle": "अपने Gmail या ईमेल से रजिस्टर करें",
+    "chooseTypeTitle": "आप किस रूप में जुड़ना चाहेंगे?",
+    "chooseTypeSubtitle": "आगे बढ़ने के लिए अपना खाता प्रकार चुनें।",
+    "roleClient": "ग्राहक",
+    "roleClientDesc": "ISO प्रमाणन के लिए आवेदन करें और आवेदन से अनुमोदन तक उसे ट्रैक करें।",
+    "roleAuditor": "लेखा परीक्षक",
+    "roleAuditorDesc": "दुनिया भर के संगठनों के लिए ISO ऑडिट करें।",
+    "roleAffiliate": "सहयोगी",
+    "roleAffiliateDesc": "आपके द्वारा रेफ़र किए गए हर ग्राहक पर 10% कमीशन कमाएँ।",
+    "roleConsultant": "सलाहकार",
+    "roleConsultantDesc": "विशेषज्ञ साझेदार के रूप में संगठनों को ISO प्रमाणन तक मार्गदर्शन दें।",
+    "roleCertBody": "प्रमाणन निकाय",
+    "roleCertBodyDesc": "ISO प्रमाणन प्रदान करने हेतु मान्यता प्राप्त निकाय के रूप में साझेदारी करें।",
+    "roleInvestor": "निवेशक",
+    "roleInvestorDesc": "CertifyCX के साथ निवेश के अवसर तलाशें।",
     "enterYourEmail": "अपना ईमेल दर्ज करें",
     "yourName": "आपका नाम",
     "yourNamePlaceholder": "पूरा नाम",
@@ -736,8 +750,8 @@
     "passwordMinLength": "पासवर्ड कम से कम 6 अक्षर का होना चाहिए",
     "noPermissionCreate": "आपको यह भूमिका बनाने की अनुमति नहीं है",
     "successCreated": "सफलतापूर्वक बनाया गया",
-    "createdButEmailFailed": "[DRAFT] खाता बन गया, लेकिन सत्यापन ईमेल नहीं भेजा जा सका। उपयोगकर्ता के लॉग इन करने के लिए 'सत्यापन पुनः भेजें' का उपयोग करें।",
-    "verificationResent": "[DRAFT] सत्यापन ईमेल भेजा गया",
+    "createdButEmailFailed": "खाता बन गया, लेकिन सत्यापन ईमेल नहीं भेजा जा सका। उपयोगकर्ता के लॉगिन के लिए 'सत्यापन पुनः भेजें' का उपयोग करें।",
+    "verificationResent": "सत्यापन ईमेल भेजा गया",
     "noPermissionAssign": "आपको यह भूमिका सौंपने की अनुमति नहीं है",
     "roleUpdated": "{{name}} की भूमिका {{role}} में अपडेट की गई",
     "failedDelete": "उपयोगकर्ता हटाने में विफल",
@@ -901,7 +915,7 @@
     "selectStandard": "Select ISO standard",
     "package": "Package",
     "applicationCreated": "Application created",
-    "filteredBy": "Filtered by [DRAFT]",
+    "filteredBy": "इसके अनुसार फ़िल्टर किया गया",
     "clientApproved": "Client approved — access link sent",
     "approveClientAccess": "Approve & grant dashboard access",
     "clientAwaitingApproval": "This client has paid and is awaiting your approval.",
@@ -917,7 +931,8 @@
     "paymentStatus_paidWith": "भुगतान हो गया — {{method}}",
     "filesSelected": "{{count}} फ़ाइल चुनी गईं — प्रत्येक अधिकतम {{max}} MB।",
     "docUploadPartialFailed": "सहेज लिया गया, लेकिन {{count}} दस्तावेज़ अपलोड नहीं हो सके ({{files}})। फ़ाइलें {{max}} MB या उससे छोटी होनी चाहिए — एडिट फ़ॉर्म से दोबारा कोशिश करें।",
-    "paymentReceived": "भुगतान प्राप्त"
+    "paymentReceived": "भुगतान प्राप्त",
+    "roleLabel": "भूमिका: {{role}}"
   },
   "certBody": {
     "addBody": "प्रमाणन निकाय जोड़ें",
@@ -935,6 +950,9 @@
     "selectISO": "ISO मानक चुनें...",
     "iafCodes": "IAF सेक्टर कोड",
     "selectIAF": "IAF कोड चुनें...",
+    "iafCodesPerStandard": "प्रति मानक IAF क्षेत्र कोड",
+    "iafSelectStandardsFirst": "IAF कोड निर्दिष्ट करने के लिए ऊपर ISO मानक चुनें।",
+    "address": "पता",
     "pricing": "मूल्य निर्धारण",
     "pricingPerStandard": "प्रति ISO मानक मूल्य",
     "pricingSelectStandardsFirst": "मूल्य निर्धारण कॉन्फ़िगर करने के लिए ऊपर ISO मानक चुनें।",
@@ -956,15 +974,25 @@
     "confirmDelete": "क्या आप वाकई \"{{name}}\" हटाना चाहते हैं?",
     "deleteFailed": "प्रमाणन निकाय हटाने में विफल",
     "saveFailed": "प्रमाणन निकाय सहेजने में विफल",
+    "importBody": "प्रमाणन निकाय आयात करें",
+    "importIntro": "मान्यता अनुसूची से कॉपी किया गया डेटा चिपकाएँ — प्रति पंक्ति एक आइटम, या अल्पविराम से अलग। आइटम स्वतः मौजूदा सूचियों से मिलाए जाते हैं।",
+    "pasteABs": "मान्यता निकाय (नाम या संक्षिप्त रूप, प्रति पंक्ति एक)",
+    "pasteCountries": "कवर किए गए देश (प्रति पंक्ति एक या अल्पविराम से अलग)",
+    "pasteISO": "ISO मानक (प्रति पंक्ति एक)",
+    "pasteIAF": "IAF क्षेत्र कोड (संख्याएँ या 'कोड — नाम', प्रति पंक्ति एक)",
+    "matched": "{{count}} मिलान हुए",
+    "notFound": "{{count}} नहीं मिले",
+    "importNoName": "कृपया निकाय का नाम दर्ज करें",
+    "importNoAB": "कोई मान्यता निकाय मेल नहीं खाया — कम से कम एक आवश्यक है",
     "surveillance1": "Surveillance 1",
     "surveillance2": "Surveillance 2",
     "pricingRequired": "Please enter Initial, Surveillance 1 and Surveillance 2 prices for each selected standard.",
-    "pricingInvalid": "Prices must be valid, non-negative numbers. [DRAFT]",
-    "loadPartial": "Some certification-body details could not be loaded — a database update may be pending. Basic fields are still editable. [DRAFT]",
-    "loadFailed": "Failed to load certification bodies [DRAFT]",
-    "autoSaving": "Saving… [DRAFT]",
-    "autoSaved": "All changes saved [DRAFT]",
-    "autoSaveError": "Auto-save failed — click Save to retry. [DRAFT]"
+    "pricingInvalid": "कीमतें वैध और गैर-ऋणात्मक संख्याएँ होनी चाहिए।",
+    "loadPartial": "प्रमाणन निकाय के कुछ विवरण लोड नहीं हो सके — संभवतः कोई डेटाबेस अपडेट लंबित है। मूल फ़ील्ड अब भी संपादन योग्य हैं।",
+    "loadFailed": "प्रमाणन निकाय लोड करने में विफल",
+    "autoSaving": "सहेजा जा रहा है…",
+    "autoSaved": "सभी बदलाव सहेजे गए",
+    "autoSaveError": "स्वतः सहेजना विफल — पुनः प्रयास के लिए सहेजें पर क्लिक करें।"
   },
   "countries": {
     "title": "देश",
@@ -1038,7 +1066,9 @@
     "regionalAdmin": "Country Admin",
     "auditor": "ऑडिटर",
     "certificationBody": "प्रमाणन निकाय",
-    "client": "ग्राहक"
+    "client": "ग्राहक",
+    "referral": "रेफ़रल साझेदार",
+    "consultancy": "परामर्श फर्म"
   },
   "regions": {
     "asia": "एशिया",
@@ -1310,32 +1340,32 @@
     "packageCta": "Get Certified"
   },
   "mainDash": {
-    "title": "Main Dashboard [DRAFT]",
-    "welcome": "Welcome back, {{name}} [DRAFT]",
-    "clients": "Clients [DRAFT]",
-    "clientsDesc": "View and manage client companies [DRAFT]",
-    "certBodies": "Certification Bodies [DRAFT]",
-    "certBodiesDesc": "Manage the certification body registry [DRAFT]",
-    "auditors": "Auditors [DRAFT]",
-    "auditorsDesc": "Manage auditors [DRAFT]",
-    "consultancies": "Consultancies [DRAFT]",
-    "consultanciesDesc": "View consultancy partners [DRAFT]",
-    "referrals": "Referrals [DRAFT]",
-    "referralsDesc": "Referral partners and commissions [DRAFT]",
-    "sales": "Sales [DRAFT]",
-    "salesDesc": "Revenue and payments [DRAFT]"
+    "title": "मुख्य डैशबोर्ड",
+    "welcome": "वापसी पर स्वागत है, {{name}}",
+    "clients": "ग्राहक",
+    "clientsDesc": "ग्राहक कंपनियाँ देखें और प्रबंधित करें",
+    "certBodies": "प्रमाणन निकाय",
+    "certBodiesDesc": "प्रमाणन निकाय रजिस्ट्री प्रबंधित करें",
+    "auditors": "लेखा परीक्षक",
+    "auditorsDesc": "लेखा परीक्षक प्रबंधित करें",
+    "consultancies": "परामर्श फर्में",
+    "consultanciesDesc": "परामर्श साझेदार देखें",
+    "referrals": "रेफ़रल",
+    "referralsDesc": "रेफ़रल साझेदार और कमीशन",
+    "sales": "बिक्री",
+    "salesDesc": "राजस्व और भुगतान"
   },
   "sales": {
-    "title": "Sales [DRAFT]",
-    "subtitle": "Revenue and recent transactions [DRAFT]",
-    "totalRevenue": "Total Revenue [DRAFT]",
-    "paidCount": "Paid Transactions [DRAFT]",
-    "pendingAmount": "Pending Amount [DRAFT]",
-    "client": "Client [DRAFT]",
-    "amount": "Amount [DRAFT]",
-    "type": "Type [DRAFT]",
-    "date": "Date [DRAFT]",
-    "noPayments": "No payments recorded yet. [DRAFT]"
+    "title": "बिक्री",
+    "subtitle": "राजस्व और हाल के लेन-देन",
+    "totalRevenue": "कुल राजस्व",
+    "paidCount": "भुगतान किए गए लेन-देन",
+    "pendingAmount": "लंबित राशि",
+    "client": "ग्राहक",
+    "amount": "राशि",
+    "type": "प्रकार",
+    "date": "दिनांक",
+    "noPayments": "अभी तक कोई भुगतान दर्ज नहीं हुआ।"
   },
   "checkout": {
     "chooseStandardTitle": "अपना प्रमाणन चुनें",
@@ -1658,6 +1688,121 @@
     "notFoundTitle": "सेवा नहीं मिली",
     "notFoundDesc": "इस पते पर हमें कोई अनुपालन ऑडिट नहीं मिला।",
     "backToAll": "सभी अनुपालन ऑडिट"
-
+  },
+  "stakeholder": {
+    "certificationBody": {
+      "title": "प्रमाणन निकाय",
+      "singular": "प्रमाणन निकाय",
+      "desc": "एक मान्यता प्राप्त प्रमाणन निकाय के रूप में CertifyCX के साथ साझेदारी करें और हमारे बढ़ते ग्राहक आधार को ISO प्रमाणन सेवाएँ प्रदान करें।",
+      "benefits": [
+        "ISO प्रमाणन चाहने वाले ग्राहकों के बढ़ते समूह तक पहुँच",
+        "ऑडिट प्रबंधन और शेड्यूलिंग के सरल उपकरण",
+        "डिजिटल प्रमाणपत्र जारी करना और उनकी ट्रैकिंग",
+        "एकीकृत अनुपालन रिपोर्टिंग डैशबोर्ड",
+        "कई क्षेत्रों में विस्तारित बाज़ार पहुँच"
+      ],
+      "rules": [
+        "संबंधित मान्यता निकायों द्वारा मान्यता प्राप्त प्रमाणन निकाय होना आवश्यक है",
+        "प्रबंधन प्रणाली प्रमाणन के लिए ISO/IEC 17021 की आवश्यकताओं का पालन करें",
+        "निष्पक्षता और गोपनीयता के कठोर मानक बनाए रखें",
+        "CertifyCX प्लेटफ़ॉर्म दिशानिर्देशों और सेवा स्तर समझौतों का पालन करें",
+        "ऑडिट रिपोर्ट और प्रमाणन निर्णय समय पर प्रस्तुत करें"
+      ]
+    },
+    "consultancy": {
+      "title": "परामर्श फर्में",
+      "singular": "परामर्श फर्म",
+      "desc": "परामर्श साझेदार के रूप में CertifyCX से जुड़ें और विशेषज्ञ मार्गदर्शन से संगठनों को ISO प्रमाणन प्राप्त करने में मदद करें।",
+      "benefits": [
+        "ISO प्रमाणन मार्गदर्शन चाहने वाले व्यवसायों से जुड़ें",
+        "ग्राहक कार्यों के प्रबंधन के लिए प्लेटफ़ॉर्म उपकरणों तक पहुँच",
+        "सत्यापित ग्राहक परिणामों से अपनी प्रतिष्ठा बनाएँ",
+        "हमारे बढ़ते नेटवर्क से रेफ़रल प्राप्त करें",
+        "प्लेटफ़ॉर्म पर प्रमाणन निकायों के साथ सीधे सहयोग करें"
+      ],
+      "rules": [
+        "ISO प्रबंधन प्रणालियों में प्रासंगिक उद्योग अनुभव आवश्यक है",
+        "पेशेवर आचरण और नैतिक मानक बनाए रखें",
+        "ग्राहकों को सटीक और ईमानदार मार्गदर्शन दें",
+        "CertifyCX प्लेटफ़ॉर्म के नियमों और शर्तों का पालन करें",
+        "सभी ग्राहक जानकारी पूर्णतः गोपनीय रखें"
+      ]
+    },
+    "referral": {
+      "title": "रेफ़रल",
+      "singular": "रेफ़रल साझेदार",
+      "desc": "CertifyCX को ग्राहक रेफ़र करके 10% कमीशन कमाएँ। रेफ़र किए गए ग्राहकों को उनकी पहली खरीद पर 10% छूट मिलती है!",
+      "benefits": [
+        "हर सफल रेफ़रल पर 10% कमीशन कमाएँ",
+        "आपके रेफ़रल को उनकी खरीद पर 10% छूट मिलती है",
+        "रेफ़रल की संख्या पर कोई सीमा नहीं",
+        "अपने डैशबोर्ड पर रेफ़रल और कमाई को रीयल-टाइम में देखें",
+        "कमीशन सीधे आपके बैंक खाते में भुगतान किया जाता है"
+      ],
+      "rules": [
+        "रेफ़रल कमीशन छूट के बाद बिक्री राशि का 10% है",
+        "रेफ़र किए गए ग्राहक के सफल भुगतान के बाद कमीशन दिया जाता है",
+        "भुगतान मैन्युअल रूप से संसाधित होते हैं — ईमेल द्वारा सूचित किए जाने पर अपने बैंक विवरण भेजें",
+        "स्वयं को रेफ़र करने की अनुमति नहीं है",
+        "प्रत्येक रेफ़र किया गया ग्राहक केवल एक रेफ़रर से जुड़ सकता है"
+      ]
+    },
+    "client": {
+      "title": "ग्राहक",
+      "singular": "ग्राहक",
+      "desc": "CertifyCX के माध्यम से ISO प्रमाणन के लिए आवेदन करें और आवेदन से अनुमोदन तक अपनी यात्रा को सरल बनाएँ।",
+      "benefits": [
+        "ISO प्रमाणन के लिए सरल ऑनलाइन आवेदन प्रक्रिया",
+        "अपने प्रमाणन की स्थिति रीयल-टाइम में देखें",
+        "ऑडिट की तैयारी हेतु गैप विश्लेषण उपकरणों तक पहुँच",
+        "कई ISO मानकों में से चुनें (9001, 14001, 45001, 22000)",
+        "लचीले भुगतान विकल्प — मासिक या एकमुश्त"
+      ],
+      "rules": [
+        "पंजीकरण के समय सही कंपनी और संपर्क जानकारी दें",
+        "प्रमाणन प्रक्रिया के दौरान नियुक्त लेखा परीक्षकों के साथ सहयोग करें",
+        "अपनी प्रमाणित प्रबंधन प्रणालियों का अनुपालन बनाए रखें",
+        "अपनी प्रबंधन प्रणाली में किसी भी महत्वपूर्ण बदलाव की सूचना CertifyCX को दें",
+        "चुनी गई योजना के अनुसार प्रमाणन शुल्क का समय पर भुगतान करें"
+      ]
+    },
+    "auditor": {
+      "title": "लेखा परीक्षक",
+      "singular": "लेखा परीक्षक",
+      "desc": "प्रमाणित लेखा परीक्षक के रूप में CertifyCX से जुड़ें और दुनिया भर के संगठनों के लिए ISO ऑडिट करें।",
+      "benefits": [
+        "कई क्षेत्रों में ऑडिट कार्य प्राप्त करें",
+        "प्लेटफ़ॉर्म से ऑडिट कार्यक्रम और रिपोर्ट प्रबंधित करें",
+        "अपना पेशेवर प्रोफ़ाइल और कार्य रिकॉर्ड बनाएँ",
+        "प्रमाणन निकायों के साथ सहज सहयोग करें",
+        "लचीला जुड़ाव — अपनी विशेषज्ञता के अनुरूप ऑडिट पर काम करें"
+      ],
+      "rules": [
+        "प्रासंगिक लेखा परीक्षक योग्यताएँ होनी चाहिए (जैसे ISO 19011 प्रशिक्षित)",
+        "सभी ऑडिट में स्वतंत्रता और निष्पक्षता बनाए रखें",
+        "सहमत समय-सीमा के भीतर ऑडिट रिपोर्ट जमा करें",
+        "CertifyCX के ऑडिट प्रोटोकॉल और रिपोर्टिंग मानकों का पालन करें",
+        "सभी ऑडिट निष्कर्ष और ग्राहक जानकारी गोपनीय रखें"
+      ]
+    },
+    "investor": {
+      "title": "निवेशक",
+      "singular": "निवेशक",
+      "desc": "CertifyCX के साथ निवेश के अवसर तलाशें — डिजिटल ISO प्रमाणन प्रबंधन का भविष्य।",
+      "benefits": [
+        "बढ़ता बाज़ार — ISO प्रमाणन की माँग वैश्विक स्तर पर बढ़ रही है",
+        "आवर्ती राजस्व मॉडल वाला स्केलेबल SaaS प्लेटफ़ॉर्म",
+        "विस्तार की संभावना के साथ बहु-क्षेत्रीय उपस्थिति",
+        "कम ग्राहक अधिग्रहण लागत के साथ मज़बूत यूनिट इकोनॉमिक्स",
+        "विस्तृत व्यावसायिक मीट्रिक और विकास रिपोर्ट तक पहुँच"
+      ],
+      "rules": [
+        "निवेश संबंधी पूछताछ ड्यू डिलिजेंस प्रक्रियाओं के अधीन है",
+        "साझा की गई सभी वित्तीय जानकारी पूर्णतः गोपनीय है",
+        "निवेश की शर्तें बातचीत और आपसी सहमति के अधीन हैं",
+        "लागू प्रतिभूति और निवेश नियमों का पालन करें",
+        "विस्तृत प्रस्तावों के लिए CertifyCX टीम से mvpcertify@gmail.com पर संपर्क करें"
+      ]
+    }
   }
 }

@@ -50,7 +50,7 @@
     "submitting": "Enviando...",
     "add": "Add",
     "create": "Create",
-    "clear": "Clear [DRAFT]",
+    "clear": "Borrar",
     "gotIt": "Entendido",
     "accessDenied": "Acceso denegado.",
     "allStatuses": "Todos los estados",
@@ -109,8 +109,8 @@
     "permissions": "Roles y permisos",
     "userFields": "Campos de usuario",
     "applicationFields": "Campos de solicitud",
-    "mainDashboard": "Main Dashboard [DRAFT]",
-    "sales": "Sales [DRAFT]",
+    "mainDashboard": "Panel principal",
+    "sales": "Ventas",
     "menu": "Menú",
     "signUp": "Registrarse",
     "partnerContract": "Acuerdo de Socio",
@@ -750,8 +750,8 @@
     "passwordMinLength": "La contraseña debe tener al menos 6 caracteres",
     "noPermissionCreate": "No tienes permiso para crear este rol",
     "successCreated": "Creado exitosamente",
-    "createdButEmailFailed": "[DRAFT] Cuenta creada, pero no se pudo enviar el correo de verificación. Usa Reenviar verificación para que el usuario pueda iniciar sesión.",
-    "verificationResent": "[DRAFT] Correo de verificación enviado a",
+    "createdButEmailFailed": "La cuenta se creó, pero no se pudo enviar el correo de verificación. Use Reenviar verificación para que el usuario pueda iniciar sesión.",
+    "verificationResent": "Correo de verificación enviado a",
     "noPermissionAssign": "No tienes permiso para asignar este rol",
     "roleUpdated": "Rol de {{name}} actualizado a {{role}}",
     "failedDelete": "Error al eliminar usuario",
@@ -915,7 +915,7 @@
     "selectStandard": "Select ISO standard",
     "package": "Package",
     "applicationCreated": "Application created",
-    "filteredBy": "Filtered by [DRAFT]",
+    "filteredBy": "Filtrado por",
     "clientApproved": "Cliente aprobado: enlace de acceso enviado",
     "approveClientAccess": "Aprobar y conceder acceso al panel",
     "clientAwaitingApproval": "Este cliente ha pagado y está esperando su aprobación.",
@@ -931,7 +931,8 @@
     "paymentStatus_paidWith": "Pagado — {{method}}",
     "filesSelected": "{{count}} archivo(s) seleccionado(s) — máx. {{max}} MB cada uno.",
     "docUploadPartialFailed": "Guardado, pero no se pudieron subir {{count}} documento(s) ({{files}}). Los archivos deben ser de {{max}} MB o menos — inténtalo de nuevo desde el formulario de edición.",
-    "paymentReceived": "Pago Recibido"
+    "paymentReceived": "Pago Recibido",
+    "roleLabel": "Rol: {{role}}"
   },
   "certBody": {
     "addBody": "Añadir Organismo de Certificación",
@@ -986,12 +987,12 @@
     "surveillance1": "Surveillance 1",
     "surveillance2": "Surveillance 2",
     "pricingRequired": "Please enter Initial, Surveillance 1 and Surveillance 2 prices for each selected standard.",
-    "pricingInvalid": "Prices must be valid, non-negative numbers. [DRAFT]",
-    "loadPartial": "Some certification-body details could not be loaded — a database update may be pending. Basic fields are still editable. [DRAFT]",
-    "loadFailed": "Failed to load certification bodies [DRAFT]",
-    "autoSaving": "Saving… [DRAFT]",
-    "autoSaved": "All changes saved [DRAFT]",
-    "autoSaveError": "Auto-save failed — click Save to retry. [DRAFT]"
+    "pricingInvalid": "Los precios deben ser números válidos y no negativos.",
+    "loadPartial": "No se pudieron cargar algunos datos del organismo de certificación; puede haber una actualización de base de datos pendiente. Los campos básicos siguen siendo editables.",
+    "loadFailed": "No se pudieron cargar los organismos de certificación",
+    "autoSaving": "Guardando…",
+    "autoSaved": "Todos los cambios guardados",
+    "autoSaveError": "Error al guardar automáticamente: haga clic en Guardar para reintentar."
   },
   "countries": {
     "title": "Países",
@@ -1065,7 +1066,9 @@
     "regionalAdmin": "Administrador de país",
     "auditor": "Auditor",
     "certificationBody": "Entidad certificadora",
-    "client": "Cliente"
+    "client": "Cliente",
+    "referral": "Socio de referidos",
+    "consultancy": "Consultoría"
   },
   "regions": {
     "asia": "Asia",
@@ -1337,32 +1340,32 @@
     "packageCta": "Certifícate"
   },
   "mainDash": {
-    "title": "Main Dashboard [DRAFT]",
-    "welcome": "Welcome back, {{name}} [DRAFT]",
-    "clients": "Clients [DRAFT]",
-    "clientsDesc": "View and manage client companies [DRAFT]",
-    "certBodies": "Certification Bodies [DRAFT]",
-    "certBodiesDesc": "Manage the certification body registry [DRAFT]",
-    "auditors": "Auditors [DRAFT]",
-    "auditorsDesc": "Manage auditors [DRAFT]",
-    "consultancies": "Consultancies [DRAFT]",
-    "consultanciesDesc": "View consultancy partners [DRAFT]",
-    "referrals": "Referrals [DRAFT]",
-    "referralsDesc": "Referral partners and commissions [DRAFT]",
-    "sales": "Sales [DRAFT]",
-    "salesDesc": "Revenue and payments [DRAFT]"
+    "title": "Panel principal",
+    "welcome": "Bienvenido de nuevo, {{name}}",
+    "clients": "Clientes",
+    "clientsDesc": "Ver y gestionar empresas cliente",
+    "certBodies": "Organismos de certificación",
+    "certBodiesDesc": "Gestionar el registro de organismos de certificación",
+    "auditors": "Auditores",
+    "auditorsDesc": "Gestionar auditores",
+    "consultancies": "Consultorías",
+    "consultanciesDesc": "Ver socios de consultoría",
+    "referrals": "Referidos",
+    "referralsDesc": "Socios de referidos y comisiones",
+    "sales": "Ventas",
+    "salesDesc": "Ingresos y pagos"
   },
   "sales": {
-    "title": "Sales [DRAFT]",
-    "subtitle": "Revenue and recent transactions [DRAFT]",
-    "totalRevenue": "Total Revenue [DRAFT]",
-    "paidCount": "Paid Transactions [DRAFT]",
-    "pendingAmount": "Pending Amount [DRAFT]",
-    "client": "Client [DRAFT]",
-    "amount": "Amount [DRAFT]",
-    "type": "Type [DRAFT]",
-    "date": "Date [DRAFT]",
-    "noPayments": "No payments recorded yet. [DRAFT]"
+    "title": "Ventas",
+    "subtitle": "Ingresos y transacciones recientes",
+    "totalRevenue": "Ingresos totales",
+    "paidCount": "Transacciones pagadas",
+    "pendingAmount": "Importe pendiente",
+    "client": "Cliente",
+    "amount": "Importe",
+    "type": "Tipo",
+    "date": "Fecha",
+    "noPayments": "Aún no hay pagos registrados."
   },
   "checkout": {
     "chooseStandardTitle": "Elige tu certificación",
@@ -1685,6 +1688,121 @@
     "notFoundTitle": "Servicio no encontrado",
     "notFoundDesc": "No hemos encontrado ninguna auditoría de cumplimiento en esta dirección.",
     "backToAll": "Todas las auditorías de cumplimiento"
-
+  },
+  "stakeholder": {
+    "certificationBody": {
+      "title": "Organismos de certificación",
+      "singular": "Organismo de certificación",
+      "desc": "Colabore con CertifyCX como organismo de certificación acreditado y ofrezca servicios de certificación ISO a nuestra creciente base de clientes.",
+      "benefits": [
+        "Acceso a un grupo creciente de clientes que buscan la certificación ISO",
+        "Herramientas simplificadas de gestión y programación de auditorías",
+        "Emisión y seguimiento de certificados digitales",
+        "Panel integrado de informes de cumplimiento",
+        "Mayor alcance de mercado en múltiples regiones"
+      ],
+      "rules": [
+        "Debe ser un organismo de certificación acreditado por las entidades de acreditación pertinentes",
+        "Cumplir los requisitos de ISO/IEC 17021 para la certificación de sistemas de gestión",
+        "Mantener estrictos estándares de imparcialidad y confidencialidad",
+        "Seguir las directrices de la plataforma CertifyCX y los acuerdos de nivel de servicio",
+        "Entregar informes de auditoría y decisiones de certificación a tiempo"
+      ]
+    },
+    "consultancy": {
+      "title": "Consultorías",
+      "singular": "Consultoría",
+      "desc": "Únase a CertifyCX como socio consultor y ayude a las organizaciones a lograr la certificación ISO con orientación experta.",
+      "benefits": [
+        "Conecte con empresas que buscan orientación para la certificación ISO",
+        "Acceda a herramientas de la plataforma para gestionar sus clientes",
+        "Construya su reputación con resultados verificados",
+        "Reciba referencias de nuestra red en crecimiento",
+        "Colabore directamente con organismos de certificación en la plataforma"
+      ],
+      "rules": [
+        "Debe contar con experiencia relevante en sistemas de gestión ISO",
+        "Mantener una conducta profesional y estándares éticos",
+        "Ofrecer orientación precisa y honesta a los clientes",
+        "Cumplir los términos y condiciones de la plataforma CertifyCX",
+        "Mantener toda la información de los clientes en estricta confidencialidad"
+      ]
+    },
+    "referral": {
+      "title": "Referidos",
+      "singular": "Socio de referidos",
+      "desc": "Gane un 10 % de comisión al referir clientes a CertifyCX. ¡Los clientes referidos obtienen un 10 % de descuento en su primera compra!",
+      "benefits": [
+        "Gane un 10 % de comisión por cada referido exitoso",
+        "Sus referidos obtienen un 10 % de descuento en su compra",
+        "Sin límite en el número de referidos que puede hacer",
+        "Siga sus referidos y ganancias en tiempo real en su panel",
+        "La comisión se paga directamente a su cuenta bancaria"
+      ],
+      "rules": [
+        "La comisión por referido es del 10 % del importe de la venta tras el descuento",
+        "La comisión se paga tras el pago exitoso del cliente referido",
+        "Los pagos se procesan manualmente: envíe sus datos bancarios cuando reciba el aviso por correo",
+        "No se permiten autorreferencias",
+        "Cada cliente referido solo puede vincularse a un referente"
+      ]
+    },
+    "client": {
+      "title": "Clientes",
+      "singular": "Cliente",
+      "desc": "Solicite la certificación ISO a través de CertifyCX y simplifique su recorrido desde la solicitud hasta la aprobación.",
+      "benefits": [
+        "Proceso de solicitud en línea sencillo para certificaciones ISO",
+        "Siga el estado de su certificación en tiempo real",
+        "Acceda a herramientas de análisis de brechas para preparar las auditorías",
+        "Elija entre múltiples normas ISO (9001, 14001, 45001, 22000)",
+        "Opciones de pago flexibles: mensual o pago único"
+      ],
+      "rules": [
+        "Proporcione información precisa de la empresa y de contacto durante el registro",
+        "Colabore con los auditores asignados durante el proceso de certificación",
+        "Mantenga el cumplimiento de sus sistemas de gestión certificados",
+        "Notifique a CertifyCX cualquier cambio significativo en su sistema de gestión",
+        "Pague puntualmente las tarifas de certificación según el plan elegido"
+      ]
+    },
+    "auditor": {
+      "title": "Auditores",
+      "singular": "Auditor",
+      "desc": "Únase a CertifyCX como auditor certificado y realice auditorías ISO para organizaciones de todo el mundo.",
+      "benefits": [
+        "Reciba asignaciones de auditoría en múltiples regiones",
+        "Gestione calendarios e informes de auditoría desde la plataforma",
+        "Construya su perfil profesional y su historial",
+        "Colabore sin fricciones con los organismos de certificación",
+        "Colaboración flexible: trabaje en auditorías acordes a su experiencia"
+      ],
+      "rules": [
+        "Debe poseer cualificaciones de auditor pertinentes (p. ej., formación ISO 19011)",
+        "Mantener la independencia y la objetividad en todas las auditorías",
+        "Entregar los informes de auditoría en los plazos acordados",
+        "Seguir los protocolos de auditoría y estándares de informes de CertifyCX",
+        "Mantener confidenciales todos los hallazgos e información de clientes"
+      ]
+    },
+    "investor": {
+      "title": "Inversores",
+      "singular": "Inversor",
+      "desc": "Explore oportunidades de inversión con CertifyCX: el futuro de la gestión digital de certificaciones ISO.",
+      "benefits": [
+        "Mercado en crecimiento: la demanda de certificación ISO aumenta a nivel mundial",
+        "Plataforma SaaS escalable con modelo de ingresos recurrentes",
+        "Presencia multirregional con potencial de expansión",
+        "Sólida economía unitaria con bajo coste de adquisición de clientes",
+        "Acceso a métricas de negocio detalladas e informes de crecimiento"
+      ],
+      "rules": [
+        "Las consultas de inversión están sujetas a procesos de diligencia debida",
+        "Toda la información financiera compartida es estrictamente confidencial",
+        "Los términos de inversión están sujetos a negociación y acuerdo mutuo",
+        "Cumplir la normativa aplicable en materia de valores e inversiones",
+        "Contacte al equipo de CertifyCX en mvpcertify@gmail.com para propuestas detalladas"
+      ]
+    }
   }
 }

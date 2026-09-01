@@ -5,7 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Input, Select, Button, Autocomplete } from '../../components/ui/FormElements';
 import CustomFieldRenderer, { validateCustomFields } from '../../components/CustomFieldRenderer';
 import MultiSelect from '../../components/ui/MultiSelect';
-import { getStakeholderType } from '../../utils/stakeholderTypes';
+import { getStakeholderType, getStakeholderCopy } from '../../utils/stakeholderTypes';
 import { COUNTRY_DIAL_CODES, dialCodeForCountry } from '../../utils/dialCodes';
 import {
   AUDITOR_LEVELS,
@@ -344,6 +344,9 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
   const [searchParams] = useSearchParams();
   const referralCode = searchParams.get('ref') || '';
   const targetRole = stakeholderConfig?.role || 'client';
+  // Translated heading and blurb — the wizard is public, so a visitor who
+  // arrived in Arabic must not be greeted in English.
+  const stakeholderCopy = getStakeholderCopy(stakeholderConfig, t);
   const isIndividualStakeholder = targetRole === 'auditor' || registrationType === 'referral' || registrationType === 'investor';
   // Pure individuals (referral, investor) — no company context at all. Auditors
   // are individuals but still capture a "practice name" + professional fields.
@@ -635,10 +638,10 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
   return (
     <div className="auth-form auth-form--wide">
       <h2 className="auth-form__title">
-        {t('auth.registerAs', { type: stakeholderConfig.singularTitle })}
+        {t('auth.registerAs', { type: stakeholderCopy.singularTitle })}
       </h2>
       <p className="auth-form__subtitle">
-        {stakeholderConfig.description}
+        {stakeholderCopy.description}
       </p>
 
       <button

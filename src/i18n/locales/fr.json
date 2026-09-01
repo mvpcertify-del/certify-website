@@ -50,7 +50,7 @@
     "submitting": "Envoi...",
     "add": "Add",
     "create": "Create",
-    "clear": "Clear [DRAFT]",
+    "clear": "Effacer",
     "gotIt": "Got it",
     "accessDenied": "Accès refusé.",
     "allStatuses": "Tous les statuts",
@@ -109,8 +109,8 @@
     "permissions": "Rôles et autorisations",
     "userFields": "Champs utilisateur personnalisés",
     "applicationFields": "Champs de demande personnalisés",
-    "mainDashboard": "Main Dashboard [DRAFT]",
-    "sales": "Sales [DRAFT]",
+    "mainDashboard": "Tableau de bord principal",
+    "sales": "Ventes",
     "menu": "Menu",
     "signUp": "S'inscrire",
     "partnerContract": "Contrat de Partenaire",
@@ -263,6 +263,20 @@
     "validationEmail": "Veuillez saisir une adresse e-mail valide",
     "validationName": "Veuillez saisir votre nom",
     "simpleHeroTitle": "Inscrivez-vous avec votre Gmail ou e-mail",
+    "chooseTypeTitle": "Comment souhaitez-vous nous rejoindre ?",
+    "chooseTypeSubtitle": "Sélectionnez votre type de compte pour continuer.",
+    "roleClient": "Client",
+    "roleClientDesc": "Demandez la certification ISO et suivez-la de la demande à l'approbation.",
+    "roleAuditor": "Auditeur",
+    "roleAuditorDesc": "Réalisez des audits ISO pour des organisations du monde entier.",
+    "roleAffiliate": "Affilié",
+    "roleAffiliateDesc": "Gagnez 10 % de commission pour chaque client que vous recommandez.",
+    "roleConsultant": "Consultant",
+    "roleConsultantDesc": "Accompagnez les organisations vers la certification ISO en tant que partenaire expert.",
+    "roleCertBody": "Organisme de certification",
+    "roleCertBodyDesc": "Devenez partenaire en tant qu'organisme accrédité pour délivrer la certification ISO.",
+    "roleInvestor": "Investisseur",
+    "roleInvestorDesc": "Explorez les opportunités d'investissement avec CertifyCX.",
     "enterYourEmail": "Saisissez votre e-mail",
     "yourName": "Votre nom",
     "yourNamePlaceholder": "Nom complet",
@@ -736,8 +750,8 @@
     "passwordMinLength": "Le mot de passe doit comporter au moins 6 caractères",
     "noPermissionCreate": "Vous n'avez pas l'autorisation de créer ce rôle",
     "successCreated": "Créé avec succès",
-    "createdButEmailFailed": "[DRAFT] Compte créé, mais l'e-mail de vérification n'a pas pu être envoyé. Utilisez Renvoyer la vérification pour que l'utilisateur puisse se connecter.",
-    "verificationResent": "[DRAFT] E-mail de vérification envoyé à",
+    "createdButEmailFailed": "Le compte a été créé, mais l'e-mail de vérification n'a pas pu être envoyé. Utilisez « Renvoyer la vérification » pour que la personne puisse se connecter.",
+    "verificationResent": "E-mail de vérification envoyé à",
     "noPermissionAssign": "Vous n'avez pas l'autorisation d'attribuer ce rôle",
     "roleUpdated": "Rôle de {{name}} mis à jour en {{role}}",
     "failedDelete": "Échec de la suppression de l'utilisateur",
@@ -901,7 +915,7 @@
     "selectStandard": "Select ISO standard",
     "package": "Package",
     "applicationCreated": "Application created",
-    "filteredBy": "Filtered by [DRAFT]",
+    "filteredBy": "Filtré par",
     "clientApproved": "Client approved — access link sent",
     "approveClientAccess": "Approve & grant dashboard access",
     "clientAwaitingApproval": "This client has paid and is awaiting your approval.",
@@ -917,7 +931,8 @@
     "paymentStatus_paidWith": "Payé — {{method}}",
     "filesSelected": "{{count}} fichier(s) sélectionné(s) — max. {{max}} Mo chacun.",
     "docUploadPartialFailed": "Enregistré, mais {{count}} document(s) n’ont pas pu être téléversés ({{files}}). Les fichiers doivent faire {{max}} Mo maximum — réessayez depuis le formulaire de modification.",
-    "paymentReceived": "Paiement reçu"
+    "paymentReceived": "Paiement reçu",
+    "roleLabel": "Rôle : {{role}}"
   },
   "certBody": {
     "addBody": "Ajouter un organisme de certification",
@@ -935,6 +950,9 @@
     "selectISO": "Sélectionnez les normes ISO...",
     "iafCodes": "Codes secteur IAF",
     "selectIAF": "Sélectionnez les codes IAF...",
+    "iafCodesPerStandard": "Codes secteur IAF par norme",
+    "iafSelectStandardsFirst": "Sélectionnez des normes ISO ci-dessus pour attribuer des codes IAF.",
+    "address": "Adresse",
     "pricing": "Tarification",
     "pricingPerStandard": "Tarification par norme ISO",
     "pricingSelectStandardsFirst": "Sélectionnez les normes ISO ci-dessus pour configurer la tarification.",
@@ -956,15 +974,25 @@
     "confirmDelete": "Êtes-vous sûr de vouloir supprimer « {{name}} » ?",
     "deleteFailed": "Échec de la suppression de l'organisme de certification",
     "saveFailed": "Échec de l'enregistrement de l'organisme de certification",
+    "importBody": "Importer un organisme de certification",
+    "importIntro": "Collez des données copiées depuis un référentiel d'accréditation — un élément par ligne, ou séparés par des virgules. Les éléments sont rapprochés automatiquement des listes existantes.",
+    "pasteABs": "Organismes d'accréditation (nom ou sigle, un par ligne)",
+    "pasteCountries": "Pays couverts (un par ligne ou séparés par des virgules)",
+    "pasteISO": "Normes ISO (une par ligne)",
+    "pasteIAF": "Codes secteur IAF (numéros ou « code — nom », un par ligne)",
+    "matched": "{{count}} rapproché(s)",
+    "notFound": "{{count}} introuvable(s)",
+    "importNoName": "Veuillez saisir le nom de l'organisme",
+    "importNoAB": "Aucun organisme d'accréditation rapproché — au moins un est requis",
     "surveillance1": "Surveillance 1",
     "surveillance2": "Surveillance 2",
     "pricingRequired": "Please enter Initial, Surveillance 1 and Surveillance 2 prices for each selected standard.",
-    "pricingInvalid": "Prices must be valid, non-negative numbers. [DRAFT]",
-    "loadPartial": "Some certification-body details could not be loaded — a database update may be pending. Basic fields are still editable. [DRAFT]",
-    "loadFailed": "Failed to load certification bodies [DRAFT]",
-    "autoSaving": "Saving… [DRAFT]",
-    "autoSaved": "All changes saved [DRAFT]",
-    "autoSaveError": "Auto-save failed — click Save to retry. [DRAFT]"
+    "pricingInvalid": "Les prix doivent être des nombres valides et non négatifs.",
+    "loadPartial": "Certaines informations sur l'organisme de certification n'ont pas pu être chargées — une mise à jour de la base de données est peut-être en attente. Les champs de base restent modifiables.",
+    "loadFailed": "Échec du chargement des organismes de certification",
+    "autoSaving": "Enregistrement…",
+    "autoSaved": "Toutes les modifications sont enregistrées",
+    "autoSaveError": "Échec de l'enregistrement automatique — cliquez sur Enregistrer pour réessayer."
   },
   "countries": {
     "title": "Pays",
@@ -1038,7 +1066,9 @@
     "regionalAdmin": "Country Admin",
     "auditor": "Auditeur",
     "certificationBody": "Organisme de certification",
-    "client": "Client"
+    "client": "Client",
+    "referral": "Partenaire de parrainage",
+    "consultancy": "Cabinet de conseil"
   },
   "regions": {
     "asia": "Asie",
@@ -1310,32 +1340,32 @@
     "packageCta": "Get Certified"
   },
   "mainDash": {
-    "title": "Main Dashboard [DRAFT]",
-    "welcome": "Welcome back, {{name}} [DRAFT]",
-    "clients": "Clients [DRAFT]",
-    "clientsDesc": "View and manage client companies [DRAFT]",
-    "certBodies": "Certification Bodies [DRAFT]",
-    "certBodiesDesc": "Manage the certification body registry [DRAFT]",
-    "auditors": "Auditors [DRAFT]",
-    "auditorsDesc": "Manage auditors [DRAFT]",
-    "consultancies": "Consultancies [DRAFT]",
-    "consultanciesDesc": "View consultancy partners [DRAFT]",
-    "referrals": "Referrals [DRAFT]",
-    "referralsDesc": "Referral partners and commissions [DRAFT]",
-    "sales": "Sales [DRAFT]",
-    "salesDesc": "Revenue and payments [DRAFT]"
+    "title": "Tableau de bord principal",
+    "welcome": "Bon retour, {{name}}",
+    "clients": "Clients",
+    "clientsDesc": "Consulter et gérer les entreprises clientes",
+    "certBodies": "Organismes de certification",
+    "certBodiesDesc": "Gérer le registre des organismes de certification",
+    "auditors": "Auditeurs",
+    "auditorsDesc": "Gérer les auditeurs",
+    "consultancies": "Cabinets de conseil",
+    "consultanciesDesc": "Consulter les partenaires conseil",
+    "referrals": "Parrainages",
+    "referralsDesc": "Partenaires de parrainage et commissions",
+    "sales": "Ventes",
+    "salesDesc": "Chiffre d'affaires et paiements"
   },
   "sales": {
-    "title": "Sales [DRAFT]",
-    "subtitle": "Revenue and recent transactions [DRAFT]",
-    "totalRevenue": "Total Revenue [DRAFT]",
-    "paidCount": "Paid Transactions [DRAFT]",
-    "pendingAmount": "Pending Amount [DRAFT]",
-    "client": "Client [DRAFT]",
-    "amount": "Amount [DRAFT]",
-    "type": "Type [DRAFT]",
-    "date": "Date [DRAFT]",
-    "noPayments": "No payments recorded yet. [DRAFT]"
+    "title": "Ventes",
+    "subtitle": "Chiffre d'affaires et transactions récentes",
+    "totalRevenue": "Chiffre d'affaires total",
+    "paidCount": "Transactions payées",
+    "pendingAmount": "Montant en attente",
+    "client": "Client",
+    "amount": "Montant",
+    "type": "Type",
+    "date": "Date",
+    "noPayments": "Aucun paiement enregistré pour le moment."
   },
   "checkout": {
     "chooseStandardTitle": "Choisissez votre certification",
@@ -1658,6 +1688,121 @@
     "notFoundTitle": "Prestation introuvable",
     "notFoundDesc": "Nous n'avons trouvé aucun audit de conformité à cette adresse.",
     "backToAll": "Tous les audits de conformité"
-
+  },
+  "stakeholder": {
+    "certificationBody": {
+      "title": "Organismes de certification",
+      "singular": "Organisme de certification",
+      "desc": "Devenez partenaire de CertifyCX en tant qu'organisme de certification accrédité et proposez des services de certification ISO à notre clientèle en pleine croissance.",
+      "benefits": [
+        "Accès à un vivier croissant de clients recherchant la certification ISO",
+        "Outils simplifiés de gestion et de planification des audits",
+        "Émission et suivi des certificats numériques",
+        "Tableau de bord intégré de reporting de conformité",
+        "Portée commerciale élargie sur plusieurs régions"
+      ],
+      "rules": [
+        "Être un organisme de certification accrédité par les instances d'accréditation compétentes",
+        "Respecter les exigences de l'ISO/IEC 17021 pour la certification des systèmes de management",
+        "Maintenir des normes strictes d'impartialité et de confidentialité",
+        "Suivre les directives de la plateforme CertifyCX et les accords de niveau de service",
+        "Fournir les rapports d'audit et les décisions de certification dans les délais"
+      ]
+    },
+    "consultancy": {
+      "title": "Cabinets de conseil",
+      "singular": "Cabinet de conseil",
+      "desc": "Rejoignez CertifyCX comme partenaire conseil et aidez les organisations à obtenir la certification ISO grâce à votre expertise.",
+      "benefits": [
+        "Entrez en contact avec des entreprises cherchant un accompagnement ISO",
+        "Accédez aux outils de la plateforme pour gérer vos missions",
+        "Bâtissez votre réputation grâce à des résultats clients vérifiés",
+        "Recevez des recommandations de notre réseau en croissance",
+        "Collaborez directement avec les organismes de certification sur la plateforme"
+      ],
+      "rules": [
+        "Disposer d'une expérience sectorielle pertinente en systèmes de management ISO",
+        "Maintenir une conduite professionnelle et des normes éthiques",
+        "Fournir un accompagnement exact et honnête aux clients",
+        "Respecter les conditions générales de la plateforme CertifyCX",
+        "Conserver toutes les informations clients strictement confidentielles"
+      ]
+    },
+    "referral": {
+      "title": "Parrainage",
+      "singular": "Partenaire de parrainage",
+      "desc": "Gagnez 10 % de commission en recommandant des clients à CertifyCX. Les clients parrainés bénéficient de 10 % de remise sur leur premier achat !",
+      "benefits": [
+        "10 % de commission sur chaque parrainage réussi",
+        "Vos filleuls bénéficient de 10 % de remise sur leur achat",
+        "Aucune limite au nombre de parrainages",
+        "Suivez vos parrainages et vos gains en temps réel sur votre tableau de bord",
+        "Commission versée directement sur votre compte bancaire"
+      ],
+      "rules": [
+        "La commission de parrainage est de 10 % du montant de la vente après remise",
+        "La commission est versée après le paiement effectif du client parrainé",
+        "Les versements sont traités manuellement — envoyez vos coordonnées bancaires lorsque vous êtes notifié par e-mail",
+        "L'auto-parrainage n'est pas autorisé",
+        "Chaque client parrainé ne peut être rattaché qu'à un seul parrain"
+      ]
+    },
+    "client": {
+      "title": "Clients",
+      "singular": "Client",
+      "desc": "Demandez votre certification ISO via CertifyCX et simplifiez votre parcours, de la demande à l'approbation.",
+      "benefits": [
+        "Processus de demande en ligne simple pour les certifications ISO",
+        "Suivez l'état de votre certification en temps réel",
+        "Accédez aux outils d'analyse d'écarts pour préparer les audits",
+        "Choisissez parmi plusieurs normes ISO (9001, 14001, 45001, 22000)",
+        "Options de paiement flexibles — mensuel ou en une fois"
+      ],
+      "rules": [
+        "Fournir des informations d'entreprise et de contact exactes lors de l'inscription",
+        "Coopérer avec les auditeurs désignés pendant le processus de certification",
+        "Maintenir la conformité de vos systèmes de management certifiés",
+        "Informer CertifyCX de tout changement important de votre système de management",
+        "Régler les frais de certification dans les délais selon la formule choisie"
+      ]
+    },
+    "auditor": {
+      "title": "Auditeurs",
+      "singular": "Auditeur",
+      "desc": "Rejoignez CertifyCX comme auditeur certifié et réalisez des audits ISO pour des organisations du monde entier.",
+      "benefits": [
+        "Recevez des missions d'audit dans plusieurs régions",
+        "Gérez plannings et rapports d'audit depuis la plateforme",
+        "Construisez votre profil professionnel et votre historique",
+        "Collaborez sans friction avec les organismes de certification",
+        "Engagement flexible — travaillez sur les audits qui correspondent à votre expertise"
+      ],
+      "rules": [
+        "Détenir des qualifications d'auditeur pertinentes (p. ex. formation ISO 19011)",
+        "Maintenir indépendance et objectivité lors de tous les audits",
+        "Remettre les rapports d'audit dans les délais convenus",
+        "Suivre les protocoles d'audit et les standards de reporting de CertifyCX",
+        "Garder confidentiels tous les constats d'audit et informations clients"
+      ]
+    },
+    "investor": {
+      "title": "Investisseurs",
+      "singular": "Investisseur",
+      "desc": "Explorez les opportunités d'investissement avec CertifyCX — l'avenir de la gestion numérique des certifications ISO.",
+      "benefits": [
+        "Marché en croissance — la demande de certification ISO augmente mondialement",
+        "Plateforme SaaS scalable à revenus récurrents",
+        "Présence multirégionale avec un fort potentiel d'expansion",
+        "Économie unitaire solide et faible coût d'acquisition client",
+        "Accès à des indicateurs détaillés et à des rapports de croissance"
+      ],
+      "rules": [
+        "Les demandes d'investissement font l'objet d'une due diligence",
+        "Toute information financière partagée est strictement confidentielle",
+        "Les conditions d'investissement sont soumises à négociation et accord mutuel",
+        "Respecter la réglementation applicable en matière de valeurs mobilières et d'investissement",
+        "Contactez l'équipe CertifyCX à mvpcertify@gmail.com pour des propositions détaillées"
+      ]
+    }
   }
 }

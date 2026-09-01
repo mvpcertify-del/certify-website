@@ -1,8 +1,8 @@
 .topbar {
   position: fixed;
   top: 0;
-  left: var(--sidebar-width);
-  right: 0;
+  inset-inline-start: var(--sidebar-width);
+  inset-inline-end: 0;
   height: var(--topbar-height);
   background: var(--color-bg-secondary);
   border-bottom: 1px solid var(--color-border);
@@ -11,11 +11,11 @@
   justify-content: space-between;
   padding: 0 var(--spacing-lg);
   z-index: 90;
-  transition: left var(--transition-slow);
+  transition: inset-inline-start var(--transition-slow);
 }
 
 .topbar--expanded {
-  left: 68px;
+  inset-inline-start: 68px;
 }
 
 /* ---- Left ---- */
@@ -227,11 +227,11 @@
 /* ---- Mobile ---- */
 @media (max-width: 1023px) {
   .topbar {
-    left: 0;
+    inset-inline-start: 0;
   }
 
   .topbar--expanded {
-    left: 0;
+    inset-inline-start: 0;
   }
 
   .topbar__menu-btn {

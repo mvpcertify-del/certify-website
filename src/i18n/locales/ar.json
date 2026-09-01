@@ -48,9 +48,9 @@
     "uploading": "جاري الرفع...",
     "saving": "جاري الحفظ...",
     "submitting": "جاري الإرسال...",
-    "add": "Add",
-    "create": "Create",
-    "clear": "Clear [DRAFT]",
+    "add": "إضافة",
+    "create": "إنشاء",
+    "clear": "مسح",
     "gotIt": "حسنًا",
     "accessDenied": "تم رفض الوصول.",
     "allStatuses": "كل الحالات",
@@ -102,15 +102,15 @@
     "outreachDocs": "المذكرات التعريفية",
     "messages": "الرسائل",
     "registrations": "التسجيلات",
-    "referrals": "Referral",
+    "referrals": "الإحالات",
     "myProfile": "ملفي الشخصي",
     "notifications": "الإشعارات",
     "settings": "الإعدادات",
     "permissions": "الأدوار والصلاحيات",
     "userFields": "حقول المستخدم المخصصة",
     "applicationFields": "حقول الطلب المخصصة",
-    "mainDashboard": "Main Dashboard [DRAFT]",
-    "sales": "Sales [DRAFT]",
+    "mainDashboard": "اللوحة الرئيسية",
+    "sales": "المبيعات",
     "menu": "القائمة",
     "signUp": "إنشاء حساب",
     "partnerContract": "اتفاقية الشريك",
@@ -174,7 +174,7 @@
     "footerSignUp": "إنشاء حساب",
     "footerResetPassword": "إعادة تعيين كلمة المرور",
     "footerJoinNetwork": "انضم إلى شبكتنا",
-    "footerLegal": "Legal",
+    "footerLegal": "الشؤون القانونية",
     "step4Title": "استلم الشهادة",
     "step4Desc": "بعد تدقيق ناجح، استلم شهادتك المعترف بها دولياً.",
     "getCertifiedNow": "احصل على الشهادة الآن",
@@ -291,11 +291,11 @@
     "almostThereTitle": "اقتربت من الانتهاء",
     "almostThereSubtitle": "سجّل الدخول أو أنشئ حسابك لإكمال شهادة ISO 9001 الخاصة بك. تستغرق أقل من دقيقة.",
     "continueWithEmail": "المتابعة بالبريد الإلكتروني",
-    "nextStepsTitle": "What happens next?",
-    "nextStep1": "Open the email above and click the verification link.",
-    "nextStep2": "Log in to your account.",
-    "nextStep3": "Our certification team will contact you to guide your next steps.",
-    "nextStepsContact": "Questions? Email us at",
+    "nextStepsTitle": "ما الخطوة التالية؟",
+    "nextStep1": "افتح البريد الإلكتروني أعلاه وانقر على رابط التحقق.",
+    "nextStep2": "سجّل الدخول إلى حسابك.",
+    "nextStep3": "سيتواصل معك فريق الشهادات لدينا لإرشادك في الخطوات التالية.",
+    "nextStepsContact": "لديك أسئلة؟ راسلنا على",
     "auditorStandards": "المعايير",
     "auditorStandardsPlaceholder": "اختر المعايير…",
     "auditorLevel": "مستوى الشهادة",
@@ -632,14 +632,14 @@
     "noTierYet": "لم تصل إلى أي مستوى بعد — ابدأ بالإحالة لفتح العمولات.",
     "certs": "شهادات",
     "certsIn12mo": "شهادات / 12 شهر",
-    "referredName": "Client Name",
-    "referredCompany": "Company",
+    "referredName": "اسم العميل",
+    "referredCompany": "الشركة",
     "addReferral": "إضافة عميل",
     "addReferralHint": "أدخل بيانات العميل الذي تحيله. سيظهر في قائمتك كمعلّق حتى يقوم بالتسجيل.",
     "referralAdded": "تمت إضافة العميل",
     "extraFieldsNotSaved": "تمت إضافة العميل، لكن تعذّر حتّى الآن حفظ رقم واتساب والموقع الإلكتروني. يرجى الطلب من المسؤول تطبيق تحديث قاعدة البيانات المعلّق.",
-    "noSelfReferral": "You can't refer yourself.",
-    "alreadyReferred": "You've already referred this email.",
+    "noSelfReferral": "لا يمكنك إحالة نفسك.",
+    "alreadyReferred": "لقد أحلت هذا البريد الإلكتروني بالفعل.",
     "yourDiscountCode": "رمز الخصم الخاص بك",
     "discountCodeHint": "شارك هذا الرمز مع عملائك. يحصلون على خصم 10٪ وتحصل أنت على عمولتك تلقائياً.",
     "codePending": "يتم إنشاء رمز الخصم الخاص بك. يرجى التحديث بعد قليل أو الاتصال بالدعم إذا لم يظهر.",
@@ -750,8 +750,8 @@
     "passwordMinLength": "يجب أن تكون كلمة المرور 6 أحرف على الأقل",
     "noPermissionCreate": "ليس لديك إذن لإنشاء هذا الدور",
     "successCreated": "تم الإنشاء بنجاح",
-    "createdButEmailFailed": "[DRAFT] تم إنشاء الحساب، لكن تعذّر إرسال بريد التحقق. استخدم إعادة إرسال التحقق حتى يتمكن المستخدم من تسجيل الدخول.",
-    "verificationResent": "[DRAFT] تم إرسال بريد التحقق إلى",
+    "createdButEmailFailed": "تم إنشاء الحساب، لكن تعذّر إرسال بريد التحقق. استخدم إعادة إرسال التحقق حتى يتمكن المستخدم من تسجيل الدخول.",
+    "verificationResent": "تم إرسال بريد التحقق إلى",
     "noPermissionAssign": "ليس لديك إذن لتعيين هذا الدور",
     "roleUpdated": "تم تحديث دور {{name}} إلى {{role}}",
     "failedDelete": "فشل حذف المستخدم",
@@ -907,15 +907,15 @@
     "unassigned": "غير معيّن (مستقل)",
     "active": "نشط",
     "inactive": "غير نشط",
-    "addAuditor": "Add Auditor",
+    "addAuditor": "إضافة مدقق",
     "addRegionalAdmin": "إضافة مدير دولة",
-    "addApplication": "Add Application",
-    "createNewClient": "Create new client",
-    "newClientDetails": "New client details",
-    "selectStandard": "Select ISO standard",
-    "package": "Package",
-    "applicationCreated": "Application created",
-    "filteredBy": "Filtered by [DRAFT]",
+    "addApplication": "إضافة طلب",
+    "createNewClient": "إنشاء عميل جديد",
+    "newClientDetails": "بيانات العميل الجديد",
+    "selectStandard": "اختر معيار الأيزو",
+    "package": "الباقة",
+    "applicationCreated": "تم إنشاء الطلب",
+    "filteredBy": "مُصفّى حسب",
     "clientApproved": "تمت الموافقة على العميل — تم إرسال رابط الوصول",
     "approveClientAccess": "الموافقة ومنح الوصول إلى لوحة التحكم",
     "clientAwaitingApproval": "دفع هذا العميل وهو في انتظار موافقتك.",
@@ -931,7 +931,8 @@
     "paymentStatus_paidWith": "مدفوع — {{method}}",
     "filesSelected": "تم اختيار {{count}} ملف — بحد أقصى {{max}} ميجابايت لكل ملف.",
     "docUploadPartialFailed": "تم الحفظ، لكن تعذّر رفع {{count}} مستند ({{files}}). يجب ألا يتجاوز حجم الملف {{max}} ميجابايت — حاول مرة أخرى من نموذج التعديل.",
-    "paymentReceived": "تم استلام الدفعة"
+    "paymentReceived": "تم استلام الدفعة",
+    "roleLabel": "الدور: {{role}}"
   },
   "certBody": {
     "addBody": "إضافة هيئة تصديق",
@@ -983,15 +984,15 @@
     "notFound": "{{count}} غير موجود",
     "importNoName": "يرجى إدخال اسم الهيئة",
     "importNoAB": "لا توجد هيئة اعتماد مطابقة — مطلوب واحدة على الأقل",
-    "surveillance1": "Surveillance 1",
-    "surveillance2": "Surveillance 2",
-    "pricingRequired": "Please enter Initial, Surveillance 1 and Surveillance 2 prices for each selected standard.",
-    "pricingInvalid": "Prices must be valid, non-negative numbers. [DRAFT]",
-    "loadPartial": "Some certification-body details could not be loaded — a database update may be pending. Basic fields are still editable. [DRAFT]",
-    "loadFailed": "Failed to load certification bodies [DRAFT]",
-    "autoSaving": "Saving… [DRAFT]",
-    "autoSaved": "All changes saved [DRAFT]",
-    "autoSaveError": "Auto-save failed — click Save to retry. [DRAFT]"
+    "surveillance1": "المتابعة الأولى",
+    "surveillance2": "المتابعة الثانية",
+    "pricingRequired": "يرجى إدخال أسعار التقييم الأولي والمتابعة الأولى والمتابعة الثانية لكل معيار محدد.",
+    "pricingInvalid": "يجب أن تكون الأسعار أرقامًا صحيحة وغير سالبة.",
+    "loadPartial": "تعذّر تحميل بعض تفاصيل جهة إصدار الشهادات — قد يكون هناك تحديث معلّق لقاعدة البيانات. الحقول الأساسية لا تزال قابلة للتعديل.",
+    "loadFailed": "تعذّر تحميل جهات إصدار الشهادات",
+    "autoSaving": "جارٍ الحفظ…",
+    "autoSaved": "تم حفظ جميع التغييرات",
+    "autoSaveError": "فشل الحفظ التلقائي — انقر على حفظ لإعادة المحاولة."
   },
   "countries": {
     "title": "الدول",
@@ -1065,7 +1066,9 @@
     "regionalAdmin": "مدير الدولة",
     "auditor": "المدقق",
     "certificationBody": "جهة الاعتماد",
-    "client": "العميل"
+    "client": "العميل",
+    "referral": "شريك إحالة",
+    "consultancy": "شركة استشارية"
   },
   "regions": {
     "asia": "آسيا",
@@ -1179,7 +1182,7 @@
     "groupBodies": "جهات المنح",
     "groupReports": "التقارير",
     "groupAdmin": "الإدارة",
-    "groupReferrals": "Referrals",
+    "groupReferrals": "الإحالات",
     "reset": "إعادة تعيين"
   },
   "userFields": {
@@ -1337,32 +1340,32 @@
     "packageCta": "احصل على الشهادة"
   },
   "mainDash": {
-    "title": "Main Dashboard [DRAFT]",
-    "welcome": "Welcome back, {{name}} [DRAFT]",
-    "clients": "Clients [DRAFT]",
-    "clientsDesc": "View and manage client companies [DRAFT]",
-    "certBodies": "Certification Bodies [DRAFT]",
-    "certBodiesDesc": "Manage the certification body registry [DRAFT]",
-    "auditors": "Auditors [DRAFT]",
-    "auditorsDesc": "Manage auditors [DRAFT]",
-    "consultancies": "Consultancies [DRAFT]",
-    "consultanciesDesc": "View consultancy partners [DRAFT]",
-    "referrals": "Referrals [DRAFT]",
-    "referralsDesc": "Referral partners and commissions [DRAFT]",
-    "sales": "Sales [DRAFT]",
-    "salesDesc": "Revenue and payments [DRAFT]"
+    "title": "اللوحة الرئيسية",
+    "welcome": "مرحبًا بعودتك، {{name}}",
+    "clients": "العملاء",
+    "clientsDesc": "عرض شركات العملاء وإدارتها",
+    "certBodies": "جهات إصدار الشهادات",
+    "certBodiesDesc": "إدارة سجل جهات إصدار الشهادات",
+    "auditors": "المدققون",
+    "auditorsDesc": "إدارة المدققين",
+    "consultancies": "الشركات الاستشارية",
+    "consultanciesDesc": "عرض الشركاء الاستشاريين",
+    "referrals": "الإحالات",
+    "referralsDesc": "شركاء الإحالة والعمولات",
+    "sales": "المبيعات",
+    "salesDesc": "الإيرادات والمدفوعات"
   },
   "sales": {
-    "title": "Sales [DRAFT]",
-    "subtitle": "Revenue and recent transactions [DRAFT]",
-    "totalRevenue": "Total Revenue [DRAFT]",
-    "paidCount": "Paid Transactions [DRAFT]",
-    "pendingAmount": "Pending Amount [DRAFT]",
-    "client": "Client [DRAFT]",
-    "amount": "Amount [DRAFT]",
-    "type": "Type [DRAFT]",
-    "date": "Date [DRAFT]",
-    "noPayments": "No payments recorded yet. [DRAFT]"
+    "title": "المبيعات",
+    "subtitle": "الإيرادات وأحدث المعاملات",
+    "totalRevenue": "إجمالي الإيرادات",
+    "paidCount": "المعاملات المدفوعة",
+    "pendingAmount": "المبلغ المعلّق",
+    "client": "العميل",
+    "amount": "المبلغ",
+    "type": "النوع",
+    "date": "التاريخ",
+    "noPayments": "لا توجد مدفوعات مسجّلة بعد."
   },
   "checkout": {
     "chooseStandardTitle": "اختر شهادتك",
@@ -1685,6 +1688,121 @@
     "notFoundTitle": "الخدمة غير موجودة",
     "notFoundDesc": "لم نتمكن من العثور على تدقيق امتثال على هذا العنوان.",
     "backToAll": "جميع تدقيقات الامتثال"
-
+  },
+  "stakeholder": {
+    "certificationBody": {
+      "title": "جهات إصدار الشهادات",
+      "singular": "جهة إصدار شهادات",
+      "desc": "انضم إلى CertifyCX كجهة إصدار شهادات معتمدة لتقديم خدمات شهادات الأيزو لقاعدة عملائنا المتنامية.",
+      "benefits": [
+        "الوصول إلى قاعدة متنامية من العملاء الباحثين عن شهادات الأيزو",
+        "أدوات مبسطة لإدارة عمليات التدقيق وجدولتها",
+        "إصدار الشهادات الرقمية وتتبعها",
+        "لوحة متكاملة لتقارير الامتثال",
+        "توسيع الانتشار في السوق عبر مناطق متعددة"
+      ],
+      "rules": [
+        "يجب أن تكون جهة إصدار شهادات معتمدة من هيئات الاعتماد المعنية",
+        "الالتزام بمتطلبات ISO/IEC 17021 لشهادات أنظمة الإدارة",
+        "الحفاظ على أعلى معايير الحياد والسرية",
+        "اتباع إرشادات منصة CertifyCX واتفاقيات مستوى الخدمة",
+        "تقديم تقارير التدقيق وقرارات إصدار الشهادات في مواعيدها"
+      ]
+    },
+    "consultancy": {
+      "title": "الشركات الاستشارية",
+      "singular": "شركة استشارية",
+      "desc": "انضم إلى CertifyCX كشريك استشاري وساعد المؤسسات على الحصول على شهادات الأيزو بإرشاد الخبراء.",
+      "benefits": [
+        "التواصل مع الشركات الباحثة عن إرشاد في شهادات الأيزو",
+        "الوصول إلى أدوات المنصة لإدارة ارتباطات العملاء",
+        "بناء سمعتك من خلال نتائج موثّقة لعملائك",
+        "تلقّي إحالات من شبكتنا المتنامية",
+        "التعاون مباشرة مع جهات إصدار الشهادات عبر المنصة"
+      ],
+      "rules": [
+        "يجب امتلاك خبرة عملية ذات صلة بأنظمة إدارة الأيزو",
+        "الحفاظ على السلوك المهني والمعايير الأخلاقية",
+        "تقديم إرشاد دقيق وصادق للعملاء",
+        "الالتزام بشروط وأحكام منصة CertifyCX",
+        "الحفاظ على سرية جميع معلومات العملاء"
+      ]
+    },
+    "referral": {
+      "title": "الإحالة",
+      "singular": "شريك إحالة",
+      "desc": "احصل على عمولة 10% عند إحالة العملاء إلى CertifyCX. ويحصل العملاء المُحالون على خصم 10% على أول عملية شراء!",
+      "benefits": [
+        "عمولة 10% على كل إحالة ناجحة",
+        "خصم 10% للعملاء الذين تُحيلهم على مشترياتهم",
+        "لا يوجد حد لعدد الإحالات التي يمكنك تقديمها",
+        "تتبّع إحالاتك وأرباحك لحظيًا من لوحة التحكم",
+        "تُدفع العمولة مباشرة إلى حسابك البنكي"
+      ],
+      "rules": [
+        "عمولة الإحالة هي 10% من قيمة البيع بعد الخصم",
+        "تُدفع العمولة بعد إتمام العميل المُحال للدفع بنجاح",
+        "تُعالج الدفعات يدويًا — أرسل بياناتك البنكية عند إشعارك عبر البريد الإلكتروني",
+        "لا يُسمح بالإحالة الذاتية",
+        "يمكن ربط كل عميل مُحال بمُحيل واحد فقط"
+      ]
+    },
+    "client": {
+      "title": "العملاء",
+      "singular": "عميل",
+      "desc": "قدّم طلب شهادة الأيزو عبر CertifyCX وبسّط رحلتك من تقديم الطلب حتى الاعتماد.",
+      "benefits": [
+        "عملية تقديم إلكترونية بسيطة لشهادات الأيزو",
+        "تتبّع حالة شهادتك لحظيًا",
+        "الوصول إلى أدوات تحليل الفجوات للاستعداد للتدقيق",
+        "الاختيار من بين معايير أيزو متعددة (9001، 14001، 45001، 22000)",
+        "خيارات دفع مرنة — شهريًا أو دفعة واحدة"
+      ],
+      "rules": [
+        "تقديم معلومات دقيقة عن الشركة وبيانات التواصل عند التسجيل",
+        "التعاون مع المدققين المعيّنين خلال عملية إصدار الشهادة",
+        "الحفاظ على الامتثال لأنظمة الإدارة المعتمدة لديك",
+        "إبلاغ CertifyCX بأي تغييرات جوهرية في نظام الإدارة",
+        "سداد رسوم الشهادة في مواعيدها وفق الخطة المختارة"
+      ]
+    },
+    "auditor": {
+      "title": "المدققون",
+      "singular": "مدقق",
+      "desc": "انضم إلى CertifyCX كمدقق معتمد ونفّذ عمليات تدقيق الأيزو لمؤسسات حول العالم.",
+      "benefits": [
+        "الحصول على مهام تدقيق في مناطق متعددة",
+        "إدارة جداول التدقيق والتقارير عبر المنصة",
+        "بناء ملفك المهني وسجل أعمالك",
+        "التعاون بسلاسة مع جهات إصدار الشهادات",
+        "ارتباط مرن — اعمل على عمليات التدقيق التي تناسب خبرتك"
+      ],
+      "rules": [
+        "يجب امتلاك مؤهلات تدقيق ذات صلة (مثل التدريب على ISO 19011)",
+        "الحفاظ على الاستقلالية والموضوعية في جميع عمليات التدقيق",
+        "تسليم تقارير التدقيق ضمن المواعيد المتفق عليها",
+        "اتباع بروتوكولات التدقيق ومعايير التقارير في CertifyCX",
+        "الحفاظ على سرية جميع نتائج التدقيق ومعلومات العملاء"
+      ]
+    },
+    "investor": {
+      "title": "المستثمرون",
+      "singular": "مستثمر",
+      "desc": "استكشف فرص الاستثمار مع CertifyCX — مستقبل الإدارة الرقمية لشهادات الأيزو.",
+      "benefits": [
+        "سوق متنامٍ — الطلب على شهادات الأيزو يتزايد عالميًا",
+        "منصة SaaS قابلة للتوسع بنموذج إيرادات متكررة",
+        "حضور في مناطق متعددة مع إمكانية التوسع",
+        "اقتصاديات وحدة قوية مع تكلفة اكتساب عملاء منخفضة",
+        "الوصول إلى مؤشرات أعمال تفصيلية وتقارير النمو"
+      ],
+      "rules": [
+        "تخضع استفسارات الاستثمار لإجراءات العناية الواجبة",
+        "جميع المعلومات المالية المتبادلة سرية تمامًا",
+        "شروط الاستثمار قابلة للتفاوض والاتفاق المتبادل",
+        "الالتزام بالأنظمة السارية للأوراق المالية والاستثمار",
+        "تواصل مع فريق CertifyCX على mvpcertify@gmail.com للحصول على مقترحات تفصيلية"
+      ]
+    }
   }
 }
