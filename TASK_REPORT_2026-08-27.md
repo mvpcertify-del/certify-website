@@ -276,6 +276,28 @@ This machine now has Node.js installed, so these are real runs, not static check
 - Partner-typed text is escaped everywhere it enters HTML; inbound message bodies
   are stored and rendered as plain text only.
 
+### One more fix, found after this report was first written
+
+You asked whether the system was 100% done. Checking that question turned up a
+real defect, so it is worth recording.
+
+I had assumed Resend's inbound webhook delivers the message body. It does not —
+it carries **metadata only**: who sent it, to what address, and the subject. The
+body has to be fetched separately, with
+`GET https://api.resend.com/emails/receiving/{email_id}`.
+
+My code read `text` off the webhook payload, a field that is not there. Every
+client reply would have been filed with the right sender, the right subject and
+an **empty body** — which reads as a display bug, not as a missing fetch, so it
+could have gone unnoticed for a while.
+
+Fixed in commit `15e5bdf`: the payload is still checked first, and the API call
+is the fallback. If that call fails it is logged and the message is still filed,
+so a reply is never lost outright — it just arrives without its text.
+
+**A known limit, stated plainly:** a file attached to a client's *reply* is not
+stored. You did not ask for it; saying so now so it is not a surprise later.
+
 **Not verified here, and I want to be straight about it:** no migration has been
 run and no live email has been sent or received from this machine. What needs
 your eyes after deploy:
