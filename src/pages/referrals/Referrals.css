@@ -152,27 +152,6 @@
   }
 }
 
-/* Signature editor textarea in the invite-signature modal. Matches the
-   platform input treatment; monospace-free because a signature is prose. */
-.referral-signature-input {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 0.75rem 0.85rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-bg-page);
-  color: var(--color-text-primary);
-  font-family: inherit;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  resize: vertical;
-}
-
-.referral-signature-input:focus {
-  outline: none;
-  border-color: var(--color-accent);
-}
-
 /* Partial-save banner: the referral WAS created, but an optional detail on it
    was not stored. Amber rather than green or red — the action succeeded, so a
    red error would be wrong, and a green tick would hide the gap. */
@@ -207,7 +186,7 @@
   color: var(--color-text-primary);
 }
 
-/* Matches .referral-signature-input rather than inventing a second field look.
+/* Matches the platform input treatment rather than inventing a second look.
    `appearance: none` is what lets the border and background above actually
    apply — a native <select> ignores most of them, and on a dark theme the
    untouched control renders as a light-grey system widget in the middle of a
@@ -263,4 +242,205 @@
 .referral-attach-note svg {
   flex: 0 0 auto;
   margin-top: 0.15rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Referral Program Dashboard sub-screens (client, 6 Sep)
+   Commissions / Marketing Material / Ready Email templates.
+   Written as classes rather than the inline styles the tier ladder used to
+   carry, because these blocks now live on three screens instead of one.
+   --------------------------------------------------------------------------- */
+
+.referral-tier-current {
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(62, 207, 142, 0.25);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(62, 207, 142, 0.08), rgba(37, 99, 235, 0.06));
+}
+
+.referral-tier-current__label {
+  margin-bottom: 4px;
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+}
+
+.referral-tier-current__value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.referral-tier-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.referral-tier {
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+}
+
+.referral-tier--current {
+  border: 2px solid var(--color-accent);
+  background: var(--color-bg-page);
+}
+
+.referral-tier__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.referral-tier__percent {
+  margin-top: 4px;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.referral-tier__range {
+  margin-top: 2px;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+/* ---- Marketing Material ---- */
+
+.referral-material-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.referral-material {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+}
+
+.referral-material__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: rgba(99, 102, 241, 0.12);
+  color: #6366f1;
+}
+
+/* min-width:0 lets a long file name ellipsis instead of forcing the row wider
+   than the page — a flex item defaults to min-width:auto, which will not
+   shrink below its content. */
+.referral-material__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.referral-material__code {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.referral-material__title {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.referral-material__meta {
+  margin-top: 2px;
+  font-size: 0.78rem;
+  color: var(--color-text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- Ready Email templates ---- */
+
+.referral-template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.referral-template {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+}
+
+.referral-template__head {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.referral-template__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(14, 165, 233, 0.12);
+  color: #0ea5e9;
+}
+
+.referral-template__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.referral-template__subject {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: var(--color-text-tertiary);
+}
+
+.referral-template__desc {
+  margin: 0;
+  font-size: 0.87rem;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+}
+
+.referral-template__facts {
+  /* padding-inline-start, not padding-left: the marker sits on the start edge,
+     which is the right edge in Arabic. */
+  margin: 0;
+  padding-inline-start: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+
+.referral-template__facts li {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.referral-template__facts svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: var(--color-accent);
 }

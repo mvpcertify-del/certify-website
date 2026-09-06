@@ -33,8 +33,6 @@ const supabaseAdmin = createClient(
 // be used to mail a novel to a stranger from the company's domain.
 const MAX_REPLY_CHARS = 5000;
 
-const SIGNATURE_MAX_LEN = 600;
-
 const partnerActive = (caller) =>
   (caller.role === 'referral' || caller.role === 'consultancy') &&
   caller.approval_status !== 'pending' &&
@@ -116,13 +114,9 @@ async function reply(req, res) {
 
   const { data: partner } = await supabaseAdmin
     .from('profiles')
-    .select('full_name, email, email_signature')
+    .select('full_name, email')
     .eq('id', caller.id)
     .maybeSingle();
-
-  const signature = partner?.email_signature
-    ? String(partner.email_signature).slice(0, SIGNATURE_MAX_LEN)
-    : null;
 
   // "Re:" is added once, not stacked — a thread replied to five times should
   // not read "Re: Re: Re: Re: Re:".
@@ -131,7 +125,6 @@ async function reply(req, res) {
 
   const { html, text } = partnerReplyEmail({
     bodyText,
-    signature,
     partnerName: partner?.full_name,
   });
 

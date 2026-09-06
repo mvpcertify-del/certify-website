@@ -28,7 +28,9 @@ WITH col(phase, detail, tbl, cname) AS (
     ('phase25', 'profiles.referral_code',            'profiles',             'referral_code'),
     ('phase25', 'applications.referral_code',        'applications',         'referral_code'),
     ('phase25', 'referrals.source',                  'referrals',            'source'),
-    ('phase27', 'profiles.email_signature',          'profiles',             'email_signature'),
+    -- phase27's profiles.email_signature is deliberately NOT listed: phase34
+    -- drops it again (client instruction, 6 Sep), so its ABSENCE is the
+    -- healthy state and checking for it here would report a false failure.
     ('phase28', 'referrals.referred_whatsapp',       'referrals',            'referred_whatsapp'),
     ('phase28', 'referrals.referred_website',        'referrals',            'referred_website'),
     ('phase30', 'contract_acceptances.is_accepted',  'contract_acceptances', 'is_accepted'),

@@ -54,7 +54,9 @@
     "gotIt": "حسنًا",
     "accessDenied": "تم رفض الوصول.",
     "allStatuses": "كل الحالات",
-    "send": "إرسال"
+    "send": "إرسال",
+    "firstName": "الاسم الأول",
+    "lastName": "اسم العائلة"
   },
   "languageSuggestion": {
     "title": "تغيير اللغة؟",
@@ -119,7 +121,9 @@
     "myAudits": "عمليات التدقيق الخاصة بي",
     "myReviews": "مراجعاتي",
     "kindViewOnly": "للعرض فقط",
-    "kindDataEntry": "إدخال البيانات"
+    "kindDataEntry": "إدخال البيانات",
+    "referralProgramDashboard": "لوحة برنامج الإحالة",
+    "referralClients": "العملاء"
   },
   "landing": {
     "iafBadge": "شركاء من هيئات منح الشهادات المعتمدة من IAF",
@@ -314,7 +318,9 @@
     "invalidResetLink": "رابط غير صالح أو منتهي الصلاحية",
     "invalidResetLinkDesc": "رابط إعادة تعيين كلمة المرور هذا غير صالح أو انتهت صلاحيته. يرجى طلب رابط جديد.",
     "passwordTooShort": "يجب ألا تقل كلمة المرور عن 6 أحرف.",
-    "redirectingToSignIn": "جارٍ تحويلك إلى تسجيل الدخول…"
+    "redirectingToSignIn": "جارٍ تحويلك إلى تسجيل الدخول…",
+    "contactFirstName": "الاسم الأول للمسؤول *",
+    "contactLastName": "اسم عائلة المسؤول"
   },
   "unauthorized": {
     "accessDenied": "الوصول مرفوض",
@@ -663,14 +669,18 @@
     "inviteResend": "إعادة إرسال",
     "inviteSent": "تم إرسال الدعوة",
     "inviteFailed": "تعذّر إرسال الدعوة",
-    "editSignature": "تعديل التوقيع",
-    "signatureHint": "يُضاف هذا التوقيع إلى أسفل كل دعوة ترسلها إلى عملائك.",
-    "signaturePlaceholder": "مثال: مع التحية،\nجون سميث\nAcme Consulting\n+971 50 123 4567",
-    "signatureSaved": "تم حفظ التوقيع",
     "referredWhatsapp": "رقم واتساب",
     "referredWhatsappPlaceholder": "مثال: ‎+971 50 123 4567",
     "referredWebsite": "موقع الشركة",
-    "referredWebsitePlaceholder": "مثال: https://company.com"
+    "referredWebsitePlaceholder": "مثال: https://company.com",
+    "copyCode": "نسخ الرمز",
+    "commissionPaid": "المدفوع",
+    "commissionOutstanding": "المستحق",
+    "commissionLedger": "العمولة حسب العميل",
+    "noCommissionsYet": "لم تُحقق أي عمولة بعد.",
+    "materialsHint": "تُرفق هذه المستندات تلقائيًا عند إرسال عرض للمواصفة المطابقة.",
+    "materialsEmpty": "لم تُضَف أي مستندات بعد. يرفعها المسؤول لديك، مستند لكل مواصفة.",
+    "materialsFailed": "تعذر تحميل المواد. يرجى المحاولة مرة أخرى."
   },
   "outreachDocs": {
     "title": "المذكرات التعريفية",
@@ -1804,5 +1814,36 @@
         "تواصل مع فريق CertifyCX على mvpcertify@gmail.com للحصول على مقترحات تفصيلية"
       ]
     }
+  },
+  "refDash": {
+    "title": "لوحة برنامج الإحالة",
+    "welcome": "مرحبًا بعودتك، {{name}}",
+    "notifications": "الإشعارات",
+    "notificationsDesc": "تحديثات غير مقروءة عن عملائك المحتملين ومستحقاتك",
+    "clients": "العملاء",
+    "clientsDesc": "أضف عميلًا وأرسل له دعوة",
+    "commissions": "العمولات",
+    "commissionsDesc": "ما حققته من أرباح وما لا يزال مستحقًا لك",
+    "coupons": "كوبونات للمشاركة",
+    "couponsDesc": "رمز الخصم الخاص بك ورابط الإحالة",
+    "materials": "المواد التسويقية",
+    "materialsDesc": "مستندات تعريفية يمكنك إرسالها إلى عميل محتمل",
+    "templates": "قوالب بريد جاهزة",
+    "templatesDesc": "الرسائل التي يمكنك إرسالها، جاهزة للإرسال"
+  },
+  "refTemplates": {
+    "subjectLabel": "الموضوع",
+    "carriesCode": "تحمل رمز الخصم الخاص بك، فتُحتسب المبيعة لك.",
+    "carriesDoc": "ترفق المستند التعريفي للمواصفات: {{list}}",
+    "carriesDocNone": "ترفق مستندًا تعريفيًا عند توفره للمواصفة التي تختارها.",
+    "centrallyWritten": "تكتبها وترسلها Certify.cx باسم الشركة — لا شيء عليك كتابته.",
+    "inviteTitle": "دعوة العميل",
+    "inviteSubject": "ندعوك للحصول على شهادة الأيزو مع Certify.cx",
+    "inviteDesc": "تعريف موجز يحمل رمز الخصم الخاص بك ورابطًا مباشرًا إلى الدفع. أرسلها إلى عميل سبق أن تحدثت معه.",
+    "inviteCta": "الإرسال من صفحة العملاء",
+    "proposalTitle": "خطاب عرض المواصفة",
+    "proposalSubject": "عرض للنظر في اعتماد مؤسستكم",
+    "proposalDesc": "عرض رسمي لمواصفة واحدة محددة، مع إرفاق المستند التعريفي. أرسله إلى مؤسسة تتواصل معها لأول مرة.",
+    "proposalCta": "الإرسال من صفحة العملاء"
   }
 }

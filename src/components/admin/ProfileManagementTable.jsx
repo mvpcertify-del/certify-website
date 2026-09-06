@@ -7,6 +7,7 @@ import Modal from '../ui/Modal';
 import DetailModal from '../ui/DetailModal';
 import MultiSelect from '../ui/MultiSelect';
 import { Input, Select, Button } from '../ui/FormElements';
+import NameFields from '../ui/NameFields';
 import { ROLES, REGIONS } from '../../utils/roles';
 import { COUNTRY_DIAL_CODES } from '../../utils/dialCodes';
 import { useAuth } from '../../contexts/AuthContext';
@@ -44,6 +45,8 @@ import { AlertCircle, CheckCircle, Eye, EyeOff, UserPlus } from 'lucide-react';
 //                 the value is a string[].
 //   'phone'       dial-code select + number input; the value is stored as one
 //                 concatenated "+971 50 123 4567" string (see splitPhone).
+//   'name'        First Name + Last Name inputs over one stored full-name
+//                 string, the same two-controls-one-column idea as 'phone'.
 //   'file'        file input; supports `accept`, `multiple`, `docType` and
 //                 `uploadAction`. Files cannot ride along in the JSON create
 //                 payload, so they are sent one-by-one AFTER the row exists.
@@ -427,6 +430,22 @@ export default function ProfileManagementTable({
             </div>
           </div>
         </div>
+      );
+    }
+
+    // First Name / Last Name over one stored full-name string (client, 6 Sep).
+    // Same shape as the phone control above — two controls, one column — so the
+    // descriptor-driven screens split their name box by adding `type: 'name'`
+    // and nothing else.
+    if (f.type === 'name') {
+      return (
+        <NameFields
+          key={f.key}
+          idPrefix={id}
+          value={form[f.key] || ''}
+          onChange={set}
+          required={!!f.required}
+        />
       );
     }
 

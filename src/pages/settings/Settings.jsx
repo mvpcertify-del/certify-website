@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { Input, Button, Select } from '../../components/ui/FormElements';
+import NameFields from '../../components/ui/NameFields';
 import { REGIONS, ROLES, ROLE_LABELS, PERMISSIONS, getRolePermissions, hasPermission, getDisplayRoleLabel } from '../../utils/roles';
 import { COUNTRY_DIAL_CODES, dialCodeForCountry } from '../../utils/dialCodes';
 import { fetchCityOptions } from '../../utils/geoapify';
@@ -256,11 +257,10 @@ function ProfileTab({ user }) {
           </div>
         </div>
         <div className="settings__form-grid">
-          <Input
-            label="Full Name"
-            id="settings-name"
+          <NameFields
+            idPrefix="settings-name"
             value={formData.full_name}
-            onChange={(e) => setFormData({...formData, full_name: e.target.value})}
+            onChange={(v) => setFormData({ ...formData, full_name: v })}
           />
           <Input
             label="Email"

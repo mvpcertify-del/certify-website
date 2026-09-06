@@ -11,7 +11,9 @@
   align-items: flex-start;
   gap: 6px;
   padding: 20px;
-  text-align: left;
+  /* `start`, not `left` — in Arabic the card's text has to hang off the right
+     edge like everything else on the page. */
+  text-align: start;
   background: var(--color-surface, #fff);
   border: 1px solid var(--color-border, #e5e7eb);
   border-radius: 12px;

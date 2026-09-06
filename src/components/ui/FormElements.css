@@ -222,3 +222,14 @@
     min-height: 36px;
   }
 }
+
+/* First Name / Last Name pair (NameFields).
+   Side by side where there is room, stacked where there is not. Uses
+   auto-fit + minmax rather than two fixed columns so the pair collapses on a
+   narrow modal without a media query, and `gap` alone rather than margins so
+   it inherits direction — in Arabic the boxes swap sides with no RTL rule. */
+.name-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0 var(--spacing-base);
+}

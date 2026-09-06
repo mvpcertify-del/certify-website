@@ -464,7 +464,7 @@ export function billingDocumentEmail({ title, message, orgName, taxLabel, taxNum
 // ---- Referral partner → their client invitation (phase27) -------------------
 //
 // Sent from a referral partner's dashboard to a client they added. Everything
-// interpolated here is partner-supplied (client name, partner name, signature)
+// interpolated here is partner-supplied (client name, partner name)
 // or partner-triggered (their code), so ALL of it is HTML-escaped — a partner
 // is authenticated but still untrusted input as far as another person's inbox
 // is concerned.
@@ -474,7 +474,7 @@ export function billingDocumentEmail({ title, message, orgName, taxLabel, taxNum
 // is optional — a company profile PDF or video link — and the row is dropped
 // when absent so we never render a dangling "View: " with no link.
 export function referralClientInviteEmail({
-  clientName, partnerName, partnerCompany, registrationUrl, discountCode, profileUrl, signature,
+  clientName, partnerName, partnerCompany, registrationUrl, discountCode, profileUrl,
 }) {
   const cName = escapeHtml(clientName || 'there');
   const pName = escapeHtml(partnerName || 'A Certify.cx partner');
@@ -496,12 +496,15 @@ export function referralClientInviteEmail({
     `Want to know more first? <a href="${escapeHtml(profileUrl)}" style="color:${ACCENT_ON_WHITE};text-decoration:none;font-weight:500;">View our company profile</a>.`
   ) : '';
 
-  const signatureBlock = signature ? `
+  // Signs off with the partner's stored name. The partner-typed signature this
+  // used to carry was removed on 6 Sep at the client's instruction — nothing a
+  // partner types now goes out under the company's own domain.
+  const signOff = `
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:28px 0 0;border-top:1px solid ${BORDER};">
       <tr><td style="padding:18px 0 0;">
-        <p style="margin:0;font-size:13px;line-height:1.6;color:${TEXT_SECONDARY};white-space:pre-line;">${escapeHtml(signature)}</p>
+        <p style="margin:0;font-size:13px;line-height:1.6;color:${TEXT_SECONDARY};">${fromLine}</p>
       </td></tr>
-    </table>` : '';
+    </table>`;
 
   const html = layout({
     title: subject,
@@ -514,7 +517,7 @@ export function referralClientInviteEmail({
       <p style="margin:0 0 28px;">${button(registrationUrl, 'Start your certification')}</p>
       ${linkFallback(registrationUrl)}
       ${profileRow}
-      ${signatureBlock}`,
+      ${signOff}`,
   });
 
   const text = [
@@ -525,7 +528,8 @@ export function referralClientInviteEmail({
     ``,
     `Start here: ${registrationUrl}`,
     profileUrl ? `\nCompany profile: ${profileUrl}` : '',
-    signature ? `\n\n${signature}` : '',
+    ``,
+    `${partnerName || 'A Certify.cx partner'}${partnerCompany ? ` (${partnerCompany})` : ''}`,
     ``,
     `— ${BRAND_TEXT}`,
   ].filter(Boolean).join('\n');
@@ -554,8 +558,8 @@ export function referralClientInviteEmail({
 //     it — hiding that is what gets a domain reported rather than replied to.
 //
 //  2. Every interpolated value is escapeHtml'd. `orgName`, `clientName` and
-//     `existingCert` are typed by a partner into a form; `signature` is stored
-//     profile text. None of it is trusted markup.
+//     `existingCert` are typed by a partner into a form. None of it is
+//     trusted markup.
 //
 //  3. The call to action points at the standard's own page on Certify.cx with
 //     the partner's referral code attached — NOT at wca-global.com, which is
@@ -571,7 +575,6 @@ export function partnerOutreachEmail({
   standardCode,
   existingCert,
   ctaUrl,
-  signature,
   partnerName,
   attachmentName,
 }) {
@@ -603,9 +606,9 @@ export function partnerOutreachEmail({
     ? body(`I have attached a short briefing note on ${code} &mdash; <em>${escapeHtml(attachmentName)}</em> &mdash; which sets out the requirements and the certification route in more detail.`)
     : '';
 
-  const signatureBlock = signature
-    ? `<p style="margin:0 0 4px;font-size:14px;line-height:1.7;color:${TEXT_SECONDARY};white-space:pre-line;">${escapeHtml(signature)}</p>`
-    : `<p style="margin:0 0 4px;font-size:14px;line-height:1.7;color:${TEXT_SECONDARY};">${escapeHtml(partnerName || '')}</p>`;
+  // The partner's stored name, full stop. The editable signature this used to
+  // prefer was removed on 6 Sep at the client's instruction.
+  const signatureBlock = `<p style="margin:0 0 4px;font-size:14px;line-height:1.7;color:${TEXT_SECONDARY};">${escapeHtml(partnerName || '')}</p>`;
 
   const headerHtml = `<table role="presentation" cellpadding="0" cellspacing="0" border="0">
     <tr><td style="vertical-align:middle;">
@@ -680,7 +683,7 @@ export function partnerOutreachEmail({
     `Thank you for your commitment to quality and organizational excellence. We look forward to the opportunity to work with ${orgName || 'your organization'}.`,
     ``,
     `Kind regards,`,
-    ...(signature || partnerName ? [signature || partnerName] : []),
+    ...(partnerName ? [partnerName] : []),
     SENDER.name,
     ``,
     SENDER.taglineA,
@@ -705,16 +708,16 @@ export function partnerOutreachEmail({
 // blast rather than a person replying.
 //
 // So: the same envelope as the rest of the platform's mail, the partner's
-// words, their signature, and nothing else. `bodyText` is typed by the partner
+// words, their name, and nothing else. `bodyText` is typed by the partner
 // and escaped before it becomes HTML; newlines are preserved with white-space
 // rather than by building <br> tags out of user input.
-export function partnerReplyEmail({ bodyText, signature, partnerName }) {
+export function partnerReplyEmail({ bodyText, partnerName }) {
   const safeBody = escapeHtml(bodyText || '');
 
-  const signatureBlock = (signature || partnerName)
+  const signatureBlock = partnerName
     ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:26px 0 0;border-top:1px solid ${BORDER};">
         <tr><td style="padding:18px 0 0;">
-          <p style="margin:0;font-size:13px;line-height:1.7;color:${TEXT_SECONDARY};white-space:pre-line;">${escapeHtml(signature || partnerName)}</p>
+          <p style="margin:0;font-size:13px;line-height:1.7;color:${TEXT_SECONDARY};">${escapeHtml(partnerName)}</p>
         </td></tr>
       </table>`
     : '';
@@ -731,7 +734,7 @@ export function partnerReplyEmail({ bodyText, signature, partnerName }) {
 
   const text = [
     bodyText || '',
-    ...(signature || partnerName ? ['', signature || partnerName] : []),
+    ...(partnerName ? ['', partnerName] : []),
   ].join('\n');
 
   return { html, text };

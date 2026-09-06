@@ -54,7 +54,9 @@
     "gotIt": "Got it",
     "accessDenied": "पहुँच अस्वीकृत।",
     "allStatuses": "सभी स्थितियाँ",
-    "send": "भेजें"
+    "send": "भेजें",
+    "firstName": "पहला नाम",
+    "lastName": "उपनाम"
   },
   "languageSuggestion": {
     "title": "भाषा बदलें?",
@@ -119,7 +121,9 @@
     "myAudits": "मेरे ऑडिट",
     "myReviews": "मेरी समीक्षाएँ",
     "kindViewOnly": "केवल देखें",
-    "kindDataEntry": "डेटा प्रविष्टि"
+    "kindDataEntry": "डेटा प्रविष्टि",
+    "referralProgramDashboard": "रेफ़रल प्रोग्राम डैशबोर्ड",
+    "referralClients": "ग्राहक"
   },
   "landing": {
     "iafBadge": "IAF मान्यता प्राप्त प्रमाणन निकाय भागीदार",
@@ -314,7 +318,9 @@
     "invalidResetLink": "अमान्य या समाप्त लिंक",
     "invalidResetLinkDesc": "यह पासवर्ड रीसेट लिंक अमान्य है या समाप्त हो चुका है। कृपया नया लिंक माँगें।",
     "passwordTooShort": "पासवर्ड कम से कम 6 अक्षरों का होना चाहिए।",
-    "redirectingToSignIn": "आपको साइन इन पर भेजा जा रहा है…"
+    "redirectingToSignIn": "आपको साइन इन पर भेजा जा रहा है…",
+    "contactFirstName": "संपर्क व्यक्ति का पहला नाम *",
+    "contactLastName": "संपर्क व्यक्ति का उपनाम"
   },
   "unauthorized": {
     "accessDenied": "पहुंच अस्वीकृत",
@@ -663,14 +669,18 @@
     "inviteResend": "फिर भेजें",
     "inviteSent": "आमंत्रण भेजा गया",
     "inviteFailed": "आमंत्रण नहीं भेजा जा सका",
-    "editSignature": "हस्ताक्षर संपादित करें",
-    "signatureHint": "यह हस्ताक्षर आपके भेजे हर क्लाइंट आमंत्रण के नीचे जोड़ा जाता है।",
-    "signaturePlaceholder": "जैसे, सादर,\nJohn Smith\nAcme Consulting\n+971 50 123 4567",
-    "signatureSaved": "हस्ताक्षर सहेजा गया",
     "referredWhatsapp": "व्हाट्सएप नंबर",
     "referredWhatsappPlaceholder": "जैसे +971 50 123 4567",
     "referredWebsite": "कंपनी वेबसाइट",
-    "referredWebsitePlaceholder": "जैसे https://company.com"
+    "referredWebsitePlaceholder": "जैसे https://company.com",
+    "copyCode": "कोड कॉपी करें",
+    "commissionPaid": "भुगतान किया गया",
+    "commissionOutstanding": "अभी बाकी",
+    "commissionLedger": "ग्राहक के अनुसार कमीशन",
+    "noCommissionsYet": "अभी तक कोई कमीशन अर्जित नहीं हुआ है।",
+    "materialsHint": "जब आप संबंधित मानक का प्रस्ताव भेजते हैं तो ये दस्तावेज़ अपने आप संलग्न हो जाते हैं।",
+    "materialsEmpty": "अभी तक कोई दस्तावेज़ नहीं जोड़ा गया है। इन्हें आपका प्रशासक अपलोड करता है, हर मानक के लिए एक।",
+    "materialsFailed": "सामग्री लोड नहीं हो सकी। कृपया फिर से प्रयास करें।"
   },
   "outreachDocs": {
     "title": "ब्रीफिंग दस्तावेज़",
@@ -1804,5 +1814,36 @@
         "विस्तृत प्रस्तावों के लिए CertifyCX टीम से mvpcertify@gmail.com पर संपर्क करें"
       ]
     }
+  },
+  "refDash": {
+    "title": "रेफ़रल प्रोग्राम डैशबोर्ड",
+    "welcome": "वापसी पर स्वागत है, {{name}}",
+    "notifications": "सूचनाएँ",
+    "notificationsDesc": "आपके लीड और भुगतान से जुड़े अपठित अपडेट",
+    "clients": "ग्राहक",
+    "clientsDesc": "ग्राहक जोड़ें और उन्हें आमंत्रण भेजें",
+    "commissions": "कमीशन",
+    "commissionsDesc": "आपने कितना कमाया और कितना अभी बाकी है",
+    "coupons": "साझा करने के कूपन",
+    "couponsDesc": "आपका डिस्काउंट कोड और रेफ़रल लिंक",
+    "materials": "मार्केटिंग सामग्री",
+    "materialsDesc": "ब्रीफ़िंग दस्तावेज़ जो आप किसी लीड को भेज सकते हैं",
+    "templates": "तैयार ईमेल टेम्पलेट",
+    "templatesDesc": "भेजने के लिए तैयार पत्र"
+  },
+  "refTemplates": {
+    "subjectLabel": "विषय",
+    "carriesCode": "इसमें आपका डिस्काउंट कोड होता है, ताकि बिक्री का श्रेय आपको मिले।",
+    "carriesDoc": "इन मानकों का ब्रीफ़िंग दस्तावेज़ संलग्न करता है: {{list}}",
+    "carriesDocNone": "आपके चुने हुए मानक के लिए दस्तावेज़ उपलब्ध होने पर उसे संलग्न करता है।",
+    "centrallyWritten": "Certify.cx कंपनी के नाम से इसे लिखता और भेजता है — आपको कुछ टाइप नहीं करना।",
+    "inviteTitle": "ग्राहक आमंत्रण",
+    "inviteSubject": "Certify.cx के साथ ISO प्रमाणन के लिए आपको आमंत्रित किया जाता है",
+    "inviteDesc": "आपके डिस्काउंट कोड और सीधे चेकआउट लिंक के साथ एक संक्षिप्त परिचय। ऐसे ग्राहक को भेजें जिनसे आप पहले बात कर चुके हैं।",
+    "inviteCta": "ग्राहक पृष्ठ से भेजें",
+    "proposalTitle": "मानक प्रस्ताव पत्र",
+    "proposalSubject": "आपके संगठन के प्रमाणन पर विचार करने का प्रस्ताव",
+    "proposalDesc": "एक निर्दिष्ट मानक के लिए औपचारिक प्रस्ताव, ब्रीफ़िंग दस्तावेज़ संलग्न। पहली बार संपर्क किए जा रहे संगठन को भेजें।",
+    "proposalCta": "ग्राहक पृष्ठ से भेजें"
   }
 }

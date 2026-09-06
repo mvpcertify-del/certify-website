@@ -54,7 +54,9 @@
     "gotIt": "Got it",
     "accessDenied": "拒绝访问。",
     "allStatuses": "所有状态",
-    "send": "发送"
+    "send": "发送",
+    "firstName": "名字",
+    "lastName": "姓氏"
   },
   "languageSuggestion": {
     "title": "切换语言？",
@@ -119,7 +121,9 @@
     "myAudits": "我的审核",
     "myReviews": "我的复审",
     "kindViewOnly": "仅查看",
-    "kindDataEntry": "数据录入"
+    "kindDataEntry": "数据录入",
+    "referralProgramDashboard": "推荐计划面板",
+    "referralClients": "客户"
   },
   "landing": {
     "iafBadge": "IAF 认可认证机构合作伙伴",
@@ -314,7 +318,9 @@
     "invalidResetLink": "链接无效或已过期",
     "invalidResetLinkDesc": "此密码重置链接无效或已过期，请重新申请。",
     "passwordTooShort": "密码至少需要 6 个字符。",
-    "redirectingToSignIn": "正在跳转到登录页…"
+    "redirectingToSignIn": "正在跳转到登录页…",
+    "contactFirstName": "联系人名字 *",
+    "contactLastName": "联系人姓氏"
   },
   "unauthorized": {
     "accessDenied": "访问被拒绝",
@@ -663,14 +669,18 @@
     "inviteResend": "重新发送",
     "inviteSent": "邀请已发送",
     "inviteFailed": "无法发送邀请",
-    "editSignature": "编辑签名",
-    "signatureHint": "此签名会附加在您发送的每封客户邀请的底部。",
-    "signaturePlaceholder": "例如：此致敬礼，\nJohn Smith\nAcme Consulting\n+971 50 123 4567",
-    "signatureSaved": "签名已保存",
     "referredWhatsapp": "WhatsApp 号码",
     "referredWhatsappPlaceholder": "例如 +971 50 123 4567",
     "referredWebsite": "公司网站",
-    "referredWebsitePlaceholder": "例如 https://company.com"
+    "referredWebsitePlaceholder": "例如 https://company.com",
+    "copyCode": "复制折扣码",
+    "commissionPaid": "已支付",
+    "commissionOutstanding": "尚未结清",
+    "commissionLedger": "按客户列出的佣金",
+    "noCommissionsYet": "目前尚未产生佣金。",
+    "materialsHint": "当您就相应标准发送提案时，这些文件会自动作为附件发出。",
+    "materialsEmpty": "尚未添加任何文件。由您的管理员上传，每项标准一份。",
+    "materialsFailed": "无法加载资料，请重试。"
   },
   "outreachDocs": {
     "title": "简介文件",
@@ -1804,5 +1814,36 @@
         "如需详细方案，请联系 CertifyCX 团队：mvpcertify@gmail.com"
       ]
     }
+  },
+  "refDash": {
+    "title": "推荐计划面板",
+    "welcome": "欢迎回来，{{name}}",
+    "notifications": "通知",
+    "notificationsDesc": "与您的潜在客户和佣金相关的未读更新",
+    "clients": "客户",
+    "clientsDesc": "添加客户并向其发送邀请",
+    "commissions": "佣金",
+    "commissionsDesc": "您已赚取的金额，以及尚未结清的金额",
+    "coupons": "可分享的优惠券",
+    "couponsDesc": "您的折扣码与推荐链接",
+    "materials": "营销资料",
+    "materialsDesc": "可发送给潜在客户的简介文件",
+    "templates": "现成邮件模板",
+    "templatesDesc": "可直接发送的信函"
+  },
+  "refTemplates": {
+    "subjectLabel": "主题",
+    "carriesCode": "附带您的折扣码，成交后佣金即归于您。",
+    "carriesDoc": "会附上以下标准的简介文件：{{list}}",
+    "carriesDocNone": "若您所选标准已有简介文件，将一并附上。",
+    "centrallyWritten": "由 Certify.cx 以公司名义撰写并发送——您无需输入任何内容。",
+    "inviteTitle": "客户邀请函",
+    "inviteSubject": "诚邀您通过 Certify.cx 取得 ISO 认证",
+    "inviteDesc": "简短介绍，附上您的折扣码和直达结账的链接。适合发送给您已经联系过的客户。",
+    "inviteCta": "前往客户页面发送",
+    "proposalTitle": "标准提案信",
+    "proposalSubject": "关于贵组织认证事宜的提案",
+    "proposalDesc": "针对某一项标准的正式提案，并附上简介文件。适合首次接触的组织。",
+    "proposalCta": "前往客户页面发送"
   }
 }

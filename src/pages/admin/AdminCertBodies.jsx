@@ -16,7 +16,7 @@ export default function AdminCertBodies() {
   ];
 
   const editFields = [
-    { key: 'full_name', label: t('admin.fullName'), required: true },
+    { key: 'full_name', label: t('admin.fullName'), type: 'name', required: true },
     { key: 'email', label: t('auth.email'), type: 'email', required: true },
     { key: 'company_name', label: t('admin.organization') },
     { key: 'country', label: t('admin.country') },

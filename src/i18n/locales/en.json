@@ -54,7 +54,9 @@
     "gotIt": "Got it",
     "accessDenied": "Access denied.",
     "allStatuses": "All Statuses",
-    "send": "Send"
+    "send": "Send",
+    "firstName": "First Name",
+    "lastName": "Last Name"
   },
   "languageSuggestion": {
     "title": "Change Language?",
@@ -119,7 +121,9 @@
     "myAudits": "My Audits",
     "myReviews": "My Reviews",
     "kindViewOnly": "View only",
-    "kindDataEntry": "Data entry"
+    "kindDataEntry": "Data entry",
+    "referralProgramDashboard": "Referral Program Dashboard",
+    "referralClients": "Clients"
   },
   "landing": {
     "iafBadge": "IAF Accredited Certification Bodies Partners",
@@ -314,7 +318,9 @@
     "invalidResetLink": "Invalid or expired link",
     "invalidResetLinkDesc": "This password reset link is invalid or has expired. Please request a new one.",
     "passwordTooShort": "Password must be at least 6 characters.",
-    "redirectingToSignIn": "Redirecting you to sign in…"
+    "redirectingToSignIn": "Redirecting you to sign in…",
+    "contactFirstName": "Contact First Name *",
+    "contactLastName": "Contact Last Name"
   },
   "unauthorized": {
     "accessDenied": "Access Denied",
@@ -663,14 +669,18 @@
     "inviteResend": "Resend",
     "inviteSent": "Invite sent",
     "inviteFailed": "Could not send the invite",
-    "editSignature": "Edit Signature",
-    "signatureHint": "This sign-off is added to the bottom of every client invite you send.",
-    "signaturePlaceholder": "e.g. Best regards,\nJohn Smith\nAcme Consulting\n+971 50 123 4567",
-    "signatureSaved": "Signature saved",
     "referredWhatsapp": "WhatsApp Number",
     "referredWhatsappPlaceholder": "e.g. +971 50 123 4567",
     "referredWebsite": "Company Website",
-    "referredWebsitePlaceholder": "e.g. https://company.com"
+    "referredWebsitePlaceholder": "e.g. https://company.com",
+    "copyCode": "Copy code",
+    "commissionPaid": "Paid out",
+    "commissionOutstanding": "Still owed",
+    "commissionLedger": "Commission by client",
+    "noCommissionsYet": "No commission has been earned yet.",
+    "materialsHint": "These documents are attached automatically when you send a proposal for the matching standard.",
+    "materialsEmpty": "No documents have been added yet. Your administrator uploads them, one per standard.",
+    "materialsFailed": "Could not load the materials. Please try again."
   },
   "outreachDocs": {
     "title": "Briefing Documents",
@@ -1804,5 +1814,36 @@
         "Contact the CertifyCX team at mvpcertify@gmail.com for detailed proposals"
       ]
     }
+  },
+  "refDash": {
+    "title": "Referral Program Dashboard",
+    "welcome": "Welcome back, {{name}}",
+    "notifications": "Notifications",
+    "notificationsDesc": "Unread updates on your leads and payouts",
+    "clients": "Clients",
+    "clientsDesc": "Add a client and send them an invitation",
+    "commissions": "Commissions",
+    "commissionsDesc": "What you have earned, and what is still owed",
+    "coupons": "Coupons to share",
+    "couponsDesc": "Your discount code and referral link",
+    "materials": "Marketing Material",
+    "materialsDesc": "Briefing documents you can send to a lead",
+    "templates": "Ready Email templates",
+    "templatesDesc": "The letters you can send, ready to go"
+  },
+  "refTemplates": {
+    "subjectLabel": "Subject",
+    "carriesCode": "Carries your discount code, so the sale is credited to you.",
+    "carriesDoc": "Attaches the briefing document for: {{list}}",
+    "carriesDocNone": "Attaches a briefing document when one exists for the standard you choose.",
+    "centrallyWritten": "Written and sent by Certify.cx under the company name — nothing to type.",
+    "inviteTitle": "Client invitation",
+    "inviteSubject": "You are invited to get ISO certified with Certify.cx",
+    "inviteDesc": "A short introduction with your discount code and a link straight to checkout. Send it to a client you have already spoken to.",
+    "inviteCta": "Send from Clients",
+    "proposalTitle": "Standard proposal letter",
+    "proposalSubject": "Proposal to consider certification for your organization",
+    "proposalDesc": "A formal proposal for one named standard, with the briefing document attached. Send it to an organization you are approaching cold.",
+    "proposalCta": "Send from Clients"
   }
 }

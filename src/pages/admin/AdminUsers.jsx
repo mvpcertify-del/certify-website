@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { Input, Select, Button } from '../../components/ui/FormElements';
+import NameFields from '../../components/ui/NameFields';
 import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
@@ -382,13 +383,10 @@ export default function AdminUsers() {
             </div>
           )}
 
-          <Input
-            label={t('admin.fullName')}
-            id="create-user-name"
-            name="full_name"
-            placeholder={t('admin.fullNamePlaceholder')}
+          <NameFields
+            idPrefix="create-user-name"
             value={createForm.full_name}
-            onChange={handleCreateChange}
+            onChange={(v) => setCreateForm(p => ({ ...p, full_name: v }))}
             required
           />
 

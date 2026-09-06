@@ -15,13 +15,13 @@ export default function AdminRegionalAdmins() {
   ];
 
   const editFields = [
-    { key: 'full_name', label: t('admin.fullName'), required: true },
+    { key: 'full_name', label: t('admin.fullName'), type: 'name', required: true },
     { key: 'email', label: t('auth.email'), type: 'email', required: true },
     { key: 'country', label: t('admin.country') },
   ];
 
   const createFields = [
-    { key: 'full_name', label: t('admin.fullName'), required: true },
+    { key: 'full_name', label: t('admin.fullName'), type: 'name', required: true },
     { key: 'email', label: t('auth.email'), type: 'email', required: true },
     { key: 'password', label: t('auth.password'), type: 'password', required: true },
     { key: 'country', label: t('admin.country'), required: true },

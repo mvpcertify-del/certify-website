@@ -77,9 +77,17 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     // Super Admin overview landing — kept at the very top. The role-specific
     // "Certification dashboard" stays available as the next item.
     { path: '/main-dashboard', labelKey: 'nav.mainDashboard', icon: LayoutGrid, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN] },
+    // The partner equivalent of the Super Admin's Main Dashboard: a grid of
+    // boxes covering Notifications, Clients, Commissions, Coupons, Marketing
+    // Material and Ready Email templates (client, 6 Sep — "This is to be
+    // renamed as Referral Program Dashboard"). It REPLACES the generic
+    // Dashboard entry for these two roles rather than sitting beside it; that
+    // is what the rename asked for, and the arrow in the screenshot pointed at
+    // the Dashboard row.
+    { path: '/referral-dashboard', labelKey: 'nav.referralProgramDashboard', icon: LayoutGrid, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_REFERRALS], allowedRoles: [ROLES.REFERRAL, ROLES.CONSULTANCY] },
     // Only the client's dashboard takes input (document upload); every other
     // role's branch of this same page is a read-only list.
-    { path: '/dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard, kind: (r) => (r === ROLES.CLIENT ? KIND_CREATE : KIND_VIEW), permissions: [PERMISSIONS.VIEW_DASHBOARD] },
+    { path: '/dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard, kind: (r) => (r === ROLES.CLIENT ? KIND_CREATE : KIND_VIEW), permissions: [PERMISSIONS.VIEW_DASHBOARD], excludeRoles: [ROLES.REFERRAL, ROLES.CONSULTANCY] },
     { path: '/client/apply', labelKey: 'nav.newApplication', icon: PlusCircle, kind: KIND_CREATE, permissions: [PERMISSIONS.CREATE_CERTIFICATION] },
     { path: '/client/certificates', labelKey: 'nav.myCertificates', icon: Award, kind: KIND_VIEW, allowedRoles: [ROLES.CLIENT], permissions: [PERMISSIONS.VIEW_DASHBOARD] },
     // ---- Auditor / CB work queues ----
@@ -127,7 +135,12 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     // Referral partners (their own role since phase 14) and consultancy
     // partners (phase 22) both get the partner dashboard here — same screen,
     // different commercial terms. Admins manage referrals via Commission Tiers.
-    { path: '/referrals', labelKey: 'nav.referrals', icon: Gift, kind: KIND_CREATE, permissions: [PERMISSIONS.VIEW_REFERRALS], allowedRoles: [ROLES.REFERRAL, ROLES.CONSULTANCY] },
+    // Labelled "Clients" from 6 Sep, not "Referral": the discount code and the
+    // commission tiers moved onto their own screens under the Referral Program
+    // Dashboard, so what is left here IS the client list — and the dashboard
+    // box that opens it is called Clients too. Two names for one screen is
+    // exactly the confusion the box grid was meant to remove.
+    { path: '/referrals', labelKey: 'nav.referralClients', icon: Gift, kind: KIND_CREATE, permissions: [PERMISSIONS.VIEW_REFERRALS], allowedRoles: [ROLES.REFERRAL, ROLES.CONSULTANCY] },
     // Client replies to partner mail. Visible to the partner who owns the
     // thread and to the admins the client named — a regional admin is included
     // deliberately, and gated on VIEW_DASHBOARD rather than VIEW_REFERRALS,

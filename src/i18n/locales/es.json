@@ -54,7 +54,9 @@
     "gotIt": "Entendido",
     "accessDenied": "Acceso denegado.",
     "allStatuses": "Todos los estados",
-    "send": "Enviar"
+    "send": "Enviar",
+    "firstName": "Nombre",
+    "lastName": "Apellidos"
   },
   "languageSuggestion": {
     "title": "¿Cambiar idioma?",
@@ -119,7 +121,9 @@
     "myAudits": "Mis Auditorías",
     "myReviews": "Mis Revisiones",
     "kindViewOnly": "Solo lectura",
-    "kindDataEntry": "Entrada de datos"
+    "kindDataEntry": "Entrada de datos",
+    "referralProgramDashboard": "Panel del Programa de Referidos",
+    "referralClients": "Clientes"
   },
   "landing": {
     "iafBadge": "Socios de Organismos de Certificación Acreditados por IAF",
@@ -314,7 +318,9 @@
     "invalidResetLink": "Enlace no válido o caducado",
     "invalidResetLinkDesc": "Este enlace para restablecer la contraseña no es válido o ha caducado. Solicita uno nuevo.",
     "passwordTooShort": "La contraseña debe tener al menos 6 caracteres.",
-    "redirectingToSignIn": "Redirigiéndote al inicio de sesión…"
+    "redirectingToSignIn": "Redirigiéndote al inicio de sesión…",
+    "contactFirstName": "Nombre del contacto *",
+    "contactLastName": "Apellidos del contacto"
   },
   "unauthorized": {
     "accessDenied": "Acceso denegado",
@@ -663,14 +669,18 @@
     "inviteResend": "Reenviar",
     "inviteSent": "Invitación enviada",
     "inviteFailed": "No se pudo enviar la invitación",
-    "editSignature": "Editar firma",
-    "signatureHint": "Esta firma se añade al final de cada invitación que envíes.",
-    "signaturePlaceholder": "p. ej. Saludos,\nJuan Pérez\nAcme Consulting\n+971 50 123 4567",
-    "signatureSaved": "Firma guardada",
     "referredWhatsapp": "Número de WhatsApp",
     "referredWhatsappPlaceholder": "ej. +971 50 123 4567",
     "referredWebsite": "Sitio web de la empresa",
-    "referredWebsitePlaceholder": "ej. https://empresa.com"
+    "referredWebsitePlaceholder": "ej. https://empresa.com",
+    "copyCode": "Copiar código",
+    "commissionPaid": "Pagado",
+    "commissionOutstanding": "Pendiente de cobro",
+    "commissionLedger": "Comisión por cliente",
+    "noCommissionsYet": "Aún no has ganado ninguna comisión.",
+    "materialsHint": "Estos documentos se adjuntan automáticamente cuando envías una propuesta de la norma correspondiente.",
+    "materialsEmpty": "Todavía no se ha añadido ningún documento. Los sube tu administrador, uno por norma.",
+    "materialsFailed": "No se pudo cargar el material. Inténtalo de nuevo."
   },
   "outreachDocs": {
     "title": "Documentos informativos",
@@ -1804,5 +1814,36 @@
         "Contacte al equipo de CertifyCX en mvpcertify@gmail.com para propuestas detalladas"
       ]
     }
+  },
+  "refDash": {
+    "title": "Panel del Programa de Referidos",
+    "welcome": "Bienvenido de nuevo, {{name}}",
+    "notifications": "Notificaciones",
+    "notificationsDesc": "Novedades sin leer sobre tus clientes potenciales y tus pagos",
+    "clients": "Clientes",
+    "clientsDesc": "Añade un cliente y envíale una invitación",
+    "commissions": "Comisiones",
+    "commissionsDesc": "Lo que has ganado y lo que aún se te debe",
+    "coupons": "Cupones para compartir",
+    "couponsDesc": "Tu código de descuento y tu enlace de referido",
+    "materials": "Material de marketing",
+    "materialsDesc": "Documentos informativos que puedes enviar a un cliente potencial",
+    "templates": "Plantillas de correo listas",
+    "templatesDesc": "Las cartas que puedes enviar, listas para usar"
+  },
+  "refTemplates": {
+    "subjectLabel": "Asunto",
+    "carriesCode": "Incluye tu código de descuento, para que la venta se te acredite a ti.",
+    "carriesDoc": "Adjunta el documento informativo de: {{list}}",
+    "carriesDocNone": "Adjunta un documento informativo cuando exista para la norma que elijas.",
+    "centrallyWritten": "Redactada y enviada por Certify.cx en nombre de la empresa: no hay nada que escribir.",
+    "inviteTitle": "Invitación al cliente",
+    "inviteSubject": "Te invitamos a certificarte en ISO con Certify.cx",
+    "inviteDesc": "Una breve presentación con tu código de descuento y un enlace directo al pago. Envíasela a un cliente con el que ya has hablado.",
+    "inviteCta": "Enviar desde Clientes",
+    "proposalTitle": "Carta de propuesta de norma",
+    "proposalSubject": "Propuesta para considerar la certificación de su organización",
+    "proposalDesc": "Una propuesta formal para una norma concreta, con el documento informativo adjunto. Envíala a una organización a la que contactas en frío.",
+    "proposalCta": "Enviar desde Clientes"
   }
 }

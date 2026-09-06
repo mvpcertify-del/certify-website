@@ -54,7 +54,9 @@
     "gotIt": "Got it",
     "accessDenied": "Accès refusé.",
     "allStatuses": "Tous les statuts",
-    "send": "Envoyer"
+    "send": "Envoyer",
+    "firstName": "Prénom",
+    "lastName": "Nom"
   },
   "languageSuggestion": {
     "title": "Changer de langue ?",
@@ -119,7 +121,9 @@
     "myAudits": "Mes Audits",
     "myReviews": "Mes Revues",
     "kindViewOnly": "Lecture seule",
-    "kindDataEntry": "Saisie de données"
+    "kindDataEntry": "Saisie de données",
+    "referralProgramDashboard": "Tableau de bord du programme de parrainage",
+    "referralClients": "Clients"
   },
   "landing": {
     "iafBadge": "Partenaires d'organismes de certification accrédités IAF",
@@ -314,7 +318,9 @@
     "invalidResetLink": "Lien invalide ou expiré",
     "invalidResetLinkDesc": "Ce lien de réinitialisation du mot de passe est invalide ou a expiré. Veuillez en demander un nouveau.",
     "passwordTooShort": "Le mot de passe doit comporter au moins 6 caractères.",
-    "redirectingToSignIn": "Redirection vers la connexion…"
+    "redirectingToSignIn": "Redirection vers la connexion…",
+    "contactFirstName": "Prénom du contact *",
+    "contactLastName": "Nom du contact"
   },
   "unauthorized": {
     "accessDenied": "Accès refusé",
@@ -663,14 +669,18 @@
     "inviteResend": "Renvoyer",
     "inviteSent": "Invitation envoyée",
     "inviteFailed": "Impossible d envoyer l invitation",
-    "editSignature": "Modifier la signature",
-    "signatureHint": "Cette signature est ajoutée au bas de chaque invitation que vous envoyez.",
-    "signaturePlaceholder": "p. ex. Cordialement,\nJohn Smith\nAcme Consulting\n+971 50 123 4567",
-    "signatureSaved": "Signature enregistrée",
     "referredWhatsapp": "Numéro WhatsApp",
     "referredWhatsappPlaceholder": "p. ex. +971 50 123 4567",
     "referredWebsite": "Site web de l entreprise",
-    "referredWebsitePlaceholder": "p. ex. https://entreprise.com"
+    "referredWebsitePlaceholder": "p. ex. https://entreprise.com",
+    "copyCode": "Copier le code",
+    "commissionPaid": "Versé",
+    "commissionOutstanding": "Restant dû",
+    "commissionLedger": "Commission par client",
+    "noCommissionsYet": "Aucune commission n’a encore été gagnée.",
+    "materialsHint": "Ces documents sont joints automatiquement lorsque vous envoyez une proposition pour la norme correspondante.",
+    "materialsEmpty": "Aucun document n’a encore été ajouté. Votre administrateur les téléverse, un par norme.",
+    "materialsFailed": "Impossible de charger les supports. Veuillez réessayer."
   },
   "outreachDocs": {
     "title": "Notes d'information",
@@ -1804,5 +1814,36 @@
         "Contactez l'équipe CertifyCX à mvpcertify@gmail.com pour des propositions détaillées"
       ]
     }
+  },
+  "refDash": {
+    "title": "Tableau de bord du programme de parrainage",
+    "welcome": "Bon retour, {{name}}",
+    "notifications": "Notifications",
+    "notificationsDesc": "Nouveautés non lues sur vos prospects et vos versements",
+    "clients": "Clients",
+    "clientsDesc": "Ajoutez un client et envoyez-lui une invitation",
+    "commissions": "Commissions",
+    "commissionsDesc": "Ce que vous avez gagné et ce qui vous est encore dû",
+    "coupons": "Coupons à partager",
+    "couponsDesc": "Votre code de réduction et votre lien de parrainage",
+    "materials": "Supports marketing",
+    "materialsDesc": "Documents de présentation à envoyer à un prospect",
+    "templates": "Modèles d’e-mail prêts",
+    "templatesDesc": "Les lettres que vous pouvez envoyer, prêtes à partir"
+  },
+  "refTemplates": {
+    "subjectLabel": "Objet",
+    "carriesCode": "Contient votre code de réduction, pour que la vente vous soit attribuée.",
+    "carriesDoc": "Joint le document de présentation pour : {{list}}",
+    "carriesDocNone": "Joint un document de présentation lorsqu’il en existe un pour la norme choisie.",
+    "centrallyWritten": "Rédigée et envoyée par Certify.cx au nom de l’entreprise — rien à saisir.",
+    "inviteTitle": "Invitation client",
+    "inviteSubject": "Vous êtes invité à obtenir votre certification ISO avec Certify.cx",
+    "inviteDesc": "Une courte présentation avec votre code de réduction et un lien direct vers le paiement. À envoyer à un client déjà contacté.",
+    "inviteCta": "Envoyer depuis Clients",
+    "proposalTitle": "Lettre de proposition de norme",
+    "proposalSubject": "Proposition d’étude d’une certification pour votre organisation",
+    "proposalDesc": "Une proposition formelle pour une norme précise, document de présentation joint. À envoyer lors d’une prise de contact à froid.",
+    "proposalCta": "Envoyer depuis Clients"
   }
 }

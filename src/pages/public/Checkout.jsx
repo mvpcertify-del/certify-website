@@ -21,6 +21,7 @@ import {
 import LanguageSwitcher from '../../components/LanguageSwitcher';
 import BrandLogo from '../../components/ui/BrandLogo';
 import BackButton from '../../components/ui/BackButton';
+import { useNameParts } from '../../components/ui/NameFields';
 import './Checkout.css';
 
 const METHOD_ICONS = { CreditCard, Banknote, Landmark };
@@ -253,6 +254,9 @@ function CheckoutForm() {
 
   const offlineSelected = isOfflineMethod(paymentMethod);
   const setField = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  // First Name / Last Name over the single stored `name` (client, 6 Sep).
+  const nameParts = useNameParts(form.name, (v) => setForm((f) => ({ ...f, name: v })));
 
   // Bank/cash beneficiary details, shown both in the on-select popup and on the
   // post-order confirmation screen. Single source so the two never drift.
@@ -628,9 +632,29 @@ function CheckoutForm() {
           {/* Contact details */}
           <h2 className="checkout__section-label">{t('checkout.contactTitle')}</h2>
           <div className="checkout__fields">
-            <label className="checkout__field checkout__field--full">
-              <span>{t('checkout.fullName')} *</span>
-              <input type="text" value={form.name} onChange={setField('name')} autoComplete="name" required />
+            {/* Split into First / Last on the client's instruction (6 Sep).
+                Written out rather than reusing <NameFields> because checkout
+                renders its own field markup, not the dashboard's <Input>. The
+                two halves are stored as one `name` — the same value the order,
+                the invoice and the certificate already print. */}
+            <label className="checkout__field">
+              <span>{t('common.firstName')} *</span>
+              <input
+                type="text"
+                value={nameParts.first}
+                onChange={(e) => nameParts.setFirst(e.target.value)}
+                autoComplete="given-name"
+                required
+              />
+            </label>
+            <label className="checkout__field">
+              <span>{t('common.lastName')}</span>
+              <input
+                type="text"
+                value={nameParts.last}
+                onChange={(e) => nameParts.setLast(e.target.value)}
+                autoComplete="family-name"
+              />
             </label>
             <label className="checkout__field checkout__field--full">
               <span>{t('checkout.email')} *</span>

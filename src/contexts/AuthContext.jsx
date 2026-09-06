@@ -379,8 +379,11 @@ export function AuthProvider({ children }) {
       [ROLES.AUDITOR]: '/auditor/dashboard',
       [ROLES.CERTIFICATION_BODY]: '/cert-body/dashboard',
       [ROLES.CLIENT]: '/client/dashboard',
-      [ROLES.REFERRAL]: '/referrals',
-      [ROLES.CONSULTANCY]: '/referrals',
+      // Partners land on the Referral Program Dashboard from 6 Sep — the box
+      // grid the client asked for, mirroring the Super Admin above. The client
+      // list they used to land on is one box away.
+      [ROLES.REFERRAL]: '/referral-dashboard',
+      [ROLES.CONSULTANCY]: '/referral-dashboard',
     };
     return map[role] || '/dashboard';
   };

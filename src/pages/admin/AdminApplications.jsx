@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Input, Select, Button } from '../../components/ui/FormElements';
+import NameFields from '../../components/ui/NameFields';
 import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
@@ -309,9 +310,11 @@ export default function AdminApplications() {
 
           {form.clientId === NEW_CLIENT && (
             <>
-              <Input label={`${t('admin.fullName')}`} id="app-new-name" name="new_full_name"
+              <NameFields
+                idPrefix="app-new-name"
                 value={form.new_full_name}
-                onChange={(e) => setForm(p => ({ ...p, new_full_name: e.target.value }))} required />
+                onChange={(v) => setForm(p => ({ ...p, new_full_name: v }))}
+                required />
               <Input label={t('auth.email')} type="email" id="app-new-email" name="new_email"
                 value={form.new_email}
                 onChange={(e) => setForm(p => ({ ...p, new_email: e.target.value }))} required />

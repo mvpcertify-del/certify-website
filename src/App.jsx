@@ -97,6 +97,11 @@ const StartPayment = lazy(() => import('./pages/client/StartPayment'));
 const GapAnalysis = lazy(() => import('./pages/client/GapAnalysis'));
 const MyCertificates = lazy(() => import('./pages/client/MyCertificates'));
 const Referrals = lazy(() => import('./pages/referrals/Referrals'));
+const ReferralProgramDashboard = lazy(() => import('./pages/referrals/ReferralProgramDashboard'));
+const ReferralCommissions = lazy(() => import('./pages/referrals/ReferralCommissions'));
+const ReferralCoupons = lazy(() => import('./pages/referrals/ReferralCoupons'));
+const ReferralMaterials = lazy(() => import('./pages/referrals/ReferralMaterials'));
+const ReferralTemplates = lazy(() => import('./pages/referrals/ReferralTemplates'));
 const PartnerContract = lazy(() => import('./pages/partner/PartnerContract'));
 
 // Lightweight fallback shown while a route's chunk is being fetched. Kept tiny
@@ -411,10 +416,51 @@ function AppRoutes() {
               </ProtectedRoute>
             } />
 
+            {/* ---- Referral Program Dashboard (client, 6 Sep) ----
+                A landing grid of boxes — Notifications, Clients, Commissions,
+                Coupons, Marketing Material, Ready Email templates — modelled on
+                the Super Admin's Main Dashboard, with one screen behind each
+                box. /referrals stays the Clients screen so every link, bookmark
+                and email that already points at it still lands somewhere real.
+
+                All six share the same gate as /referrals itself: holding
+                VIEW_REFERRALS is what makes someone a partner here. Repeating
+                the permission on each route rather than nesting keeps the gate
+                visible at the line that grants access. */}
+            <Route path="/referral-dashboard" element={
+              <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_REFERRALS}>
+                <ReferralProgramDashboard />
+              </ProtectedRoute>
+            } />
+
             {/* Referral dashboard — referral partners (and super admin oversight) */}
             <Route path="/referrals" element={
               <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_REFERRALS}>
                 <Referrals />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/referrals/commissions" element={
+              <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_REFERRALS}>
+                <ReferralCommissions />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/referrals/coupons" element={
+              <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_REFERRALS}>
+                <ReferralCoupons />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/referrals/materials" element={
+              <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_REFERRALS}>
+                <ReferralMaterials />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/referrals/templates" element={
+              <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_REFERRALS}>
+                <ReferralTemplates />
               </ProtectedRoute>
             } />
 

@@ -3,6 +3,7 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { Input, Select, Button, Autocomplete } from '../../components/ui/FormElements';
+import NameFields from '../../components/ui/NameFields';
 import CustomFieldRenderer, { validateCustomFields } from '../../components/CustomFieldRenderer';
 import MultiSelect from '../../components/ui/MultiSelect';
 import { getStakeholderType, getStakeholderCopy } from '../../utils/stakeholderTypes';
@@ -700,12 +701,11 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
             just the essentials, no multi-step wizard. */}
         {isPureIndividual && (
           <>
-            <Input
-              label={t('auth.fullName')}
-              id="signup-contact-name" name="contact_person_name"
-              placeholder={t('auth.fullNamePlaceholder')}
+            <NameFields
+              idPrefix="signup-contact"
               value={formData.contact_person_name}
-              onChange={handleChange} required />
+              onChange={(v) => setFormData(p => ({ ...p, contact_person_name: v }))}
+              required />
 
             <Input label={t('auth.emailRequired')} type="email" id="signup-email" name="email"
               placeholder="you@example.com"
@@ -838,12 +838,16 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
 
         {step === 2 && (
           <>
-            <Input
-              label={isPureIndividual ? t('auth.fullName') : t('auth.contactPersonName')}
-              id="signup-contact-name" name="contact_person_name"
-              placeholder={isPureIndividual ? t('auth.fullNamePlaceholder') : t('auth.contactPersonPlaceholder')}
+            {/* An organization still gives ONE contact person, so the pair is
+                labelled as the contact's first and last name rather than
+                becoming a different field for companies. */}
+            <NameFields
+              idPrefix="signup-contact"
               value={formData.contact_person_name}
-              onChange={handleChange} required />
+              onChange={(v) => setFormData(p => ({ ...p, contact_person_name: v }))}
+              firstLabel={isPureIndividual ? undefined : t('auth.contactFirstName')}
+              lastLabel={isPureIndividual ? undefined : t('auth.contactLastName')}
+              required />
 
             {!isPureIndividual && (
               <Input label={t('auth.designationRole')} id="signup-contact-role" name="contact_role"

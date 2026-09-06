@@ -39,10 +39,6 @@ const COMPANY_PROFILE_URL = process.env.COMPANY_PROFILE_URL || null;
 const INVITE_DAILY_CAP = 20;
 const INVITE_PER_RECIPIENT_CAP = 3;
 
-// Signatures are appended to outbound email; bound the length server-side. The
-// browser also caps it, but the browser is not a security control.
-const SIGNATURE_MAX_LEN = 600;
-
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // The rate a referral partner earns when no per-partner rate is agreed.
@@ -73,7 +69,6 @@ export default async function handler(req, res) {
     if (action === 'check-discount') return await checkDiscount(req, res);
     if (action === 'send-client-invite') return await sendClientInvite(req, res);
     if (action === 'send-outreach') return await sendOutreach(req, res);
-    if (action === 'save-signature') return await saveSignature(req, res);
     return res.status(400).json({ error: 'Unknown action' });
   } catch (error) {
     // Log the detail server-side; never hand the raw Postgres/PostgREST text to
@@ -472,7 +467,7 @@ async function sendClientInvite(req, res) {
   // Partner's own details for the email body + reply-to.
   const { data: partner } = await supabaseAdmin
     .from('profiles')
-    .select('full_name, email, company_name, referral_code, email_signature, region')
+    .select('full_name, email, company_name, referral_code, region')
     .eq('id', caller.id)
     .maybeSingle();
 
@@ -497,9 +492,6 @@ async function sendClientInvite(req, res) {
   }
 
   const registrationUrl = `${APP_URL}/checkout?ref=${encodeURIComponent(partner.referral_code)}`;
-  const signature = partner.email_signature
-    ? String(partner.email_signature).slice(0, SIGNATURE_MAX_LEN)
-    : null;
 
   const { subject, html, text } = referralClientInviteEmail({
     clientName: referral.referred_name,
@@ -508,7 +500,6 @@ async function sendClientInvite(req, res) {
     registrationUrl,
     discountCode: partner.referral_code,
     profileUrl: COMPANY_PROFILE_URL,
-    signature,
   });
 
   // The invite shares the proposal's thread with this lead, so a partner who
@@ -623,7 +614,7 @@ async function sendOutreach(req, res) {
 
   const { data: partner } = await supabaseAdmin
     .from('profiles')
-    .select('full_name, email, company_name, referral_code, email_signature, region')
+    .select('full_name, email, company_name, referral_code, region')
     .eq('id', caller.id)
     .maybeSingle();
 
@@ -692,10 +683,6 @@ async function sendOutreach(req, res) {
   // sale that starts from this letter is credited to the partner who sent it.
   const ctaUrl = `${APP_URL}/iso/${iso.slug}?ref=${encodeURIComponent(partner.referral_code)}`;
 
-  const signature = partner.email_signature
-    ? String(partner.email_signature).slice(0, SIGNATURE_MAX_LEN)
-    : null;
-
   const { subject, html, text } = partnerOutreachEmail({
     clientName: referral.referred_name,
     // The letter addresses an ORGANIZATION, so the company name leads and the
@@ -706,7 +693,6 @@ async function sendOutreach(req, res) {
     standardCode: iso.code,
     existingCert: heldCert,
     ctaUrl,
-    signature,
     partnerName: partner.full_name,
     attachmentName: attachment?.filename || null,
   });
@@ -774,35 +760,7 @@ async function sendOutreach(req, res) {
   });
 }
 
-// ---- Referral partner saves their email signature ---------------------------
-// Was a direct browser write to profiles, which — because Postgres RLS is
-// row-level, not column-level — would have let a partner set role /
-// approval_status / referral_code in the same update if the profiles UPDATE
-// policy is the usual `id = auth.uid()`. Routed through the service role so the
-// ONLY column the partner can touch is email_signature.
-async function saveSignature(req, res) {
-  const auth = await verifySession(req);
-  if (auth.error) return res.status(auth.status).json({ error: 'Please sign in again' });
-  const caller = auth.caller;
-
-  if (caller.role !== 'referral' && caller.role !== 'consultancy') {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
-
-  const raw = req.body?.signature;
-  if (raw != null && typeof raw !== 'string') {
-    return res.status(400).json({ error: 'Invalid signature' });
-  }
-  const signature = raw ? raw.slice(0, SIGNATURE_MAX_LEN) : null;
-
-  const { error } = await supabaseAdmin
-    .from('profiles')
-    .update({ email_signature: signature })
-    .eq('id', caller.id);
-  if (error) {
-    console.error('save-signature error:', error.message);
-    return res.status(500).json({ error: 'Could not save your signature. Please try again.' });
-  }
-
-  return res.status(200).json({ ok: true });
-}
+// The `save-signature` action that used to live here was removed on 6 Sep at
+// the client's instruction: no role, existing or new, edits an email signature
+// any more. Partner mail signs off with profiles.full_name — the name the
+// company already holds on the signed partner agreement.

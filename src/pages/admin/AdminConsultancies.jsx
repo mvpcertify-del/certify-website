@@ -16,6 +16,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { apiPost } from '../../lib/apiClient';
 import { ROLES } from '../../utils/roles';
 import { Button, Input } from '../../components/ui/FormElements';
+import NameFields from '../../components/ui/NameFields';
 import Modal from '../../components/ui/Modal';
 import DetailModal from '../../components/ui/DetailModal';
 import RowActions from '../../components/ui/RowActions';
@@ -646,13 +647,10 @@ export default function AdminConsultancies() {
               <AlertCircle size={16} /><span>{kpiError}</span>
             </div>
           )}
-          {/* admin.fullName already carries its own asterisk. */}
-          <Input
-            label={t('admin.fullName')}
-            id="edit-consultancy-name"
-            name="full_name"
+          <NameFields
+            idPrefix="edit-consultancy-name"
             value={editForm.full_name}
-            onChange={(e) => setEditForm((p) => ({ ...p, full_name: e.target.value }))}
+            onChange={(v) => setEditForm((p) => ({ ...p, full_name: v }))}
             required
           />
           <Input

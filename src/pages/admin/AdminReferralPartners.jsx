@@ -4,6 +4,7 @@ import { Gift, RefreshCw, Search, AlertCircle, CheckCircle } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext';
 import { apiPost } from '../../lib/apiClient';
 import { Button, Input } from '../../components/ui/FormElements';
+import NameFields from '../../components/ui/NameFields';
 import Modal from '../../components/ui/Modal';
 import DetailModal from '../../components/ui/DetailModal';
 import RowActions from '../../components/ui/RowActions';
@@ -426,13 +427,10 @@ export default function AdminReferralPartners() {
               <AlertCircle size={16} /><span>{error}</span>
             </div>
           )}
-          {/* admin.fullName already carries its own asterisk. */}
-          <Input
-            label={t('admin.fullName')}
-            id="edit-partner-name"
-            name="full_name"
+          <NameFields
+            idPrefix="edit-partner-name"
             value={editForm.full_name}
-            onChange={(e) => setEditForm((p) => ({ ...p, full_name: e.target.value }))}
+            onChange={(v) => setEditForm((p) => ({ ...p, full_name: v }))}
             required
           />
           <Input

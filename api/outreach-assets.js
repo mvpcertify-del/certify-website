@@ -30,7 +30,7 @@
 // ============================================================================
 
 import { createClient } from '@supabase/supabase-js';
-import { verifyAdmin } from './_verifyAdmin.js';
+import { verifyAdmin, verifySession } from './_verifyAdmin.js';
 import { ISO_CATALOG } from '../src/utils/isoCatalog.js';
 
 const supabaseAdmin = createClient(
@@ -66,6 +66,8 @@ export default async function handler(req, res) {
 
   try {
     if (action === 'list') return await listAssets(req, res);
+    if (action === 'partner-list') return await listForPartner(req, res);
+    if (action === 'partner-download') return await downloadForPartner(req, res);
     if (action === 'upload') return await uploadAsset(req, res);
     if (action === 'delete') return await deleteAsset(req, res);
     return res.status(400).json({ error: 'Unknown action' });
@@ -93,6 +95,95 @@ async function listAssets(req, res) {
   }
 
   return res.status(200).json({ assets: data || [] });
+}
+
+// ---- The partner's own view of the library ---------------------------------
+//
+// Who counts as an audience for the partner library: the partners it was
+// written for, plus the admins who manage it. Not "any signed-in user" — the
+// bytes are sales collateral rather than a secret, but a client account has no
+// business enumerating the company's whole outreach library, and a role check
+// costs nothing here.
+const canUsePartnerLibrary = (role) =>
+  role === 'referral' || role === 'consultancy'
+  || role === 'super_admin' || role === 'regional_admin';
+
+//
+// Added 6 Sep for the Marketing Material box on the Referral Program Dashboard:
+// the client asked that a partner be able to see, and send, the collateral —
+// "if they are targeting a School or University: ISO 21001 Email content + PDF
+// attachment". Until now a partner could only learn a document existed by
+// opening the proposal composer and picking a standard.
+//
+// Separate from `list` rather than relaxing it: `list` is an admin management
+// view and its shape is free to grow with admin-only columns (who uploaded it,
+// storage path). This one returns the four fields a partner needs and nothing
+// else, so widening the admin view can never widen what a partner sees.
+async function listForPartner(req, res) {
+  const auth = await verifySession(req);
+  if (auth.error) return res.status(auth.status).json({ error: 'Please sign in again' });
+  if (!canUsePartnerLibrary(auth.caller?.role)) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('outreach_assets')
+    .select('standard_slug, file_name, byte_size, updated_at')
+    .order('standard_slug');
+
+  if (error) {
+    console.error('outreach-assets partner-list error:', error.message);
+    return res.status(500).json({ error: 'Could not load the materials.' });
+  }
+
+  return res.status(200).json({ assets: data || [] });
+}
+
+// ---- A time-limited link to one document -----------------------------------
+//
+// The bucket stays private. A signed URL is minted per request and expires, so
+// nothing here turns the library into the enumerable public directory the
+// header of this file rules out. The partner is authenticated; the link they
+// receive is not a permanent one they can post anywhere.
+const SIGNED_URL_TTL_SECONDS = 300;
+
+async function downloadForPartner(req, res) {
+  const auth = await verifySession(req);
+  if (auth.error) return res.status(auth.status).json({ error: 'Please sign in again' });
+  if (!canUsePartnerLibrary(auth.caller?.role)) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  const { standardSlug } = req.body || {};
+  // Validated against the catalogue, not merely non-empty: the slug reaches a
+  // storage path, and "any string the browser sent" is the wrong thing to put
+  // there even when the lookup below would fail anyway.
+  if (!standardSlug || !ISO_CATALOG[standardSlug]) {
+    return res.status(400).json({ error: 'Unknown standard' });
+  }
+
+  const { data: asset } = await supabaseAdmin
+    .from('outreach_assets')
+    .select('file_name, storage_path')
+    .eq('standard_slug', standardSlug)
+    .maybeSingle();
+
+  if (!asset?.storage_path) {
+    return res.status(404).json({ error: 'There is no document for that standard yet.' });
+  }
+
+  const { data, error } = await supabaseAdmin.storage
+    .from(BUCKET)
+    .createSignedUrl(asset.storage_path, SIGNED_URL_TTL_SECONDS, {
+      download: asset.file_name,
+    });
+
+  if (error || !data?.signedUrl) {
+    console.error('outreach-assets sign error:', error?.message);
+    return res.status(500).json({ error: 'Could not open that document.' });
+  }
+
+  return res.status(200).json({ url: data.signedUrl, fileName: asset.file_name });
 }
 
 // ---- Upload (or replace) the document for one standard ---------------------
