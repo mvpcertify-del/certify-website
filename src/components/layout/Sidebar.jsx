@@ -41,6 +41,8 @@ import {
   Zap,
   Paperclip,
   MessagesSquare,
+  Megaphone,
+  GraduationCap,
 } from 'lucide-react';
 import BrandLogo from '../ui/BrandLogo';
 import LanguageSwitcher from '../LanguageSwitcher';
@@ -141,6 +143,14 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     // box that opens it is called Clients too. Two names for one screen is
     // exactly the confusion the box grid was meant to remove.
     { path: '/referrals', labelKey: 'nav.referralClients', icon: Gift, kind: KIND_CREATE, permissions: [PERMISSIONS.VIEW_REFERRALS], allowedRoles: [ROLES.REFERRAL, ROLES.CONSULTANCY] },
+    // Marketing Tools and Training also have boxes on the dashboard. They are
+    // repeated here on purpose: the 7 Sep report from a live partner was "I
+    // can't access the ready email template", and she was looking at the
+    // sidebar. A landing page you have to know to go back to is not
+    // discoverable — the two screens a partner uses to actually sell get a
+    // permanent link.
+    { path: '/referrals/marketing', labelKey: 'nav.referralMarketing', icon: Megaphone, kind: KIND_CREATE, permissions: [PERMISSIONS.VIEW_REFERRALS], allowedRoles: [ROLES.REFERRAL, ROLES.CONSULTANCY] },
+    { path: '/referrals/training', labelKey: 'nav.referralTraining', icon: GraduationCap, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_REFERRALS], allowedRoles: [ROLES.REFERRAL, ROLES.CONSULTANCY] },
     // Client replies to partner mail. Visible to the partner who owns the
     // thread and to the admins the client named — a regional admin is included
     // deliberately, and gated on VIEW_DASHBOARD rather than VIEW_REFERRALS,

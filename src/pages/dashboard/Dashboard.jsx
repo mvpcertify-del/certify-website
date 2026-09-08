@@ -917,10 +917,18 @@ export default function Dashboard() {
         </>
       ) : isAuditor ? (
         <>
+          {/* These three shipped without onClick, so StatCard never got its
+              --clickable class and the auditor's whole dashboard read as dead
+              text — the "all users' dashboards should be interactive" note
+              (8 Sep). They land on the auditor's own work queue rather than
+              /admin/applications: VIEW_ALL_CERTIFICATIONS is admin-only, so
+              that route would bounce an auditor to /unauthorized. The queue
+              has no status filter to deep-link into, hence the same path for
+              all three. */}
           <div className="dashboard__stats">
-            <StatCard title={t('dashboard.totalAssigned')} value={auditorApplications.length} icon={UserCheck} iconColor="#A78BFA" />
-            <StatCard title={t('dashboard.inReview')} value={auditorApplications.filter(a => a.status === 'in_review').length} icon={Clock} iconColor="#FBBF24" />
-            <StatCard title={t('dashboard.completed')} value={auditorApplications.filter(a => a.status === 'audited').length} icon={CheckCircle2} iconColor="#3ECF8E" />
+            <StatCard title={t('dashboard.totalAssigned')} value={auditorApplications.length} icon={UserCheck} iconColor="#A78BFA" onClick={() => navigate('/auditor/dashboard')} />
+            <StatCard title={t('dashboard.inReview')} value={auditorApplications.filter(a => a.status === 'in_review').length} icon={Clock} iconColor="#FBBF24" onClick={() => navigate('/auditor/dashboard')} />
+            <StatCard title={t('dashboard.completed')} value={auditorApplications.filter(a => a.status === 'audited').length} icon={CheckCircle2} iconColor="#3ECF8E" onClick={() => navigate('/auditor/dashboard')} />
           </div>
           <div className="dashboard__grid" style={{ display: 'block' }}>
             <div className="dashboard__section">
@@ -950,10 +958,13 @@ export default function Dashboard() {
         </>
       ) : isCB ? (
         <>
+          {/* Same dead-text bug as the auditor tiles above (8 Sep). A
+              certification body has no VIEW_ALL_CERTIFICATIONS either, so the
+              only list it may open is its own review queue. */}
           <div className="dashboard__stats">
-            <StatCard title={t('dashboard.assignedApplications')} value={cbApplications.length} icon={Building2} iconColor="#3ECF8E" />
-            <StatCard title={t('dashboard.awaitingDecision')} value={cbApplications.filter(a => a.status === 'audited' || a.status === 'in_review').length} icon={Clock} iconColor="#FBBF24" />
-            <StatCard title={t('dashboard.certified')} value={cbApplications.filter(a => a.status === 'approved').length} icon={CheckCircle2} iconColor="#60A5FA" />
+            <StatCard title={t('dashboard.assignedApplications')} value={cbApplications.length} icon={Building2} iconColor="#3ECF8E" onClick={() => navigate('/cert-body/dashboard')} />
+            <StatCard title={t('dashboard.awaitingDecision')} value={cbApplications.filter(a => a.status === 'audited' || a.status === 'in_review').length} icon={Clock} iconColor="#FBBF24" onClick={() => navigate('/cert-body/dashboard')} />
+            <StatCard title={t('dashboard.certified')} value={cbApplications.filter(a => a.status === 'approved').length} icon={CheckCircle2} iconColor="#60A5FA" onClick={() => navigate('/cert-body/dashboard')} />
           </div>
           <div className="dashboard__grid" style={{ display: 'block' }}>
             <div className="dashboard__section">

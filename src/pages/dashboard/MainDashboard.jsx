@@ -84,12 +84,19 @@ export default function MainDashboard() {
           countRows('profiles', (q) => q.eq('role', 'client').or('stakeholder_type.is.null,stakeholder_type.eq.client')),
           countRows('certification_bodies'),
           countRows('profiles', (q) => q.eq('role', 'auditor')),
-          // Count consultancies by stakeholder_type, not role. The role has moved
-          // twice now (client → referral in phase 19 → consultancy in phase 22)
-          // and this box read 0 the whole time phase 19 was live, because no row
-          // could satisfy role='client' AND stakeholder_type='consultancy' after
-          // that migration. stakeholder_type has been stable throughout.
-          countRows('profiles', (q) => q.eq('stakeholder_type', 'consultancy')),
+          // The consultancy role has moved twice (client → referral in phase 19
+          // → consultancy in phase 22) and this box read 0 the whole time phase
+          // 19 was live, because no row could satisfy role='client' AND
+          // stakeholder_type='consultancy' after that migration. So match
+          // either column, which is what the destination page already does:
+          // the consultancy_kpi view behind /admin/consultancies (phase23) ends
+          // `WHERE p.stakeholder_type = 'consultancy' OR p.role = 'consultancy'`.
+          // Matching on stakeholder_type alone left legacy rows
+          // that carry role='consultancy' with a NULL stakeholder_type on the
+          // page but out of this box, so the box read lower than the list.
+          // Still disjoint from the referrals box below: everything added here
+          // has role='consultancy', which can never also be role='referral'.
+          countRows('profiles', (q) => q.or('stakeholder_type.eq.consultancy,role.eq.consultancy')),
           // Referrals must EXCLUDE consultancies or the two boxes double-count
           // the same people — which is what produced the inflated referral
           // figure while consultancies sat on the referral role.

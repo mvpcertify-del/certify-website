@@ -102,6 +102,8 @@ const ReferralCommissions = lazy(() => import('./pages/referrals/ReferralCommiss
 const ReferralCoupons = lazy(() => import('./pages/referrals/ReferralCoupons'));
 const ReferralMaterials = lazy(() => import('./pages/referrals/ReferralMaterials'));
 const ReferralTemplates = lazy(() => import('./pages/referrals/ReferralTemplates'));
+const ReferralTraining = lazy(() => import('./pages/referrals/ReferralTraining'));
+const ReferralMarketing = lazy(() => import('./pages/referrals/ReferralMarketing'));
 const PartnerContract = lazy(() => import('./pages/partner/PartnerContract'));
 
 // Lightweight fallback shown while a route's chunk is being fetched. Kept tiny
@@ -461,6 +463,27 @@ function AppRoutes() {
             <Route path="/referrals/templates" element={
               <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_REFERRALS}>
                 <ReferralTemplates />
+              </ProtectedRoute>
+            } />
+
+            {/* Training — the client asked for it as the FIRST box on the
+                partner dashboard (7 Sep). The content is written into the
+                platform rather than uploaded, so there is nothing to configure
+                before it works. */}
+            <Route path="/referrals/training" element={
+              <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_REFERRALS}>
+                <ReferralTraining />
+              </ProtectedRoute>
+            } />
+
+            {/* Marketing Tools — pick a client and a standard, tick the letter,
+                the company profile and the standard's brochure, and send. Also
+                the destination of the Auto Proposal box: the client described
+                one action twice, and one composer is what keeps the two
+                descriptions from drifting apart. */}
+            <Route path="/referrals/marketing" element={
+              <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_REFERRALS}>
+                <ReferralMarketing />
               </ProtectedRoute>
             } />
 

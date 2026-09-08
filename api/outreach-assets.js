@@ -32,6 +32,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { verifyAdmin, verifySession } from './_verifyAdmin.js';
 import { ISO_CATALOG } from '../src/utils/isoCatalog.js';
+import { COMPANY_PROFILE_SLUG } from './_assetSlugs.js';
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -56,6 +57,13 @@ const MAX_BYTES = 3 * 1024 * 1024;
 // or a .pptx would be both off-message and a far more dangerous thing to mail
 // to strangers from a shared domain.
 const ALLOWED_TYPE = 'application/pdf';
+
+// Every place a slug arrives from the browser goes through this. Before today
+// the test was `ISO_CATALOG[slug]` in three separate places; centralising it is
+// what stops the reserved company-profile slug being accepted by two of them
+// and rejected by the third. See api/_assetSlugs.js for why that slug exists.
+const isKnownAssetSlug = (slug) =>
+  slug === COMPANY_PROFILE_SLUG || Boolean(ISO_CATALOG[slug]);
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -158,7 +166,7 @@ async function downloadForPartner(req, res) {
   // Validated against the catalogue, not merely non-empty: the slug reaches a
   // storage path, and "any string the browser sent" is the wrong thing to put
   // there even when the lookup below would fail anyway.
-  if (!standardSlug || !ISO_CATALOG[standardSlug]) {
+  if (!standardSlug || !isKnownAssetSlug(standardSlug)) {
     return res.status(400).json({ error: 'Unknown standard' });
   }
 
@@ -196,7 +204,7 @@ async function uploadAsset(req, res) {
   // The slug is the join between this library and the letter. Validating it
   // against the real catalogue — rather than accepting any string — is what
   // stops the table filling with typo'd rows that no send will ever match.
-  if (!standardSlug || !ISO_CATALOG[standardSlug]) {
+  if (!standardSlug || !isKnownAssetSlug(standardSlug)) {
     return res.status(400).json({ error: 'Unknown standard' });
   }
   if (typeof contentBase64 !== 'string' || !contentBase64) {
@@ -273,7 +281,7 @@ async function deleteAsset(req, res) {
   if (auth.error) return res.status(auth.status).json({ error: auth.error });
 
   const { standardSlug } = req.body || {};
-  if (!standardSlug || !ISO_CATALOG[standardSlug]) {
+  if (!standardSlug || !isKnownAssetSlug(standardSlug)) {
     return res.status(400).json({ error: 'Unknown standard' });
   }
 

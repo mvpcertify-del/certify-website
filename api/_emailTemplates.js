@@ -576,7 +576,8 @@ export function partnerOutreachEmail({
   existingCert,
   ctaUrl,
   partnerName,
-  attachmentName,
+  attachmentNames = [],
+  discountCode,
 }) {
   const copy = getOutreachCopy(standardSlug);
   const title = copy?.title || '';
@@ -602,9 +603,34 @@ export function partnerOutreachEmail({
        ${body(`Building on this achievement, we would like to encourage ${org} to consider implementing and pursuing ${named}.`)}`
     : body(`On behalf of <strong style="color:${TEXT_PRIMARY};">${escapeHtml(SENDER.name)}</strong>, I would like to introduce ${named}, and to encourage ${org} to consider implementing and pursuing it.`);
 
-  const attachmentRow = attachmentName
-    ? body(`I have attached a short briefing note on ${code} &mdash; <em>${escapeHtml(attachmentName)}</em> &mdash; which sets out the requirements and the certification route in more detail.`)
-    : '';
+  // Names the files the message ACTUALLY carries — the array is built from
+  // bytes in hand, never from what the sender ticked (api/referrals.js). One
+  // file keeps the original sentence; two get a sentence that names both, so a
+  // recipient is never told about a briefing note and then handed two PDFs with
+  // no explanation of the second.
+  const attachedList = Array.isArray(attachmentNames) ? attachmentNames.filter(Boolean) : [];
+  const namesHtml = attachedList
+    .map(n => `<em>${escapeHtml(n)}</em>`)
+    .join(' and ');
+  const attachmentRow = attachedList.length === 0
+    ? ''
+    : attachedList.length === 1
+      ? body(`I have attached a short briefing note on ${code} &mdash; ${namesHtml} &mdash; which sets out the requirements and the certification route in more detail.`)
+      : body(`I have attached ${namesHtml}, which together set out who we are and what the ${code} requirements and certification route involve.`);
+
+  // The partner's own code, so a lead who reads this letter and buys is
+  // credited to the partner who sent it (client, 6 Sep). The call-to-action
+  // link already carries ?ref=, but a recipient who reaches the site any other
+  // way — searching for it, or forwarding the mail to a colleague who then
+  // types the address — would otherwise arrive with no attribution at all.
+  const dCode = discountCode ? escapeHtml(discountCode) : '';
+  const codeBox = dCode ? `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;">
+      <tr><td align="center" style="padding:16px;border:1px dashed ${ACCENT_ON_WHITE};border-radius:12px;background:#f0fbf6;">
+        <p style="margin:0 0 6px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:${TEXT_TERTIARY};">Your discount code</p>
+        <p style="margin:0;font-family:'SFMono-Regular',Consolas,monospace;font-size:24px;font-weight:700;letter-spacing:0.1em;color:${ACCENT_ON_WHITE};">${dCode}</p>
+      </td></tr>
+    </table>` : '';
 
   // The partner's stored name, full stop. The editable signature this used to
   // prefer was removed on 6 Sep at the client's instruction.
@@ -644,6 +670,8 @@ export function partnerOutreachEmail({
       ${body(`We would also be glad to prepare and share a proposal and quotation for the ${code} certification process for your consideration, based on your specific requirements and scope.`)}
       ${attachmentRow}
       ${body('We would appreciate an opportunity to engage with the Management or the relevant team to discuss this further and explore how we can support you in taking this important next step.')}
+      ${dCode ? body('Quote the code below at checkout for a discount on your certification:') : ''}
+      ${codeBox}
       <p style="margin:0 0 12px;">${button(ctaUrl, `View ${standardCode} details &amp; pricing`)}</p>
       ${linkFallback(ctaUrl)}
       ${body(`You can also read more about us at <a href="${SENDER.siteUrl}" style="color:${ACCENT_ON_WHITE};text-decoration:none;font-weight:500;">${escapeHtml(SENDER.site)}</a>.`)}
@@ -671,12 +699,15 @@ export function partnerOutreachEmail({
     `As ${SENDER.name}, we would be pleased to support ${orgName || 'your organization'} throughout this process. Our team can provide guidance on the ${standardCode} implementation process, assess your current systems against the standard, identify any gaps, and support you in preparing for certification.`,
     ``,
     `We would also be glad to prepare and share a proposal and quotation for the ${standardCode} certification process for your consideration, based on your specific requirements and scope.`,
-    ...(attachmentName
-      ? [``, `I have attached a short briefing note on ${standardCode} (${attachmentName}) which sets out the requirements and the certification route in more detail.`]
-      : []),
+    ...(attachedList.length === 0
+      ? []
+      : attachedList.length === 1
+        ? [``, `I have attached a short briefing note on ${standardCode} (${attachedList[0]}) which sets out the requirements and the certification route in more detail.`]
+        : [``, `I have attached ${attachedList.join(' and ')}, which together set out who we are and what the ${standardCode} requirements and certification route involve.`]),
     ``,
     `We would appreciate an opportunity to engage with the Management or the relevant team to discuss this further and explore how we can support you in taking this important next step.`,
     ``,
+    ...(discountCode ? [`Your discount code: ${discountCode}`, ``] : []),
     `Details and pricing: ${ctaUrl}`,
     `More about us: ${SENDER.siteUrl}`,
     ``,

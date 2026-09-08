@@ -6,7 +6,7 @@ import StatCard from '../../components/ui/StatCard';
 import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
 import BackButton from '../../components/ui/BackButton';
-import { DollarSign, Gift, Clock } from 'lucide-react';
+import { DollarSign, Gift, Clock, TrendingUp } from 'lucide-react';
 import './Referrals.css';
 
 // "Commissions" — one of the six boxes the client asked for on the Referral
@@ -49,6 +49,14 @@ export default function ReferralCommissions() {
   }, [user?.id]);
 
   // Only converted rows carry money. Everything else is a lead.
+  //
+  // Two different numbers, and the client named them separately on 7 Sep:
+  // "Sales which they have generated" is what the CLIENT paid; "Credit amount
+  // which they have generated from sales" is the partner's cut of it. Both
+  // dashboard boxes open this screen, so both numbers have to be on it —
+  // landing on a page that answers only one of them is what makes a box feel
+  // broken.
+  const salesTotal = rows.reduce((sum, r) => sum + (parseFloat(r.payment_amount) || 0), 0);
   const earned = rows.reduce((sum, r) => sum + (parseFloat(r.commission_amount) || 0), 0);
   const paid = rows
     .filter(r => r.payout_status === 'paid')
@@ -112,12 +120,13 @@ export default function ReferralCommissions() {
       <BackButton fallback="/referral-dashboard" />
       <div className="page-header">
         <div>
-          <h1 className="page-title">{t('refDash.commissions')}</h1>
-          <p className="page-subtitle">{t('refDash.commissionsDesc')}</p>
+          <h1 className="page-title">{t('refDash.earningsTitle')}</h1>
+          <p className="page-subtitle">{t('refDash.earningsDesc')}</p>
         </div>
       </div>
 
       <div className="referral-stats">
+        <StatCard title={t('refDash.sales')} value={`$${salesTotal.toFixed(2)}`} icon={TrendingUp} iconColor="#0ea5e9" />
         <StatCard title={t('referrals.totalEarnings')} value={`$${earned.toFixed(2)}`} icon={DollarSign} iconColor="#f59e0b" />
         <StatCard title={t('referrals.commissionPaid')} value={`$${paid.toFixed(2)}`} icon={Gift} iconColor="#10b981" />
         <StatCard title={t('referrals.commissionOutstanding')} value={`$${outstanding.toFixed(2)}`} icon={Clock} iconColor="#6366f1" />

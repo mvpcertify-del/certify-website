@@ -31,6 +31,13 @@ import './AdminOutreachDocs.css';
 // server check is the real one.
 const MAX_BYTES = 3 * 1024 * 1024;
 
+// The company profile is stored in the same library under a reserved slug —
+// see COMPANY_PROFILE_SLUG in api/_assetSlugs.js for why it lives there
+// rather than in a table of its own. It is listed FIRST because it is the one
+// document that goes out with every standard, so an empty slot here is a gap
+// in every proposal rather than in one.
+const COMPANY_PROFILE_SLUG = 'company-profile';
+
 const formatSize = (bytes) => {
   if (!bytes) return '—';
   if (bytes < 1024) return `${bytes} B`;
@@ -127,6 +134,18 @@ export default function AdminOutreachDocs() {
     }
   };
 
+  // One list, so the company profile gets the same upload, replace and delete
+  // controls as every standard instead of a second bespoke widget beside them.
+  // `code`/`titleKey` are the two fields the card below reads, so the synthetic
+  // entry only has to supply those.
+  const slots = [
+    { slug: COMPANY_PROFILE_SLUG, code: t('outreachDocs.companyProfileCode'), titleKey: 'outreachDocs.companyProfileTitle' },
+    ...ISO_CATALOG_LIST,
+  ];
+
+  // Counted over the ISO standards only. The client's question behind this
+  // number is "how many standards can a partner attach a brochure for?", and
+  // folding the company profile in would answer a different one.
   const withDoc = ISO_CATALOG_LIST.filter((iso) => assets[iso.slug]).length;
 
   return (
@@ -158,7 +177,7 @@ export default function AdminOutreachDocs() {
         <p style={{ color: 'var(--color-text-secondary)' }}>{t('common.loading')}</p>
       ) : (
         <div className="outreach-docs__grid">
-          {ISO_CATALOG_LIST.map((iso) => {
+          {slots.map((iso) => {
             const asset = assets[iso.slug];
             const busy = busySlug === iso.slug;
             return (

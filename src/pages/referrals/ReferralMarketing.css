@@ -1,0 +1,210 @@
+/* Marketing Tools — the tick-and-send composer (client, 7 Sep).
+   Its own stylesheet rather than more of Referrals.css: that file is already
+   the longest in the folder and this screen shares none of its table or
+   stat-card layout.
+
+   Everything here uses logical properties (inline-start / inline-end) rather
+   than left / right. The Arabic UI runs right-to-left and a physical `left`
+   pins the element to the wrong edge in exactly one of the two directions —
+   which is the bug that put the sidebar on top of the page in September. */
+
+.refmkt__panel {
+  padding: 20px;
+  margin-bottom: var(--spacing-lg, 20px);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+}
+
+.refmkt__panel-title {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.refmkt__panel-hint {
+  margin: 0 0 18px;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+}
+
+.refmkt__label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+/* `appearance: none` is what lets the border and background below actually
+   apply — a native select ignores most of them, and on the dark theme the
+   untouched control renders as a light-grey system widget mid-panel. */
+.refmkt__select {
+  appearance: none;
+  width: 100%;
+  box-sizing: border-box;
+  padding-block: 0.75rem;
+  padding-inline: 0.85rem 2.2rem;
+  margin-bottom: var(--spacing-md, 16px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-page);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.refmkt__select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.refmkt__hint {
+  margin: -8px 0 var(--spacing-md, 16px);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--color-text-tertiary);
+}
+
+/* ---- The three tick items ---- */
+
+.refmkt__items {
+  padding: 14px 16px;
+  margin-bottom: var(--spacing-md, 16px);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-bg-page);
+}
+
+.refmkt__items-title {
+  margin-bottom: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.refmkt__check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding-block: 0.5rem;
+  cursor: pointer;
+  line-height: 1.45;
+}
+
+.refmkt__check input {
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+}
+
+/* Two different reasons a row cannot be ticked, drawn the same way on purpose:
+   either the file has not been uploaded yet, or the item is the letter itself
+   and is always sent. The note underneath says which — the styling only has to
+   say "not your decision right now". */
+.refmkt__check--disabled,
+.refmkt__check--locked {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.refmkt__check-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.refmkt__check-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.refmkt__check-note {
+  font-size: 0.78rem;
+  color: var(--color-text-tertiary);
+  overflow-wrap: anywhere;
+}
+
+.refmkt__code-note,
+.refmkt__attach-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0 0 var(--spacing-md, 16px);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.refmkt__attach-note {
+  margin-block: var(--spacing-md, 16px) 0;
+}
+
+.refmkt__code-note svg,
+.refmkt__attach-note svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: var(--color-accent);
+}
+
+.refmkt__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ---- The library ---- */
+
+.refmkt__library {
+  display: grid;
+  gap: 10px;
+}
+
+.refmkt__doc {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+}
+
+.refmkt__doc-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  background: rgba(99, 102, 241, 0.12);
+  color: #6366f1;
+}
+
+/* min-width:0 lets a long file name ellipsis rather than forcing the row wider
+   than the panel — a flex item defaults to min-width:auto and will not shrink
+   below its own content. */
+.refmkt__doc-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.refmkt__doc-name {
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.refmkt__doc-meta {
+  margin-top: 2px;
+  font-size: 0.78rem;
+  color: var(--color-text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

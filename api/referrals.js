@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { verifySession, verifyAdmin } from './_verifyAdmin.js';
+import { COMPANY_PROFILE_SLUG } from './_assetSlugs.js';
 import { referralClientInviteEmail, partnerOutreachEmail } from './_emailTemplates.js';
 import { getOutreachCopy } from './_outreachCopy.js';
 import { ensureConversation, appendMessage, discardConversation } from './_conversations.js';
@@ -36,6 +37,13 @@ const COMPANY_PROFILE_URL = process.env.COMPANY_PROFILE_URL || null;
 //   - a per-RECIPIENT lifetime cap, so the recipient is attacker-chosen but a
 //     given address can only ever be mailed a couple of times.
 // A real partner onboarding a handful of leads never touches either.
+// A single letter may now carry two PDFs (the standard's brochure and the
+// company profile). Each is capped at 3 MB on upload, so two of them is 6 MB
+// raw — about 8 MB once base64 puts them on the wire, against a mail-server
+// bounce threshold that is commonly 10 MB. This is the combined ceiling that
+// keeps the total under it with room for the letter itself.
+const MAX_TOTAL_ATTACHMENT_BYTES = 6 * 1024 * 1024;
+
 const INVITE_DAILY_CAP = 20;
 const INVITE_PER_RECIPIENT_CAP = 3;
 
@@ -583,8 +591,18 @@ async function sendOutreach(req, res) {
     return res.status(503).json({ error: 'Email is not configured on the server' });
   }
 
-  const { referralId, standardSlug, existingCert } = req.body || {};
+  const { referralId, standardSlug, existingCert, include } = req.body || {};
   if (!referralId) return res.status(400).json({ error: 'Missing referral reference' });
+
+  // Which of the three items the partner ticked (client, 6 Sep: "the above 3
+  // items will be available & just to be ticked & system will send directly").
+  //
+  // The ready email template is item 1 and is not optional — it IS the letter,
+  // and an email with no body is not a thing to offer. Items 2 and 3 are the
+  // two attachments. Both default to the pre-6-Sep behaviour so an older
+  // client build, or a retry from a stale tab, sends exactly what it used to.
+  const wantBrochure = include?.brochure !== false;
+  const wantCompanyProfile = include?.companyProfile === true;
 
   // The slug must satisfy BOTH catalogues: ISO_CATALOG (it is a standard the
   // site actually sells, so the call-to-action link resolves) and the outreach
@@ -630,31 +648,71 @@ async function sendOutreach(req, res) {
     ? String(existingCert).replace(/[\r\n]+/g, ' ').trim().slice(0, 60)
     : null;
 
-  // ---- The attachment, if this standard has one ----
+  // ---- The attachments, in the order the recipient should meet them ----
   //
-  // A standard with no uploaded document sends the letter WITHOUT one rather
-  // than with somebody else's. `attachmentName` is passed to the template only
-  // when the bytes are actually in hand, so the letter can never claim "I have
-  // attached a briefing note" over an email that carries no attachment.
-  let attachment = null;
-  const { data: asset } = await supabaseAdmin
-    .from('outreach_assets')
-    .select('file_name, storage_path')
-    .eq('standard_slug', standardSlug)
-    .maybeSingle();
+  // Up to two files now: the standard's own briefing note, and the company
+  // profile the client asked for on 6 Sep. `attachmentNames` is handed to the
+  // template ONLY for files whose bytes are actually in hand, which is what
+  // stops the letter claiming "I have attached our company profile" over an
+  // email that carries no such thing. That invariant predates this change and
+  // is the reason the list is built here rather than from what was ticked.
+  //
+  // A missing or unreadable file is NOT fatal, exactly as before: a good letter
+  // with nothing attached beats no letter at all, and beats a letter that lies
+  // about its own contents.
+  // Company profile first, brochure second — the order the letter names them
+  // in, and the order a stranger should meet them: who we are, then what we are
+  // proposing. Mail clients list attachments in the order they are sent.
+  const wanted = [];
+  if (wantCompanyProfile) wanted.push(COMPANY_PROFILE_SLUG);
+  if (wantBrochure) wanted.push(standardSlug);
 
-  if (asset?.storage_path) {
-    const { data: blob, error: dlErr } = await supabaseAdmin.storage
-      .from('outreach-assets')
-      .download(asset.storage_path);
-    if (dlErr || !blob) {
-      // Worth knowing about — it means the row and the bucket disagree — but
-      // not worth failing the partner's send over. The letter still stands up
-      // on its own without the brochure.
-      console.error('send-outreach: attachment download failed', standardSlug, dlErr?.message);
-    } else {
+  const attachments = [];
+  let attachmentBytes = 0;
+
+  if (wanted.length) {
+    const { data: assetRows } = await supabaseAdmin
+      .from('outreach_assets')
+      .select('standard_slug, file_name, storage_path')
+      .in('standard_slug', wanted);
+
+    const bySlug = new Map((assetRows || []).map(r => [r.standard_slug, r]));
+
+    // Sequential, not Promise.all: two 3 MB downloads plus their base64 strings
+    // already sit in one serverless function's memory at once, and fetching
+    // them in parallel doubles the peak for no useful latency win on a send
+    // that is already waiting on Resend.
+    for (const slug of wanted) {
+      const row = bySlug.get(slug);
+      if (!row?.storage_path) continue;
+
+      const { data: blob, error: dlErr } = await supabaseAdmin.storage
+        .from('outreach-assets')
+        .download(row.storage_path);
+
+      if (dlErr || !blob) {
+        // Worth knowing about — it means the row and the bucket disagree — but
+        // not worth failing the partner's send over.
+        console.error('send-outreach: attachment download failed', slug, dlErr?.message);
+        continue;
+      }
+
       const buf = Buffer.from(await blob.arrayBuffer());
-      attachment = { filename: asset.file_name, content: buf.toString('base64') };
+
+      // Refuse rather than silently drop. Mail servers commonly bounce a
+      // message over 10 MB and base64 inflates by a third, so two files at the
+      // 3 MB per-file ceiling is already ~8 MB on the wire. A bounce is
+      // invisible to the partner — they see "sent" and hear nothing back — so
+      // the failure has to happen here, in front of them, naming the fix.
+      if (attachmentBytes + buf.length > MAX_TOTAL_ATTACHMENT_BYTES) {
+        return res.status(413).json({
+          error: 'The selected attachments are too large to email together. '
+            + 'Send them separately, or ask your administrator to upload a smaller PDF.',
+        });
+      }
+
+      attachmentBytes += buf.length;
+      attachments.push({ filename: row.file_name, content: buf.toString('base64') });
     }
   }
 
@@ -694,7 +752,11 @@ async function sendOutreach(req, res) {
     existingCert: heldCert,
     ctaUrl,
     partnerName: partner.full_name,
-    attachmentName: attachment?.filename || null,
+    attachmentNames: attachments.map(a => a.filename),
+    // The client asked on 6 Sep that the proposal carry the partner's discount
+    // code, as the invitation letter already did. Without it a cold lead who
+    // reads the proposal and buys is credited to nobody.
+    discountCode: partner.referral_code,
   });
 
   // Open (or re-use) the thread this letter belongs to, so the client's reply
@@ -726,7 +788,8 @@ async function sendOutreach(req, res) {
       subject,
       html,
       text,
-      ...(attachment ? { attachments: [attachment] } : {}),
+      // Spread in only when non-empty: Resend rejects an empty array.
+      ...(attachments.length ? { attachments } : {}),
     }),
   });
 
@@ -755,7 +818,8 @@ async function sendOutreach(req, res) {
   return res.status(200).json({
     ok: true,
     sentTo: recipient,
-    attached: Boolean(attachment),
+    attached: attachments.length > 0,
+    attachedCount: attachments.length,
     threaded: Boolean(thread),
   });
 }
