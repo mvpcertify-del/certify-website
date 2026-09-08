@@ -8,6 +8,16 @@ import {
   acceptContract,
 } from './_contract.js';
 import { notifyAdmins } from './_notifyAdmins.js';
+// Three handlers that used to be their own /api routes. They moved in here on
+// 8 Sep because Vercel's Hobby plan allows at most 12 Serverless Functions per
+// deployment and this project had reached 15 — every deploy since 27 August
+// failed at "Deploying outputs", which is why finished work never went live.
+// A file under api/ whose name starts with "_" is a helper, not a route, so
+// these three now cost nothing against that limit. All three were only ever
+// called from the browser, so moving them changes no external integration.
+import { approveRegistration } from './_approveRegistration.js';
+import { deleteUser } from './_deleteUser.js';
+import { resendVerification } from './_resendVerification.js';
 import { sendWhatsApp } from './_notifyWhatsApp.js';
 import { ROLES, getRegionFromCountry } from '../src/utils/roles.js';
 import { sanitizeAuditorTags } from '../src/utils/auditorOptions.js';
@@ -38,6 +48,9 @@ export default async function handler(req, res) {
     }
 
     const action = req.body?.action;
+    if (action === 'approve-registration') return await approveRegistration(req, res);
+    if (action === 'delete-user') return await deleteUser(req, res);
+    if (action === 'resend-verification') return await resendVerification(req, res);
     if (action === 'update-profile') return await updateProfile(req, res);
     if (action === 'update-role') return await updateRole(req, res);
     if (action === 'set-active') return await setActive(req, res);

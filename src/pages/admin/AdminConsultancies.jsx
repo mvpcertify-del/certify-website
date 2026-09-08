@@ -37,7 +37,7 @@ import './AdminConsultancies.css';
 //    Management. Deactivation remains an explicit, deliberate click.
 //
 //    Every write goes through the same service-role endpoints User Management
-//    uses (/api/user + /api/delete-user), which re-verify the caller's Bearer
+//    uses (/api/user actions), which re-verify the caller's Bearer
 //    token and refuse a target they may not manage. As on Referral Partners,
 //    a Super Admin gets all four actions and every other admin who can reach
 //    the list gets View alone.
@@ -325,7 +325,7 @@ export default function AdminConsultancies() {
     // signed contract, so this is confirmed before it is sent.
     if (!window.confirm(t('admin.deleteUserConfirm') + ` ${name}?`)) return;
     try {
-      await apiPost('/api/delete-user', { userId: p.profile_id });
+      await apiPost('/api/user', { action: 'delete-user', userId: p.profile_id });
       setPartners((prev) => prev.filter((x) => x.profile_id !== p.profile_id));
       setKpiSuccess(`${t('admin.successDeleted')} ${name}`);
     } catch (err) {

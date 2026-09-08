@@ -20,7 +20,7 @@ import { supabase } from './supabase';
  * Throws an Error with a human-readable message on any non-2xx or non-JSON
  * response (never throws a raw "Unexpected token" SyntaxError).
  *
- * @param {string} path  e.g. '/api/delete-user'
+ * @param {string} path  e.g. '/api/user'
  * @param {object} body  request payload (serialized to JSON)
  */
 export async function apiPost(path, body = {}) {

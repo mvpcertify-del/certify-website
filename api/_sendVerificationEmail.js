@@ -3,7 +3,7 @@
 // (currently throttled to 2/h on this project after a historical bounce-rate
 // flag — see plan Phase 6).
 //
-// Used by both /api/create-user (initial signup) and /api/resend-verification
+// Used by /api/create-user (initial signup) and the resend-verification action
 // (manual resend when the first send failed).
 
 import { verifyEmail } from './_emailTemplates.js';

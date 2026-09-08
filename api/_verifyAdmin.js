@@ -126,7 +126,7 @@ export async function verifyAdmin(req, { requireSuperAdmin = false } = {}) {
 // or another regional_admin. Self-checks are the caller's responsibility (they
 // carry their own message).
 //
-// Shared here so api/user.js (deactivate, re-role) and api/delete-user.js apply
+// Shared here so api/user.js (deactivate, re-role) and _deleteUser.js apply
 // the exact same rule and cannot drift apart.
 const _ADMIN_ROLES = ['super_admin', 'regional_admin'];
 

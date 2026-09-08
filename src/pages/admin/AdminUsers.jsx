@@ -172,7 +172,7 @@ export default function AdminUsers() {
     setError('');
     setSuccess('');
     try {
-      await apiPost('/api/resend-verification', { email: userRow.email });
+      await apiPost('/api/user', { action: 'resend-verification', email: userRow.email });
       setSuccess(`${t('admin.verificationResent')} ${userRow.email}`);
     } catch (err) {
       setError(err.message);
@@ -211,7 +211,7 @@ export default function AdminUsers() {
     setLoading(true);
 
     try {
-      await apiPost('/api/delete-user', { userId: deletingUser.id });
+      await apiPost('/api/user', { action: 'delete-user', userId: deletingUser.id });
 
       setSuccess(`${t('admin.successDeleted')} ${deletingUser.full_name || deletingUser.email}`);
       setUsers(prev => prev.filter(u => u.id !== deletingUser.id));

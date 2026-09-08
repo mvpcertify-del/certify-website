@@ -29,7 +29,7 @@ import { notifyAdmins } from './_notifyAdmins.js';
 //   and delete every application-scoped child by application_id FIRST, then the
 //   applications themselves. (`certificates` is ON DELETE CASCADE — no action.)
 // ---------------------------------------------------------------------------
-export default async function handler(req, res) {
+export async function deleteUser(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }

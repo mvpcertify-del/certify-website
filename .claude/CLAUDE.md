@@ -29,6 +29,21 @@ Copy `.env.example` to `.env`. Required vars:
 
 **Two-tier runtime.** The app is a SPA plus Vercel-style serverless functions in [api/](api/). In local dev, [vite.config.js](vite.config.js) installs a custom middleware plugin (`vercelApiPlugin`) that intercepts `/api/*` requests, dynamically imports the matching `.js` file, and adapts Node `req`/`res` to the Vercel handler shape (`res.status().json()`). In production, Vercel serves these directly; [vercel.json](vercel.json) rewrites everything else to `index.html` for SPA routing. When adding a new API route, just drop a file in `api/` exporting `default async function handler(req, res)` — no registration needed.
 
+**Hard limit: 12 serverless functions.** The Vercel project is on the Hobby
+plan, which refuses any deployment containing more than 12 Serverless Functions.
+Every `.js` directly under `api/` whose name does NOT start with `_` counts as
+one. This is not theoretical: on 27 Aug the count went from 12 to 15 and every
+deployment failed at "Deploying outputs" for twelve days while finished work
+piled up on `main` — the build log looks successful right up to that line, so it
+reads as a mystery unless you know to count. Before adding a route, count:
+`ls api/*.js | grep -v "/_" | wc -l`. If it is already 12, add an `action` to an
+existing handler instead — that is why `user.js`, `referrals.js` and
+`outreach-assets.js` are action-dispatched — or move a browser-only handler to a
+`_`-prefixed helper and call it from one. Four routes are pinned by external
+callers and must keep their URLs: `send-welcome` (Postgres trigger),
+`auth-email-hook` (Supabase), `inbound-email` (Resend webhook) and `notify-event`
+(the cron in `vercel.json`).
+
 **Why the API layer exists.** The frontend uses the Supabase anon key; any operation needing the service role (creating users, deleting users, reading referral data across accounts, Stripe checkout) must go through `api/`. Do not attempt to do these from `src/`.
 
 **Auth & profile shape.** [src/contexts/AuthContext.jsx](src/contexts/AuthContext.jsx) is the single source of truth for the current user. On session init it fetches the `profiles` row and merges it into the Supabase user object, so `user.role`, `user.region`, `user.approval_status`, etc. are read directly off `user`. Google OAuth users without a profile get auto-created as `client` via `/api/update-profile`. When reading user data in components, use `useAuth()` — don't re-query Supabase for the current user.

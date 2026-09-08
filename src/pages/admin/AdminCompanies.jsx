@@ -164,7 +164,7 @@ export default function AdminCompanies() {
     const name = client.company_name || client.full_name || client.email;
     if (!window.confirm(t('admin.deleteUserConfirm') + ` ${name}?`)) return;
     try {
-      await apiPost('/api/delete-user', { userId: client.id });
+      await apiPost('/api/user', { action: 'delete-user', userId: client.id });
       setCompanies(prev => prev.filter(c => c.id !== client.id));
       setSuccess(`${t('admin.successDeleted')} ${name}`);
     } catch (err) {

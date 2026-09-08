@@ -19,7 +19,7 @@ import './AdminReferralPartners.css';
 // split follows Clients exactly: a Super Admin gets all four, every other admin
 // who can reach the list gets View alone. The actions are not a second way to
 // manage users; they call the same endpoints User Management does
-// (/api/user + /api/delete-user), which re-check the caller's rights server-side.
+// (/api/user actions), which re-check the caller's rights server-side.
 //
 // The region scope is applied by the API (a country admin only ever receives
 // their own region's partners), not by this component — the browser must not be
@@ -127,7 +127,7 @@ export default function AdminReferralPartners() {
   // Every write goes through the same service-role endpoint the Clients screen
   // uses, so the authorization rules live in one place: /api/user re-verifies
   // the Bearer token and refuses a target the caller may not manage, and
-  // /api/delete-user does its own ownership check before it clears the ~15
+  // The delete-user action does its own ownership check before it clears the ~15
   // tables that reference the user.
   // ---------------------------------------------------------------------
   const openView = (p) => {
@@ -200,7 +200,7 @@ export default function AdminReferralPartners() {
     // is confirmed before it is sent — same guard as the Clients screen.
     if (!window.confirm(t('admin.deleteUserConfirm') + ` ${name}?`)) return;
     try {
-      await apiPost('/api/delete-user', { userId: p.profile_id });
+      await apiPost('/api/user', { action: 'delete-user', userId: p.profile_id });
       setPartners((prev) => prev.filter((x) => x.profile_id !== p.profile_id));
       setSuccess(`${t('admin.successDeleted')} ${name}`);
     } catch (err) {

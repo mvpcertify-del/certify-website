@@ -492,7 +492,7 @@ function clientIp(req) {
 // ----------------------------------------------------------------------------
 // The contract runs from the administrator's approval. When a partner signs
 // BEFORE being approved, their acceptance is recorded with no dates; this fills
-// them in at the moment of approval. Called from api/approve-registration.js.
+// them in at the moment of approval. Called from api/_approveRegistration.js.
 export async function stampEffectiveDate(supabaseAdmin, profileId, approvedAtIso) {
   const approved = new Date(approvedAtIso || Date.now());
   if (Number.isNaN(approved.getTime())) return;

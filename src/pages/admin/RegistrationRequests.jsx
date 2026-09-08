@@ -60,7 +60,7 @@ export default function RegistrationRequests() {
       // apiPost attaches the Supabase access token. A bare fetch sent no
       // Authorization header, and the endpoint now verifies the caller from
       // that token rather than trusting an adminId in the body.
-      const result = await apiPost('/api/approve-registration', { userId, action });
+      const result = await apiPost('/api/user', { action: 'approve-registration', userId, decision: action });
       if (result.success) {
         // Remove from current list
         setRequests(prev => prev.filter(r => r.id !== userId));

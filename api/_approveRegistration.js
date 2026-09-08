@@ -7,19 +7,22 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-export default async function handler(req, res) {
+export async function approveRegistration(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
   try {
-    const { userId, action } = req.body;
+    // `decision`, not `action`: this handler is now reached through
+    // /api/user, whose dispatcher already owns `action`. Reusing that name
+    // would have made the router swallow 'approved'/'rejected'.
+    const { userId, decision } = req.body;
 
-    if (!userId || !action) {
-      return res.status(400).json({ error: 'Missing userId or action' });
+    if (!userId || !decision) {
+      return res.status(400).json({ error: 'Missing userId or decision' });
     }
 
-    if (!['approved', 'rejected'].includes(action)) {
+    if (!['approved', 'rejected'].includes(decision)) {
       return res.status(400).json({ error: 'Action must be "approved" or "rejected"' });
     }
 
@@ -36,7 +39,7 @@ export default async function handler(req, res) {
     const { error } = await supabaseAdmin
       .from('profiles')
       .update({
-        approval_status: action,
+        approval_status: decision,
         approved_by: caller.id,
         approved_at: approvedAt,
       })
@@ -51,7 +54,7 @@ export default async function handler(req, res) {
     // approved has an acceptance with no dates; this is the moment they are
     // known, so fill them in and start the 12-month term. Best-effort: the
     // approval itself must not fail because of this.
-    if (action === 'approved') {
+    if (decision === 'approved') {
       try {
         await stampEffectiveDate(supabaseAdmin, userId, approvedAt);
       } catch (e) {
@@ -67,10 +70,10 @@ export default async function handler(req, res) {
       .maybeSingle();
 
     // Create notification for the user
-    const notifTitle = action === 'approved'
+    const notifTitle = decision === 'approved'
       ? 'Registration Approved'
       : 'Registration Declined';
-    const notifMessage = action === 'approved'
+    const notifMessage = decision === 'approved'
       ? 'Your CertifyCX registration has been approved! You can now log in and access your dashboard.'
       : 'Your CertifyCX registration has been declined. Please contact support at mvpcertify@gmail.com for more information.';
 
@@ -83,7 +86,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
-      action,
+      action: decision,
       user: userProfile?.full_name || userId,
     });
   } catch (error) {

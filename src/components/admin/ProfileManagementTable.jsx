@@ -24,7 +24,7 @@ import { AlertCircle, CheckCircle, Eye, EyeOff, UserPlus } from 'lucide-react';
 // Writes route through the existing service-role endpoints:
 //   - Edit              -> /api/user           (action: 'update-profile')
 //   - Activate/Deactivate -> /api/user         (action: 'set-active')  [super only]
-//   - Delete            -> /api/delete-user                            [super only]
+//   - Delete            -> /api/user (action: 'delete-user')           [super only]
 //   - File fields       -> /api/user           (action from field.uploadAction)
 //
 // Props:
@@ -358,7 +358,7 @@ export default function ProfileManagementTable({
     const name = rowName(row);
     if (!window.confirm(t('admin.deleteUserConfirm') + ` ${name}?`)) return;
     try {
-      await apiPost('/api/delete-user', { userId: row.id });
+      await apiPost('/api/user', { action: 'delete-user', userId: row.id });
       setItems(prev => prev.filter(i => i.id !== row.id));
       setSuccess(`${t('admin.successDeleted')} ${name}`);
     } catch (err) {
