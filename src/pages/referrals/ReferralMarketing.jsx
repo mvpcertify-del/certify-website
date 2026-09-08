@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { apiPost } from '../../lib/apiClient';
-import BackButton from '../../components/ui/BackButton';
 import { Input, Button } from '../../components/ui/FormElements';
 import { ISO_CATALOG_LIST, getIsoBySlug } from '../../utils/isoCatalog';
 import {
@@ -179,7 +178,6 @@ export default function ReferralMarketing() {
 
   return (
     <div className="page-container">
-      <BackButton fallback="/referral-dashboard" />
       <div className="page-header">
         <div>
           <h1 className="page-title">{t('refDash.marketing')}</h1>

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { apiPost } from '../../lib/apiClient';
-import BackButton from '../../components/ui/BackButton';
 import { Button } from '../../components/ui/FormElements';
 import { getIsoBySlug } from '../../utils/isoCatalog';
 import { FileText, Download, AlertCircle, Paperclip } from 'lucide-react';
@@ -64,7 +63,6 @@ export default function ReferralMaterials() {
 
   return (
     <div className="page-container">
-      <BackButton fallback="/referral-dashboard" />
       <div className="page-header">
         <div>
           <h1 className="page-title">{t('refDash.materials')}</h1>

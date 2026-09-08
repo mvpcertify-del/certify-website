@@ -5,7 +5,6 @@ import { supabase } from '../../lib/supabase';
 import StatCard from '../../components/ui/StatCard';
 import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
-import BackButton from '../../components/ui/BackButton';
 import { DollarSign, Gift, Clock, TrendingUp } from 'lucide-react';
 import './Referrals.css';
 
@@ -117,7 +116,6 @@ export default function ReferralCommissions() {
 
   return (
     <div className="page-container">
-      <BackButton fallback="/referral-dashboard" />
       <div className="page-header">
         <div>
           <h1 className="page-title">{t('refDash.earningsTitle')}</h1>

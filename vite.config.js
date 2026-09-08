@@ -10,10 +10,21 @@ function vercelApiPlugin() {
         if (!req.url.startsWith('/api/')) return next();
 
         const routePath = req.url.split('?')[0]; // e.g. /api/checkout
-        const { fileURLToPath } = await import('url');
+        const { fileURLToPath, pathToFileURL } = await import('url');
         const { dirname, join } = await import('path');
         const __dirname = dirname(fileURLToPath(import.meta.url));
-        const modulePath = join(__dirname, `${routePath}.js`);
+
+        // pathToFileURL, not the bare path. On Windows `join()` produces
+        // "E:\...\api\user.js", and Node's ESM loader reads the drive letter as
+        // a URL scheme — it fails with "Only URLs with a scheme in: file, data,
+        // and node are supported ... Received protocol 'e:'". Every /api/* call
+        // then returned HTTP 500, so no admin screen that reads through the
+        // service role could be tested locally at all. It looked like empty
+        // data rather than a broken dev server, which is worse: on 8 Sep it
+        // briefly read as a real bug in the Consultancies and Referral Partners
+        // pages. POSIX paths have no drive letter, which is why this never
+        // showed up anywhere but Windows.
+        const modulePath = pathToFileURL(join(__dirname, `${routePath}.js`)).href;
 
         try {
           // Load env vars for server-side use

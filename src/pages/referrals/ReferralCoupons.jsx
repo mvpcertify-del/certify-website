@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
-import BackButton from '../../components/ui/BackButton';
 import { Copy, Check } from 'lucide-react';
 import './Referrals.css';
 
@@ -39,7 +38,6 @@ export default function ReferralCoupons() {
 
   return (
     <div className="page-container">
-      <BackButton fallback="/referral-dashboard" />
       <div className="page-header">
         <div>
           <h1 className="page-title">{t('refDash.coupons')}</h1>

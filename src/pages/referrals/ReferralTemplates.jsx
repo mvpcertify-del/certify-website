@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { apiPost } from '../../lib/apiClient';
-import BackButton from '../../components/ui/BackButton';
 import { Button } from '../../components/ui/FormElements';
 import { READY_TEMPLATES } from './readyTemplates';
 import { getIsoBySlug } from '../../utils/isoCatalog';
@@ -41,7 +40,6 @@ export default function ReferralTemplates() {
 
   return (
     <div className="page-container">
-      <BackButton fallback="/referral-dashboard" />
       <div className="page-header">
         <div>
           <h1 className="page-title">{t('refDash.templates')}</h1>

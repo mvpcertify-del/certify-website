@@ -8,7 +8,6 @@ import StatusBadge from '../../components/ui/StatusBadge';
 import Modal from '../../components/ui/Modal';
 import { Input, Button } from '../../components/ui/FormElements';
 import NameFields from '../../components/ui/NameFields';
-import BackButton from '../../components/ui/BackButton';
 import { apiPost } from '../../lib/apiClient';
 import { ISO_CATALOG_LIST } from '../../utils/isoCatalog';
 import { Link2, Check, Users, DollarSign, UserPlus, Gift, Plus, AlertCircle, CheckCircle, Mail, Send, Paperclip } from 'lucide-react';
@@ -330,9 +329,6 @@ export default function Referrals() {
 
   return (
     <div className="page-container">
-      {/* Back to the box grid. Falls back to a real link rather than
-          history.back() for a partner who arrived here on a bookmark. */}
-      <BackButton fallback="/referral-dashboard" />
       <div className="page-header">
         <div>
           {/* Titled "Clients", matching the dashboard box that opens it. The

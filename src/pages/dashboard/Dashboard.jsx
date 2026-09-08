@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Building2, FileCheck2, Clock, UserCheck, Percent, PlusCircle, CheckCircle2, ChevronRight, Upload, FileText, AlertCircle, MessageSquare, Download, Trash2, Eye, XCircle, Award } from 'lucide-react';
 import StatCard from '../../components/ui/StatCard';
@@ -376,6 +376,21 @@ export default function Dashboard() {
     }
     setDeletingDocId(null);
   };
+
+  // A referral or consultancy partner has no branch in the ladder below, so
+  // they fell through to the final `else` and were shown "Your portal is
+  // currently being set up. Check back later." That is the blank screen a live
+  // partner reported on 7 Sep, and it is a lie — their portal is built, it is
+  // just at /referral-dashboard.
+  //
+  // The sidebar stopped linking here for them on 6 Sep, but a bookmark, an old
+  // email link, or the layout's Back button can still land them on /dashboard.
+  // Redirecting closes the hole rather than papering over it; adding a sixth
+  // branch that duplicates the partner dashboard would be two screens to keep
+  // in step, and one of them would rot.
+  if (user?.role === ROLES.REFERRAL || user?.role === ROLES.CONSULTANCY) {
+    return <Navigate to="/referral-dashboard" replace />;
+  }
 
   if (!user || loading) return <div className="page-container"><p>{t('common.loadingDashboard')}</p></div>;
 

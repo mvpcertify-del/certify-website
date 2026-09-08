@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import BackButton from '../../components/ui/BackButton';
 import { Button } from '../../components/ui/FormElements';
 import { TRAINING_TOPICS } from './trainingTopics';
 import { ChevronDown, ChevronUp, ArrowRight } from 'lucide-react';
@@ -30,7 +29,6 @@ export default function ReferralTraining() {
 
   return (
     <div className="page-container">
-      <BackButton fallback="/referral-dashboard" />
       <div className="page-header">
         <div>
           <h1 className="page-title">{t('refTraining.title')}</h1>
