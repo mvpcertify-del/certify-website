@@ -16,6 +16,11 @@
 // matching locale key would surface a raw key on screen, so the two move
 // together.
 //
+// `color` is the box's accent on the Training grid. The grid reuses the
+// dashboard's card, and that card takes its accent from the entry — so the
+// colour lives with the topic rather than being computed from its index,
+// which would reshuffle every box the moment one is inserted.
+//
 // `path` is the screen the walkthrough is actually about, so a partner who has
 // just read it can be taken straight there instead of hunting for it in the
 // sidebar.
@@ -31,18 +36,21 @@ import {
 export const TRAINING_TOPICS = [
   {
     key: 'gettingStarted',
+    color: '#8b5cf6',
     icon: LayoutDashboard,
     steps: 4,
     path: '/referral-dashboard',
   },
   {
     key: 'addClient',
+    color: '#3ECF8E',
     icon: UserPlus,
     steps: 5,
     path: '/referrals',
   },
   {
     key: 'sendInvite',
+    color: '#0ea5e9',
     icon: Mail,
     steps: 4,
     // Invites are sent from the Clients table row, not from a screen of their
@@ -51,6 +59,7 @@ export const TRAINING_TOPICS = [
   },
   {
     key: 'sendProposal',
+    color: '#f97316',
     icon: FileText,
     steps: 5,
     // Marketing Tools, not the Clients table: a proposal is composed there now
@@ -60,12 +69,14 @@ export const TRAINING_TOPICS = [
   },
   {
     key: 'discountCode',
+    color: '#ec4899',
     icon: Ticket,
     steps: 4,
     path: '/referrals/coupons',
   },
   {
     key: 'commissions',
+    color: '#10b981',
     icon: Wallet,
     steps: 4,
     path: '/referrals/commissions',

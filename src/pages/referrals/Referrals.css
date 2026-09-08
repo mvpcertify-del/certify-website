@@ -447,112 +447,52 @@
 
 /* ---- Training ---- */
 
-.referral-training-grid {
-  display: grid;
-  gap: 12px;
-}
+/* ---------------------------------------------------------------------------
+   Training (client, 8 Sep: "follow & apply the Boxes Visual appearance")
+   The grid itself is the dashboard's — see MainDashboard.css. Only the panel
+   that opens under a chosen box lives here.
+   --------------------------------------------------------------------------- */
 
-.referral-training {
+.referral-training__panel {
+  margin-top: var(--spacing-lg, 20px);
+  padding: 22px 24px;
   border: 1px solid var(--color-border);
   border-radius: 12px;
   background: var(--color-surface);
-  overflow: hidden;
 }
 
-/* The head is a <button>, so the browser defaults (centred text, button
-   background, physical padding) have to be unwound before it can look like a
-   card row. text-align: start, not left — the Arabic layout mirrors. */
-.referral-training__head {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  width: 100%;
-  padding: 16px 18px;
-  border: 0;
-  background: none;
-  font: inherit;
-  color: inherit;
-  text-align: start;
-  cursor: pointer;
-}
-
-.referral-training__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 42px;
-  height: 42px;
-  border-radius: 10px;
-  background: rgba(16, 185, 129, 0.12);
-  color: #10b981;
-}
-
-/* min-width:0 lets a long title wrap instead of forcing the row wider than the
-   page — a flex item defaults to min-width:auto. */
-.referral-training__head-text {
-  display: grid;
-  gap: 2px;
-  flex: 1;
-  min-width: 0;
-}
-
-.referral-training__title {
-  font-size: 1rem;
+.referral-training__panel-title {
+  margin: 0 0 14px;
+  font-size: 1.1rem;
   font-weight: 600;
+  color: var(--color-text-primary);
 }
 
-.referral-training__desc {
-  font-size: 0.85rem;
-  line-height: 1.5;
-  color: var(--color-text-secondary);
-}
-
-.referral-training__chevron {
-  display: inline-flex;
-  flex-shrink: 0;
-  color: var(--color-text-tertiary);
-}
-
-.referral-training__body {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 14px;
-  /* Indented to line up under the head text, past the icon, on whichever side
-     the start edge happens to be. */
-  padding: 0 18px 18px;
-  padding-inline-start: 74px;
-  border-top: 1px solid var(--color-border);
-}
-
+/* padding-inline-start, not padding-left: the list marker sits on the start
+   edge, which is the right edge in Arabic. */
 .referral-training__steps {
-  margin: 14px 0 0;
-  /* The numbers sit on the start edge, which is the right edge in Arabic. */
-  padding-inline-start: 20px;
+  margin: 0 0 18px;
+  padding-inline-start: 1.25rem;
   display: grid;
-  gap: 8px;
+  gap: 10px;
+  max-width: 68ch;
 }
 
 .referral-training__steps li {
-  font-size: 0.87rem;
-  line-height: 1.55;
+  font-size: 0.92rem;
+  line-height: 1.6;
   color: var(--color-text-secondary);
-  padding-inline-start: 4px;
 }
 
-@media (max-width: 640px) {
-  /* On a phone the indent costs more than the alignment is worth. */
-  .referral-training__body {
-    padding-inline-start: 18px;
-  }
+.referral-training__steps li::marker {
+  color: var(--color-accent);
+  font-weight: 700;
 }
 
 /* The "open this screen" arrow points along the reading direction, so in
    Arabic it has to point the other way. `transform` has no logical form —
    unlike margin-inline / inset-inline it does not flip with `dir` — which is
-   why this needs an explicit RTL twin rather than a logical property. Same
-   reason the mobile sidebar drawer still carries one. */
-[dir="rtl"] .referral-training__body .form-btn svg:last-child {
+   why this needs an explicit RTL twin rather than a logical property. */
+[dir="rtl"] .referral-training__panel .form-btn svg:last-child {
   transform: scaleX(-1);
 }

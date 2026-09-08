@@ -3,29 +3,38 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/ui/FormElements';
 import { TRAINING_TOPICS } from './trainingTopics';
-import { ChevronDown, ChevronUp, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import '../dashboard/MainDashboard.css';
 import './Referrals.css';
 
-// "Training" — the first box on the Referral Program Dashboard (client, 8 Sep).
+// "Training" — the first box on the Referral Program Dashboard (client, 7 Sep).
 //
-// The tutorials are read here rather than downloaded or watched. Nothing in
-// this platform stores training content — there is no table, no bucket and no
-// upload screen for it — so instead of shipping a page that waits on files
-// somebody still has to produce, the walkthroughs are written into the product
-// as translated copy (see trainingTopics.js). A partner sees the real steps on
-// day one, in their own language, and a correction is a copy edit.
+// Laid out as the SAME grid of boxes as the dashboard itself, on the client's
+// instruction of 8 Sep: "If you can follow & apply the Boxes Visual appearance
+// in Training & Marketing, it will be more easy to understand by referral
+// partners." So it imports MainDashboard.css and reuses `main-dash__card`
+// rather than growing a third card style — a partner learns one visual idea,
+// a box you pick, and it holds on every screen they touch.
 //
-// Every walkthrough ends by taking the partner to the screen it describes:
-// reading how to send an invite is only useful next to the button that sends
-// one.
+// Picking a box opens its walkthrough underneath instead of navigating away:
+// the grid is the map, and a partner comparing "adding a client" against
+// "sending a proposal" should not have to go back and forth to see both.
+//
+// The tutorials are read here rather than watched. Nothing in this platform
+// stores training content — no table, no bucket, no upload screen — so instead
+// of shipping a page that waits on files somebody still has to produce, the
+// walkthroughs are written into the product as translated copy (see
+// trainingTopics.js). A partner sees the real steps on day one, in their own
+// language, and a correction is a copy edit.
 export default function ReferralTraining() {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  // Only the first topic starts open. A partner opening this page is almost
-  // always new, so "getting started" is what they want; the rest stay collapsed
-  // so the six topics fit on one screen and can be scanned.
+  // The first topic is open on arrival. A partner opening this page is almost
+  // always new, so "getting started" is what they want; and an empty panel
+  // under a grid of boxes reads as something that failed to load.
   const [openKey, setOpenKey] = useState(TRAINING_TOPICS[0].key);
+  const topic = TRAINING_TOPICS.find(x => x.key === openKey) || null;
 
   return (
     <div className="page-container">
@@ -36,56 +45,51 @@ export default function ReferralTraining() {
         </div>
       </div>
 
-      <div className="referral-training-grid">
-        {TRAINING_TOPICS.map((topic) => {
-          const Icon = topic.icon;
-          const isOpen = openKey === topic.key;
-
+      <div className="main-dash__grid">
+        {TRAINING_TOPICS.map((tp) => {
+          const Icon = tp.icon;
+          const selected = tp.key === openKey;
           return (
-            <div className="referral-training" key={topic.key}>
-              {/* The whole head toggles, so the target is the full row rather
-                  than a chevron a touch user has to hit precisely. */}
-              <button
-                type="button"
-                className="referral-training__head"
-                aria-expanded={isOpen}
-                onClick={() => setOpenKey(isOpen ? null : topic.key)}
-              >
-                <span className="referral-training__icon"><Icon size={20} /></span>
-                <span className="referral-training__head-text">
-                  <span className="referral-training__title">
-                    {t(`refTraining.${topic.key}Title`)}
-                  </span>
-                  <span className="referral-training__desc">
-                    {t(`refTraining.${topic.key}Desc`)}
-                  </span>
-                </span>
-                <span className="referral-training__chevron">
-                  {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                </span>
-              </button>
-
-              <div className="referral-training__body" hidden={!isOpen}>
-                <ol className="referral-training__steps">
-                  {/* `steps` is a count in the catalogue; the sentences live in
-                      the locale files, one key per step. */}
-                  {Array.from({ length: topic.steps }, (_, i) => (
-                    <li key={i}>{t(`refTraining.${topic.key}Step${i + 1}`)}</li>
-                  ))}
-                </ol>
-
-                <Button
-                  variant="outline"
-                  size="md"
-                  onClick={() => navigate(topic.path)}
-                >
-                  {t('refTraining.openScreen')} <ArrowRight size={16} />
-                </Button>
+            <button
+              key={tp.key}
+              type="button"
+              // The chosen box keeps its accent border, so the panel below is
+              // visibly the answer to the box that was just pressed.
+              className={`main-dash__card${selected ? ' main-dash__card--selected' : ''}`}
+              aria-expanded={selected}
+              onClick={() => setOpenKey(tp.key)}
+              style={{ '--card-accent': tp.color }}
+            >
+              <div className="main-dash__icon" style={{ background: `${tp.color}1a`, color: tp.color }}>
+                <Icon size={24} />
               </div>
-            </div>
+              {/* The big figure is the number of steps, so a partner can see
+                  what they are committing to before they open it. */}
+              <div className="main-dash__value">{tp.steps}</div>
+              <div className="main-dash__label">{t(`refTraining.${tp.key}Title`)}</div>
+              <div className="main-dash__desc">{t(`refTraining.${tp.key}Desc`)}</div>
+            </button>
           );
         })}
       </div>
+
+      {topic && (
+        <div className="referral-training__panel">
+          <h2 className="referral-training__panel-title">
+            {t(`refTraining.${topic.key}Title`)}
+          </h2>
+          <ol className="referral-training__steps">
+            {/* `steps` is a count in the catalogue; the sentences live in the
+                locale files, one key per step. */}
+            {Array.from({ length: topic.steps }, (_, i) => (
+              <li key={i}>{t(`refTraining.${topic.key}Step${i + 1}`)}</li>
+            ))}
+          </ol>
+          <Button variant="primary" size="md" onClick={() => navigate(topic.path)}>
+            {t('refTraining.openScreen')} <ArrowRight size={16} />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

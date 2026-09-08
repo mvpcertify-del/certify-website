@@ -61,3 +61,12 @@
   font-size: 0.8rem;
   color: var(--color-text-tertiary, #9ca3af);
 }
+
+/* A card that is not just a link but a CHOICE the page is currently acting on
+   — the Training grid, where the panel below shows whichever box is selected.
+   The accent border is the same one hover uses, made permanent, so "selected"
+   and "hovered" read as the same idea rather than two competing signals. */
+.main-dash__card--selected {
+  border-color: var(--card-accent, var(--color-accent, #3ECF8E));
+  box-shadow: inset 0 0 0 1px var(--card-accent, var(--color-accent, #3ECF8E));
+}

@@ -7,7 +7,7 @@ import { Input, Button } from '../../components/ui/FormElements';
 import { ISO_CATALOG_LIST, getIsoBySlug } from '../../utils/isoCatalog';
 import {
   Mail, FileText, Building2, Paperclip, Download, Send,
-  AlertCircle, CheckCircle, Ticket,
+  AlertCircle, CheckCircle, Ticket, Check,
 } from 'lucide-react';
 import './ReferralMarketing.css';
 
@@ -256,62 +256,81 @@ export default function ReferralMarketing() {
           ))}
         </select>
 
-        {/* ---- The three items ---- */}
+        {/* ---- The three items ----
+            Drawn as boxes rather than a list of checkbox rows, on the client's
+            instruction of 8 Sep: the dashboard's boxes are the visual idea a
+            partner already understands, so the three things that go in the
+            envelope use it too. Each box is the tick — the whole card is the
+            hit target, not a 13px square. */}
         <div className="refmkt__items">
           <div className="refmkt__items-title">{t('refMarketing.itemsTitle')}</div>
-
-          {/* 1 — the letter itself */}
-          <label className="refmkt__check refmkt__check--locked">
-            <input type="checkbox" checked readOnly disabled />
-            <span className="refmkt__check-body">
-              <span className="refmkt__check-label">
-                <Mail size={15} /> {t('refMarketing.itemTemplate')}
-              </span>
-              <span className="refmkt__check-note">{t('refMarketing.itemTemplateNote')}</span>
-            </span>
-          </label>
-
-          {/* 2 — the company profile */}
-          <label className={`refmkt__check${companyProfile ? '' : ' refmkt__check--disabled'}`}>
-            <input
-              type="checkbox"
-              checked={Boolean(companyProfile) && withProfile}
-              disabled={!companyProfile}
-              onChange={(e) => setWithProfile(e.target.checked)}
-            />
-            <span className="refmkt__check-body">
-              <span className="refmkt__check-label">
-                <Building2 size={15} /> {t('refMarketing.itemProfile')}
-              </span>
-              <span className="refmkt__check-note">
-                {companyProfile
+          <div className="refmkt__item-grid">
+            {[
+              {
+                key: 'template',
+                Icon: Mail,
+                color: '#0ea5e9',
+                label: t('refMarketing.itemTemplate'),
+                note: t('refMarketing.itemTemplateNote'),
+                // Not a choice: the ready email template IS the letter, so it
+                // is shown on and locked rather than pretended to be optional.
+                on: true,
+                locked: true,
+                available: true,
+              },
+              {
+                key: 'profile',
+                Icon: Building2,
+                color: '#6366f1',
+                label: t('refMarketing.itemProfile'),
+                note: companyProfile
                   ? companyProfile.file_name
-                  : t('refMarketing.itemProfileMissing')}
-              </span>
-            </span>
-          </label>
-
-          {/* 3 — the standard's own brochure */}
-          <label className={`refmkt__check${brochure ? '' : ' refmkt__check--disabled'}`}>
-            <input
-              type="checkbox"
-              checked={Boolean(brochure) && withBrochure}
-              disabled={!brochure}
-              onChange={(e) => setWithBrochure(e.target.checked)}
-            />
-            <span className="refmkt__check-body">
-              <span className="refmkt__check-label">
-                <FileText size={15} /> {t('refMarketing.itemBrochure')}
-              </span>
-              <span className="refmkt__check-note">
-                {!standard
+                  : t('refMarketing.itemProfileMissing'),
+                on: Boolean(companyProfile) && withProfile,
+                available: Boolean(companyProfile),
+                toggle: () => setWithProfile(v => !v),
+              },
+              {
+                key: 'brochure',
+                Icon: FileText,
+                color: '#f97316',
+                label: t('refMarketing.itemBrochure'),
+                note: !standard
                   ? t('refMarketing.itemBrochurePickFirst')
                   : brochure
                     ? brochure.file_name
-                    : t('refMarketing.itemBrochureMissing')}
-              </span>
-            </span>
-          </label>
+                    : t('refMarketing.itemBrochureMissing'),
+                on: Boolean(brochure) && withBrochure,
+                available: Boolean(brochure),
+                toggle: () => setWithBrochure(v => !v),
+              },
+            ].map(item => (
+              <button
+                key={item.key}
+                type="button"
+                className={`refmkt__item${item.on ? ' refmkt__item--on' : ''}`
+                  + `${item.available ? '' : ' refmkt__item--off'}`}
+                style={{ '--item-accent': item.color }}
+                // A locked item is still rendered as pressed, so the partner
+                // can see it is going; it just cannot be un-pressed.
+                aria-pressed={item.on}
+                disabled={item.locked || !item.available}
+                onClick={item.toggle}
+              >
+                <span
+                  className="refmkt__item-icon"
+                  style={{ background: `${item.color}1a`, color: item.color }}
+                >
+                  <item.Icon size={20} />
+                </span>
+                <span className="refmkt__item-tick" aria-hidden="true">
+                  {item.on ? <Check size={14} /> : null}
+                </span>
+                <span className="refmkt__item-label">{item.label}</span>
+                <span className="refmkt__item-note">{item.note}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         <Input

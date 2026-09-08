@@ -86,48 +86,99 @@
   color: var(--color-text-secondary);
 }
 
-.refmkt__check {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.65rem;
-  padding-block: 0.5rem;
-  cursor: pointer;
-  line-height: 1.45;
+/* The three items as boxes (client, 8 Sep: "follow & apply the Boxes Visual
+   appearance"). Same shape language as the dashboard cards — icon tile, label,
+   supporting line — but these are toggles, so they also need an on state and
+   an unavailable state, which a dashboard card never has. */
+.refmkt__item-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
 }
 
-.refmkt__check input {
-  margin-top: 0.2rem;
-  flex-shrink: 0;
-}
-
-/* Two different reasons a row cannot be ticked, drawn the same way on purpose:
-   either the file has not been uploaded yet, or the item is the letter itself
-   and is always sent. The note underneath says which — the styling only has to
-   say "not your decision right now". */
-.refmkt__check--disabled,
-.refmkt__check--locked {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.refmkt__check-body {
+.refmkt__item {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  min-width: 0;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 16px;
+  /* `start`, not `left` — in Arabic the card's text hangs off the right edge. */
+  text-align: start;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 
-.refmkt__check-label {
-  display: flex;
+.refmkt__item:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: var(--item-accent, var(--color-accent));
+}
+
+.refmkt__item:focus-visible {
+  outline: 2px solid var(--item-accent, var(--color-accent));
+  outline-offset: 2px;
+}
+
+/* Ticked: the accent ring says "this is going in the envelope". */
+.refmkt__item--on {
+  border-color: var(--item-accent, var(--color-accent));
+  box-shadow: inset 0 0 0 1px var(--item-accent, var(--color-accent));
+}
+
+/* Nothing to send yet — the file has not been uploaded, or no standard is
+   chosen. Dimmed rather than hidden: a partner needs to know the slot exists
+   and what would fill it, which is the whole point of the note underneath. */
+.refmkt__item--off {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.refmkt__item-icon {
+  display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--color-text-primary);
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
 }
 
-.refmkt__check-note {
+/* inset-inline-end, not right: the tick sits on the trailing corner, which is
+   the LEFT corner once the page flips to Arabic. */
+.refmkt__item-tick {
+  position: absolute;
+  top: 14px;
+  inset-inline-end: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: #fff;
+}
+
+.refmkt__item--on .refmkt__item-tick {
+  background: var(--item-accent, var(--color-accent));
+  border-color: var(--item-accent, var(--color-accent));
+}
+
+.refmkt__item-label {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  /* Keeps a long label clear of the tick in the corner. */
+  padding-inline-end: 26px;
+}
+
+.refmkt__item-note {
   font-size: 0.78rem;
+  line-height: 1.45;
   color: var(--color-text-tertiary);
   overflow-wrap: anywhere;
 }
