@@ -56,7 +56,11 @@
     "allStatuses": "Todos los estados",
     "send": "Enviar",
     "firstName": "Nombre",
-    "lastName": "Apellidos"
+    "lastName": "Apellidos",
+    "serverBusy": "El servidor está ocupado en este momento. Inténtalo de nuevo en un momento.",
+    "requestFailed": "No se pudo completar (error {{status}}). Inténtalo de nuevo.",
+    "networkError": "No se pudo contactar con el servidor. Comprueba tu conexión e inténtalo de nuevo.",
+    "all": "Todos"
   },
   "languageSuggestion": {
     "title": "¿Cambiar idioma?",
@@ -125,7 +129,8 @@
     "referralProgramDashboard": "Panel del Programa de Referidos",
     "referralClients": "Clientes",
     "referralMarketing": "Herramientas de marketing",
-    "referralTraining": "Formación"
+    "referralTraining": "Formación",
+    "investors": "Inversores"
   },
   "landing": {
     "iafBadge": "Socios de Organismos de Certificación Acreditados por IAF",
@@ -1929,5 +1934,38 @@
     "commissionsStep2": "La comisión se acredita cuando el cliente ha pagado su certificación, no cuando se le invita.",
     "commissionsStep3": "Tu porcentaje sube a medida que traes más clientes que pagan: tu nivel actual y el siguiente se muestran en esa misma pantalla.",
     "commissionsStep4": "La comisión ya pagada y la que aún se te debe se listan por separado, así siempre sabes qué queda pendiente."
+  },
+  "investors": {
+    "title": "Inversores",
+    "subtitle": "Fondos de inversión registrados, para revisión.",
+    "searchPlaceholder": "Buscar fondo, ubicación, sector, socio o notas…",
+    "allRegions": "Todas las regiones",
+    "total": "Fondos",
+    "totalDesc": "Todos los fondos registrados",
+    "active": "Activos",
+    "activeDesc": "Aún en consideración",
+    "regions": "Regiones",
+    "regionsDesc": "Desde dónde invierten estos fondos",
+    "fund": "Fondo",
+    "region": "Región",
+    "geography": "Ubicación",
+    "stage": "Etapa",
+    "sector": "Sector / tesis",
+    "leads": "¿Lidera rondas?",
+    "checkRange": "Importe de inversión",
+    "recentActivity": "Actividad reciente",
+    "website": "Sitio web",
+    "fundLinkedin": "LinkedIn del fondo",
+    "keyPartner": "Socio principal",
+    "partnerLinkedin": "LinkedIn del socio",
+    "notes": "Notas",
+    "status": "Estado",
+    "empty": "Ningún fondo coincide con tu búsqueda.",
+    "loading": "Cargando inversores…",
+    "editTitle": "Editar fondo",
+    "confirmDelete": "¿Quitar {{fund}} del registro? Esta acción no se puede deshacer.",
+    "saved": "Guardado",
+    "deleted": "Eliminado",
+    "loadFailed": "No se pudo cargar el registro de inversores. Inténtalo de nuevo."
   }
 }

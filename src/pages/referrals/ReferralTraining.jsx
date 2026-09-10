@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/ui/FormElements';
 import { TRAINING_TOPICS } from './trainingTopics';
 import { ArrowRight } from 'lucide-react';
-import '../dashboard/MainDashboard.css';
+import DashboardBoxes from '../../components/ui/DashboardBoxes';
 import './Referrals.css';
 
 // "Training" — the first box on the Referral Program Dashboard (client, 7 Sep).
@@ -12,9 +12,9 @@ import './Referrals.css';
 // Laid out as the SAME grid of boxes as the dashboard itself, on the client's
 // instruction of 8 Sep: "If you can follow & apply the Boxes Visual appearance
 // in Training & Marketing, it will be more easy to understand by referral
-// partners." So it imports MainDashboard.css and reuses `main-dash__card`
-// rather than growing a third card style — a partner learns one visual idea,
-// a box you pick, and it holds on every screen they touch.
+// partners." So it renders <DashboardBoxes>, the one shared grid every
+// dashboard now uses — a partner learns one visual idea, a box you pick, and
+// it holds on every screen they touch.
 //
 // Picking a box opens its walkthrough underneath instead of navigating away:
 // the grid is the map, and a partner comparing "adding a client" against
@@ -45,33 +45,22 @@ export default function ReferralTraining() {
         </div>
       </div>
 
-      <div className="main-dash__grid">
-        {TRAINING_TOPICS.map((tp) => {
-          const Icon = tp.icon;
-          const selected = tp.key === openKey;
-          return (
-            <button
-              key={tp.key}
-              type="button"
-              // The chosen box keeps its accent border, so the panel below is
-              // visibly the answer to the box that was just pressed.
-              className={`main-dash__card${selected ? ' main-dash__card--selected' : ''}`}
-              aria-expanded={selected}
-              onClick={() => setOpenKey(tp.key)}
-              style={{ '--card-accent': tp.color }}
-            >
-              <div className="main-dash__icon" style={{ background: `${tp.color}1a`, color: tp.color }}>
-                <Icon size={24} />
-              </div>
-              {/* The big figure is the number of steps, so a partner can see
-                  what they are committing to before they open it. */}
-              <div className="main-dash__value">{tp.steps}</div>
-              <div className="main-dash__label">{t(`refTraining.${tp.key}Title`)}</div>
-              <div className="main-dash__desc">{t(`refTraining.${tp.key}Desc`)}</div>
-            </button>
-          );
-        })}
-      </div>
+      <DashboardBoxes
+        selectedKey={openKey}
+        boxes={TRAINING_TOPICS.map((tp) => ({
+          key: tp.key,
+          icon: tp.icon,
+          color: tp.color,
+          // The big figure is how many steps the walkthrough runs to, so a
+          // partner sees the length before opening it.
+          value: tp.steps,
+          label: t(`refTraining.${tp.key}Title`),
+          desc: t(`refTraining.${tp.key}Desc`),
+          // Opens underneath rather than navigating: the grid is the map, and
+          // comparing two walkthroughs should not need a round trip.
+          onClick: () => setOpenKey(tp.key),
+        }))}
+      />
 
       {topic && (
         <div className="referral-training__panel">

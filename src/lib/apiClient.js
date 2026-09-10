@@ -13,6 +13,7 @@
 //      defensively, so callers always get a readable Error message.
 
 import { supabase } from './supabase';
+import i18n from '../i18n/i18n';
 
 /**
  * POST JSON to an /api route with the caller's auth token attached.
@@ -43,25 +44,55 @@ export async function apiPost(path, body = {}) {
       body: JSON.stringify(body),
     });
   } catch (networkErr) {
-    throw new Error(networkErr?.message || 'Network request failed');
+    // "Failed to fetch" is what the browser says and it tells the user nothing.
+    // The real text is kept in the console for whoever is debugging.
+    console.error(`apiPost ${path}: network error`, networkErr);
+    throw new Error(i18n.t('common.networkError'));
   }
 
   // Read as text first so a non-JSON error body never crashes the parse.
   const raw = await response.text();
   let data = {};
+  let bodyWasJson = false;
   if (raw) {
     try {
       data = JSON.parse(raw);
+      bodyWasJson = true;
     } catch {
-      // Body was not JSON (platform 500/timeout, HTML error page, etc.).
-      data = { error: raw.trim().slice(0, 300) };
+      // Body was not JSON. This used to become the user's error message:
+      //   data = { error: raw.trim().slice(0, 300) }
+      // On 9 Sep a referral partner pressed Send on Marketing Tools and was
+      // shown 300 characters of a Cloudflare error page — "<!DOCTYPE html>
+      // <!--[if lt IE 7]> <html class="no-js ie6 oldie" ..." — as if it were
+      // advice. Every screen in the app renders a caught message this way
+      // (roughly thirty of them), so the guard belongs here, once, rather than
+      // in each of them.
+      //
+      // The raw body still goes to the console: whoever is debugging needs it,
+      // and the person trying to send an email does not.
+      console.error(`apiPost ${path}: non-JSON response (HTTP ${response.status})`, raw.slice(0, 1000));
+      data = {};
     }
   }
 
   if (!response.ok) {
-    throw new Error(
-      data.error || data.message || `Request failed (HTTP ${response.status})`
-    );
+    // Only a message the SERVER meant for a human is shown. A body that failed
+    // to parse leaves `data` empty, so this falls through to the translated
+    // line below rather than surfacing markup.
+    const serverMessage = bodyWasJson
+      ? (typeof data.error === 'string' ? data.error : null)
+        || (typeof data.message === 'string' ? data.message : null)
+      : null;
+
+    // 502/503/504 are the platform or the CDN, not the request: "try again"
+    // is genuinely the right advice and blaming the user's input would be
+    // wrong. Anything else gets the generic line with its status, which is
+    // what a support conversation actually needs.
+    const fallback = [502, 503, 504].includes(response.status)
+      ? i18n.t('common.serverBusy')
+      : i18n.t('common.requestFailed', { status: response.status });
+
+    throw new Error(serverMessage || fallback);
   }
 
   return data;

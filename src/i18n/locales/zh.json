@@ -56,7 +56,11 @@
     "allStatuses": "所有状态",
     "send": "发送",
     "firstName": "名字",
-    "lastName": "姓氏"
+    "lastName": "姓氏",
+    "serverBusy": "服务器当前繁忙，请稍后再试。",
+    "requestFailed": "操作未能完成（错误 {{status}}），请重试。",
+    "networkError": "无法连接服务器，请检查网络后重试。",
+    "all": "全部"
   },
   "languageSuggestion": {
     "title": "切换语言？",
@@ -125,7 +129,8 @@
     "referralProgramDashboard": "推荐计划面板",
     "referralClients": "客户",
     "referralMarketing": "营销工具",
-    "referralTraining": "培训"
+    "referralTraining": "培训",
+    "investors": "投资方"
   },
   "landing": {
     "iafBadge": "IAF 认可认证机构合作伙伴",
@@ -1929,5 +1934,38 @@
     "commissionsStep2": "佣金在客户支付认证费用后计入，而非在发出邀请时。",
     "commissionsStep3": "随着付费客户增多，您的佣金比例会提高——当前等级与下一等级显示在同一页面。",
     "commissionsStep4": "已结算与尚未结算的佣金分别列出，您随时都能知道还有多少未收。"
+  },
+  "investors": {
+    "title": "投资方",
+    "subtitle": "已收录的投资基金，供查阅。",
+    "searchPlaceholder": "搜索基金、地区、行业、合伙人或备注…",
+    "allRegions": "所有地区",
+    "total": "基金数",
+    "totalDesc": "已收录的全部基金",
+    "active": "在考虑中",
+    "activeDesc": "仍在考虑范围内",
+    "regions": "地区",
+    "regionsDesc": "这些基金的投资来源地",
+    "fund": "基金",
+    "region": "地区",
+    "geography": "所在地",
+    "stage": "阶段",
+    "sector": "行业 / 投资逻辑",
+    "leads": "是否领投？",
+    "checkRange": "投资金额",
+    "recentActivity": "近期动态",
+    "website": "网站",
+    "fundLinkedin": "基金领英",
+    "keyPartner": "主要合伙人",
+    "partnerLinkedin": "合伙人领英",
+    "notes": "备注",
+    "status": "状态",
+    "empty": "没有符合条件的基金。",
+    "loading": "正在加载投资方…",
+    "editTitle": "编辑基金",
+    "confirmDelete": "要将 {{fund}} 从名录中移除吗？此操作无法撤销。",
+    "saved": "已保存",
+    "deleted": "已移除",
+    "loadFailed": "无法加载投资方名录，请重试。"
   }
 }

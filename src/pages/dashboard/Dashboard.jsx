@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Building2, FileCheck2, Clock, UserCheck, Percent, PlusCircle, CheckCircle2, ChevronRight, Upload, FileText, AlertCircle, MessageSquare, Download, Trash2, Eye, XCircle, Award } from 'lucide-react';
-import StatCard from '../../components/ui/StatCard';
+import { Building2, FileCheck2, Clock, UserCheck, Percent, PlusCircle, CheckCircle2, ChevronRight, Upload, FileText, AlertCircle, MessageSquare, Download, Trash2, Eye, XCircle, Award, Bell } from 'lucide-react';
+import DashboardBoxes from '../../components/ui/DashboardBoxes';
 import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
 import { Button } from '../../components/ui/FormElements';
@@ -211,6 +211,28 @@ export default function Dashboard() {
     // "Loading" each time the user came back from another window.
   }, [user?.id, user?.role, user?.region]);
 
+
+  // Two figures the client's box grid shows that nothing else on this page
+  // needed. Head-only counts: the client never sees these rows here, and
+  // downloading a hundred notifications to render one number is the wrong
+  // trade. Either may stay null — DashboardBoxes then draws an em-dash rather
+  // than inventing a zero.
+  const [clientCertCount, setClientCertCount] = useState(null);
+  const [clientUnread, setClientUnread] = useState(null);
+
+  useEffect(() => {
+    if (!user?.id || user?.role !== ROLES.CLIENT) return;
+    let mounted = true;
+    supabase.from('certificates').select('*', { count: 'exact', head: true })
+      .eq('client_id', user.id)
+      .then(({ count, error }) => { if (mounted) setClientCertCount(error ? null : count || 0); },
+            () => { if (mounted) setClientCertCount(null); });
+    supabase.from('notifications').select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id).eq('read', false)
+      .then(({ count, error }) => { if (mounted) setClientUnread(error ? null : count || 0); },
+            () => { if (mounted) setClientUnread(null); });
+    return () => { mounted = false; };
+  }, [user?.id, user?.role]);
 
   const [selectedAppId, setSelectedAppId] = useState(null);
   // A row still at 'awaiting_registration' was created at the payment step and
@@ -426,6 +448,19 @@ export default function Dashboard() {
 
       {isClient ? (
         <div className="dashboard__client-layout">
+          {/* The client's dashboard is a purchase-and-tracking flow, not a
+              stats board, so the boxes sit ABOVE it as navigation rather than
+              replacing it — the client asked for the box format as the
+              standard (8 Sep), not for the funnel underneath to be rebuilt as
+              tiles. Everything below this grid is unchanged. */}
+          <DashboardBoxes
+            boxes={[
+              { key: 'apply', icon: PlusCircle, color: '#3ECF8E', value: registeredApplications.length, label: t('nav.newApplication'), path: '/client/apply' },
+              { key: 'certs', icon: Award, color: '#60A5FA', value: clientCertCount, label: t('nav.myCertificates'), path: '/client/certificates' },
+              { key: 'browse', icon: FileCheck2, color: '#A78BFA', value: ISO_CATALOG_LIST.length, label: t('dashboard.browseCertifications'), path: '/certifications' },
+              { key: 'notifications', icon: Bell, color: '#f59e0b', value: clientUnread, label: t('nav.notifications'), path: '/notifications' },
+            ]}
+          />
           {!fetchingApps && registeredApplications.length === 0 && seeksCertification ? (
             <div className="dashboard__empty-state" style={{ textAlign: 'center', padding: '40px', background: 'var(--surface-color)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)' }}>
               {gapScore == null ? (
@@ -889,14 +924,20 @@ export default function Dashboard() {
         </div>
       ) : isAdmin ? (
         <>
-          {/* Stat Cards */}
-          <div className="dashboard__stats">
-            <StatCard title={t('dashboard.totalApplications')} value={totalApplications} icon={Building2} iconColor="#3ECF8E" onClick={() => navigate('/admin/applications')} />
-            <StatCard title={t('dashboard.approved')} value={approvedCertifications} icon={FileCheck2} iconColor="#60A5FA" onClick={() => navigate('/admin/applications?status=approved')} />
-            <StatCard title={t('dashboard.pendingProcessing')} value={pendingProcessing} icon={Clock} iconColor="#FBBF24" onClick={() => navigate('/admin/applications?status=pending')} />
-            <StatCard title={t('dashboard.activeReview')} value={activeReview} icon={UserCheck} iconColor="#A78BFA" onClick={() => navigate('/admin/applications?status=in_review')} />
-            <StatCard title={t('dashboard.awaitingPayment')} value={awaitingPayment} icon={Percent} iconColor="#F87171" onClick={() => navigate('/admin/applications?status=awaiting_payment')} />
-          </div>
+          {/* The client asked on 8 Sep that the box format become the standard
+              for every dashboard. These five were StatCards; they carry the
+              same figures and the same destinations, in the shared card.
+              Each one deep-links to the applications list already filtered to
+              that status, so the number and the screen behind it agree. */}
+          <DashboardBoxes
+            boxes={[
+              { key: 'total', icon: Building2, color: '#3ECF8E', value: totalApplications, label: t('dashboard.totalApplications'), path: '/admin/applications' },
+              { key: 'approved', icon: FileCheck2, color: '#60A5FA', value: approvedCertifications, label: t('dashboard.approved'), path: '/admin/applications?status=approved' },
+              { key: 'pending', icon: Clock, color: '#FBBF24', value: pendingProcessing, label: t('dashboard.pendingProcessing'), path: '/admin/applications?status=pending' },
+              { key: 'review', icon: UserCheck, color: '#A78BFA', value: activeReview, label: t('dashboard.activeReview'), path: '/admin/applications?status=in_review' },
+              { key: 'awaiting', icon: Percent, color: '#F87171', value: awaitingPayment, label: t('dashboard.awaitingPayment'), path: '/admin/applications?status=awaiting_payment' },
+            ]}
+          />
 
           {/* Main content grid */}
           <div className="dashboard__grid" style={{ display: 'block' }}>
@@ -940,11 +981,13 @@ export default function Dashboard() {
               that route would bounce an auditor to /unauthorized. The queue
               has no status filter to deep-link into, hence the same path for
               all three. */}
-          <div className="dashboard__stats">
-            <StatCard title={t('dashboard.totalAssigned')} value={auditorApplications.length} icon={UserCheck} iconColor="#A78BFA" onClick={() => navigate('/auditor/dashboard')} />
-            <StatCard title={t('dashboard.inReview')} value={auditorApplications.filter(a => a.status === 'in_review').length} icon={Clock} iconColor="#FBBF24" onClick={() => navigate('/auditor/dashboard')} />
-            <StatCard title={t('dashboard.completed')} value={auditorApplications.filter(a => a.status === 'audited').length} icon={CheckCircle2} iconColor="#3ECF8E" onClick={() => navigate('/auditor/dashboard')} />
-          </div>
+          <DashboardBoxes
+            boxes={[
+              { key: 'assigned', icon: UserCheck, color: '#A78BFA', value: auditorApplications.length, label: t('dashboard.totalAssigned'), path: '/auditor/dashboard' },
+              { key: 'inReview', icon: Clock, color: '#FBBF24', value: auditorApplications.filter(a => a.status === 'in_review').length, label: t('dashboard.inReview'), path: '/auditor/dashboard' },
+              { key: 'completed', icon: CheckCircle2, color: '#3ECF8E', value: auditorApplications.filter(a => a.status === 'audited').length, label: t('dashboard.completed'), path: '/auditor/dashboard' },
+            ]}
+          />
           <div className="dashboard__grid" style={{ display: 'block' }}>
             <div className="dashboard__section">
               <div className="dashboard__section-header">
@@ -976,11 +1019,13 @@ export default function Dashboard() {
           {/* Same dead-text bug as the auditor tiles above (8 Sep). A
               certification body has no VIEW_ALL_CERTIFICATIONS either, so the
               only list it may open is its own review queue. */}
-          <div className="dashboard__stats">
-            <StatCard title={t('dashboard.assignedApplications')} value={cbApplications.length} icon={Building2} iconColor="#3ECF8E" onClick={() => navigate('/cert-body/dashboard')} />
-            <StatCard title={t('dashboard.awaitingDecision')} value={cbApplications.filter(a => a.status === 'audited' || a.status === 'in_review').length} icon={Clock} iconColor="#FBBF24" onClick={() => navigate('/cert-body/dashboard')} />
-            <StatCard title={t('dashboard.certified')} value={cbApplications.filter(a => a.status === 'approved').length} icon={CheckCircle2} iconColor="#60A5FA" onClick={() => navigate('/cert-body/dashboard')} />
-          </div>
+          <DashboardBoxes
+            boxes={[
+              { key: 'assigned', icon: Building2, color: '#3ECF8E', value: cbApplications.length, label: t('dashboard.assignedApplications'), path: '/cert-body/dashboard' },
+              { key: 'awaiting', icon: Clock, color: '#FBBF24', value: cbApplications.filter(a => a.status === 'audited' || a.status === 'in_review').length, label: t('dashboard.awaitingDecision'), path: '/cert-body/dashboard' },
+              { key: 'certified', icon: CheckCircle2, color: '#60A5FA', value: cbApplications.filter(a => a.status === 'approved').length, label: t('dashboard.certified'), path: '/cert-body/dashboard' },
+            ]}
+          />
           <div className="dashboard__grid" style={{ display: 'block' }}>
             <div className="dashboard__section">
               <div className="dashboard__section-header">

@@ -56,7 +56,11 @@
     "allStatuses": "Alle Status",
     "send": "Senden",
     "firstName": "Vorname",
-    "lastName": "Nachname"
+    "lastName": "Nachname",
+    "serverBusy": "Der Server ist gerade ausgelastet. Bitte versuchen Sie es gleich noch einmal.",
+    "requestFailed": "Das hat nicht geklappt (Fehler {{status}}). Bitte erneut versuchen.",
+    "networkError": "Der Server war nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+    "all": "Alle"
   },
   "languageSuggestion": {
     "title": "Sprache ändern?",
@@ -125,7 +129,8 @@
     "referralProgramDashboard": "Dashboard des Empfehlungsprogramms",
     "referralClients": "Kunden",
     "referralMarketing": "Marketing-Tools",
-    "referralTraining": "Schulung"
+    "referralTraining": "Schulung",
+    "investors": "Investoren"
   },
   "landing": {
     "iafBadge": "IAF-akkreditierte Zertifizierungsstellen-Partner",
@@ -1929,5 +1934,38 @@
     "commissionsStep2": "Eine Provision wird gutgeschrieben, sobald der Kunde seine Zertifizierung bezahlt hat — nicht schon bei der Einladung.",
     "commissionsStep3": "Ihr Satz steigt, je mehr zahlende Kunden Sie bringen — Ihre aktuelle und die nächste Stufe sehen Sie auf derselben Seite.",
     "commissionsStep4": "Bereits ausgezahlte und noch offene Provision werden getrennt aufgeführt, damit Sie stets wissen, was noch aussteht."
+  },
+  "investors": {
+    "title": "Investoren",
+    "subtitle": "Erfasste Investmentfonds zur Durchsicht.",
+    "searchPlaceholder": "Fonds, Standort, Sektor, Partner oder Notizen durchsuchen…",
+    "allRegions": "Alle Regionen",
+    "total": "Fonds",
+    "totalDesc": "Alle erfassten Fonds",
+    "active": "Aktiv",
+    "activeDesc": "Weiterhin in Betracht",
+    "regions": "Regionen",
+    "regionsDesc": "Von wo aus diese Fonds investieren",
+    "fund": "Fonds",
+    "region": "Region",
+    "geography": "Standort",
+    "stage": "Phase",
+    "sector": "Sektor / These",
+    "leads": "Führt Runden an?",
+    "checkRange": "Investitionshöhe",
+    "recentActivity": "Jüngste Aktivität",
+    "website": "Website",
+    "fundLinkedin": "LinkedIn des Fonds",
+    "keyPartner": "Hauptansprechpartner",
+    "partnerLinkedin": "LinkedIn des Partners",
+    "notes": "Notizen",
+    "status": "Status",
+    "empty": "Kein Fonds passt zu Ihrer Suche.",
+    "loading": "Investoren werden geladen…",
+    "editTitle": "Fonds bearbeiten",
+    "confirmDelete": "{{fund}} aus dem Register entfernen? Das lässt sich nicht rückgängig machen.",
+    "saved": "Gespeichert",
+    "deleted": "Entfernt",
+    "loadFailed": "Das Investorenregister konnte nicht geladen werden. Bitte erneut versuchen."
   }
 }

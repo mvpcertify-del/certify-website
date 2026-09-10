@@ -43,6 +43,7 @@ import {
   MessagesSquare,
   Megaphone,
   GraduationCap,
+  Landmark,
 } from 'lucide-react';
 import BrandLogo from '../ui/BrandLogo';
 import LanguageSwitcher from '../LanguageSwitcher';
@@ -129,6 +130,10 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     // The briefing document a partner's proposal letter attaches, one per ISO
     // standard. Super Admin only — it is what goes out under the company name
     // to every region at once.
+    // The investor registry (phase35). Sits with the other Super-Admin-only
+    // registries rather than near Clients: these funds are prospects the
+    // company is raising from, not customers it is selling to.
+    { path: '/admin/investors', labelKey: 'nav.investors', icon: Landmark, kind: adminCreates, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN] },
     { path: '/admin/outreach-docs', labelKey: 'nav.outreachDocs', icon: Paperclip, kind: KIND_CREATE, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN] },
     { path: '/admin/registrations', labelKey: 'nav.registrations', icon: UserPlus, kind: KIND_CREATE, permissions: [PERMISSIONS.MANAGE_USERS] },
     { path: '/admin/permissions', labelKey: 'nav.permissions', icon: KeyRound, kind: KIND_CREATE, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN] },

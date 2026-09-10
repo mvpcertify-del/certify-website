@@ -56,7 +56,11 @@
     "allStatuses": "Tous les statuts",
     "send": "Envoyer",
     "firstName": "Prénom",
-    "lastName": "Nom"
+    "lastName": "Nom",
+    "serverBusy": "Le serveur est occupé pour le moment. Réessayez dans un instant.",
+    "requestFailed": "L’opération n’a pas abouti (erreur {{status}}). Veuillez réessayer.",
+    "networkError": "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.",
+    "all": "Tous"
   },
   "languageSuggestion": {
     "title": "Changer de langue ?",
@@ -125,7 +129,8 @@
     "referralProgramDashboard": "Tableau de bord du programme de parrainage",
     "referralClients": "Clients",
     "referralMarketing": "Outils marketing",
-    "referralTraining": "Formation"
+    "referralTraining": "Formation",
+    "investors": "Investisseurs"
   },
   "landing": {
     "iafBadge": "Partenaires d'organismes de certification accrédités IAF",
@@ -1929,5 +1934,38 @@
     "commissionsStep2": "Une commission est créditée une fois que le client a payé sa certification, et non lorsqu’il est invité.",
     "commissionsStep3": "Votre taux augmente à mesure que vous apportez des clients payants — votre palier actuel et le suivant figurent sur le même écran.",
     "commissionsStep4": "La commission déjà versée et celle encore due sont listées séparément, pour que vous sachiez toujours ce qui reste en attente."
+  },
+  "investors": {
+    "title": "Investisseurs",
+    "subtitle": "Fonds d’investissement enregistrés, pour consultation.",
+    "searchPlaceholder": "Rechercher un fonds, un lieu, un secteur, un associé ou des notes…",
+    "allRegions": "Toutes les régions",
+    "total": "Fonds",
+    "totalDesc": "Tous les fonds enregistrés",
+    "active": "Actifs",
+    "activeDesc": "Toujours à l’étude",
+    "regions": "Régions",
+    "regionsDesc": "D’où ces fonds investissent",
+    "fund": "Fonds",
+    "region": "Région",
+    "geography": "Localisation",
+    "stage": "Stade",
+    "sector": "Secteur / thèse",
+    "leads": "Mène les tours ?",
+    "checkRange": "Montant investi",
+    "recentActivity": "Activité récente",
+    "website": "Site web",
+    "fundLinkedin": "LinkedIn du fonds",
+    "keyPartner": "Associé référent",
+    "partnerLinkedin": "LinkedIn de l’associé",
+    "notes": "Notes",
+    "status": "Statut",
+    "empty": "Aucun fonds ne correspond à votre recherche.",
+    "loading": "Chargement des investisseurs…",
+    "editTitle": "Modifier le fonds",
+    "confirmDelete": "Retirer {{fund}} du registre ? Cette action est irréversible.",
+    "saved": "Enregistré",
+    "deleted": "Retiré",
+    "loadFailed": "Impossible de charger le registre des investisseurs. Veuillez réessayer."
   }
 }

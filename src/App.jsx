@@ -69,6 +69,7 @@ const AdminCompanies = lazy(() => import('./pages/admin/AdminCompanies'));
 const ApplicationDetails = lazy(() => import('./pages/admin/ApplicationDetails'));
 const ShareableLinks = lazy(() => import('./pages/admin/ShareableLinks'));
 const AdminOutreachDocs = lazy(() => import('./pages/admin/AdminOutreachDocs'));
+const AdminInvestors = lazy(() => import('./pages/admin/AdminInvestors'));
 const Messages = lazy(() => import('./pages/messages/Messages'));
 const RegistrationRequests = lazy(() => import('./pages/admin/RegistrationRequests'));
 const AdminPermissions = lazy(() => import('./pages/admin/AdminPermissions'));
@@ -356,6 +357,17 @@ function AppRoutes() {
             <Route path="/admin/shareable-links" element={
               <ProtectedRoute requiredPermission={PERMISSIONS.MANAGE_USERS}>
                 <ShareableLinks />
+              </ProtectedRoute>
+            } />
+
+            {/* Admin — Investor registry (phase35).
+                166 venture funds the client asked to be able to review inside
+                the platform. Super Admin only: this is commercially sensitive
+                research, and a country admin has no use for a global fund list.
+                The table's RLS enforces the same thing server-side. */}
+            <Route path="/admin/investors" element={
+              <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}>
+                <AdminInvestors />
               </ProtectedRoute>
             } />
 

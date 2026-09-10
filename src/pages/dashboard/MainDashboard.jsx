@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { ROLES } from '../../utils/roles';
 import { Users, Building, UserCheck, Briefcase, Gift, CircleDollarSign } from 'lucide-react';
+import DashboardBoxes from '../../components/ui/DashboardBoxes';
 import './MainDashboard.css';
 
 // Super Admin landing overview. A grid of clickable "category" boxes that each
@@ -30,7 +30,6 @@ const PAID_STATUSES = ['paid', 'verified'];
 export default function MainDashboard() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [counts, setCounts] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -123,7 +122,9 @@ export default function MainDashboard() {
 
   const formatValue = (box) => {
     const v = counts[box.key];
-    if (v == null) return '—';
+    // null is handed straight through: DashboardBoxes draws the em-dash, so
+    // the "could not read this" rule lives in one place.
+    if (v == null) return null;
     if (box.currency) return `$${Number(v).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
     return Number(v).toLocaleString();
   };
@@ -139,24 +140,15 @@ export default function MainDashboard() {
         </div>
       </div>
 
-      <div className="main-dash__grid">
-        {BOXES.map((box) => (
-          <button
-            key={box.key}
-            type="button"
-            className="main-dash__card"
-            onClick={() => navigate(box.path)}
-            style={{ '--card-accent': box.color }}
-          >
-            <div className="main-dash__icon" style={{ background: `${box.color}1a`, color: box.color }}>
-              <box.icon size={24} />
-            </div>
-            <div className="main-dash__value">{loading ? '…' : formatValue(box)}</div>
-            <div className="main-dash__label">{t(`mainDash.${box.key}`)}</div>
-            <div className="main-dash__desc">{t(`mainDash.${box.key}Desc`)}</div>
-          </button>
-        ))}
-      </div>
+      <DashboardBoxes
+        loading={loading}
+        boxes={BOXES.map((box) => ({
+          ...box,
+          value: formatValue(box),
+          label: t(`mainDash.${box.key}`),
+          desc: t(`mainDash.${box.key}Desc`),
+        }))}
+      />
     </div>
   );
 }

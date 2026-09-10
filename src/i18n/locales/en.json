@@ -56,7 +56,11 @@
     "allStatuses": "All Statuses",
     "send": "Send",
     "firstName": "First Name",
-    "lastName": "Last Name"
+    "lastName": "Last Name",
+    "serverBusy": "The server is busy right now. Please try again in a moment.",
+    "requestFailed": "That did not go through (error {{status}}). Please try again.",
+    "networkError": "Could not reach the server. Check your connection and try again.",
+    "all": "All"
   },
   "languageSuggestion": {
     "title": "Change Language?",
@@ -125,7 +129,8 @@
     "referralProgramDashboard": "Referral Program Dashboard",
     "referralClients": "Clients",
     "referralMarketing": "Marketing Tools",
-    "referralTraining": "Training"
+    "referralTraining": "Training",
+    "investors": "Investors"
   },
   "landing": {
     "iafBadge": "IAF Accredited Certification Bodies Partners",
@@ -1929,5 +1934,38 @@
     "commissionsStep2": "A commission is credited once the client has paid for their certification, not when they are invited.",
     "commissionsStep3": "Your rate rises as you bring in more paid clients — your current tier and the next one are shown on the same screen.",
     "commissionsStep4": "Commission that has been paid out and commission still owed are listed separately, so you always know what is outstanding."
+  },
+  "investors": {
+    "title": "Investors",
+    "subtitle": "Investment funds on file, for review.",
+    "searchPlaceholder": "Search fund, location, sector, partner or notes…",
+    "allRegions": "All regions",
+    "total": "Funds",
+    "totalDesc": "Every fund on file",
+    "active": "Active",
+    "activeDesc": "Still being considered",
+    "regions": "Regions",
+    "regionsDesc": "Where these funds invest from",
+    "fund": "Fund",
+    "region": "Region",
+    "geography": "Location",
+    "stage": "Stage",
+    "sector": "Sector / thesis",
+    "leads": "Leads rounds?",
+    "checkRange": "Cheque size",
+    "recentActivity": "Recent activity",
+    "website": "Website",
+    "fundLinkedin": "Fund LinkedIn",
+    "keyPartner": "Key partner",
+    "partnerLinkedin": "Partner LinkedIn",
+    "notes": "Notes",
+    "status": "Status",
+    "empty": "No funds match what you are looking for.",
+    "loading": "Loading investors…",
+    "editTitle": "Edit fund",
+    "confirmDelete": "Remove {{fund}} from the register? This cannot be undone.",
+    "saved": "Saved",
+    "deleted": "Removed",
+    "loadFailed": "Could not load the investor register. Please try again."
   }
 }

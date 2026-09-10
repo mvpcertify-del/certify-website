@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -8,7 +7,7 @@ import { TRAINING_TOPICS } from './trainingTopics';
 import {
   Bell, Users, CircleDollarSign, TrendingUp, Megaphone, Send, GraduationCap,
 } from 'lucide-react';
-import '../dashboard/MainDashboard.css';
+import DashboardBoxes from '../../components/ui/DashboardBoxes';
 
 // The Referral Program Dashboard (client, 6 Sep).
 //
@@ -51,7 +50,6 @@ const BOXES = [
 export default function ReferralProgramDashboard() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [counts, setCounts] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -145,7 +143,7 @@ export default function ReferralProgramDashboard() {
 
   const formatValue = (box) => {
     const v = counts[box.key];
-    if (v == null) return '—';
+    if (v == null) return null;
     if (box.text) return v;
     if (box.currency) return `$${Number(v).toFixed(2)}`;
     return Number(v).toLocaleString();
@@ -162,24 +160,15 @@ export default function ReferralProgramDashboard() {
         </div>
       </div>
 
-      <div className="main-dash__grid">
-        {BOXES.map((box) => (
-          <button
-            key={box.key}
-            type="button"
-            className="main-dash__card"
-            onClick={() => navigate(box.path)}
-            style={{ '--card-accent': box.color }}
-          >
-            <div className="main-dash__icon" style={{ background: `${box.color}1a`, color: box.color }}>
-              <box.icon size={24} />
-            </div>
-            <div className="main-dash__value">{loading ? '…' : formatValue(box)}</div>
-            <div className="main-dash__label">{t(`refDash.${box.key}`)}</div>
-            <div className="main-dash__desc">{t(`refDash.${box.key}Desc`)}</div>
-          </button>
-        ))}
-      </div>
+      <DashboardBoxes
+        loading={loading}
+        boxes={BOXES.map((box) => ({
+          ...box,
+          value: formatValue(box),
+          label: t(`refDash.${box.key}`),
+          desc: t(`refDash.${box.key}Desc`),
+        }))}
+      />
     </div>
   );
 }
