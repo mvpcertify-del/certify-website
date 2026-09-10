@@ -9,16 +9,19 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROLES } from '../../utils/roles';
 import RowActions from '../../components/ui/RowActions';
-import { Building2, CheckCircle2, Globe2 } from 'lucide-react';
+import { Building2, CheckCircle2, Globe2, Mail } from 'lucide-react';
 
-// The seven groupings the client's fund list is organised by. Hardcoded rather
-// than derived from the rows so the dropdown keeps offering a region even when
-// no fund currently sits in it — an empty result is a real answer here.
+// The groupings the client's fund list is organised by. Hardcoded rather than
+// derived from the rows so the dropdown keeps offering a region even when no
+// fund currently sits in it — an empty result is a real answer here.
+//
+// Israel is deliberately absent: the client asked on 10 Sep that those funds be
+// removed, and offering a filter that can only ever return nothing would read
+// as a bug.
 const REGIONS = [
   'North America',
   'Latin America',
   'Europe',
-  'Israel',
   'Middle East & Africa',
   'Asia',
   'India',
@@ -38,6 +41,7 @@ const EMPTY = {
   key_partner: '',
   partner_linkedin: '',
   notes: '',
+  contact_email: '',
   source: '',
   is_active: true,
 };
@@ -77,6 +81,7 @@ export default function AdminInvestors() {
   const [search, setSearch] = useState('');
   const [region, setRegion] = useState('all');
   const [activeOnly, setActiveOnly] = useState(false);
+  const [missingEmailOnly, setMissingEmailOnly] = useState(false);
   const regionRef = useRef(null);
 
   const [showModal, setShowModal] = useState(false);
@@ -117,13 +122,15 @@ export default function AdminInvestors() {
     return items.filter((row) => {
       if (region !== 'all' && row.region !== region) return false;
       if (activeOnly && !row.is_active) return false;
+      if (missingEmailOnly && row.contact_email) return false;
       if (!q) return true;
-      return [row.fund_name, row.geography, row.sector, row.key_partner, row.notes]
+      return [row.fund_name, row.geography, row.sector, row.key_partner, row.notes, row.contact_email]
         .some((f) => f && String(f).toLowerCase().includes(q));
     });
-  }, [items, search, region, activeOnly]);
+  }, [items, search, region, activeOnly, missingEmailOnly]);
 
   const activeCount = items.filter((r) => r.is_active).length;
+  const emailCount = items.filter((r) => r.contact_email).length;
   const regionCount = new Set(items.map((r) => r.region).filter(Boolean)).size;
 
   const boxes = [
@@ -144,6 +151,19 @@ export default function AdminInvestors() {
       label: t('investors.active'),
       desc: t('investors.activeDesc'),
       onClick: () => { setActiveOnly(true); setRegion('all'); },
+    },
+    {
+      // The client's stated plan is to email every fund in here (10 Sep). The
+      // research file carries websites and LinkedIn profiles but not one email
+      // address, so this box is the honest measure of how far that plan is
+      // from possible — and it drops to the rows still missing one.
+      key: 'withEmail',
+      icon: Mail,
+      color: '#8b5cf6',
+      value: emailCount,
+      label: t('investors.withEmail'),
+      desc: t('investors.withEmailDesc'),
+      onClick: () => { setMissingEmailOnly(true); setRegion('all'); setSearch(''); },
     },
     {
       key: 'regions',
@@ -174,6 +194,7 @@ export default function AdminInvestors() {
       key_partner: row.key_partner || '',
       partner_linkedin: row.partner_linkedin || '',
       notes: row.notes || '',
+      contact_email: row.contact_email || '',
       source: row.source || '',
       is_active: !!row.is_active,
     });
@@ -219,6 +240,7 @@ export default function AdminInvestors() {
           key_partner: clean(formData.key_partner),
           partner_linkedin: clean(formData.partner_linkedin),
           notes: clean(formData.notes),
+          contact_email: clean(formData.contact_email),
           source: clean(formData.source),
           is_active: !!formData.is_active,
           updated_at: new Date().toISOString(),
@@ -258,6 +280,11 @@ export default function AdminInvestors() {
     { key: 'leads', label: t('investors.leads'), render: (v) => <Plain value={v} /> },
     { key: 'key_partner', label: t('investors.keyPartner'), render: (v) => <Plain value={v} /> },
     {
+      key: 'contact_email',
+      label: t('investors.contactEmail'),
+      render: (v) => (v ? <a href={`mailto:${v}`}>{v}</a> : <Plain value={v} />),
+    },
+    {
       key: 'actions',
       label: t('common.edit'),
       render: (_, row) => (
@@ -283,6 +310,12 @@ export default function AdminInvestors() {
     { label: t('investors.fundLinkedin'), value: <ExternalLink value={viewingRow.fund_linkedin} /> },
     { label: t('investors.partnerLinkedin'), value: <ExternalLink value={viewingRow.partner_linkedin} /> },
     { label: t('investors.notes'), value: viewingRow.notes },
+    {
+      label: t('investors.contactEmail'),
+      value: viewingRow.contact_email
+        ? <a href={`mailto:${viewingRow.contact_email}`}>{viewingRow.contact_email}</a>
+        : <Plain value={null} />,
+    },
     {
       label: t('investors.status'),
       value: viewingRow.is_active ? t('common.active') : t('common.inactive'),
@@ -402,6 +435,15 @@ export default function AdminInvestors() {
               label={t('investors.keyPartner')}
               value={formData.key_partner}
               onChange={(e) => setFormData({ ...formData, key_partner: e.target.value })}
+            />
+            {/* The one field the research file could not supply. It leads the
+                contact block because filling it in is the prerequisite for the
+                outreach the client wants to run. */}
+            <Input
+              label={t('investors.contactEmail')}
+              type="email"
+              value={formData.contact_email}
+              onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
             />
             <Input
               label={t('investors.website')}

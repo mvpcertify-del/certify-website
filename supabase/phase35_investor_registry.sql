@@ -7,13 +7,23 @@
 -- review by accessing SA in certify.cx" - attached to a spreadsheet of 166
 -- venture-capital funds, grouped by region.
 --
+-- Follow-up (10 Sep): "We will be sending emails to all investment companies
+-- in Investors Module ( Remove Israel companies )". So the 16 Israel funds
+-- are excluded and 150 remain. Section 4 below also removes them from a
+-- database where an earlier version of this file was already run.
+--
+-- On the sending itself: the source spreadsheet contains NO email address in
+-- any column - checked across all twelve, all 166 rows, zero matches. The
+-- contact_email column below exists so those addresses have somewhere to
+-- live, but nothing can be sent until they are supplied.
+--
 -- WHY A NEW TABLE, rather than the three places it might have gone:
 --
 --   * NOT one profiles row per fund. An "investor" already exists here, but it
 --     is a stakeholder_type on the client role: a person who signs up, waits at
---     approval_status 'pending', and can log in. These 166 funds have no
---     account and no relationship with us yet. Creating them as users would put
---     166 strangers into the client count, the admin user list, and the
+--     approval_status 'pending', and can log in. These funds have no account
+--     and no relationship with us yet. Creating them as users would put 150
+--     strangers into the client count, the admin user list, and the
 --     welcome-email path.
 --
 --   * NOT referrals. That table looks like a lead list, but referrer_id is NOT
@@ -56,12 +66,17 @@ CREATE TABLE IF NOT EXISTS public.investors (
   key_partner      text,
   partner_linkedin text,
   notes            text,
+  contact_email    text,
   source           text,
   is_active        boolean NOT NULL DEFAULT true,
   created_by       uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
   created_at       timestamptz NOT NULL DEFAULT now(),
   updated_at       timestamptz NOT NULL DEFAULT now()
 );
+
+-- Added after the table shipped, so an existing install picks it up too.
+ALTER TABLE public.investors
+  ADD COLUMN IF NOT EXISTS contact_email text;
 
 -- The fund name is the natural key. Lower-cased so "BoxGroup" and "Boxgroup"
 -- cannot both exist, which is what makes the seed below re-runnable.
@@ -77,6 +92,10 @@ COMMENT ON TABLE public.investors IS
 COMMENT ON COLUMN public.investors.website IS
   'Host only, with no scheme (e.g. mayfield.com). The UI prepends https:// when '
   'it renders the link, so a stored value is never used as an href as-is.';
+COMMENT ON COLUMN public.investors.contact_email IS
+  'Where outreach to this fund would be sent. Empty for every row seeded '
+  'from the research spreadsheet: that file carries websites and LinkedIn '
+  'profiles but not one email address. Filled in by an admin.';
 COMMENT ON COLUMN public.investors.source IS
   'Which research file the row came from, so a later import can be told apart.';
 COMMENT ON COLUMN public.investors.is_active IS
@@ -108,11 +127,11 @@ CREATE POLICY "investors_super_admin_write"
                       WHERE profiles.id = auth.uid() AND profiles.role = 'super_admin'));
 
 -- ---------------------------------------------------------------------
--- 3. The 166 funds
+-- 3. The 150 funds
 -- ---------------------------------------------------------------------
 -- Region totals match the section headers in the source sheet exactly:
--- North America 75, Latin America 11, Europe 27, Israel 16,
--- Middle East & Africa 11, Asia 13, India 13.
+-- North America 75, Latin America 11, Europe 27, Middle East & Africa 11,
+-- Asia 13, India 13. Israel (16) is excluded on the client's instruction.
 --
 -- ON CONFLICT updates rather than skipping, so correcting the spreadsheet and
 -- re-running this file brings the table back in step instead of keeping stale
@@ -233,22 +252,6 @@ VALUES
   ('Notion Capital', 'Europe', 'UK (London)', 'Seed – Series D', 'B2B SaaS, cloud, fintech', 'Yes', 'Seed–Growth', 'GoCardless, Mews, Paddle, Tradeshift, Currencycloud', 'notioncapital.com', 'linkedin.com/company/notion-capital', 'Stephen Chandler — Managing Partner', 'linkedin.com/in/stephen-chandler-7a06366', '$1B+ AUM; Fund V €300M. Built by MessageLabs founders', 'Active Investors last quarter (Max x Ruben)'),
   ('Frontline Ventures', 'Europe', 'Ireland (Dublin) + UK (London)', 'Pre-seed / Seed (+ US growth)', 'B2B software (transatlantic)', 'Yes', '€250K–€2.5M', 'Cross-Atlantic B2B specialist; Logentries, Pointy, Kota', 'frontline.vc', 'linkedin.com/company/frontline-ventures', 'William McQuillan — Co-founding Partner', 'linkedin.com/in/willmcq', 'Frontline Seed (EU) + Frontline Growth (US). Also Will Prendergast, Zoe Chambers', 'Active Investors last quarter (Max x Ruben)'),
   ('Lakestar', 'Europe', 'Switzerland (Zurich / Berlin / London)', 'Seed – Growth', 'Deeptech, fintech, defense, AI, health', 'Yes', 'Seed–Growth', 'Spotify, Revolut, Klarna, Isar Aerospace, Helsing, Neko Health', 'lakestar.com', 'linkedin.com/company/lakestar-vc', 'Klaus Hommels — Founder & Chairman', 'linkedin.com/in/klaushommels', '€2B+ AUM; chaired NATO Innovation Fund. Digital-sovereignty advocate', 'Active Investors last quarter (Max x Ruben)'),
-  ('Cyberstarts', 'Israel', 'Israel / US', 'Seed', 'Cybersecurity, identity, agent governance', 'Yes', 'Seed (often Day-1)', 'NewCore — $66M (Jun 2026)', 'cyberstarts.com', 'linkedin.com/company/cyberstarts', 'Gili Raanan — Founder & GP', 'linkedin.com/in/giliraanan', 'CISO partner network. Wiz, Cyera. Also Lior Simon', 'Active Investors last quarter (Max x Ruben)'),
-  ('Aleph', 'Israel', 'Israel (Tel Aviv)', 'Seed / Series A', 'Fintech, insurtech, B2C, AI, enterprise, health', 'Yes', 'Seed–Series A', 'Lemonade, Melio, HoneyBook, Healthy.io, Fabric, NextSilicon', 'aleph.vc', 'linkedin.com/company/aleph-vc', 'Eden Shochat — Equal Partner', 'linkedin.com/in/edens', '$850M AUM; equal partnership w/ Michael Eisenberg. face.com founder', 'Active Investors last quarter (Max x Ruben)'),
-  ('TLV Partners', 'Israel', 'Israel (Tel Aviv)', 'Seed / Series A', 'Cybersecurity, AI, devtools, cloud, fintech, data', 'Yes', '$4M–$20M', 'Aqua Security, Run:ai, Next Insurance, Granulate, Firebolt', 'tlv.partners', 'linkedin.com/company/tlv-partners', 'Rona Segev — Co-founder & Managing Partner', 'linkedin.com/in/ronasegev', '$1B+ AUM; led Dux seed (Dec 2025). Co-founder Eitan Bek', 'Active Investors last quarter (Max x Ruben)'),
-  ('Entrée Capital', 'Israel', 'Israel (Tel Aviv) + London / NY', 'Pre-seed – Growth', 'AI, fintech, deeptech, cyber, SaaS, crypto', 'Yes', 'Seed (to $3M) + multi-stage', 'monday.com, Stripe, Snap, Deliveroo, Riskified, Coupang', 'entreecap.com', 'linkedin.com/company/entree-capital', 'Avi Eyal — Managing Partner', 'linkedin.com/in/avieyal', '$1.2B+ AUM, 18 unicorns; #1 Forbes Midas Europe 2023', 'Active Investors last quarter (Max x Ruben)'),
-  ('Glilot Capital Partners', 'Israel', 'Israel (Tel Aviv)', 'Seed + early growth (Glilot+)', 'Cybersecurity, enterprise software, cloud, DevOps, AI', 'Yes', 'Seed–Series A', 'Claroty, Anecdotes, ScaleOps, Stream.Security', 'glilotcapital.com', 'linkedin.com/company/glilot-capital-partners', 'Kobi Samboursky — Co-founder & Managing Partner', 'linkedin.com/in/kobisamboursky', '~$700M+ AUM; world''s first cyber-focused VC. Co-founder Arik Kleinstein', 'Active Investors last quarter (Max x Ruben)'),
-  ('Grove Ventures', 'Israel', 'Israel (Tel Aviv)', 'Pre-seed / Seed – Series A', 'Deep tech: semiconductors, AI infra, quantum, space, IoT', 'Yes', '$250K–$5M', 'Wiliot, RapidAPI, TriEye, Quantum Source, Majestic Labs', 'grovevc.com', 'linkedin.com/company/grove-ventures', 'Dov Moran — Managing Partner', 'linkedin.com/in/dovmoran', '$500M+ AUM; inventor of the USB flash drive. Co-founder Lotan Levkowitz', 'Active Investors last quarter (Max x Ruben)'),
-  ('83North', 'Israel', 'Israel (Tel Aviv) + London', 'Seed – Growth', 'Consumer + enterprise, fintech, SaaS', 'Yes', 'Seed–Growth', 'Wolt, iZettle, Celonis, Mirakl, Just Eat, VAST Data', '83north.com', 'linkedin.com/company/83north', 'Laurel Bowden — Partner', 'linkedin.com/in/laurel-bowden-3a869b', '$2B+ AUM; Europe + Israel (name = sum of London + TLV latitudes)', 'Active Investors last quarter (Max x Ruben)'),
-  ('Hetz Ventures', 'Israel', 'Israel (Tel Aviv) + London', 'Seed (thematic)', 'B2B enterprise, DevOps, AI/data infra, cyber, fintech', 'Yes', 'Seed', 'Trigo, Deepchecks, Prompt Security, Silk, Fundamental', 'hetz.vc', 'linkedin.com/company/hetz-ventures', 'Judah Taub — Co-founder & Managing Partner', 'linkedin.com/in/judah-taub-3773247b', '~$500M AUM; thematic AI-infra approach. GPs Pavel Livshiz, Guy Fighel', 'Active Investors last quarter (Max x Ruben)'),
-  ('F2 Venture Capital', 'Israel', 'Israel (Tel Aviv)', 'Pre-seed / Seed', 'AI, fintech, big data, cloud ops, cyber', 'Yes', '$500K–$3M', 'Darrow, Explorium, Justt, Astrix, Faye', 'f2vc.com', 'linkedin.com/company/f2-capital', 'Barak Rabinowitz — Co-founder & Managing Partner', 'linkedin.com/in/barak2007', '$500M AUM; first-check investors. Operates The Junction pre-seed. Co-founder Jonathan Saacks', 'Active Investors last quarter (Max x Ruben)'),
-  ('StageOne Ventures', 'Israel', 'Israel (Herzliya)', 'Seed / Early', 'Enterprise deep-tech: cloud infra, cyber, vertical AI/SaaS, DevOps', 'Yes', '$500K–$3M', 'Coralogix, Silverfort, NeuroBlade, Avanan, Epsagon, Qwak', 'stageonevc.com', 'linkedin.com/company/stageone-ventures', 'Yuval Cohen — Founder & Managing Partner', 'linkedin.com/in/yuval-cohen-73a9697', '$500M+ AUM, Fund V $165M; ~84% first-investor rate', 'Active Investors last quarter (Max x Ruben)'),
-  ('Vertex Ventures Israel', 'Israel', 'Israel (Tel Aviv)', 'Seed – Series B', 'Generalist: enterprise, cyber, mobility/auto, digital health', 'Yes', '$1M–$10M', 'Waze, CyberArk, SolarEdge, Axonius, Yotpo, Innoviz', 'vertexventures.co.il', 'linkedin.com/company/vertex-ventures-israel', 'Emanuel Timor — General Partner', 'linkedin.com/in/emanuel-timor-79959', '$1.4B raised; part of global Vertex network. Founder Yoram Oron', 'Active Investors last quarter (Max x Ruben)'),
-  ('YL Ventures', 'Israel', 'Israel / US (Silicon Valley)', 'Seed', 'Cybersecurity only', 'Yes', 'Seed', 'Axonius, Orca, Medigate, Twistlock', 'ylventures.com', 'linkedin.com/company/yl-ventures', 'Yoav Leitersdorf — Founder & Managing Partner', 'linkedin.com/in/leitersdorf', '$800M AUM; largest cyber seed fund. CISO network', 'Active Investors last quarter (Max x Ruben)'),
-  ('JVP (Jerusalem Venture Partners)', 'Israel', 'Israel (Jerusalem / NY)', 'Early – Growth', 'Cyber, vertical AI, enterprise, fintech, foodtech', 'Yes', 'Early–Growth', 'CyberArk, Coro, Morphisec, Akeyless', 'jvpvc.com', 'linkedin.com/company/jvp', 'Yoav Tzruya — General Partner', 'linkedin.com/in/yoav-tzruya-36198b', '$1.7B+ across 10 funds. Founder Erel Margalit (Exec Chairman)', 'Active Investors last quarter (Max x Ruben)'),
-  ('Pitango', 'Israel', 'Israel (Herzliya)', 'Seed – Growth', 'Generalist: enterprise, fintech, healthtech, AI', 'Yes', 'Seed–Growth', 'Riskified, DriveNets, Tomorrow.io, AI21 Labs', 'pitango.com', 'linkedin.com/company/pitango', 'Aaron Mankovski — Managing General Partner', 'linkedin.com/in/aaron-mankovski', '~$1.8B AUM; Pitango First does seed. Co-founders Chemi Peres, Rami Kalish', 'Active Investors last quarter (Max x Ruben)'),
-  ('lool ventures', 'Israel', 'Israel (Tel Aviv)', 'Pre-seed / Seed', 'Enterprise apps, deep tech, consumer, IoT, AI', 'Yes', '$500K–$2.5M', 'Eleos Health, NoTraffic, Wibbitz', 'lool.vc', 'linkedin.com/company/lool-ventures', 'Yaniv Golan — Founder & General Partner', 'linkedin.com/in/yanivgolan', 'Founded 2011; 42 companies. Co-founder Avichay Nissenbaum', 'Active Investors last quarter (Max x Ruben)'),
-  ('Team8', 'Israel', 'Israel (Tel Aviv)', 'Seed – Early', 'Cyber, infra, fintech, digital health, AI, data', 'Yes', 'Seed–Early', 'Claroty, Sygnia, Curv, Portshift', 'team8.vc', 'linkedin.com/company/team8', 'Liran Grinberg — Co-founder & Managing Partner', 'linkedin.com/in/lirangr', '$1B+ AUM; venture-creation foundry. Co-founder Israel Grimberg', 'Active Investors last quarter (Max x Ruben)'),
   ('Shorooq Partners', 'Middle East & Africa', 'UAE (Abu Dhabi)', 'Pre-seed / Seed + venture debt', 'MENAP early-stage; fintech, platform, software, web3', 'Yes', 'Pre-seed–Seed', 'Tamara, Sarwa, Lean Technologies, NymCard, TruKKer', 'shorooq.com', 'linkedin.com/company/shorooqpartners', 'Mahmoud Adi — Founding Partner', 'linkedin.com/in/m-adi', '~$500M AUM, 45+ companies. First Emirati-founded VC; first ADGM-regulated. Co-founder Shane Shin', 'Active Investors last quarter (Max x Ruben)'),
   ('BECO Capital', 'Middle East & Africa', 'UAE (Dubai)', 'Seed / Early growth', 'MENA/GCC early-stage growth tech; founder-focused', 'Yes', 'Seed–Early growth', 'Careem, Property Finder, Swvl, Kitopi, Vectara', 'becocapital.com', 'linkedin.com/company/beco-capital', 'Dany Farha — Co-founder & Managing Partner', 'linkedin.com/in/danyfarha', '~$495M AUM/4 funds (raised $370M new fund). First VC in GCC (2012). Co-founder Amir Farha', 'Active Investors last quarter (Max x Ruben)'),
   ('TLcom Capital', 'Middle East & Africa', 'Africa (Nairobi / Lagos / London)', 'Seed – Series B', 'Africa-focused; fintech, mobility, agri, health, edu, e-com', 'Leads', '$500K–$15M', 'Andela, Twiga Foods, FairMoney, Autochek, Kobo360', 'tlcomcapital.com', 'linkedin.com/company/tlcom-capital-partners', 'Maurizio Caio — Founder & Managing Partner', 'linkedin.com/in/maurizio-caio-1580a97', 'Africa''s largest seed/Series A investor; TIDE Africa Fund II $154M. Partners Omobola Johnson, Andreata Muforo', 'Active Investors last quarter (Max x Ruben)'),
@@ -302,6 +305,17 @@ ON CONFLICT (lower(fund_name)) DO UPDATE SET
   source           = EXCLUDED.source,
   updated_at       = now();
 
+-- ---------------------------------------------------------------------
+-- 4. Remove the Israel funds
+-- ---------------------------------------------------------------------
+-- Client instruction, 10 Sep. They are absent from the INSERT above, so this
+-- only matters where an earlier version of this file was already run - it
+-- makes the file correct whether it is a first run or a second.
+--
+-- A hard DELETE, not is_active = false, because "remove" was the instruction
+-- and a deactivated row would still be one search-filter away.
+DELETE FROM public.investors WHERE region = 'Israel';
+
 COMMIT;
 
 -- PostgREST serves the API from a cached copy of the schema, so a brand new
@@ -312,9 +326,11 @@ NOTIFY pgrst, 'reload schema';
 -- Verification
 -- =====================================================================
 -- SELECT to_regclass('public.investors');                       -- not null
--- SELECT count(*) FROM public.investors;                        -- 166
+-- SELECT count(*) FROM public.investors;                        -- 150
 -- SELECT region, count(*) FROM public.investors
 --  GROUP BY region ORDER BY 2 DESC;
---    -- North America 75, Europe 27, Israel 16, Asia 13, India 13,
+--    -- North America 75, Europe 27, Asia 13, India 13,
 --    -- Latin America 11, Middle East & Africa 11
+-- SELECT count(*) FROM public.investors WHERE region = 'Israel';   -- 0
+-- SELECT count(*) FROM public.investors WHERE contact_email IS NOT NULL;  -- 0
 -- SELECT count(*) FROM public.investors WHERE website IS NULL;  -- 0

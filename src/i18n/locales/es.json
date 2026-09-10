@@ -1966,6 +1966,9 @@
     "confirmDelete": "¿Quitar {{fund}} del registro? Esta acción no se puede deshacer.",
     "saved": "Guardado",
     "deleted": "Eliminado",
-    "loadFailed": "No se pudo cargar el registro de inversores. Inténtalo de nuevo."
+    "loadFailed": "No se pudo cargar el registro de inversores. Inténtalo de nuevo.",
+    "contactEmail": "Correo de contacto",
+    "withEmail": "Con correo",
+    "withEmailDesc": "Se les puede escribir — toca para ver los demás"
   }
 }

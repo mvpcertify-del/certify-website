@@ -1966,6 +1966,9 @@
     "confirmDelete": "Remover {{fund}} do registo? Esta ação não pode ser anulada.",
     "saved": "Guardado",
     "deleted": "Removido",
-    "loadFailed": "Não foi possível carregar o registo de investidores. Tente novamente."
+    "loadFailed": "Não foi possível carregar o registo de investidores. Tente novamente.",
+    "contactEmail": "E-mail de contacto",
+    "withEmail": "Com e-mail",
+    "withEmailDesc": "É possível contactá-los — toque para ver os restantes"
   }
 }

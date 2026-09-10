@@ -1966,6 +1966,9 @@
     "confirmDelete": "Retirer {{fund}} du registre ? Cette action est irréversible.",
     "saved": "Enregistré",
     "deleted": "Retiré",
-    "loadFailed": "Impossible de charger le registre des investisseurs. Veuillez réessayer."
+    "loadFailed": "Impossible de charger le registre des investisseurs. Veuillez réessayer.",
+    "contactEmail": "E-mail de contact",
+    "withEmail": "Avec e-mail",
+    "withEmailDesc": "Joignables par e-mail — appuyez pour voir les autres"
   }
 }

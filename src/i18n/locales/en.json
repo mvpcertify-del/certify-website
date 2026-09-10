@@ -1966,6 +1966,9 @@
     "confirmDelete": "Remove {{fund}} from the register? This cannot be undone.",
     "saved": "Saved",
     "deleted": "Removed",
-    "loadFailed": "Could not load the investor register. Please try again."
+    "loadFailed": "Could not load the investor register. Please try again.",
+    "contactEmail": "Contact email",
+    "withEmail": "With an email",
+    "withEmailDesc": "Can be written to — tap to see the rest"
   }
 }

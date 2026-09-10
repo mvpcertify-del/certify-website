@@ -1966,6 +1966,9 @@
     "confirmDelete": "要将 {{fund}} 从名录中移除吗？此操作无法撤销。",
     "saved": "已保存",
     "deleted": "已移除",
-    "loadFailed": "无法加载投资方名录，请重试。"
+    "loadFailed": "无法加载投资方名录，请重试。",
+    "contactEmail": "联系邮箱",
+    "withEmail": "有邮箱",
+    "withEmailDesc": "可以发送邮件——点击查看其余的"
   }
 }

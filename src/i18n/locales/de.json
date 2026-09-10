@@ -1966,6 +1966,9 @@
     "confirmDelete": "{{fund}} aus dem Register entfernen? Das lässt sich nicht rückgängig machen.",
     "saved": "Gespeichert",
     "deleted": "Entfernt",
-    "loadFailed": "Das Investorenregister konnte nicht geladen werden. Bitte erneut versuchen."
+    "loadFailed": "Das Investorenregister konnte nicht geladen werden. Bitte erneut versuchen.",
+    "contactEmail": "Kontakt-E-Mail",
+    "withEmail": "Mit E-Mail",
+    "withEmailDesc": "Anschreibbar — tippen Sie, um die übrigen zu sehen"
   }
 }
