@@ -480,7 +480,7 @@ export const ROUTE_PERMISSIONS = {
   '/auditors': [PERMISSIONS.VIEW_AUDITORS],
   '/certification-bodies': [PERMISSIONS.VIEW_BODIES],
   '/reports': [PERMISSIONS.VIEW_REPORTS],
-  '/settings': [PERMISSIONS.MANAGE_SETTINGS],
+  '/profile': [PERMISSIONS.MANAGE_SETTINGS],
 };
 
 // ---------------------------------------------------

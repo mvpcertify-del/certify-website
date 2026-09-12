@@ -30,7 +30,7 @@ const pageTitles = {
   '/auditors': 'Auditors',
   '/certification-bodies': 'Certification Bodies',
   '/reports': 'Reports',
-  '/settings': 'Settings',
+  '/profile': 'My Profile',
 };
 
 export default function DashboardLayout() {

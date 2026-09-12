@@ -130,7 +130,8 @@
     "referralClients": "客户",
     "referralMarketing": "营销工具",
     "referralTraining": "培训",
-    "investors": "投资方"
+    "investors": "投资方",
+    "payouts": "佣金支付"
   },
   "landing": {
     "iafBadge": "IAF 认可认证机构合作伙伴",
@@ -604,7 +605,19 @@
     "emailNotifications": "电子邮件通知",
     "emailNotificationsDesc": "接收有关认证更新的电子邮件提醒",
     "twoFactorAuth": "双重身份验证",
-    "twoFactorDesc": "为您的账户增添一层额外的安全保护"
+    "twoFactorDesc": "为您的账户增添一层额外的安全保护",
+    "contactNumber": "联系电话",
+    "city": "城市",
+    "cityPlaceholder": "开始输入您的城市…",
+    "countryLabel": "国家",
+    "countryPlaceholder": "根据城市自动填写",
+    "chooseImage": "请选择图片文件。",
+    "pictureUploaded": "照片已上传——点击“保存更改”以保留。",
+    "failedUpload": "照片上传失败，请重试。",
+    "uploading": "正在上传…",
+    "changePicture": "更换照片",
+    "addPicture": "添加头像",
+    "action": "操作"
   },
   "notifications": {
     "title": "通知",

@@ -14,7 +14,6 @@ import {
   ShieldCheck,
   Stamp,
   Building,
-  Settings,
   Users,
   LogOut,
   ChevronLeft,
@@ -144,6 +143,10 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     // The investor registry (phase35). Sits with the other Super-Admin-only
     // registries rather than near Clients: these funds are prospects the
     // company is raising from, not customers it is selling to.
+    // Referral payouts, moved out of Settings on 12 Sep. Settings was the
+    // same page as My Profile, so it left the menu; this was the one tab on
+    // it that did real work, so it got its own entry.
+    { path: '/admin/payouts', labelKey: 'nav.payouts', icon: CircleDollarSign, kind: KIND_CREATE, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN] },
     { path: '/admin/investors', labelKey: 'nav.investors', icon: Landmark, kind: adminCreates, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN] },
     { path: '/admin/outreach-docs', labelKey: 'nav.outreachDocs', icon: Paperclip, kind: KIND_CREATE, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN] },
     { path: '/admin/registrations', labelKey: 'nav.registrations', icon: UserPlus, kind: KIND_CREATE, permissions: [PERMISSIONS.MANAGE_USERS] },
@@ -176,7 +179,6 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     { path: '/profile', labelKey: 'nav.myProfile', icon: User, kind: KIND_CREATE, permissions: [PERMISSIONS.MANAGE_SETTINGS] },
     // Read-only apart from marking a notification read.
     { path: '/notifications', labelKey: 'nav.notifications', icon: Bell, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_DASHBOARD] },
-    { path: '/settings', labelKey: 'nav.settings', icon: Settings, kind: KIND_CREATE, permissions: [PERMISSIONS.MANAGE_USERS] },
   ];
 
   const filteredNav = navItems.filter(item =>

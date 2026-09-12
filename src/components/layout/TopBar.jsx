@@ -3,14 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { hasPermission, PERMISSIONS, getDisplayRoleLabel } from '../../utils/roles';
+import { getDisplayRoleLabel } from '../../utils/roles';
 import {
   Menu,
   Bell,
   ChevronDown,
   LogOut,
   User,
-  Settings,
   Sun,
   Moon,
 } from 'lucide-react';
@@ -24,8 +23,6 @@ export default function TopBar({ pageTitle, onMenuClick, collapsed }) {
   const { t } = useTranslation();
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef(null);
-
-  const isAdmin = hasPermission(user?.role, PERMISSIONS.MANAGE_USERS);
 
   useEffect(() => {
     const handler = (e) => {
@@ -87,11 +84,6 @@ export default function TopBar({ pageTitle, onMenuClick, collapsed }) {
               <button className="topbar__dropdown-item" onClick={() => { setProfileOpen(false); navigate('/profile'); }}>
                 <User size={16} /> {t('common.profile')}
               </button>
-              {isAdmin && (
-                <button className="topbar__dropdown-item" onClick={() => { setProfileOpen(false); navigate('/settings'); }}>
-                  <Settings size={16} /> {t('common.settings')}
-                </button>
-              )}
               <div className="topbar__dropdown-divider" />
               <button className="topbar__dropdown-item topbar__dropdown-item--danger" onClick={logout}>
                 <LogOut size={16} /> {t('common.signOut')}

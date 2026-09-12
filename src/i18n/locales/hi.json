@@ -130,7 +130,8 @@
     "referralClients": "ग्राहक",
     "referralMarketing": "मार्केटिंग टूल",
     "referralTraining": "प्रशिक्षण",
-    "investors": "निवेशक"
+    "investors": "निवेशक",
+    "payouts": "भुगतान"
   },
   "landing": {
     "iafBadge": "IAF मान्यता प्राप्त प्रमाणन निकाय भागीदार",
@@ -604,7 +605,19 @@
     "emailNotifications": "ईमेल सूचनाएं",
     "emailNotificationsDesc": "प्रमाणन अपडेट के लिए ईमेल अलर्ट प्राप्त करें",
     "twoFactorAuth": "दो-कारक प्रमाणीकरण",
-    "twoFactorDesc": "खाता सुरक्षा की एक अतिरिक्त परत जोड़ें"
+    "twoFactorDesc": "खाता सुरक्षा की एक अतिरिक्त परत जोड़ें",
+    "contactNumber": "संपर्क नंबर",
+    "city": "शहर",
+    "cityPlaceholder": "अपना शहर लिखना शुरू करें…",
+    "countryLabel": "देश",
+    "countryPlaceholder": "आपके शहर से भर दिया जाता है",
+    "chooseImage": "कृपया एक इमेज फ़ाइल चुनें।",
+    "pictureUploaded": "फ़ोटो अपलोड हो गई — रखने के लिए परिवर्तन सहेजें दबाएँ।",
+    "failedUpload": "फ़ोटो अपलोड नहीं हो सकी। कृपया फिर से कोशिश करें।",
+    "uploading": "अपलोड हो रहा है…",
+    "changePicture": "फ़ोटो बदलें",
+    "addPicture": "प्रोफ़ाइल फ़ोटो जोड़ें",
+    "action": "कार्रवाई"
   },
   "notifications": {
     "title": "सूचनाएं",

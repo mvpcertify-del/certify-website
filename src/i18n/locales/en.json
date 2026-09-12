@@ -130,7 +130,8 @@
     "referralClients": "Clients",
     "referralMarketing": "Marketing Tools",
     "referralTraining": "Training",
-    "investors": "Investors"
+    "investors": "Investors",
+    "payouts": "Payouts"
   },
   "landing": {
     "iafBadge": "IAF Accredited Certification Bodies Partners",
@@ -604,7 +605,19 @@
     "emailNotifications": "Email Notifications",
     "emailNotificationsDesc": "Receive email alerts for certification updates",
     "twoFactorAuth": "Two-Factor Authentication",
-    "twoFactorDesc": "Add an extra layer of account security"
+    "twoFactorDesc": "Add an extra layer of account security",
+    "contactNumber": "Contact Number",
+    "city": "City",
+    "cityPlaceholder": "Start typing your city…",
+    "countryLabel": "Country",
+    "countryPlaceholder": "Filled in from your city",
+    "chooseImage": "Please choose an image file.",
+    "pictureUploaded": "Picture uploaded — press Save Changes to keep it.",
+    "failedUpload": "The picture could not be uploaded. Please try again.",
+    "uploading": "Uploading…",
+    "changePicture": "Change picture",
+    "addPicture": "Add profile picture",
+    "action": "Action"
   },
   "notifications": {
     "title": "Notifications",

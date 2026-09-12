@@ -70,6 +70,7 @@ const ApplicationDetails = lazy(() => import('./pages/admin/ApplicationDetails')
 const ShareableLinks = lazy(() => import('./pages/admin/ShareableLinks'));
 const AdminOutreachDocs = lazy(() => import('./pages/admin/AdminOutreachDocs'));
 const AdminInvestors = lazy(() => import('./pages/admin/AdminInvestors'));
+const AdminPayouts = lazy(() => import('./pages/admin/AdminPayouts'));
 const Messages = lazy(() => import('./pages/messages/Messages'));
 const RegistrationRequests = lazy(() => import('./pages/admin/RegistrationRequests'));
 const AdminPermissions = lazy(() => import('./pages/admin/AdminPermissions'));
@@ -360,6 +361,15 @@ function AppRoutes() {
               </ProtectedRoute>
             } />
 
+            {/* Admin — Referral payouts. Was a tab inside Settings until that
+                page became My Profile only (12 Sep). Super Admin only, as the
+                tab was: it marks commission as paid. */}
+            <Route path="/admin/payouts" element={
+              <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}>
+                <AdminPayouts />
+              </ProtectedRoute>
+            } />
+
             {/* Admin — Investor registry (phase35).
                 166 venture funds the client asked to be able to review inside
                 the platform. Super Admin only: this is commercially sensitive
@@ -527,11 +537,10 @@ function AppRoutes() {
             } />
 
             {/* Settings — admin only */}
-            <Route path="/settings" element={
-              <ProtectedRoute requiredPermission={PERMISSIONS.MANAGE_SETTINGS}>
-                <Settings />
-              </ProtectedRoute>
-            } />
+            {/* /settings and /profile were two routes onto one page (12 Sep).
+                The page is My Profile now; this keeps old bookmarks and links
+                landing somewhere real instead of on a 404. */}
+            <Route path="/settings" element={<Navigate to="/profile" replace />} />
           </Route>
 
           {/* ---- Redirect Catch-All ---- */}

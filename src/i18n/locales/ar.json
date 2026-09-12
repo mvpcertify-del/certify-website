@@ -130,7 +130,8 @@
     "referralClients": "العملاء",
     "referralMarketing": "أدوات التسويق",
     "referralTraining": "التدريب",
-    "investors": "المستثمرون"
+    "investors": "المستثمرون",
+    "payouts": "المدفوعات"
   },
   "landing": {
     "iafBadge": "شركاء من هيئات منح الشهادات المعتمدة من IAF",
@@ -604,7 +605,19 @@
     "emailNotifications": "إشعارات البريد الإلكتروني",
     "emailNotificationsDesc": "تلقي تنبيهات بالبريد الإلكتروني لتحديثات الشهادات",
     "twoFactorAuth": "المصادقة الثنائية",
-    "twoFactorDesc": "إضافة طبقة أمان إضافية لحسابك"
+    "twoFactorDesc": "إضافة طبقة أمان إضافية لحسابك",
+    "contactNumber": "رقم التواصل",
+    "city": "المدينة",
+    "cityPlaceholder": "ابدأ بكتابة اسم مدينتك…",
+    "countryLabel": "الدولة",
+    "countryPlaceholder": "تُملأ تلقائيًا من المدينة",
+    "chooseImage": "يرجى اختيار ملف صورة.",
+    "pictureUploaded": "تم رفع الصورة — اضغط حفظ التغييرات للاحتفاظ بها.",
+    "failedUpload": "تعذّر رفع الصورة. يرجى المحاولة مرة أخرى.",
+    "uploading": "جارٍ الرفع…",
+    "changePicture": "تغيير الصورة",
+    "addPicture": "إضافة صورة شخصية",
+    "action": "الإجراء"
   },
   "notifications": {
     "title": "الإشعارات",

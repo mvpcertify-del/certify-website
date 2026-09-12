@@ -130,7 +130,8 @@
     "referralClients": "Clients",
     "referralMarketing": "Outils marketing",
     "referralTraining": "Formation",
-    "investors": "Investisseurs"
+    "investors": "Investisseurs",
+    "payouts": "Versements"
   },
   "landing": {
     "iafBadge": "Partenaires d'organismes de certification accrédités IAF",
@@ -604,7 +605,19 @@
     "emailNotifications": "Notifications par e-mail",
     "emailNotificationsDesc": "Recevez des alertes par e-mail pour les mises à jour de certification",
     "twoFactorAuth": "Authentification à deux facteurs",
-    "twoFactorDesc": "Ajoutez une couche de sécurité supplémentaire à votre compte"
+    "twoFactorDesc": "Ajoutez une couche de sécurité supplémentaire à votre compte",
+    "contactNumber": "Numéro de contact",
+    "city": "Ville",
+    "cityPlaceholder": "Commencez à saisir votre ville…",
+    "countryLabel": "Pays",
+    "countryPlaceholder": "Renseigné à partir de votre ville",
+    "chooseImage": "Veuillez choisir un fichier image.",
+    "pictureUploaded": "Photo envoyée — cliquez sur Enregistrer pour la conserver.",
+    "failedUpload": "La photo n’a pas pu être envoyée. Veuillez réessayer.",
+    "uploading": "Envoi…",
+    "changePicture": "Changer la photo",
+    "addPicture": "Ajouter une photo de profil",
+    "action": "Action"
   },
   "notifications": {
     "title": "Notifications",
