@@ -306,7 +306,8 @@ export default function AdminInvestors() {
   // The fields the table cannot carry. DetailModal appends these after the
   // shared columns, so View shows the whole record without a second table.
   const detailExtras = viewingRow ? [
-    { label: t('investors.country'), value: viewingRow.country },
+    // Country is not repeated here: it is already a table column, and
+    // DetailModal shows every column before these extras.
     { label: t('investors.geography'), value: viewingRow.geography },
     { label: t('investors.leads'), value: viewingRow.leads },
     { label: t('investors.sector'), value: viewingRow.sector },
