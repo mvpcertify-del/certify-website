@@ -1849,7 +1849,11 @@
     "proposalDesc": "Ein fertiges Angebot mit Ihrem Rabattcode senden",
     "notificationsValue": "{{unread}} von {{total}}",
     "earningsTitle": "Umsatz und Guthaben",
-    "earningsDesc": "Was Ihre Kunden gezahlt haben und was Sie daran verdient haben"
+    "earningsDesc": "Was Ihre Kunden gezahlt haben und was Sie daran verdient haben",
+    "adminPreviewHint": "So sieht ein Empfehlungspartner sein Dashboard. Wählen Sie einen Partner aus, um dessen Ansicht zu prüfen — die Zahlen unten sind dann die dieses Partners, nicht Ihre.",
+    "adminPreviewPick": "Partner prüfen",
+    "adminPreviewNone": "Kein Partner ausgewählt",
+    "adminViewingPartner": "Dashboard von {{name}}"
   },
   "refTemplates": {
     "subjectLabel": "Betreff",
@@ -1969,6 +1973,7 @@
     "loadFailed": "Das Investorenregister konnte nicht geladen werden. Bitte erneut versuchen.",
     "contactEmail": "Kontakt-E-Mail",
     "withEmail": "Mit E-Mail",
-    "withEmailDesc": "Anschreibbar — tippen Sie, um die übrigen zu sehen"
+    "withEmailDesc": "Anschreibbar — tippen Sie, um die übrigen zu sehen",
+    "country": "Land"
   }
 }

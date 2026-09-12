@@ -1849,7 +1849,11 @@
     "proposalDesc": "Envoyez une proposition prête portant votre code de réduction",
     "notificationsValue": "{{unread}} sur {{total}}",
     "earningsTitle": "Ventes et crédit",
-    "earningsDesc": "Ce que vos clients ont payé, et ce que vous avez gagné dessus"
+    "earningsDesc": "Ce que vos clients ont payé, et ce que vous avez gagné dessus",
+    "adminPreviewHint": "Voici le tableau de bord que voit un partenaire de parrainage. Choisissez un partenaire pour consulter le sien — les chiffres ci-dessous seront alors les siens, pas les vôtres.",
+    "adminPreviewPick": "Consulter un partenaire",
+    "adminPreviewNone": "Aucun partenaire sélectionné",
+    "adminViewingPartner": "Tableau de bord de {{name}}"
   },
   "refTemplates": {
     "subjectLabel": "Objet",
@@ -1969,6 +1973,7 @@
     "loadFailed": "Impossible de charger le registre des investisseurs. Veuillez réessayer.",
     "contactEmail": "E-mail de contact",
     "withEmail": "Avec e-mail",
-    "withEmailDesc": "Joignables par e-mail — appuyez pour voir les autres"
+    "withEmailDesc": "Joignables par e-mail — appuyez pour voir les autres",
+    "country": "Pays"
   }
 }

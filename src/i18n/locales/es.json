@@ -1849,7 +1849,11 @@
     "proposalDesc": "Envía una propuesta lista con tu código de descuento",
     "notificationsValue": "{{unread}} de {{total}}",
     "earningsTitle": "Ventas y crédito",
-    "earningsDesc": "Lo que pagaron tus clientes y lo que ganaste con ello"
+    "earningsDesc": "Lo que pagaron tus clientes y lo que ganaste con ello",
+    "adminPreviewHint": "Este es el panel que ve un socio de referidos. Elige un socio para revisar el suyo: las cifras de abajo serán las de ese socio, no las tuyas.",
+    "adminPreviewPick": "Revisar un socio",
+    "adminPreviewNone": "Ningún socio seleccionado",
+    "adminViewingPartner": "Viendo el panel de {{name}}"
   },
   "refTemplates": {
     "subjectLabel": "Asunto",
@@ -1969,6 +1973,7 @@
     "loadFailed": "No se pudo cargar el registro de inversores. Inténtalo de nuevo.",
     "contactEmail": "Correo de contacto",
     "withEmail": "Con correo",
-    "withEmailDesc": "Se les puede escribir — toca para ver los demás"
+    "withEmailDesc": "Se les puede escribir — toca para ver los demás",
+    "country": "País"
   }
 }

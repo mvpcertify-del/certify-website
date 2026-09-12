@@ -1849,7 +1849,11 @@
     "proposalDesc": "Envie uma proposta pronta com o seu código de desconto",
     "notificationsValue": "{{unread}} de {{total}}",
     "earningsTitle": "Vendas e crédito",
-    "earningsDesc": "O que os seus clientes pagaram, e o que ganhou com isso"
+    "earningsDesc": "O que os seus clientes pagaram, e o que ganhou com isso",
+    "adminPreviewHint": "Este é o painel que um parceiro de indicações vê. Escolha um parceiro para rever o dele — os números abaixo passam a ser desse parceiro, não seus.",
+    "adminPreviewPick": "Rever um parceiro",
+    "adminPreviewNone": "Nenhum parceiro selecionado",
+    "adminViewingPartner": "A ver o painel de {{name}}"
   },
   "refTemplates": {
     "subjectLabel": "Assunto",
@@ -1969,6 +1973,7 @@
     "loadFailed": "Não foi possível carregar o registo de investidores. Tente novamente.",
     "contactEmail": "E-mail de contacto",
     "withEmail": "Com e-mail",
-    "withEmailDesc": "É possível contactá-los — toque para ver os restantes"
+    "withEmailDesc": "É possível contactá-los — toque para ver os restantes",
+    "country": "País"
   }
 }

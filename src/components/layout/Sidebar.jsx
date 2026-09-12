@@ -87,7 +87,18 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     // Dashboard entry for these two roles rather than sitting beside it; that
     // is what the rename asked for, and the arrow in the screenshot pointed at
     // the Dashboard row.
-    { path: '/referral-dashboard', labelKey: 'nav.referralProgramDashboard', icon: LayoutGrid, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_REFERRALS], allowedRoles: [ROLES.REFERRAL, ROLES.CONSULTANCY] },
+    // Admins are on this list from 12 Sep. The client asked for the partner
+    // dashboard to be activated, was told it had been, and then could not find
+    // it when he signed in as Super Admin — because the entry was pinned to the
+    // two partner roles. It now appears for admins too, and the screen itself
+    // asks which partner they want to look at rather than showing them their
+    // own empty figures.
+    //
+    // Super Admin only among the admins: VIEW_REFERRALS is not granted to
+    // regional_admin (roles.js), so listing that role here would offer a link
+    // the route then bounces — the exact trap the Referral Partners entry
+    // above documents.
+    { path: '/referral-dashboard', labelKey: 'nav.referralProgramDashboard', icon: LayoutGrid, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_REFERRALS], allowedRoles: [ROLES.REFERRAL, ROLES.CONSULTANCY, ROLES.SUPER_ADMIN] },
     // Only the client's dashboard takes input (document upload); every other
     // role's branch of this same page is a read-only list.
     { path: '/dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard, kind: (r) => (r === ROLES.CLIENT ? KIND_CREATE : KIND_VIEW), permissions: [PERMISSIONS.VIEW_DASHBOARD], excludeRoles: [ROLES.REFERRAL, ROLES.CONSULTANCY] },

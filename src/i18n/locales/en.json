@@ -1849,7 +1849,11 @@
     "proposalDesc": "Send a ready proposal carrying your discount code",
     "notificationsValue": "{{unread}} of {{total}}",
     "earningsTitle": "Sales & Credit",
-    "earningsDesc": "What your clients paid, and what you earned from it"
+    "earningsDesc": "What your clients paid, and what you earned from it",
+    "adminPreviewHint": "This is the dashboard a referral partner sees. Choose a partner to review theirs — the figures below are then that partner’s, not yours.",
+    "adminPreviewPick": "Review a partner",
+    "adminPreviewNone": "No partner selected",
+    "adminViewingPartner": "Viewing {{name}}’s dashboard"
   },
   "refTemplates": {
     "subjectLabel": "Subject",
@@ -1969,6 +1973,7 @@
     "loadFailed": "Could not load the investor register. Please try again.",
     "contactEmail": "Contact email",
     "withEmail": "With an email",
-    "withEmailDesc": "Can be written to — tap to see the rest"
+    "withEmailDesc": "Can be written to — tap to see the rest",
+    "country": "Country"
   }
 }

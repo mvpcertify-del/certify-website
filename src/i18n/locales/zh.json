@@ -1849,7 +1849,11 @@
     "proposalDesc": "发送附带您折扣码的现成提案",
     "notificationsValue": "{{total}} 条中的 {{unread}} 条",
     "earningsTitle": "销售与佣金",
-    "earningsDesc": "您的客户支付了多少，以及您从中赚取了多少"
+    "earningsDesc": "您的客户支付了多少，以及您从中赚取了多少",
+    "adminPreviewHint": "这是推荐合作伙伴看到的面板。选择一位合作伙伴即可查看其面板——下方数字将是该伙伴的，而非您的。",
+    "adminPreviewPick": "查看某位合作伙伴",
+    "adminPreviewNone": "未选择合作伙伴",
+    "adminViewingPartner": "正在查看 {{name}} 的面板"
   },
   "refTemplates": {
     "subjectLabel": "主题",
@@ -1969,6 +1973,7 @@
     "loadFailed": "无法加载投资方名录，请重试。",
     "contactEmail": "联系邮箱",
     "withEmail": "有邮箱",
-    "withEmailDesc": "可以发送邮件——点击查看其余的"
+    "withEmailDesc": "可以发送邮件——点击查看其余的",
+    "country": "国家"
   }
 }

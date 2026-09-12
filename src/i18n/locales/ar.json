@@ -1849,7 +1849,11 @@
     "proposalDesc": "أرسل عرضًا جاهزًا يحمل رمز الخصم الخاص بك",
     "notificationsValue": "{{unread}} من {{total}}",
     "earningsTitle": "المبيعات والرصيد",
-    "earningsDesc": "ما دفعه عملاؤك، وما حققته أنت منه"
+    "earningsDesc": "ما دفعه عملاؤك، وما حققته أنت منه",
+    "adminPreviewHint": "هذه هي اللوحة التي يراها شريك الإحالة. اختر شريكًا لمراجعة لوحته — عندها تكون الأرقام أدناه أرقامه هو لا أرقامك.",
+    "adminPreviewPick": "مراجعة شريك",
+    "adminPreviewNone": "لم يتم اختيار شريك",
+    "adminViewingPartner": "عرض لوحة {{name}}"
   },
   "refTemplates": {
     "subjectLabel": "الموضوع",
@@ -1969,6 +1973,7 @@
     "loadFailed": "تعذّر تحميل سجل المستثمرين. يرجى المحاولة مرة أخرى.",
     "contactEmail": "البريد الإلكتروني للتواصل",
     "withEmail": "لديها بريد",
-    "withEmailDesc": "يمكن مراسلتها — اضغط لعرض البقية"
+    "withEmailDesc": "يمكن مراسلتها — اضغط لعرض البقية",
+    "country": "الدولة"
   }
 }

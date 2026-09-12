@@ -30,6 +30,7 @@ const REGIONS = [
 const EMPTY = {
   fund_name: '',
   region: '',
+  country: '',
   geography: '',
   stage: '',
   sector: '',
@@ -124,7 +125,7 @@ export default function AdminInvestors() {
       if (activeOnly && !row.is_active) return false;
       if (missingEmailOnly && row.contact_email) return false;
       if (!q) return true;
-      return [row.fund_name, row.geography, row.sector, row.key_partner, row.notes, row.contact_email]
+      return [row.fund_name, row.country, row.geography, row.sector, row.key_partner, row.notes, row.contact_email]
         .some((f) => f && String(f).toLowerCase().includes(q));
     });
   }, [items, search, region, activeOnly, missingEmailOnly]);
@@ -183,6 +184,7 @@ export default function AdminInvestors() {
     setFormData({
       fund_name: row.fund_name || '',
       region: row.region || '',
+      country: row.country || '',
       geography: row.geography || '',
       stage: row.stage || '',
       sector: row.sector || '',
@@ -229,6 +231,7 @@ export default function AdminInvestors() {
         .update({
           fund_name: formData.fund_name.trim(),
           region: clean(formData.region),
+          country: clean(formData.country),
           geography: clean(formData.geography),
           stage: clean(formData.stage),
           sector: clean(formData.sector),
@@ -274,10 +277,10 @@ export default function AdminInvestors() {
   // would collapse the useful columns. They are carried in the detail popup.
   const columns = [
     { key: 'fund_name', label: t('investors.fund'), render: (v) => <strong>{v}</strong> },
+    { key: 'country', label: t('investors.country'), render: (v) => <Plain value={v} /> },
     { key: 'region', label: t('investors.region'), render: (v) => <Plain value={v} /> },
     { key: 'stage', label: t('investors.stage'), render: (v) => <Plain value={v} /> },
     { key: 'check_range', label: t('investors.checkRange'), render: (v) => <Plain value={v} /> },
-    { key: 'leads', label: t('investors.leads'), render: (v) => <Plain value={v} /> },
     { key: 'key_partner', label: t('investors.keyPartner'), render: (v) => <Plain value={v} /> },
     {
       key: 'contact_email',
@@ -303,7 +306,9 @@ export default function AdminInvestors() {
   // The fields the table cannot carry. DetailModal appends these after the
   // shared columns, so View shows the whole record without a second table.
   const detailExtras = viewingRow ? [
+    { label: t('investors.country'), value: viewingRow.country },
     { label: t('investors.geography'), value: viewingRow.geography },
+    { label: t('investors.leads'), value: viewingRow.leads },
     { label: t('investors.sector'), value: viewingRow.sector },
     { label: t('investors.recentActivity'), value: viewingRow.recent_activity },
     { label: t('investors.website'), value: <ExternalLink value={viewingRow.website} /> },
@@ -411,6 +416,11 @@ export default function AdminInvestors() {
               <option value="">{t('common.all')}</option>
               {REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
             </Select>
+            <Input
+              label={t('investors.country')}
+              value={formData.country}
+              onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+            />
             <Input
               label={t('investors.geography')}
               value={formData.geography}

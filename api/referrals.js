@@ -207,9 +207,16 @@ async function listReferralPartners(req, res) {
     converted: 0,
     pending: 0,
     converted_this_month: 0,
+    // What the partner's clients PAID, as distinct from the partner's cut.
+    // Added 12 Sep so an admin previewing a partner's dashboard sees the same
+    // Sales figure the partner sees; the browser cannot compute it for someone
+    // else, because referrals RLS is scoped to referrer_id = auth.uid().
+    total_sales: 0,
     total_commission: 0,
     unpaid_commission: 0,
     last_conversion_at: null,
+    notifications_total: 0,
+    notifications_unread: 0,
   }]));
 
   for (const row of ledger) {
@@ -224,6 +231,7 @@ async function listReferralPartners(req, res) {
     }
 
     agg.converted += 1;
+    agg.total_sales += Number(row.payment_amount) || 0;
 
     const amount = Number(row.commission_amount) || 0;
     agg.total_commission += amount;
@@ -238,6 +246,30 @@ async function listReferralPartners(req, res) {
         if (!agg.last_conversion_at || at > new Date(agg.last_conversion_at)) {
           agg.last_conversion_at = row.converted_at;
         }
+      }
+    }
+  }
+
+  // Notification counts, for the same reason total_sales is here: an admin
+  // previewing a partner's dashboard cannot read another user's notifications
+  // from the browser, because the table is scoped to user_id = auth.uid().
+  // Two columns over one indexed filter, aggregated in memory — cheaper than a
+  // count query per partner, and this list is already one row per partner.
+  if (ids.length > 0) {
+    const { data: notes, error: nErr } = await supabaseAdmin
+      .from('notifications')
+      .select('user_id, read')
+      .in('user_id', ids);
+    if (nErr) {
+      // Not worth failing the whole screen over: a partner row without its
+      // notification counts is still a useful row.
+      console.error('listReferralPartners: notifications query failed:', nErr.message);
+    } else {
+      for (const n of notes || []) {
+        const agg = byPartner.get(n.user_id);
+        if (!agg) continue;
+        agg.notifications_total += 1;
+        if (!n.read) agg.notifications_unread += 1;
       }
     }
   }

@@ -8,6 +8,8 @@ import {
   Bell, Users, CircleDollarSign, TrendingUp, Megaphone, Send, GraduationCap,
 } from 'lucide-react';
 import DashboardBoxes from '../../components/ui/DashboardBoxes';
+import { Select } from '../../components/ui/FormElements';
+import { ROLES } from '../../utils/roles';
 
 // The Referral Program Dashboard (client, 6 Sep).
 //
@@ -53,12 +55,71 @@ export default function ReferralProgramDashboard() {
   const [counts, setCounts] = useState({});
   const [loading, setLoading] = useState(true);
 
+  // An admin opening this screen is reviewing somebody else's dashboard, not
+  // their own. Without the picker below they would see their own empty figures
+  // and reasonably conclude the feature was never switched on — which is
+  // exactly what happened on 12 Sep.
+  // Super Admin only: regional_admin does not hold VIEW_REFERRALS, so it can
+  // never reach this route in the first place.
+  const isAdmin = user?.role === ROLES.SUPER_ADMIN;
+  const [partners, setPartners] = useState([]);
+  const [viewingId, setViewingId] = useState('');
+
+  // Whose dashboard is on screen. A partner always sees their own, and reads it
+  // straight from the tables under RLS; an admin previews one of these rows,
+  // because those same policies would hand them nothing.
+  const targetPartner = partners.find((p) => p.profile_id === viewingId) || null;
+
+  // The list an admin chooses from. Country admins are scoped to their own
+  // region by the endpoint itself, so this needs no filter here.
+  useEffect(() => {
+    if (!isAdmin) return undefined;
+    let mounted = true;
+    apiPost('/api/referrals', { action: 'partner-list' })
+      .then((r) => { if (mounted) setPartners(r?.partners || []); })
+      .catch(() => { if (mounted) setPartners([]); });
+    return () => { mounted = false; };
+  }, [isAdmin]);
+
   useEffect(() => {
     if (!user?.id) return undefined;
     let mounted = true;
 
     const load = async () => {
       setLoading(true);
+
+      // Admin preview. Every figure comes from the partner-list aggregate
+      // because RLS scopes both `referrals` and `notifications` to the signed-in
+      // user — an admin querying them from the browser would correctly get
+      // nothing back, which is not the same as the partner having nothing.
+      if (isAdmin) {
+        if (!targetPartner) {
+          setCounts({});
+          setLoading(false);
+          return;
+        }
+        const materialsForAdmin = await apiPost('/api/outreach-assets', { action: 'partner-list' })
+          .then((r) => (r?.assets || []).length, () => null);
+        if (!mounted) return;
+        setCounts({
+          training: TRAINING_TOPICS.length,
+          clients: targetPartner.total_referrals ?? null,
+          sales: targetPartner.total_sales ?? null,
+          commissions: targetPartner.total_commission ?? null,
+          marketing: materialsForAdmin,
+          proposal: targetPartner.pending ?? null,
+          notifications: (targetPartner.notifications_unread == null
+            || targetPartner.notifications_total == null)
+            ? null
+            : t('refDash.notificationsValue', {
+              unread: targetPartner.notifications_unread,
+              total: targetPartner.notifications_total,
+            }),
+        });
+        setLoading(false);
+        return;
+      }
+
 
       // Each count is asked for independently and allowed to fail on its own.
       // One box that cannot answer shows a dash; it does not blank the other
@@ -139,7 +200,7 @@ export default function ReferralProgramDashboard() {
     // `t` is in the deps because the notifications tile is built from a
     // translated string here rather than at render time; without it the tile
     // keeps the old language after a switch.
-  }, [user?.id, t]);
+  }, [user?.id, t, isAdmin, targetPartner]);
 
   const formatValue = (box) => {
     const v = counts[box.key];
@@ -155,10 +216,33 @@ export default function ReferralProgramDashboard() {
         <div>
           <h1 className="page-title">{t('refDash.title')}</h1>
           <p className="page-subtitle">
-            {t('refDash.welcome', { name: user?.full_name || user?.name || t('common.user') })}
+            {isAdmin
+              ? (targetPartner
+                ? t('refDash.adminViewingPartner', { name: targetPartner.full_name || targetPartner.email })
+                : t('refDash.adminPreviewNone'))
+              : t('refDash.welcome', { name: user?.full_name || user?.name || t('common.user') })}
           </p>
         </div>
       </div>
+
+      {isAdmin && (
+        <div className="refdash__admin-preview">
+          <p className="refdash__admin-preview-hint">{t('refDash.adminPreviewHint')}</p>
+          <Select
+            id="refdash-partner"
+            label={t('refDash.adminPreviewPick')}
+            value={viewingId}
+            onChange={(e) => setViewingId(e.target.value)}
+          >
+            <option value="">{t('refDash.adminPreviewNone')}</option>
+            {partners.map((p) => (
+              <option key={p.profile_id} value={p.profile_id}>
+                {p.full_name || p.email}{p.company_name ? ` — ${p.company_name}` : ''}
+              </option>
+            ))}
+          </Select>
+        </div>
+      )}
 
       <DashboardBoxes
         loading={loading}
