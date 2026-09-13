@@ -97,7 +97,7 @@
     "referralPartners": "Parceiros de Indicação",
     "regionalAdmins": "Country Admins",
     "auditors": "Auditores",
-    "certBodies": "Organismos de Certificação",
+    "certBodies": "Contas de OC",
     "cbRegistry": "Registro de OC",
     "accreditationBodies": "Organismos de Acreditação",
     "countries": "Países",
@@ -805,8 +805,6 @@
     "auditorsFound": "{{count}} auditor(es) encontrado(s)",
     "loadingAuditors": "Carregando auditores...",
     "noAuditorsFound": "Nenhum auditor encontrado.",
-    "certBodiesTitle": "Organismos de Certificação",
-    "certBodiesFound": "{{count}} organismo(s) de certificação encontrado(s)",
     "loadingCertBodies": "Carregando organismos de certificação...",
     "noCertBodiesFound": "Nenhum organismo de certificação encontrado.",
     "organization": "Organização",
@@ -964,7 +962,16 @@
     "filesSelected": "{{count}} arquivo(s) selecionado(s) — máx. {{max}} MB cada.",
     "docUploadPartialFailed": "Salvo, mas {{count}} documento(s) não puderam ser enviados ({{files}}). Os arquivos devem ter no máximo {{max}} MB — tente novamente pelo formulário de edição.",
     "paymentReceived": "Pagamento Recebido",
-    "roleLabel": "Função: {{role}}"
+    "roleLabel": "Função: {{role}}",
+    "certBodyAccountsTitle": "Contas dos organismos de certificação",
+    "certBodyAccountsFound": "{{count}} conta(s) de organismo de certificação",
+    "certBodyAccountsHint": "As pessoas que iniciam sessão em nome de um organismo de certificação. Esta lista fica vazia até alguém de um organismo registar uma conta. Para os organismos em si — as suas acreditações, os países que cobrem e os seus preços — abra o Registo de OC.",
+    "noCertBodyAccounts": "Ainda não há contas de organismos de certificação.",
+    "cbRegistryTitle": "Registo de organismos de certificação",
+    "cbRegistryFound": "{{count}} organismo(s) de certificação no registo",
+    "cbRegistryHint": "Os próprios organismos de certificação — as suas acreditações, os países que cobrem, as normas ISO que certificam e os seus preços. Um organismo pode constar aqui sem que ninguém dele tenha acesso; esses acessos estão em Contas de OC.",
+    "approvalAnswers": "Dados de aprovação registados",
+    "rejectionAnswers": "Dados de rejeição registados"
   },
   "certBody": {
     "addBody": "Adicionar Organismo de Certificação",
@@ -1385,7 +1392,11 @@
     "referrals": "Indicações",
     "referralsDesc": "Parceiros de indicação e comissões",
     "sales": "Vendas",
-    "salesDesc": "Receita e pagamentos"
+    "salesDesc": "Receita e pagamentos",
+    "messages": "Mensagens",
+    "messagesDesc": "Conversas na caixa de entrada de parceiros",
+    "notifications": "Notificações",
+    "notificationsDesc": "As suas atualizações da plataforma por ler"
   },
   "sales": {
     "title": "Vendas",
@@ -1863,10 +1874,18 @@
     "notificationsValue": "{{unread}} de {{total}}",
     "earningsTitle": "Vendas e crédito",
     "earningsDesc": "O que os seus clientes pagaram, e o que ganhou com isso",
-    "adminPreviewHint": "Este é o painel que um parceiro de indicações vê. Escolha um parceiro para rever o dele — os números abaixo passam a ser desse parceiro, não seus.",
-    "adminPreviewPick": "Rever um parceiro",
-    "adminPreviewNone": "Nenhum parceiro selecionado",
-    "adminViewingPartner": "A ver o painel de {{name}}"
+    "adminViewingPartner": "A ver o painel de {{name}}",
+    "adminAllPartners": "Todos os parceiros — {{count}} no programa",
+    "adminScopeHint": "Os cartões abaixo somam todos os parceiros de indicação. Clique num cartão para abrir essa secção por completo, ou escolha um parceiro na tabela para limitar os números aos dele.",
+    "adminBackToAll": "Voltar a todos os parceiros",
+    "adminPartnersTitle": "Parceiros de indicação",
+    "adminPartnersFound": "{{count}} parceiro(s)",
+    "adminSearchPartners": "Procurar nome, empresa, e-mail ou código…",
+    "adminNoPartners": "Nenhum parceiro de indicação corresponde.",
+    "adminColPartner": "Parceiro",
+    "adminColConverted": "Convertidos",
+    "adminColUnpaid": "Crédito por pagar",
+    "adminLoadingPartners": "A carregar parceiros…"
   },
   "refTemplates": {
     "subjectLabel": "Assunto",
@@ -1950,7 +1969,9 @@
     "commissionsStep1": "Abra Crédito ganho para ver cada cliente indicado e quanto lhe rendeu.",
     "commissionsStep2": "A comissão é creditada quando o cliente paga a sua certificação, não quando é convidado.",
     "commissionsStep3": "A sua taxa sobe à medida que traz mais clientes pagantes — o seu escalão atual e o seguinte são mostrados no mesmo ecrã.",
-    "commissionsStep4": "A comissão já paga e a que ainda lhe é devida são listadas em separado, para saber sempre o que está pendente."
+    "commissionsStep4": "A comissão já paga e a que ainda lhe é devida são listadas em separado, para saber sempre o que está pendente.",
+    "watchVideo": "Ver o vídeo — {{minutes}} min",
+    "readPdf": "Ler o PDF — {{minutes}} min"
   },
   "investors": {
     "title": "Investidores",
@@ -1987,6 +2008,11 @@
     "contactEmail": "E-mail de contacto",
     "withEmail": "Com e-mail",
     "withEmailDesc": "É possível contactá-los — toque para ver os restantes",
-    "country": "País"
+    "country": "País",
+    "linkedinProfile": "Perfil do LinkedIn",
+    "emailFund": "Enviar e-mail para {{fund}}",
+    "noEmailYet": "Nenhum e-mail registado — contacte este fundo pelo LinkedIn",
+    "contactOnLinkedin": "Contactar {{name}} no LinkedIn",
+    "noLinkedin": "Nenhum perfil do LinkedIn registado"
   }
 }

@@ -27,10 +27,15 @@ export default function AdminCertBodies() {
       role={ROLES.CERTIFICATION_BODY}
       columns={columns}
       editFields={editFields}
-      title={t('admin.certBodiesTitle')}
-      subtitle={(count) => t('admin.certBodiesFound', { count })}
+      // Deliberately NOT 'admin.certBodiesTitle': the CB Registry screen uses
+      // that, and both screens showing the identical heading "Certification
+      // Bodies" is exactly what the client asked about on 13 Sep. This one
+      // lists login accounts, that one lists the organisations.
+      title={t('admin.certBodyAccountsTitle')}
+      subtitle={(count) => t('admin.certBodyAccountsFound', { count })}
+      hint={t('admin.certBodyAccountsHint')}
       loadingText={t('admin.loadingCertBodies')}
-      emptyText={t('admin.noCertBodiesFound')}
+      emptyText={t('admin.noCertBodyAccounts')}
     />
   );
 }

@@ -590,8 +590,11 @@ export default function CertificationBodies() {
     <div className="page-container">
       <div className="page-header">
         <div>
-          <h1 className="page-title">{t('admin.certBodiesTitle')}</h1>
-          <p className="page-subtitle">{t('admin.certBodiesFound', { count: filtered.length })}</p>
+          <h1 className="page-title">{t('admin.cbRegistryTitle')}</h1>
+          <p className="page-subtitle">{t('admin.cbRegistryFound', { count: filtered.length })}</p>
+          <p className="page-subtitle" style={{ maxWidth: '70ch', marginTop: 4 }}>
+            {t('admin.cbRegistryHint')}
+          </p>
         </div>
         {canAdd && (
           <div style={{ display: 'flex', gap: 8 }}>

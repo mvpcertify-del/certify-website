@@ -104,6 +104,16 @@ const PAYMENT_CHOICES = [
   { value: 'paid:bank_transfer',    labelKey: 'admin.paymentStatus_paidBank' },
 ];
 
+// The badge below the payment method used to build its key by interpolation —
+// `admin.paymentStatus_${status}` — which produced `admin.paymentStatus_paid:card`
+// for the three `paid:*` statuses. No such key exists, so the fallback fired and
+// a paid application showed the raw string "paid:card" to the admin in all nine
+// languages. Read the label off PAYMENT_CHOICES, the list the dropdown uses, instead: one
+// source, so the badge cannot drift from the option that set it.
+const PAYMENT_STATUS_LABEL_KEYS = Object.fromEntries(
+  PAYMENT_CHOICES.filter(o => o.value).map(o => [o.value, o.labelKey])
+);
+
 const PAYMENT_METHOD_LABEL_KEYS = {
   card: 'payment.methodCard',
   cash: 'payment.methodCash',
@@ -176,6 +186,24 @@ export default function ApplicationDetails() {
   const [decisionFields, setDecisionFields] = useState([]);
   const [decisionValues, setDecisionValues] = useState({});
   const [decisionError, setDecisionError] = useState('');
+  // Every definition, not just the ones that fire on this decision: a field
+  // can be deactivated or moved to the other trigger after it was answered,
+  // and the answer already on this application still needs its label.
+  const [decisionFieldLabels, setDecisionFieldLabels] = useState({});
+
+  useEffect(() => {
+    let mounted = true;
+    supabase
+      .from('custom_application_fields')
+      .select('field_key, label')
+      .then(({ data, error }) => {
+        if (!mounted) return;
+        const map = {};
+        if (!error) (data || []).forEach((f) => { map[f.field_key] = f.label; });
+        setDecisionFieldLabels(map);
+      });
+    return () => { mounted = false; };
+  }, []);
 
   // Admin upload state
   const [uploading, setUploading] = useState(false);
@@ -575,6 +603,27 @@ export default function ApplicationDetails() {
   };
 
   // --- CB: Open Decision Modal (fetches custom fields for this trigger) ---
+  const decisionAnswers = (() => {
+    // Picked by status, NOT by `rejection_data || approval_data`: both columns
+    // are `jsonb NOT NULL DEFAULT '{}'`, and an empty object is truthy, so the
+    // fallback form always chose rejection_data and an approved application
+    // never showed its answers at all.
+    const stored = application?.status === 'rejected'
+      ? application?.rejection_data
+      : application?.approval_data;
+    if (!stored || typeof stored !== 'object') return [];
+    return Object.entries(stored)
+      .filter(([, v]) => v !== null && v !== undefined && v !== ''
+        && !(Array.isArray(v) && v.length === 0))
+      .map(([key, v]) => ({
+        key,
+        label: decisionFieldLabels[key] || key.replace(/_/g, ' '),
+        value: Array.isArray(v)
+          ? v.join(', ')
+          : (typeof v === 'boolean' ? (v ? t('common.yes') : t('common.no')) : String(v)),
+      }));
+  })();
+
   const openDecisionModal = async (decision) => {
     setDecisionError('');
     setDecisionValues({});
@@ -797,7 +846,9 @@ export default function ApplicationDetails() {
                   {{ card: t('payment.methodCard'), cash: t('payment.methodCash'), paypal: t('payment.methodPaypal'), moneygram: t('payment.methodMoneygram'), bank_transfer: t('payment.methodBankTransfer') }[application.payment_method] || application.payment_method}
                   {application.payment_status && (
                     <span style={{ marginLeft: 8, fontSize: '0.72rem', fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: application.payment_status === 'verified' ? '#dcfce7' : application.payment_status === 'awaiting_verification' ? '#fef3c7' : '#e2e8f0', color: application.payment_status === 'verified' ? '#166534' : application.payment_status === 'awaiting_verification' ? '#92400e' : '#475569' }}>
-                      {t(`admin.paymentStatus_${application.payment_status}`, application.payment_status)}
+                      {PAYMENT_STATUS_LABEL_KEYS[application.payment_status]
+                        ? t(PAYMENT_STATUS_LABEL_KEYS[application.payment_status])
+                        : t(`admin.paymentStatus_${application.payment_status}`, application.payment_status)}
                     </span>
                   )}
                 </p>
@@ -1060,6 +1111,35 @@ export default function ApplicationDetails() {
           )}
         </div>
       </div>
+
+      {/* THE DECISION ANSWERS.
+          Custom application fields are asked in the approve/reject modal and
+          written to approval_data / rejection_data, but until now nothing read
+          them back — the reviewer's answers went into the database and off the
+          screen. Rendered from the stored object rather than from the field
+          definitions so an answer survives its field later being renamed,
+          reordered or deactivated.
+          Admins and the deciding CB only. These are free-text answers to
+          questions an admin wrote — a field labelled "internal rationale" is a
+          perfectly ordinary thing to define — so they sit outside the auditor's
+          view, the same way internal_notes already does. */}
+      {(canAssign || isCB) && decisionAnswers.length > 0 && (
+        <div className="app-card" style={{ marginTop: '1.5rem' }}>
+          <h3 className="app-card-title">
+            {application.status === 'rejected'
+              ? t('admin.rejectionAnswers')
+              : t('admin.approvalAnswers')}
+          </h3>
+          <div className="details-list">
+            {decisionAnswers.map(({ key, label, value }) => (
+              <div className="detail-item" key={key}>
+                <FileText size={16} className="detail-icon" />
+                <div><label>{label}</label><p>{value}</p></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* REQUIRED DOCUMENTS CHECKLIST */}
       {getRequiredDocs(application.recommended_iso).length > 0 && (

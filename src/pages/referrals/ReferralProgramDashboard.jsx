@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -8,7 +8,8 @@ import {
   Bell, Users, CircleDollarSign, TrendingUp, Megaphone, Send, GraduationCap,
 } from 'lucide-react';
 import DashboardBoxes from '../../components/ui/DashboardBoxes';
-import { Select } from '../../components/ui/FormElements';
+import DataTable from '../../components/ui/DataTable';
+import { Button, Input } from '../../components/ui/FormElements';
 import { ROLES } from '../../utils/roles';
 
 // The Referral Program Dashboard (client, 6 Sep).
@@ -32,20 +33,24 @@ const BOXES = [
   // as the first box"). It is also the right first box on its own merits — a
   // partner who has just been approved has nothing to look at in the other six
   // and everything to learn.
+  // `adminPath` is where a Super Admin lands instead. Without it every box
+  // sent the admin to the signed-in partner's own screen — their own empty
+  // referral list — which is the opposite of "take the SA to that particular
+  // section to check the detailed data" (client, 13 Sep).
   { key: 'training',      icon: GraduationCap,    path: '/referrals/training',    color: '#8b5cf6' },
-  { key: 'clients',       icon: Users,            path: '/referrals',             color: '#3ECF8E' },
+  { key: 'clients',       icon: Users,            path: '/referrals', adminPath: '/admin/referral-partners',             color: '#3ECF8E' },
   // Sales and Credit are two different numbers — what the partner's clients
   // paid, and what the partner earned from it — but one subject, so both open
   // the same ledger. Two screens showing one table is two to keep correct.
-  { key: 'sales',         icon: TrendingUp,       path: '/referrals/commissions', color: '#0ea5e9', currency: true },
-  { key: 'commissions',   icon: CircleDollarSign, path: '/referrals/commissions', color: '#10b981', currency: true },
+  { key: 'sales',         icon: TrendingUp,       path: '/referrals/commissions', adminPath: '/admin/sales', color: '#0ea5e9', currency: true },
+  { key: 'commissions',   icon: CircleDollarSign, path: '/referrals/commissions', adminPath: '/admin/payouts', color: '#10b981', currency: true },
   // Marketing Tools and Auto Proposal likewise: the client described picking a
   // standard, ticking the letter/profile/brochure and sending, then described
   // an auto proposal sent with the partner's discount code. That is one action,
   // and it is one composer.
-  { key: 'marketing',     icon: Megaphone,        path: '/referrals/marketing',   color: '#6366f1' },
-  { key: 'proposal',      icon: Send,             path: '/referrals/marketing',   color: '#f97316' },
-  { key: 'notifications', icon: Bell,             path: '/notifications',         color: '#f59e0b', text: true },
+  { key: 'marketing',     icon: Megaphone,        path: '/referrals/marketing', adminPath: '/referrals/marketing',   color: '#6366f1' },
+  { key: 'proposal',      icon: Send,             path: '/referrals/marketing', adminPath: '/referrals/marketing',   color: '#f97316' },
+  { key: 'notifications', icon: Bell,             path: '/notifications', adminPath: '/notifications',         color: '#f59e0b', text: true },
 ];
 
 
@@ -59,11 +64,24 @@ export default function ReferralProgramDashboard() {
   // their own. Without the picker below they would see their own empty figures
   // and reasonably conclude the feature was never switched on — which is
   // exactly what happened on 12 Sep.
-  // Super Admin only: regional_admin does not hold VIEW_REFERRALS, so it can
-  // never reach this route in the first place.
+  // Super Admin only, and checked by role rather than by permission on
+  // purpose. VIEW_REFERRALS is not proof of being an admin here: a super admin
+  // can grant it to any role from /admin/permissions, and a country admin who
+  // received it would then reach this route. Such a user falls through to the
+  // partner branch below and reads only their own rows under RLS, which is the
+  // safe outcome — but it means the region scoping in `listReferralPartners`
+  // is currently unreachable, and a country admin sees an empty dashboard
+  // rather than their region's partners. Worth revisiting if the client asks
+  // for country admins to review their own region.
   const isAdmin = user?.role === ROLES.SUPER_ADMIN;
   const [partners, setPartners] = useState([]);
   const [viewingId, setViewingId] = useState('');
+  const [partnerQuery, setPartnerQuery] = useState('');
+  // `partners` is [] both before the fetch lands and after it fails, and those
+  // two mean the opposite of each other. Without this flag the totals below
+  // read a failed fetch as a real "$0.00 across 0 partners" — the one thing
+  // DashboardBoxes is explicit about never faking.
+  const [partnersLoaded, setPartnersLoaded] = useState(false);
 
   // Whose dashboard is on screen. A partner always sees their own, and reads it
   // straight from the tables under RLS; an admin previews one of these rows,
@@ -76,7 +94,14 @@ export default function ReferralProgramDashboard() {
     if (!isAdmin) return undefined;
     let mounted = true;
     apiPost('/api/referrals', { action: 'partner-list' })
-      .then((r) => { if (mounted) setPartners(r?.partners || []); })
+      .then((r) => {
+        if (!mounted) return;
+        // Carry `id` alongside `profile_id`: DataTable keys rows on `row.id`
+        // and would otherwise fall back to the array index, which shifts under
+        // the search box as the admin types.
+        setPartners((r?.partners || []).map((p) => ({ ...p, id: p.profile_id })));
+        setPartnersLoaded(true);
+      })
       .catch(() => { if (mounted) setPartners([]); });
     return () => { mounted = false; };
   }, [isAdmin]);
@@ -93,28 +118,35 @@ export default function ReferralProgramDashboard() {
       // user — an admin querying them from the browser would correctly get
       // nothing back, which is not the same as the partner having nothing.
       if (isAdmin) {
-        if (!targetPartner) {
-          setCounts({});
-          setLoading(false);
-          return;
-        }
         const materialsForAdmin = await apiPost('/api/outreach-assets', { action: 'partner-list' })
           .then((r) => (r?.assets || []).length, () => null);
         if (!mounted) return;
+
+        // With nobody picked the boxes summarise EVERY partner rather than
+        // showing seven dashes. The client's objection on 13 Sep was that
+        // reviewing 500 partners one at a time is not a review at all — the
+        // programme-wide figure is the one an admin opens this screen for, and
+        // a single partner is the drill-down, not the entry point.
+        const scope = targetPartner ? [targetPartner] : partners;
+        // A dash until the list is actually in hand. Once it is, a programme
+        // with no partners really does total zero, so zero is the right answer.
+        const total = (field) => (partnersLoaded
+          ? scope.reduce((acc, p) => acc + (Number(p[field]) || 0), 0)
+          : null);
+
+        const unread = total('notifications_unread');
+        const totalNotes = total('notifications_total');
+
         setCounts({
           training: TRAINING_TOPICS.length,
-          clients: targetPartner.total_referrals ?? null,
-          sales: targetPartner.total_sales ?? null,
-          commissions: targetPartner.total_commission ?? null,
+          clients: total('total_referrals'),
+          sales: total('total_sales'),
+          commissions: total('total_commission'),
           marketing: materialsForAdmin,
-          proposal: targetPartner.pending ?? null,
-          notifications: (targetPartner.notifications_unread == null
-            || targetPartner.notifications_total == null)
+          proposal: total('pending'),
+          notifications: (unread == null || totalNotes == null)
             ? null
-            : t('refDash.notificationsValue', {
-              unread: targetPartner.notifications_unread,
-              total: targetPartner.notifications_total,
-            }),
+            : t('refDash.notificationsValue', { unread, total: totalNotes }),
         });
         setLoading(false);
         return;
@@ -200,7 +232,48 @@ export default function ReferralProgramDashboard() {
     // `t` is in the deps because the notifications tile is built from a
     // translated string here rather than at render time; without it the tile
     // keeps the old language after a switch.
-  }, [user?.id, t, isAdmin, targetPartner]);
+  }, [user?.id, t, isAdmin, targetPartner, partners, partnersLoaded]);
+
+  // Name, company, email and referral code are all things an admin might be
+  // handed when someone asks about a partner, so any of them finds the row.
+  const filteredPartners = useMemo(() => {
+    const q = partnerQuery.trim().toLowerCase();
+    if (!q) return partners;
+    return partners.filter((p) => [p.full_name, p.company_name, p.email, p.referral_code]
+      .some((v) => String(v || '').toLowerCase().includes(q)));
+  }, [partners, partnerQuery]);
+
+  const money = (v) => `$${Number(v || 0).toFixed(2)}`;
+
+  const partnerColumns = [
+    {
+      key: 'full_name',
+      label: t('refDash.adminColPartner'),
+      render: (v, row) => (
+        <div style={{ display: 'grid', gap: 2 }}>
+          <strong>{v || row.email}</strong>
+          {row.company_name && (
+            <span style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>
+              {row.company_name}
+            </span>
+          )}
+        </div>
+      ),
+    },
+    { key: 'total_referrals', label: t('refDash.clients'), render: (v) => Number(v || 0).toLocaleString() },
+    { key: 'converted', label: t('refDash.adminColConverted'), render: (v) => Number(v || 0).toLocaleString() },
+    { key: 'total_sales', label: t('refDash.sales'), render: money },
+    { key: 'total_commission', label: t('refDash.commissions'), render: money },
+    { key: 'unpaid_commission', label: t('refDash.adminColUnpaid'), render: money },
+    {
+      key: 'notifications_unread',
+      label: t('refDash.notifications'),
+      render: (v, row) => t('refDash.notificationsValue', {
+        unread: Number(v || 0),
+        total: Number(row.notifications_total || 0),
+      }),
+    },
+  ];
 
   const formatValue = (box) => {
     const v = counts[box.key];
@@ -219,7 +292,9 @@ export default function ReferralProgramDashboard() {
             {isAdmin
               ? (targetPartner
                 ? t('refDash.adminViewingPartner', { name: targetPartner.full_name || targetPartner.email })
-                : t('refDash.adminPreviewNone'))
+                : (partnersLoaded
+                  ? t('refDash.adminAllPartners', { count: partners.length })
+                  : t('refDash.adminLoadingPartners')))
               : t('refDash.welcome', { name: user?.full_name || user?.name || t('common.user') })}
           </p>
         </div>
@@ -227,20 +302,12 @@ export default function ReferralProgramDashboard() {
 
       {isAdmin && (
         <div className="refdash__admin-preview">
-          <p className="refdash__admin-preview-hint">{t('refDash.adminPreviewHint')}</p>
-          <Select
-            id="refdash-partner"
-            label={t('refDash.adminPreviewPick')}
-            value={viewingId}
-            onChange={(e) => setViewingId(e.target.value)}
-          >
-            <option value="">{t('refDash.adminPreviewNone')}</option>
-            {partners.map((p) => (
-              <option key={p.profile_id} value={p.profile_id}>
-                {p.full_name || p.email}{p.company_name ? ` — ${p.company_name}` : ''}
-              </option>
-            ))}
-          </Select>
+          <p className="refdash__admin-preview-hint">{t('refDash.adminScopeHint')}</p>
+          {targetPartner && (
+            <Button variant="secondary" size="sm" onClick={() => setViewingId('')}>
+              {t('refDash.adminBackToAll')}
+            </Button>
+          )}
         </div>
       )}
 
@@ -248,11 +315,48 @@ export default function ReferralProgramDashboard() {
         loading={loading}
         boxes={BOXES.map((box) => ({
           ...box,
+          path: isAdmin ? (box.adminPath || box.path) : box.path,
           value: formatValue(box),
           label: t(`refDash.${box.key}`),
           desc: t(`refDash.${box.key}Desc`),
         }))}
       />
+
+      {isAdmin && (
+        <div style={{ marginTop: 24 }}>
+          <div className="page-header" style={{ marginBottom: 12 }}>
+            <div>
+              <h2 className="page-title" style={{ fontSize: '1.25rem' }}>
+                {t('refDash.adminPartnersTitle')}
+              </h2>
+              <p className="page-subtitle">
+                {partnersLoaded
+                  ? t('refDash.adminPartnersFound', { count: filteredPartners.length })
+                  : t('refDash.adminLoadingPartners')}
+              </p>
+            </div>
+            <Input
+              id="refdash-partner-search"
+              name="partnerSearch"
+              value={partnerQuery}
+              onChange={(e) => setPartnerQuery(e.target.value)}
+              placeholder={t('refDash.adminSearchPartners')}
+              style={{ width: '260px' }}
+            />
+          </div>
+          {/* A table rather than the old dropdown: it carries each partner's
+              figures, so the admin reads the whole programme in one pass and
+              opens a partner only when a row is worth a closer look. */}
+          <DataTable
+            columns={partnerColumns}
+            data={filteredPartners}
+            onRowClick={(row) => setViewingId(
+              row.profile_id === viewingId ? '' : row.profile_id
+            )}
+            emptyMessage={t('refDash.adminNoPartners')}
+          />
+        </div>
+      )}
     </div>
   );
 }

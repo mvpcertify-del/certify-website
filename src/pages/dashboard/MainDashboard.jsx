@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { ROLES } from '../../utils/roles';
-import { Users, Building, UserCheck, Briefcase, Gift, CircleDollarSign } from 'lucide-react';
+import { Users, Building, UserCheck, Briefcase, Gift, CircleDollarSign, MessagesSquare, Bell } from 'lucide-react';
 import DashboardBoxes from '../../components/ui/DashboardBoxes';
 import './MainDashboard.css';
 
@@ -22,6 +22,8 @@ const BOXES = [
   // partners landed on their own empty referral page.
   { key: 'referrals',     icon: Gift,             path: '/admin/referral-partners',          color: '#ec4899' },
   { key: 'sales',         icon: CircleDollarSign, path: '/admin/sales',                      color: '#10b981', currency: true },
+  { key: 'messages',      icon: MessagesSquare,   path: '/messages',                         color: '#8b5cf6' },
+  { key: 'notifications', icon: Bell,             path: '/notifications',                    color: '#f97316' },
 ];
 
 // 'verified' is the legacy offline-verified value; both mean money arrived.
@@ -79,7 +81,7 @@ export default function MainDashboard() {
     const load = async () => {
       setLoading(true);
       try {
-        const [clients, certBodies, auditors, consultancies, referrals, revenue] = await Promise.all([
+        const [clients, certBodies, auditors, consultancies, referrals, revenue, messages, notifications] = await Promise.all([
           countRows('profiles', (q) => q.eq('role', 'client').or('stakeholder_type.is.null,stakeholder_type.eq.client')),
           countRows('certification_bodies'),
           countRows('profiles', (q) => q.eq('role', 'auditor')),
@@ -104,10 +106,23 @@ export default function MainDashboard() {
           countRows('profiles', (q) => q.eq('role', 'referral')
             .or('stakeholder_type.is.null,stakeholder_type.neq.consultancy')),
           loadRevenue(),
+          // Every thread, not `has_unread` ones. That flag belongs to the
+          // PARTNER — phase33 clears it when the partner opens the thread, and
+          // Messages.jsx only clears it for the thread's own referrer — so an
+          // "unread" count on the admin's dashboard would be a number no
+          // action of theirs could ever move. RLS on partner_conversations
+          // already returns every thread to a super admin, so no filter here;
+          // the page behind this box is scoped the same way.
+          countRows('partner_conversations'),
+          // Notifications are per recipient, so this counts the admin's own
+          // unread ones — the same set the bell in the top bar shows.
+          user?.id
+            ? countRows('notifications', (q) => q.eq('user_id', user.id).eq('read', false))
+            : Promise.resolve(null),
         ]);
 
         if (mounted) {
-          setCounts({ clients, certBodies, auditors, consultancies, referrals, sales: revenue });
+          setCounts({ clients, certBodies, auditors, consultancies, referrals, sales: revenue, messages, notifications });
         }
       } catch (err) {
         console.error('Main dashboard counts failed:', err);
@@ -118,7 +133,7 @@ export default function MainDashboard() {
 
     load();
     return () => { mounted = false; };
-  }, [isRegionalAdmin, userRegion]);
+  }, [isRegionalAdmin, userRegion, user?.id]);
 
   const formatValue = (box) => {
     const v = counts[box.key];

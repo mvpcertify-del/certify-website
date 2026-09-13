@@ -97,7 +97,7 @@
     "referralPartners": "Empfehlungspartner",
     "regionalAdmins": "Country Admins",
     "auditors": "Auditoren",
-    "certBodies": "Zertifizierungsstellen",
+    "certBodies": "CB-Konten",
     "cbRegistry": "Verzeichnis der Zertifizierungsstellen",
     "accreditationBodies": "Akkreditierungsstellen",
     "countries": "Länder",
@@ -805,8 +805,6 @@
     "auditorsFound": "{{count}} Auditor(en) gefunden",
     "loadingAuditors": "Auditoren werden geladen...",
     "noAuditorsFound": "Keine Auditoren gefunden.",
-    "certBodiesTitle": "Zertifizierungsstellen",
-    "certBodiesFound": "{{count}} Zertifizierungsstelle(n) gefunden",
     "loadingCertBodies": "Zertifizierungsstellen werden geladen...",
     "noCertBodiesFound": "Keine Zertifizierungsstellen gefunden.",
     "organization": "Organisation",
@@ -964,7 +962,16 @@
     "filesSelected": "{{count}} Datei(en) ausgewählt — max. {{max}} MB pro Datei.",
     "docUploadPartialFailed": "Gespeichert, aber {{count}} Dokument(e) konnten nicht hochgeladen werden ({{files}}). Dateien dürfen höchstens {{max}} MB groß sein — bitte im Bearbeiten-Formular erneut versuchen.",
     "paymentReceived": "Zahlung erhalten",
-    "roleLabel": "Rolle: {{role}}"
+    "roleLabel": "Rolle: {{role}}",
+    "certBodyAccountsTitle": "Konten der Zertifizierungsstellen",
+    "certBodyAccountsFound": "{{count}} Zertifizierungsstellen-Konto/-Konten",
+    "certBodyAccountsHint": "Die Personen, die sich im Namen einer Zertifizierungsstelle anmelden. Diese Liste bleibt leer, bis jemand einer Stelle ein Konto anlegt. Die Stellen selbst — ihre Akkreditierungen, die abgedeckten Länder und ihre Preise — finden Sie im CB-Register.",
+    "noCertBodyAccounts": "Noch keine Zertifizierungsstellen-Konten.",
+    "cbRegistryTitle": "Register der Zertifizierungsstellen",
+    "cbRegistryFound": "{{count}} Zertifizierungsstelle(n) im Register",
+    "cbRegistryHint": "Die Zertifizierungsstellen selbst — ihre Akkreditierungen, die abgedeckten Länder, die zertifizierten ISO-Normen und ihre Preise. Eine Stelle kann hier stehen, ohne dass jemand von ihr einen Zugang hat; diese Zugänge finden Sie unter CB-Konten.",
+    "approvalAnswers": "Erfasste Genehmigungsangaben",
+    "rejectionAnswers": "Erfasste Ablehnungsangaben"
   },
   "certBody": {
     "addBody": "Zertifizierungsstelle hinzufügen",
@@ -1385,7 +1392,11 @@
     "referrals": "Empfehlungen",
     "referralsDesc": "Empfehlungspartner und Provisionen",
     "sales": "Umsatz",
-    "salesDesc": "Erlöse und Zahlungen"
+    "salesDesc": "Erlöse und Zahlungen",
+    "messages": "Nachrichten",
+    "messagesDesc": "Konversationen im Partner-Postfach",
+    "notifications": "Benachrichtigungen",
+    "notificationsDesc": "Ihre ungelesenen Plattform-Updates"
   },
   "sales": {
     "title": "Umsatz",
@@ -1863,10 +1874,18 @@
     "notificationsValue": "{{unread}} von {{total}}",
     "earningsTitle": "Umsatz und Guthaben",
     "earningsDesc": "Was Ihre Kunden gezahlt haben und was Sie daran verdient haben",
-    "adminPreviewHint": "So sieht ein Empfehlungspartner sein Dashboard. Wählen Sie einen Partner aus, um dessen Ansicht zu prüfen — die Zahlen unten sind dann die dieses Partners, nicht Ihre.",
-    "adminPreviewPick": "Partner prüfen",
-    "adminPreviewNone": "Kein Partner ausgewählt",
-    "adminViewingPartner": "Dashboard von {{name}}"
+    "adminViewingPartner": "Dashboard von {{name}}",
+    "adminAllPartners": "Alle Partner — {{count}} im Programm",
+    "adminScopeHint": "Die Kacheln unten summieren alle Empfehlungspartner. Klicken Sie eine Kachel an, um den Bereich vollständig zu öffnen, oder wählen Sie in der Tabelle einen Partner, um die Zahlen auf ihn einzugrenzen.",
+    "adminBackToAll": "Zurück zu allen Partnern",
+    "adminPartnersTitle": "Empfehlungspartner",
+    "adminPartnersFound": "{{count}} Partner",
+    "adminSearchPartners": "Name, Firma, E-Mail oder Code suchen…",
+    "adminNoPartners": "Keine passenden Empfehlungspartner.",
+    "adminColPartner": "Partner",
+    "adminColConverted": "Umgewandelt",
+    "adminColUnpaid": "Offenes Guthaben",
+    "adminLoadingPartners": "Partner werden geladen…"
   },
   "refTemplates": {
     "subjectLabel": "Betreff",
@@ -1950,7 +1969,9 @@
     "commissionsStep1": "Öffnen Sie „Verdientes Guthaben“, um jeden vermittelten Kunden und dessen Ertrag für Sie zu sehen.",
     "commissionsStep2": "Eine Provision wird gutgeschrieben, sobald der Kunde seine Zertifizierung bezahlt hat — nicht schon bei der Einladung.",
     "commissionsStep3": "Ihr Satz steigt, je mehr zahlende Kunden Sie bringen — Ihre aktuelle und die nächste Stufe sehen Sie auf derselben Seite.",
-    "commissionsStep4": "Bereits ausgezahlte und noch offene Provision werden getrennt aufgeführt, damit Sie stets wissen, was noch aussteht."
+    "commissionsStep4": "Bereits ausgezahlte und noch offene Provision werden getrennt aufgeführt, damit Sie stets wissen, was noch aussteht.",
+    "watchVideo": "Video ansehen — {{minutes}} Min.",
+    "readPdf": "PDF lesen — {{minutes}} Min."
   },
   "investors": {
     "title": "Investoren",
@@ -1987,6 +2008,11 @@
     "contactEmail": "Kontakt-E-Mail",
     "withEmail": "Mit E-Mail",
     "withEmailDesc": "Anschreibbar — tippen Sie, um die übrigen zu sehen",
-    "country": "Land"
+    "country": "Land",
+    "linkedinProfile": "LinkedIn-Profil",
+    "emailFund": "{{fund}} anschreiben",
+    "noEmailYet": "Keine E-Mail-Adresse hinterlegt — kontaktieren Sie diesen Fonds über LinkedIn",
+    "contactOnLinkedin": "{{name}} über LinkedIn kontaktieren",
+    "noLinkedin": "Kein LinkedIn-Profil hinterlegt"
   }
 }

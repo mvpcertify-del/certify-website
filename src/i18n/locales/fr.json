@@ -97,7 +97,7 @@
     "referralPartners": "Partenaires d'apport",
     "regionalAdmins": "Country Admins",
     "auditors": "Auditeurs",
-    "certBodies": "Organismes de certification",
+    "certBodies": "Comptes OC",
     "cbRegistry": "Registre des OC",
     "accreditationBodies": "Organismes d'accréditation",
     "countries": "Pays",
@@ -805,8 +805,6 @@
     "auditorsFound": "{{count}} auditeur(s) trouvé(s)",
     "loadingAuditors": "Chargement des auditeurs...",
     "noAuditorsFound": "Aucun auditeur trouvé.",
-    "certBodiesTitle": "Organismes de certification",
-    "certBodiesFound": "{{count}} organisme(s) de certification trouvé(s)",
     "loadingCertBodies": "Chargement des organismes de certification...",
     "noCertBodiesFound": "Aucun organisme de certification trouvé.",
     "organization": "Organisation",
@@ -964,7 +962,16 @@
     "filesSelected": "{{count}} fichier(s) sélectionné(s) — max. {{max}} Mo chacun.",
     "docUploadPartialFailed": "Enregistré, mais {{count}} document(s) n’ont pas pu être téléversés ({{files}}). Les fichiers doivent faire {{max}} Mo maximum — réessayez depuis le formulaire de modification.",
     "paymentReceived": "Paiement reçu",
-    "roleLabel": "Rôle : {{role}}"
+    "roleLabel": "Rôle : {{role}}",
+    "certBodyAccountsTitle": "Comptes des organismes de certification",
+    "certBodyAccountsFound": "{{count}} compte(s) d’organisme de certification",
+    "certBodyAccountsHint": "Les personnes qui se connectent au nom d’un organisme de certification. Cette liste reste vide tant que personne d’un organisme n’a créé de compte. Pour les organismes eux-mêmes — leurs accréditations, les pays couverts et leurs tarifs — ouvrez le Registre des OC.",
+    "noCertBodyAccounts": "Aucun compte d’organisme de certification pour l’instant.",
+    "cbRegistryTitle": "Registre des organismes de certification",
+    "cbRegistryFound": "{{count}} organisme(s) de certification dans le registre",
+    "cbRegistryHint": "Les organismes de certification eux-mêmes — leurs accréditations, les pays couverts, les normes ISO qu’ils certifient et leurs tarifs. Un organisme peut figurer ici sans que personne n’y dispose d’un accès ; ces accès se trouvent dans Comptes OC.",
+    "approvalAnswers": "Informations d’approbation enregistrées",
+    "rejectionAnswers": "Informations de refus enregistrées"
   },
   "certBody": {
     "addBody": "Ajouter un organisme de certification",
@@ -1385,7 +1392,11 @@
     "referrals": "Parrainages",
     "referralsDesc": "Partenaires de parrainage et commissions",
     "sales": "Ventes",
-    "salesDesc": "Chiffre d'affaires et paiements"
+    "salesDesc": "Chiffre d'affaires et paiements",
+    "messages": "Messages",
+    "messagesDesc": "Conversations dans la boîte des partenaires",
+    "notifications": "Notifications",
+    "notificationsDesc": "Vos mises à jour non lues de la plateforme"
   },
   "sales": {
     "title": "Ventes",
@@ -1863,10 +1874,18 @@
     "notificationsValue": "{{unread}} sur {{total}}",
     "earningsTitle": "Ventes et crédit",
     "earningsDesc": "Ce que vos clients ont payé, et ce que vous avez gagné dessus",
-    "adminPreviewHint": "Voici le tableau de bord que voit un partenaire de parrainage. Choisissez un partenaire pour consulter le sien — les chiffres ci-dessous seront alors les siens, pas les vôtres.",
-    "adminPreviewPick": "Consulter un partenaire",
-    "adminPreviewNone": "Aucun partenaire sélectionné",
-    "adminViewingPartner": "Tableau de bord de {{name}}"
+    "adminViewingPartner": "Tableau de bord de {{name}}",
+    "adminAllPartners": "Tous les partenaires — {{count}} dans le programme",
+    "adminScopeHint": "Les tuiles ci-dessous additionnent tous les partenaires de parrainage. Cliquez sur une tuile pour ouvrir la section complète, ou choisissez un partenaire dans le tableau pour limiter les chiffres aux siens.",
+    "adminBackToAll": "Revenir à tous les partenaires",
+    "adminPartnersTitle": "Partenaires de parrainage",
+    "adminPartnersFound": "{{count}} partenaire(s)",
+    "adminSearchPartners": "Rechercher nom, société, e-mail ou code…",
+    "adminNoPartners": "Aucun partenaire de parrainage correspondant.",
+    "adminColPartner": "Partenaire",
+    "adminColConverted": "Convertis",
+    "adminColUnpaid": "Crédit impayé",
+    "adminLoadingPartners": "Chargement des partenaires…"
   },
   "refTemplates": {
     "subjectLabel": "Objet",
@@ -1950,7 +1969,9 @@
     "commissionsStep1": "Ouvrez Crédit acquis pour voir chaque client parrainé et ce qu’il vous a rapporté.",
     "commissionsStep2": "Une commission est créditée une fois que le client a payé sa certification, et non lorsqu’il est invité.",
     "commissionsStep3": "Votre taux augmente à mesure que vous apportez des clients payants — votre palier actuel et le suivant figurent sur le même écran.",
-    "commissionsStep4": "La commission déjà versée et celle encore due sont listées séparément, pour que vous sachiez toujours ce qui reste en attente."
+    "commissionsStep4": "La commission déjà versée et celle encore due sont listées séparément, pour que vous sachiez toujours ce qui reste en attente.",
+    "watchVideo": "Voir la vidéo — {{minutes}} min",
+    "readPdf": "Lire le PDF — {{minutes}} min"
   },
   "investors": {
     "title": "Investisseurs",
@@ -1987,6 +2008,11 @@
     "contactEmail": "E-mail de contact",
     "withEmail": "Avec e-mail",
     "withEmailDesc": "Joignables par e-mail — appuyez pour voir les autres",
-    "country": "Pays"
+    "country": "Pays",
+    "linkedinProfile": "Profil LinkedIn",
+    "emailFund": "Écrire à {{fund}}",
+    "noEmailYet": "Aucune adresse e-mail enregistrée — contactez ce fonds sur LinkedIn",
+    "contactOnLinkedin": "Contacter {{name}} sur LinkedIn",
+    "noLinkedin": "Aucun profil LinkedIn enregistré"
   }
 }

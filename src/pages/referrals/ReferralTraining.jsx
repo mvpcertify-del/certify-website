@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/ui/FormElements';
-import { TRAINING_TOPICS } from './trainingTopics';
-import { ArrowRight } from 'lucide-react';
+import { TRAINING_TOPICS, wikiUrl } from './trainingTopics';
+import { ArrowRight, PlayCircle, FileDown } from 'lucide-react';
 import DashboardBoxes from '../../components/ui/DashboardBoxes';
 import './Referrals.css';
 
@@ -74,6 +74,37 @@ export default function ReferralTraining() {
               <li key={i}>{t(`refTraining.${topic.key}Step${i + 1}`)}</li>
             ))}
           </ol>
+          {/* Two ways to take the same walkthrough, each carrying its own
+              length so a partner can pick one that fits the time they have
+              (client, 13 Sep). Rendered only for topics whose recording and
+              hand-out are actually published on the wiki — a button that
+              leads to a missing page is worse than no button. */}
+          {(topic.video || topic.pdf) && (
+            <div className="referral-training__media">
+              {topic.video && (
+                <a
+                  className="referral-training__media-link"
+                  href={wikiUrl(topic.video.slug)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <PlayCircle size={16} />
+                  {t('refTraining.watchVideo', { minutes: topic.video.minutes })}
+                </a>
+              )}
+              {topic.pdf && (
+                <a
+                  className="referral-training__media-link"
+                  href={wikiUrl(topic.pdf.slug)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <FileDown size={16} />
+                  {t('refTraining.readPdf', { minutes: topic.pdf.minutes })}
+                </a>
+              )}
+            </div>
+          )}
           <Button variant="primary" size="md" onClick={() => navigate(topic.path)}>
             {t('refTraining.openScreen')} <ArrowRight size={16} />
           </Button>

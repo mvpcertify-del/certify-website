@@ -97,7 +97,7 @@
     "referralPartners": "推荐伙伴",
     "regionalAdmins": "Country Admins",
     "auditors": "审核员",
-    "certBodies": "认证机构",
+    "certBodies": "CB 账户",
     "cbRegistry": "认证机构登记表",
     "accreditationBodies": "认可机构",
     "countries": "国家/地区",
@@ -805,8 +805,6 @@
     "auditorsFound": "找到 {{count}} 名审核员",
     "loadingAuditors": "正在加载审核员…",
     "noAuditorsFound": "未找到审核员。",
-    "certBodiesTitle": "认证机构",
-    "certBodiesFound": "找到 {{count}} 家认证机构",
     "loadingCertBodies": "正在加载认证机构…",
     "noCertBodiesFound": "未找到认证机构。",
     "organization": "组织",
@@ -964,7 +962,16 @@
     "filesSelected": "已选择 {{count}} 个文件 — 每个最大 {{max}} MB。",
     "docUploadPartialFailed": "已保存，但有 {{count}} 个文档未能上传（{{files}}）。文件不得超过 {{max}} MB — 请在编辑表单中重试。",
     "paymentReceived": "已收到付款",
-    "roleLabel": "角色：{{role}}"
+    "roleLabel": "角色：{{role}}",
+    "certBodyAccountsTitle": "认证机构账户",
+    "certBodyAccountsFound": "{{count}} 个认证机构账户",
+    "certBodyAccountsHint": "代表认证机构登录的人员。在认证机构有人注册账户之前，此列表保持为空。认证机构本身的信息——其认可资质、覆盖国家和价格——请打开“CB 注册库”。",
+    "noCertBodyAccounts": "尚无认证机构账户。",
+    "cbRegistryTitle": "认证机构注册库",
+    "cbRegistryFound": "注册库中有 {{count}} 个认证机构",
+    "cbRegistryHint": "认证机构本身——其认可资质、覆盖国家、所认证的 ISO 标准及价格。机构可以列在此处而无人拥有登录账户；那些账户在“认证机构账户”中。",
+    "approvalAnswers": "已记录的批准信息",
+    "rejectionAnswers": "已记录的拒绝信息"
   },
   "certBody": {
     "addBody": "添加认证机构",
@@ -1385,7 +1392,11 @@
     "referrals": "推荐",
     "referralsDesc": "推荐合作伙伴与佣金",
     "sales": "销售",
-    "salesDesc": "收入与付款"
+    "salesDesc": "收入与付款",
+    "messages": "消息",
+    "messagesDesc": "合作伙伴收件箱中的会话",
+    "notifications": "通知",
+    "notificationsDesc": "您未读的平台更新"
   },
   "sales": {
     "title": "销售",
@@ -1863,10 +1874,18 @@
     "notificationsValue": "{{total}} 条中的 {{unread}} 条",
     "earningsTitle": "销售与佣金",
     "earningsDesc": "您的客户支付了多少，以及您从中赚取了多少",
-    "adminPreviewHint": "这是推荐合作伙伴看到的面板。选择一位合作伙伴即可查看其面板——下方数字将是该伙伴的，而非您的。",
-    "adminPreviewPick": "查看某位合作伙伴",
-    "adminPreviewNone": "未选择合作伙伴",
-    "adminViewingPartner": "正在查看 {{name}} 的面板"
+    "adminViewingPartner": "正在查看 {{name}} 的面板",
+    "adminAllPartners": "全部合作伙伴 — 计划中共 {{count}} 位",
+    "adminScopeHint": "下方方块汇总了所有推荐伙伴。点击方块可打开该部分的完整内容，或在表格中选择某位伙伴以仅查看其数据。",
+    "adminBackToAll": "返回全部合作伙伴",
+    "adminPartnersTitle": "推荐伙伴",
+    "adminPartnersFound": "{{count}} 位伙伴",
+    "adminSearchPartners": "搜索姓名、公司、邮箱或代码…",
+    "adminNoPartners": "没有匹配的推荐伙伴。",
+    "adminColPartner": "伙伴",
+    "adminColConverted": "已成交",
+    "adminColUnpaid": "未付佣金",
+    "adminLoadingPartners": "正在加载伙伴…"
   },
   "refTemplates": {
     "subjectLabel": "主题",
@@ -1950,7 +1969,9 @@
     "commissionsStep1": "打开「已获佣金」，查看每一位推荐客户以及各自为您带来的收入。",
     "commissionsStep2": "佣金在客户支付认证费用后计入，而非在发出邀请时。",
     "commissionsStep3": "随着付费客户增多，您的佣金比例会提高——当前等级与下一等级显示在同一页面。",
-    "commissionsStep4": "已结算与尚未结算的佣金分别列出，您随时都能知道还有多少未收。"
+    "commissionsStep4": "已结算与尚未结算的佣金分别列出，您随时都能知道还有多少未收。",
+    "watchVideo": "观看视频 — {{minutes}} 分钟",
+    "readPdf": "阅读 PDF — {{minutes}} 分钟"
   },
   "investors": {
     "title": "投资方",
@@ -1987,6 +2008,11 @@
     "contactEmail": "联系邮箱",
     "withEmail": "有邮箱",
     "withEmailDesc": "可以发送邮件——点击查看其余的",
-    "country": "国家"
+    "country": "国家",
+    "linkedinProfile": "LinkedIn 资料",
+    "emailFund": "给 {{fund}} 发邮件",
+    "noEmailYet": "未登记电子邮箱 — 请通过 LinkedIn 联系该基金",
+    "contactOnLinkedin": "在 LinkedIn 上联系 {{name}}",
+    "noLinkedin": "未登记 LinkedIn 资料"
   }
 }

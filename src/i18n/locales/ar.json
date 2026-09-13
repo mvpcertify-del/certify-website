@@ -97,7 +97,7 @@
     "referralPartners": "شركاء الإحالة",
     "regionalAdmins": "مديرو الدول",
     "auditors": "المدققون",
-    "certBodies": "جهات الاعتماد",
+    "certBodies": "حسابات الهيئات",
     "cbRegistry": "سجل هيئات التصديق",
     "accreditationBodies": "هيئات الاعتماد",
     "countries": "الدول",
@@ -805,8 +805,6 @@
     "auditorsFound": "تم العثور على {{count}} مدقق(مدققين)",
     "loadingAuditors": "جاري تحميل المدققين...",
     "noAuditorsFound": "لم يتم العثور على مدققين.",
-    "certBodiesTitle": "جهات الاعتماد",
-    "certBodiesFound": "تم العثور على {{count}} جهة اعتماد",
     "loadingCertBodies": "جاري تحميل جهات الاعتماد...",
     "noCertBodiesFound": "لم يتم العثور على جهات اعتماد.",
     "organization": "المنظمة",
@@ -964,7 +962,16 @@
     "filesSelected": "تم اختيار {{count}} ملف — بحد أقصى {{max}} ميجابايت لكل ملف.",
     "docUploadPartialFailed": "تم الحفظ، لكن تعذّر رفع {{count}} مستند ({{files}}). يجب ألا يتجاوز حجم الملف {{max}} ميجابايت — حاول مرة أخرى من نموذج التعديل.",
     "paymentReceived": "تم استلام الدفعة",
-    "roleLabel": "الدور: {{role}}"
+    "roleLabel": "الدور: {{role}}",
+    "certBodyAccountsTitle": "حسابات هيئات إصدار الشهادات",
+    "certBodyAccountsFound": "{{count}} حساب لهيئات إصدار الشهادات",
+    "certBodyAccountsHint": "الأشخاص الذين يسجّلون الدخول نيابة عن هيئة إصدار شهادات. تبقى هذه القائمة فارغة حتى يسجّل أحد أفراد الهيئة حسابًا. أما الهيئات نفسها — اعتماداتها والدول التي تغطيها وأسعارها — فتجدها في سجل الهيئات.",
+    "noCertBodyAccounts": "لا توجد حسابات لهيئات إصدار الشهادات بعد.",
+    "cbRegistryTitle": "سجل هيئات إصدار الشهادات",
+    "cbRegistryFound": "{{count}} هيئة إصدار شهادات في السجل",
+    "cbRegistryHint": "هيئات إصدار الشهادات نفسها — اعتماداتها والدول التي تغطيها ومعايير ISO التي تمنحها وأسعارها. يمكن إدراج هيئة هنا دون أن يملك أحد من أفرادها حساب دخول؛ تلك الحسابات في «حسابات الهيئات».",
+    "approvalAnswers": "تفاصيل الموافقة المسجّلة",
+    "rejectionAnswers": "تفاصيل الرفض المسجّلة"
   },
   "certBody": {
     "addBody": "إضافة هيئة تصديق",
@@ -1385,7 +1392,11 @@
     "referrals": "الإحالات",
     "referralsDesc": "شركاء الإحالة والعمولات",
     "sales": "المبيعات",
-    "salesDesc": "الإيرادات والمدفوعات"
+    "salesDesc": "الإيرادات والمدفوعات",
+    "messages": "الرسائل",
+    "messagesDesc": "المحادثات في صندوق بريد الشركاء",
+    "notifications": "الإشعارات",
+    "notificationsDesc": "تحديثات المنصة غير المقروءة"
   },
   "sales": {
     "title": "المبيعات",
@@ -1863,10 +1874,18 @@
     "notificationsValue": "{{unread}} من {{total}}",
     "earningsTitle": "المبيعات والرصيد",
     "earningsDesc": "ما دفعه عملاؤك، وما حققته أنت منه",
-    "adminPreviewHint": "هذه هي اللوحة التي يراها شريك الإحالة. اختر شريكًا لمراجعة لوحته — عندها تكون الأرقام أدناه أرقامه هو لا أرقامك.",
-    "adminPreviewPick": "مراجعة شريك",
-    "adminPreviewNone": "لم يتم اختيار شريك",
-    "adminViewingPartner": "عرض لوحة {{name}}"
+    "adminViewingPartner": "عرض لوحة {{name}}",
+    "adminAllPartners": "جميع الشركاء — {{count}} في البرنامج",
+    "adminScopeHint": "تجمع المربعات أدناه بيانات كل شركاء الإحالة. انقر على مربع لفتح ذلك القسم كاملًا، أو اختر شريكًا من الجدول لحصر الأرقام عليه.",
+    "adminBackToAll": "العودة إلى جميع الشركاء",
+    "adminPartnersTitle": "شركاء الإحالة",
+    "adminPartnersFound": "{{count}} شريك",
+    "adminSearchPartners": "ابحث بالاسم أو الشركة أو البريد أو الرمز…",
+    "adminNoPartners": "لا يوجد شركاء إحالة مطابقون.",
+    "adminColPartner": "الشريك",
+    "adminColConverted": "محوَّلون",
+    "adminColUnpaid": "رصيد غير مدفوع",
+    "adminLoadingPartners": "جارٍ تحميل الشركاء…"
   },
   "refTemplates": {
     "subjectLabel": "الموضوع",
@@ -1950,7 +1969,9 @@
     "commissionsStep1": "افتح الرصيد المكتسب لرؤية كل عميل أحلته وما حققه لك.",
     "commissionsStep2": "تُحتسب العمولة بعد أن يدفع العميل رسوم شهادته، لا عند دعوته.",
     "commissionsStep3": "ترتفع نسبتك كلما جلبت عملاء مدفوعين أكثر — وتظهر شريحتك الحالية والشريحة التالية في الصفحة نفسها.",
-    "commissionsStep4": "تُدرج العمولة المصروفة والعمولة المستحقة كلٌّ على حدة، فتعرف دائمًا ما لم يُصرف بعد."
+    "commissionsStep4": "تُدرج العمولة المصروفة والعمولة المستحقة كلٌّ على حدة، فتعرف دائمًا ما لم يُصرف بعد.",
+    "watchVideo": "شاهد الفيديو — {{minutes}} دقيقة",
+    "readPdf": "اقرأ ملف PDF — {{minutes}} دقيقة"
   },
   "investors": {
     "title": "المستثمرون",
@@ -1987,6 +2008,11 @@
     "contactEmail": "البريد الإلكتروني للتواصل",
     "withEmail": "لديها بريد",
     "withEmailDesc": "يمكن مراسلتها — اضغط لعرض البقية",
-    "country": "الدولة"
+    "country": "الدولة",
+    "linkedinProfile": "ملف LinkedIn",
+    "emailFund": "مراسلة {{fund}}",
+    "noEmailYet": "لا يوجد بريد إلكتروني مسجل — تواصل مع هذا الصندوق عبر LinkedIn",
+    "contactOnLinkedin": "تواصل مع {{name}} عبر LinkedIn",
+    "noLinkedin": "لا يوجد ملف LinkedIn مسجل"
   }
 }

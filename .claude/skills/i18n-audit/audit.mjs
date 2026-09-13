@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-// i18n audit for CertifyCX — diffs en/es/ar locale files.
+// i18n audit for CertifyCX — diffs every locale file against English.
 // Usage: node .claude/skills/i18n-audit/audit.mjs [--full]
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -13,7 +13,15 @@ const localesDir = resolve(repoRoot, 'src', 'i18n', 'locales');
 const full = process.argv.includes('--full');
 const PREVIEW = full ? Infinity : 10;
 
-const files = ['en.json', 'es.json', 'ar.json'];
+// Read the directory rather than listing the locales. The project shipped
+// six more languages after this script was written and the hardcoded trio
+// meant the pre-commit blocker could not see drift in de/fr/hi/pt/ru/zh —
+// six files that could go out of sync silently. English stays first: the
+// checks below treat the first entry as the reference.
+const files = [
+  'en.json',
+  ...readdirSync(localesDir).filter(f => f.endsWith('.json') && f !== 'en.json').sort(),
+];
 const data = Object.fromEntries(
   files.map(f => [f, JSON.parse(readFileSync(resolve(localesDir, f), 'utf8'))])
 );
@@ -35,8 +43,7 @@ const flat = Object.fromEntries(
 );
 
 const enKeys = new Set(flat['en.json'].keys());
-const esKeys = new Set(flat['es.json'].keys());
-const arKeys = new Set(flat['ar.json'].keys());
+const targets = files.filter(f => f !== 'en.json');
 
 function diff(a, b) {
   const out = [];
@@ -44,10 +51,15 @@ function diff(a, b) {
   return out.sort();
 }
 
-const missingInEs = diff(enKeys, esKeys);
-const missingInAr = diff(enKeys, arKeys);
-const extraInEs = diff(esKeys, enKeys);
-const extraInAr = diff(arKeys, enKeys);
+// Per target language rather than the two hardcoded ones, so every locale the
+// project ships is compared against English.
+const missing = {};
+const extra = {};
+for (const f of targets) {
+  const keys = new Set(flat[f].keys());
+  missing[f] = diff(enKeys, keys);
+  extra[f] = diff(keys, enKeys);
+}
 
 const empty = [];
 for (const [file, m] of Object.entries(flat)) {
@@ -56,8 +68,8 @@ for (const [file, m] of Object.entries(flat)) {
   }
 }
 
-const identicalToEn = { 'es.json': [], 'ar.json': [] };
-for (const target of ['es.json', 'ar.json']) {
+const identicalToEn = Object.fromEntries(targets.map(f => [f, []]));
+for (const target of targets) {
   for (const [k, v] of flat[target]) {
     const en = flat['en.json'].get(k);
     if (typeof en === 'string' && typeof v === 'string' && en.length > 1 && en === v) {
@@ -73,25 +85,20 @@ function section(title, items) {
   if (items.length > PREVIEW) console.log(`  ... and ${items.length - PREVIEW} more (run with --full to see all)`);
 }
 
-console.log(`# i18n audit — ${enKeys.size} keys in en.json`);
-section('Missing in es.json', missingInEs);
-section('Missing in ar.json', missingInAr);
-section('Extra in es.json (not in en.json)', extraInEs);
-section('Extra in ar.json (not in en.json)', extraInAr);
+console.log(`# i18n audit — ${enKeys.size} keys in en.json, ${targets.length} other locales`);
+for (const f of targets) section(`Missing in ${f}`, missing[f]);
+for (const f of targets) section(`Extra in ${f} (not in en.json)`, extra[f]);
 section('Empty values', empty);
-section('Likely untranslated (es.json identical to en)', identicalToEn['es.json']);
-section('Likely untranslated (ar.json identical to en)', identicalToEn['ar.json']);
+for (const f of targets) {
+  section(`Likely untranslated (${f} identical to en)`, identicalToEn[f]);
+}
 
 // Hard issues = structural drift (missing/extra keys, empty values).
 // Soft issues = heuristic "likely untranslated" — frequently legitimate
 // (short tokens like brand names, "no", region names). Reported but not failing.
-const hardIssues =
-  missingInEs.length + missingInAr.length +
-  extraInEs.length + extraInAr.length +
-  empty.length;
-
-const softIssues =
-  identicalToEn['es.json'].length + identicalToEn['ar.json'].length;
+const sum = (o) => Object.values(o).reduce((a, v) => a + v.length, 0);
+const hardIssues = sum(missing) + sum(extra) + empty.length;
+const softIssues = sum(identicalToEn);
 
 if (hardIssues === 0 && softIssues === 0) {
   console.log('\ni18n OK');

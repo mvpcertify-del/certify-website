@@ -50,15 +50,24 @@ const EMPTY = {
 // Hosts are stored bare ("mayfield.com"), so a value used verbatim as an href
 // resolves relative to the app and navigates to a dead in-app route. Every link
 // on this screen goes through here.
-function ExternalLink({ value }) {
+function ExternalLink({ value, label }) {
   if (!value) return <span style={{ color: 'var(--color-text-secondary)' }}>—</span>;
   const trimmed = String(value).trim();
-  const href = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  const href = absoluteUrl(trimmed);
   return (
     <a href={href} target="_blank" rel="noopener noreferrer" style={{ wordBreak: 'break-all' }}>
-      {trimmed}
+      {label || trimmed}
     </a>
   );
+}
+
+// The row icons need the same href the visible links get, but as a string
+// rather than an element, so the bare-host fix lives here and ExternalLink
+// borrows it. Returns null for an empty value so callers can disable a button.
+function absoluteUrl(value) {
+  const trimmed = String(value ?? '').trim();
+  if (!trimmed) return null;
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
 }
 
 function Plain({ value }) {
@@ -261,6 +270,23 @@ export default function AdminInvestors() {
     }
   };
 
+  // The register is a working outreach list: a fund that declines or goes
+  // quiet is parked rather than deleted, so the history stays.
+  const handleToggleActive = async (row) => {
+    const next = !row.is_active;
+    try {
+      const { error: upErr } = await supabase
+        .from('investors')
+        .update({ is_active: next, updated_at: new Date().toISOString() })
+        .eq('id', row.id);
+      if (upErr) throw upErr;
+      setItems((prev) => prev.map((r) => (r.id === row.id ? { ...r, is_active: next } : r)));
+      setNotice(t('investors.saved'));
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const handleDelete = async (row) => {
     if (!window.confirm(t('investors.confirmDelete', { fund: row.fund_name }))) return;
     try {
@@ -281,7 +307,33 @@ export default function AdminInvestors() {
     { key: 'region', label: t('investors.region'), render: (v) => <Plain value={v} /> },
     { key: 'stage', label: t('investors.stage'), render: (v) => <Plain value={v} /> },
     { key: 'check_range', label: t('investors.checkRange'), render: (v) => <Plain value={v} /> },
-    { key: 'key_partner', label: t('investors.keyPartner'), render: (v) => <Plain value={v} /> },
+    {
+      // The client contacts these funds through the named partner, and the
+      // spreadsheet carries no email addresses, so the person's LinkedIn is
+      // the working contact route and belongs beside their name.
+      key: 'key_partner',
+      label: t('investors.keyPartner'),
+      render: (v, row) => (
+        <div style={{ display: 'grid', gap: 2 }}>
+          <Plain value={v} />
+          {row.partner_linkedin && (
+            <ExternalLink value={row.partner_linkedin} label={t('investors.linkedinProfile')} />
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'website',
+      label: t('investors.website'),
+      render: (v, row) => (
+        <div style={{ display: 'grid', gap: 2 }}>
+          <ExternalLink value={v} />
+          {row.fund_linkedin && (
+            <ExternalLink value={row.fund_linkedin} label={t('investors.fundLinkedin')} />
+          )}
+        </div>
+      ),
+    },
     {
       key: 'contact_email',
       label: t('investors.contactEmail'),
@@ -289,17 +341,39 @@ export default function AdminInvestors() {
     },
     {
       key: 'actions',
-      label: t('common.edit'),
-      render: (_, row) => (
-        <RowActions
-          isActive={!!row.is_active}
-          showView
-          showToggle={false}
-          onView={() => { setViewingRow(row); setShowView(true); }}
-          onEdit={() => openEdit(row)}
-          onDelete={() => handleDelete(row)}
-        />
-      ),
+      label: t('dashboard.action'),
+      render: (_, row) => {
+        const linkedin = absoluteUrl(row.partner_linkedin) || absoluteUrl(row.fund_linkedin);
+        return (
+          <RowActions
+            isActive={!!row.is_active}
+            showView
+            onView={() => { setViewingRow(row); setShowView(true); }}
+            // No fund in the register has an email yet, so the envelope is
+            // disabled rather than hidden: a greyed icon says "we have no
+            // address for this one", a missing icon would read as a bug.
+            showResend
+            resendTitle={
+              row.contact_email
+                ? t('investors.emailFund', { fund: row.fund_name })
+                : t('investors.noEmailYet')
+            }
+            resendDisabled={!row.contact_email}
+            resendHref={row.contact_email ? `mailto:${row.contact_email}` : undefined}
+            showLink
+            linkTitle={
+              linkedin
+                ? t('investors.contactOnLinkedin', { name: row.key_partner || row.fund_name })
+                : t('investors.noLinkedin')
+            }
+            linkDisabled={!linkedin}
+            linkHref={linkedin || undefined}
+            onToggle={() => handleToggleActive(row)}
+            onEdit={() => openEdit(row)}
+            onDelete={() => handleDelete(row)}
+          />
+        );
+      },
     },
   ];
 
@@ -312,9 +386,9 @@ export default function AdminInvestors() {
     { label: t('investors.leads'), value: viewingRow.leads },
     { label: t('investors.sector'), value: viewingRow.sector },
     { label: t('investors.recentActivity'), value: viewingRow.recent_activity },
-    { label: t('investors.website'), value: <ExternalLink value={viewingRow.website} /> },
-    { label: t('investors.fundLinkedin'), value: <ExternalLink value={viewingRow.fund_linkedin} /> },
-    { label: t('investors.partnerLinkedin'), value: <ExternalLink value={viewingRow.partner_linkedin} /> },
+    // Website, fund LinkedIn and partner LinkedIn are not repeated here: they
+    // now sit in the Website and Key partner columns, and DetailModal reuses
+    // each column's own render, so they already appear above these extras.
     { label: t('investors.notes'), value: viewingRow.notes },
     {
       label: t('investors.contactEmail'),

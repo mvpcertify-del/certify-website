@@ -497,22 +497,57 @@
   transform: scaleX(-1);
 }
 
-/* Admin preview strip on the Referral Program Dashboard (client, 12 Sep).
-   Sits above the boxes and explains, before the numbers, that this is somebody
-   else's dashboard being reviewed — a Super Admin who lands here without that
-   line reads their own empty figures as a broken feature. */
+/* Admin scope strip on the Referral Program Dashboard (client, 12 and 13 Sep).
+   Sits above the boxes and says, before the numbers, whose figures these are —
+   the whole programme by default, or one partner once a row is picked. A Super
+   Admin who lands here without that line misreads the totals.
+   Wider than the 560px it held when this was a dropdown: it now carries a
+   sentence, and 70ch is where a sentence stays readable. */
 .refdash__admin-preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
   padding: 14px 16px;
   margin-bottom: var(--spacing-lg, 20px);
   border: 1px solid var(--color-border);
   border-radius: 12px;
   background: var(--color-surface);
-  max-width: 560px;
+  max-width: 70ch;
 }
 
 .refdash__admin-preview-hint {
-  margin: 0 0 10px;
+  margin: 0;
+  flex: 1 1 320px;
   font-size: 0.86rem;
   line-height: 1.55;
   color: var(--color-text-secondary);
+}
+
+
+/* Training walkthrough: the "watch it" / "read it" pair above the CTA.
+   Deliberately quieter than the primary button below them — they are a choice
+   of format, not the action the screen is asking for. */
+.referral-training__media {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.referral-training__media-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-text-primary);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.referral-training__media-link:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }

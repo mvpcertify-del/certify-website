@@ -93,6 +93,9 @@ export default function ProfileManagementTable({
   editFields = [],
   title,
   subtitle,
+  // One sentence saying what this list is, for screens whose name is easy to
+  // confuse with a neighbouring one (Cert Body accounts vs the CB registry).
+  hint,
   loadingText,
   emptyText,
   scopeToRegion = true,
@@ -119,6 +122,12 @@ export default function ProfileManagementTable({
   const [createForm, setCreateForm] = useState({});
   const [showView, setShowView] = useState(false);
   const [viewingRow, setViewingRow] = useState(null);
+  // Custom user fields were captured at signup and on the profile page but
+  // shown back nowhere, so an admin could not see what an applicant had
+  // answered (client asked on 13 Sep whether the feature is in use — it is,
+  // but it was write-only). The definitions give the labels and the order;
+  // profiles.custom_fields holds the answers, keyed by field_key.
+  const [customFieldDefs, setCustomFieldDefs] = useState([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -150,6 +159,50 @@ export default function ProfileManagementTable({
     fetchItems();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, user?.role, user?.region, role]);
+
+  // Fetched once per role rather than per row opened: the definitions are the
+  // same for every row in this table, and an admin skimming ten profiles
+  // should not trigger ten identical queries.
+  useEffect(() => {
+    let mounted = true;
+    supabase
+      .from('custom_user_fields')
+      .select('field_key, label, field_type, display_order')
+      .eq('is_active', true)
+      .contains('applies_to_roles', [role])
+      .order('display_order')
+      .then(({ data, error }) => {
+        if (mounted) setCustomFieldDefs(error ? [] : (data || []));
+      });
+    return () => { mounted = false; };
+  }, [role]);
+
+  // Only the questions this person actually answered. A profile created before
+  // a field existed has no value for it, and listing it as "—" would suggest
+  // they declined to answer rather than never having been asked.
+  const customFieldAnswers = (() => {
+    const answers = viewingRow?.custom_fields;
+    if (!answers || typeof answers !== 'object') return [];
+    return customFieldDefs
+      .filter((def) => {
+        const v = answers[def.field_key];
+        return v !== undefined && v !== null && v !== '' && !(Array.isArray(v) && v.length === 0);
+      })
+      .map((def) => {
+        const v = answers[def.field_key];
+        let text;
+        if (Array.isArray(v)) text = v.join(', ');
+        else if (typeof v === 'boolean' || def.field_type === 'boolean') {
+          text = v ? t('common.yes') : t('common.no');
+        } else if (def.field_type === 'date') {
+          // Stored as the input's raw ISO value; shown in the admin's own
+          // locale, the way every other date on these screens is.
+          const d = new Date(v);
+          text = Number.isNaN(d.getTime()) ? String(v) : d.toLocaleDateString();
+        } else text = String(v);
+        return { label: def.label, value: text };
+      });
+  })();
 
   const filtered = countryFilter.trim()
     ? items.filter(i => (i.country || '').toLowerCase().includes(countryFilter.trim().toLowerCase()))
@@ -579,6 +632,9 @@ export default function ProfileManagementTable({
         <div>
           <h1 className="page-title">{title}</h1>
           <p className="page-subtitle">{subtitle(filtered.length)}</p>
+          {hint && (
+            <p className="page-subtitle" style={{ maxWidth: '70ch', marginTop: 4 }}>{hint}</p>
+          )}
         </div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           {!isRegionalAdmin && (
@@ -667,6 +723,7 @@ export default function ProfileManagementTable({
         title={viewingRow ? rowName(viewingRow) : t('common.view')}
         columns={columns.map(c => (c.renderDetail ? { ...c, render: c.renderDetail } : c))}
         row={viewingRow}
+        extraFields={customFieldAnswers}
       />
     </div>
   );

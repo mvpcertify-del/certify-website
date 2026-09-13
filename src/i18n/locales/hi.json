@@ -97,7 +97,7 @@
     "referralPartners": "रेफ़रल पार्टनर",
     "regionalAdmins": "Country Admins",
     "auditors": "ऑडिटर",
-    "certBodies": "प्रमाणन निकाय",
+    "certBodies": "CB खाते",
     "cbRegistry": "CB रजिस्ट्री",
     "accreditationBodies": "मान्यता निकाय",
     "countries": "देश",
@@ -805,8 +805,6 @@
     "auditorsFound": "{{count}} ऑडिटर मिले",
     "loadingAuditors": "ऑडिटर लोड हो रहे हैं...",
     "noAuditorsFound": "कोई ऑडिटर नहीं मिला।",
-    "certBodiesTitle": "प्रमाणन निकाय",
-    "certBodiesFound": "{{count}} प्रमाणन निकाय मिले",
     "loadingCertBodies": "प्रमाणन निकाय लोड हो रहे हैं...",
     "noCertBodiesFound": "कोई प्रमाणन निकाय नहीं मिला।",
     "organization": "संगठन",
@@ -964,7 +962,16 @@
     "filesSelected": "{{count}} फ़ाइल चुनी गईं — प्रत्येक अधिकतम {{max}} MB।",
     "docUploadPartialFailed": "सहेज लिया गया, लेकिन {{count}} दस्तावेज़ अपलोड नहीं हो सके ({{files}})। फ़ाइलें {{max}} MB या उससे छोटी होनी चाहिए — एडिट फ़ॉर्म से दोबारा कोशिश करें।",
     "paymentReceived": "भुगतान प्राप्त",
-    "roleLabel": "भूमिका: {{role}}"
+    "roleLabel": "भूमिका: {{role}}",
+    "certBodyAccountsTitle": "प्रमाणन निकाय खाते",
+    "certBodyAccountsFound": "{{count}} प्रमाणन निकाय खाता/खाते",
+    "certBodyAccountsHint": "वे लोग जो किसी प्रमाणन निकाय की ओर से साइन इन करते हैं। जब तक किसी निकाय का कोई व्यक्ति खाता नहीं बनाता, यह सूची खाली रहती है। निकायों की जानकारी — उनकी मान्यताएँ, कवर किए गए देश और मूल्य — CB रजिस्ट्री में देखें।",
+    "noCertBodyAccounts": "अभी तक कोई प्रमाणन निकाय खाता नहीं।",
+    "cbRegistryTitle": "प्रमाणन निकाय रजिस्ट्री",
+    "cbRegistryFound": "रजिस्ट्री में {{count}} प्रमाणन निकाय",
+    "cbRegistryHint": "प्रमाणन निकाय स्वयं — उनकी मान्यताएँ, कवर किए गए देश, वे जो ISO मानक प्रमाणित करते हैं और उनके मूल्य। कोई निकाय यहाँ सूचीबद्ध हो सकता है भले ही उसका कोई लॉगिन न हो; वे लॉगिन CB खातों में हैं।",
+    "approvalAnswers": "दर्ज की गई अनुमोदन जानकारी",
+    "rejectionAnswers": "दर्ज की गई अस्वीकृति जानकारी"
   },
   "certBody": {
     "addBody": "प्रमाणन निकाय जोड़ें",
@@ -1385,7 +1392,11 @@
     "referrals": "रेफ़रल",
     "referralsDesc": "रेफ़रल साझेदार और कमीशन",
     "sales": "बिक्री",
-    "salesDesc": "राजस्व और भुगतान"
+    "salesDesc": "राजस्व और भुगतान",
+    "messages": "संदेश",
+    "messagesDesc": "पार्टनर इनबॉक्स की बातचीत",
+    "notifications": "सूचनाएँ",
+    "notificationsDesc": "आपके बिना पढ़े प्लेटफ़ॉर्म अपडेट"
   },
   "sales": {
     "title": "बिक्री",
@@ -1863,10 +1874,18 @@
     "notificationsValue": "{{total}} में से {{unread}}",
     "earningsTitle": "बिक्री और क्रेडिट",
     "earningsDesc": "आपके ग्राहकों ने कितना भुगतान किया, और उससे आपने कितना कमाया",
-    "adminPreviewHint": "यह वह डैशबोर्ड है जो रेफ़रल पार्टनर देखता है। किसी पार्टनर को चुनें — नीचे के आंकड़े तब उसी पार्टनर के होंगे, आपके नहीं।",
-    "adminPreviewPick": "किसी पार्टनर को देखें",
-    "adminPreviewNone": "कोई पार्टनर नहीं चुना गया",
-    "adminViewingPartner": "{{name}} का डैशबोर्ड देख रहे हैं"
+    "adminViewingPartner": "{{name}} का डैशबोर्ड देख रहे हैं",
+    "adminAllPartners": "सभी पार्टनर — कार्यक्रम में {{count}}",
+    "adminScopeHint": "नीचे के बॉक्स सभी रेफ़रल पार्टनर को जोड़ते हैं। पूरा सेक्शन खोलने के लिए किसी बॉक्स पर क्लिक करें, या आँकड़ों को किसी एक पार्टनर तक सीमित करने के लिए तालिका से पार्टनर चुनें।",
+    "adminBackToAll": "सभी पार्टनर पर वापस जाएँ",
+    "adminPartnersTitle": "रेफ़रल पार्टनर",
+    "adminPartnersFound": "{{count}} पार्टनर",
+    "adminSearchPartners": "नाम, कंपनी, ईमेल या कोड खोजें…",
+    "adminNoPartners": "कोई मेल खाता रेफ़रल पार्टनर नहीं।",
+    "adminColPartner": "पार्टनर",
+    "adminColConverted": "परिवर्तित",
+    "adminColUnpaid": "अदत्त क्रेडिट",
+    "adminLoadingPartners": "पार्टनर लोड हो रहे हैं…"
   },
   "refTemplates": {
     "subjectLabel": "विषय",
@@ -1950,7 +1969,9 @@
     "commissionsStep1": "हर रेफ़र किए गए ग्राहक और उससे हुई अपनी कमाई देखने के लिए अर्जित क्रेडिट खोलें।",
     "commissionsStep2": "कमीशन तब जुड़ता है जब ग्राहक अपने प्रमाणन का भुगतान कर देता है, आमंत्रण भेजने पर नहीं।",
     "commissionsStep3": "जैसे-जैसे आप अधिक भुगतान करने वाले ग्राहक लाते हैं, आपकी दर बढ़ती जाती है — आपका मौजूदा और अगला स्तर इसी स्क्रीन पर दिखते हैं।",
-    "commissionsStep4": "भुगतान हो चुका कमीशन और बकाया कमीशन अलग-अलग दिखाए जाते हैं, ताकि आपको हमेशा पता रहे कि कितना शेष है।"
+    "commissionsStep4": "भुगतान हो चुका कमीशन और बकाया कमीशन अलग-अलग दिखाए जाते हैं, ताकि आपको हमेशा पता रहे कि कितना शेष है।",
+    "watchVideo": "वीडियो देखें — {{minutes}} मिनट",
+    "readPdf": "PDF पढ़ें — {{minutes}} मिनट"
   },
   "investors": {
     "title": "निवेशक",
@@ -1987,6 +2008,11 @@
     "contactEmail": "संपर्क ईमेल",
     "withEmail": "ईमेल के साथ",
     "withEmailDesc": "इन्हें लिखा जा सकता है — बाकी देखने के लिए टैप करें",
-    "country": "देश"
+    "country": "देश",
+    "linkedinProfile": "लिंक्डइन प्रोफ़ाइल",
+    "emailFund": "{{fund}} को ईमेल करें",
+    "noEmailYet": "कोई ईमेल पता दर्ज नहीं — इस फंड से लिंक्डइन पर संपर्क करें",
+    "contactOnLinkedin": "{{name}} से लिंक्डइन पर संपर्क करें",
+    "noLinkedin": "कोई लिंक्डइन प्रोफ़ाइल दर्ज नहीं"
   }
 }

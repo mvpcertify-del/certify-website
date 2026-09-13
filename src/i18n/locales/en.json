@@ -97,7 +97,7 @@
     "referralPartners": "Referral Partners",
     "regionalAdmins": "Country Admins",
     "auditors": "Auditors",
-    "certBodies": "Cert Bodies",
+    "certBodies": "CB Accounts",
     "cbRegistry": "CB Registry",
     "accreditationBodies": "Accreditation Bodies",
     "countries": "Countries",
@@ -805,8 +805,6 @@
     "auditorsFound": "{{count}} auditor(s) found",
     "loadingAuditors": "Loading auditors...",
     "noAuditorsFound": "No auditors found.",
-    "certBodiesTitle": "Certification Bodies",
-    "certBodiesFound": "{{count}} certification body/bodies found",
     "loadingCertBodies": "Loading certification bodies...",
     "noCertBodiesFound": "No certification bodies found.",
     "organization": "Organization",
@@ -964,7 +962,16 @@
     "filesSelected": "{{count}} file(s) selected — max {{max}} MB each.",
     "docUploadPartialFailed": "Saved, but {{count}} document(s) could not be uploaded ({{files}}). Files must be {{max}} MB or smaller — try again from the Edit form.",
     "paymentReceived": "Payment Received",
-    "roleLabel": "Role: {{role}}"
+    "roleLabel": "Role: {{role}}",
+    "certBodyAccountsTitle": "Certification Body Accounts",
+    "certBodyAccountsFound": "{{count}} certification body account(s)",
+    "certBodyAccountsHint": "The people who sign in on behalf of a certification body. This list stays empty until someone from a body registers an account. For the bodies themselves — their accreditations, the countries they cover and their pricing — open CB Registry.",
+    "noCertBodyAccounts": "No certification body accounts yet.",
+    "cbRegistryTitle": "Certification Body Registry",
+    "cbRegistryFound": "{{count}} certification body/bodies in the registry",
+    "cbRegistryHint": "The certification body organisations themselves — their accreditations, the countries they cover, the ISO standards they certify and their pricing. A body can be listed here without anyone from it holding a login; those logins live under CB Accounts.",
+    "approvalAnswers": "Approval details recorded",
+    "rejectionAnswers": "Rejection details recorded"
   },
   "certBody": {
     "addBody": "Add Certification Body",
@@ -1385,7 +1392,11 @@
     "referrals": "Referrals",
     "referralsDesc": "Referral partners and commissions",
     "sales": "Sales",
-    "salesDesc": "Revenue and payments"
+    "salesDesc": "Revenue and payments",
+    "messages": "Messages",
+    "messagesDesc": "Conversations in the partner inbox",
+    "notifications": "Notifications",
+    "notificationsDesc": "Your unread platform updates"
   },
   "sales": {
     "title": "Sales",
@@ -1863,10 +1874,18 @@
     "notificationsValue": "{{unread}} of {{total}}",
     "earningsTitle": "Sales & Credit",
     "earningsDesc": "What your clients paid, and what you earned from it",
-    "adminPreviewHint": "This is the dashboard a referral partner sees. Choose a partner to review theirs — the figures below are then that partner’s, not yours.",
-    "adminPreviewPick": "Review a partner",
-    "adminPreviewNone": "No partner selected",
-    "adminViewingPartner": "Viewing {{name}}’s dashboard"
+    "adminViewingPartner": "Viewing {{name}}’s dashboard",
+    "adminAllPartners": "All partners — {{count}} in the programme",
+    "adminScopeHint": "The boxes below add up every referral partner. Click a box to open that section in full, or pick a partner in the table to narrow the figures to theirs.",
+    "adminBackToAll": "Back to all partners",
+    "adminPartnersTitle": "Referral partners",
+    "adminPartnersFound": "{{count}} partner(s)",
+    "adminSearchPartners": "Search name, company, email or code…",
+    "adminNoPartners": "No referral partners match.",
+    "adminColPartner": "Partner",
+    "adminColConverted": "Converted",
+    "adminColUnpaid": "Unpaid credit",
+    "adminLoadingPartners": "Loading partners…"
   },
   "refTemplates": {
     "subjectLabel": "Subject",
@@ -1950,7 +1969,9 @@
     "commissionsStep1": "Open Credit Earned to see every referred client and what each one has earned you.",
     "commissionsStep2": "A commission is credited once the client has paid for their certification, not when they are invited.",
     "commissionsStep3": "Your rate rises as you bring in more paid clients — your current tier and the next one are shown on the same screen.",
-    "commissionsStep4": "Commission that has been paid out and commission still owed are listed separately, so you always know what is outstanding."
+    "commissionsStep4": "Commission that has been paid out and commission still owed are listed separately, so you always know what is outstanding.",
+    "watchVideo": "Watch the video — {{minutes}} min",
+    "readPdf": "Read the PDF — {{minutes}} min"
   },
   "investors": {
     "title": "Investors",
@@ -1987,6 +2008,11 @@
     "contactEmail": "Contact email",
     "withEmail": "With an email",
     "withEmailDesc": "Can be written to — tap to see the rest",
-    "country": "Country"
+    "country": "Country",
+    "linkedinProfile": "LinkedIn profile",
+    "emailFund": "Email {{fund}}",
+    "noEmailYet": "No email address on file — contact this fund on LinkedIn",
+    "contactOnLinkedin": "Contact {{name}} on LinkedIn",
+    "noLinkedin": "No LinkedIn profile on file"
   }
 }
