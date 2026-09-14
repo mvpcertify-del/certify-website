@@ -2013,6 +2013,14 @@
     "emailFund": "Escribir a {{fund}}",
     "noEmailYet": "No hay dirección de correo — contacte con este fondo por LinkedIn",
     "contactOnLinkedin": "Contactar con {{name}} en LinkedIn",
-    "noLinkedin": "No hay perfil de LinkedIn registrado"
+    "noLinkedin": "No hay perfil de LinkedIn registrado",
+    "contactedLinkedin": "Contactados en LinkedIn",
+    "contactedLinkedinDesc": "CEOs y socios con quienes ya te has puesto en contacto",
+    "markContactedTitle": "Marcar a {{name}} como contactado en LinkedIn",
+    "unmarkContactedTitle": "Contactado en LinkedIn — haz clic para deshacer",
+    "paginationSummary": "Mostrando {{from}}–{{to}} de {{total}}",
+    "prevPage": "Anterior",
+    "nextPage": "Siguiente",
+    "pageOf": "Página {{page}} de {{pages}}"
   }
 }

@@ -9,7 +9,12 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROLES } from '../../utils/roles';
 import RowActions from '../../components/ui/RowActions';
-import { Building2, CheckCircle2, Globe2, Mail } from 'lucide-react';
+import { Building2, CheckCircle2, Globe2, Mail, UserCheck } from 'lucide-react';
+
+// How many rows the register shows at once (client, 14 Sep: "the page line
+// should be in 50 contacts"). Filtering resets to page 1 so a search or
+// region change never leaves the view stranded on a now-empty page.
+const PAGE_SIZE = 50;
 
 // The groupings the client's fund list is organised by. Hardcoded rather than
 // derived from the rows so the dropdown keeps offering a region even when no
@@ -92,6 +97,8 @@ export default function AdminInvestors() {
   const [region, setRegion] = useState('all');
   const [activeOnly, setActiveOnly] = useState(false);
   const [missingEmailOnly, setMissingEmailOnly] = useState(false);
+  const [contactedOnly, setContactedOnly] = useState(false);
+  const [page, setPage] = useState(1);
   const regionRef = useRef(null);
 
   const [showModal, setShowModal] = useState(false);
@@ -133,14 +140,27 @@ export default function AdminInvestors() {
       if (region !== 'all' && row.region !== region) return false;
       if (activeOnly && !row.is_active) return false;
       if (missingEmailOnly && row.contact_email) return false;
+      if (contactedOnly && !row.linkedin_contacted) return false;
       if (!q) return true;
       return [row.fund_name, row.country, row.geography, row.sector, row.key_partner, row.notes, row.contact_email]
         .some((f) => f && String(f).toLowerCase().includes(q));
     });
-  }, [items, search, region, activeOnly, missingEmailOnly]);
+  }, [items, search, region, activeOnly, missingEmailOnly, contactedOnly]);
+
+  // Any filter or search change can land the current page past the new
+  // result count, so every one of them resets back to page 1.
+  useEffect(() => { setPage(1); }, [search, region, activeOnly, missingEmailOnly, contactedOnly]);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const paged = useMemo(
+    () => filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
+    [filtered, currentPage],
+  );
 
   const activeCount = items.filter((r) => r.is_active).length;
   const emailCount = items.filter((r) => r.contact_email).length;
+  const contactedCount = items.filter((r) => r.linkedin_contacted).length;
   const regionCount = new Set(items.map((r) => r.region).filter(Boolean)).size;
 
   const boxes = [
@@ -185,6 +205,18 @@ export default function AdminInvestors() {
       // No single region to select, so this box hands the user the control that
       // does choose one rather than pretending to be a filter of its own.
       onClick: () => regionRef.current?.focus(),
+    },
+    {
+      // The client's own outreach tally (14 Sep): how many fund CEOs/partners
+      // they have personally messaged on LinkedIn so far, tracked per-row by
+      // the LinkedIn-contacted toggle in the actions column.
+      key: 'contactedLinkedin',
+      icon: UserCheck,
+      color: '#0a66c2',
+      value: contactedCount,
+      label: t('investors.contactedLinkedin'),
+      desc: t('investors.contactedLinkedinDesc'),
+      onClick: () => { setContactedOnly(true); setRegion('all'); setSearch(''); },
     },
   ];
 
@@ -287,6 +319,29 @@ export default function AdminInvestors() {
     }
   };
 
+  // Independent of is_active: whether the CEO/key partner behind this fund has
+  // actually been messaged on LinkedIn yet. linkedin_contacted_at is stamped
+  // (or cleared) here in application code rather than by a DB trigger, so a
+  // bulk import can still set both explicitly (see phase36).
+  const handleToggleContacted = async (row) => {
+    const next = !row.linkedin_contacted;
+    try {
+      const { error: upErr } = await supabase
+        .from('investors')
+        .update({
+          linkedin_contacted: next,
+          linkedin_contacted_at: next ? new Date().toISOString() : null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', row.id);
+      if (upErr) throw upErr;
+      setItems((prev) => prev.map((r) => (r.id === row.id ? { ...r, linkedin_contacted: next } : r)));
+      setNotice(t('investors.saved'));
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const handleDelete = async (row) => {
     if (!window.confirm(t('investors.confirmDelete', { fund: row.fund_name }))) return;
     try {
@@ -368,6 +423,14 @@ export default function AdminInvestors() {
             }
             linkDisabled={!linkedin}
             linkHref={linkedin || undefined}
+            showContacted
+            contacted={!!row.linkedin_contacted}
+            contactedTitle={
+              row.linkedin_contacted
+                ? t('investors.unmarkContactedTitle')
+                : t('investors.markContactedTitle', { name: row.key_partner || row.fund_name })
+            }
+            onContacted={() => handleToggleContacted(row)}
             onToggle={() => handleToggleActive(row)}
             onEdit={() => openEdit(row)}
             onDelete={() => handleDelete(row)}
@@ -399,6 +462,10 @@ export default function AdminInvestors() {
     {
       label: t('investors.status'),
       value: viewingRow.is_active ? t('common.active') : t('common.inactive'),
+    },
+    {
+      label: t('investors.contactedLinkedin'),
+      value: viewingRow.linkedin_contacted ? t('common.yes') : t('common.no'),
     },
   ] : [];
 
@@ -467,11 +534,52 @@ export default function AdminInvestors() {
       {fetching ? (
         <p>{t('investors.loading')}</p>
       ) : (
-        <DataTable
-          columns={columns}
-          data={filtered}
-          emptyMessage={t('investors.empty')}
-        />
+        <>
+          <DataTable
+            columns={columns}
+            data={paged}
+            emptyMessage={t('investors.empty')}
+          />
+          {filtered.length > 0 && (
+            <div style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 12,
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBlockStart: 'var(--spacing-md)',
+            }}>
+              <span style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>
+                {t('investors.paginationSummary', {
+                  from: (currentPage - 1) * PAGE_SIZE + 1,
+                  to: Math.min(currentPage * PAGE_SIZE, filtered.length),
+                  total: filtered.length,
+                })}
+              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={currentPage <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                >
+                  {t('investors.prevPage')}
+                </Button>
+                <span style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>
+                  {t('investors.pageOf', { page: currentPage, pages: pageCount })}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={currentPage >= pageCount}
+                  onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+                >
+                  {t('investors.nextPage')}
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       <Modal isOpen={showModal} onClose={closeModal} title={t('investors.editTitle')} size="lg">

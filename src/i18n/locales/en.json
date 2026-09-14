@@ -2013,6 +2013,14 @@
     "emailFund": "Email {{fund}}",
     "noEmailYet": "No email address on file — contact this fund on LinkedIn",
     "contactOnLinkedin": "Contact {{name}} on LinkedIn",
-    "noLinkedin": "No LinkedIn profile on file"
+    "noLinkedin": "No LinkedIn profile on file",
+    "contactedLinkedin": "Contacted on LinkedIn",
+    "contactedLinkedinDesc": "CEOs and partners you've reached out to",
+    "markContactedTitle": "Mark {{name}} as contacted on LinkedIn",
+    "unmarkContactedTitle": "Contacted on LinkedIn — click to undo",
+    "paginationSummary": "Showing {{from}}–{{to}} of {{total}}",
+    "prevPage": "Previous",
+    "nextPage": "Next",
+    "pageOf": "Page {{page}} of {{pages}}"
   }
 }

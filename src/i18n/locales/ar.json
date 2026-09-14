@@ -2013,6 +2013,14 @@
     "emailFund": "مراسلة {{fund}}",
     "noEmailYet": "لا يوجد بريد إلكتروني مسجل — تواصل مع هذا الصندوق عبر LinkedIn",
     "contactOnLinkedin": "تواصل مع {{name}} عبر LinkedIn",
-    "noLinkedin": "لا يوجد ملف LinkedIn مسجل"
+    "noLinkedin": "لا يوجد ملف LinkedIn مسجل",
+    "contactedLinkedin": "تم التواصل عبر LinkedIn",
+    "contactedLinkedinDesc": "المدراء التنفيذيون والشركاء الذين تواصلت معهم بالفعل",
+    "markContactedTitle": "تمييز {{name}} كمَن تم التواصل معه عبر LinkedIn",
+    "unmarkContactedTitle": "تم التواصل عبر LinkedIn — اضغط للتراجع",
+    "paginationSummary": "عرض {{from}}–{{to}} من {{total}}",
+    "prevPage": "السابق",
+    "nextPage": "التالي",
+    "pageOf": "صفحة {{page}} من {{pages}}"
   }
 }

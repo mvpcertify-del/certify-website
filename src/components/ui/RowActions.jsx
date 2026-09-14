@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { RefreshCw, Pencil, Trash2, Eye, Mail, Linkedin } from 'lucide-react';
+import { RefreshCw, Pencil, Trash2, Eye, Mail, Linkedin, UserCheck } from 'lucide-react';
 
 // Shared row-action cluster:
 // [View] [Mail] [LinkedIn] [Activate/Deactivate] [Edit] [Delete].
@@ -18,12 +18,19 @@ export default function RowActions({
   onView,
   onResend,
   onLink,
+  onContacted,
   showToggle = true,
   showEdit = true,
   showDelete = true,
   showView = false,
   showResend = false,
   showLink = false,
+  // A second, independent LinkedIn signal: showLink opens the profile, this
+  // one records that the person behind it has actually been reached out to.
+  // Investors is the only screen that turns it on today.
+  showContacted = false,
+  contacted = false,
+  contactedTitle,
   // The envelope means "resend the verification email" on the user screens, but
   // on the investor register it means "write to this fund". Callers that mean
   // something else pass their own title rather than mislabelling the button.
@@ -118,6 +125,21 @@ export default function RowActions({
             <Linkedin size={14} />
           </button>
         )
+      )}
+      {showContacted && (
+        <button
+          type="button"
+          title={contactedTitle || (contacted ? t('common.deactivate') : t('common.activate'))}
+          onClick={onContacted}
+          disabled={disabled}
+          style={
+            contacted
+              ? { ...baseStyle, color: '#0a66c2', border: '1px solid rgba(10,102,194,0.4)', background: 'rgba(10,102,194,0.10)' }
+              : baseStyle
+          }
+        >
+          <UserCheck size={14} />
+        </button>
       )}
       {showToggle && (
         <button
