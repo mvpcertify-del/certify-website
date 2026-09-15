@@ -3,40 +3,14 @@ import { notifyAdmins } from './_notifyAdmins.js';
 import { verifyAdmin } from './_verifyAdmin.js';
 import { getRegionFromCountry, getCreatableRoles, ROLE_LABELS } from '../src/utils/roles.js';
 import { sanitizeAuditorTags } from '../src/utils/auditorOptions.js';
-import { welcomeEmail } from './_emailTemplates.js';
-import { DASHBOARD_URL } from './_appUrl.js';
+import { sendWelcomeDirect } from './_sendWelcomeDirect.js';
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL;
 const BRAND_NAME = 'Certify.cx';
-
-// Email verification was removed for everyone (client, 25 Jul). New users are
-// created already-confirmed and are never sent a "verify your email" link, so
-// the welcome email — which used to ride on the email_confirmed_at trigger — no
-// longer has a transition to fire on. We send it directly here instead, so a
-// new user still gets welcomed. Best-effort: never blocks account creation.
-async function sendWelcomeDirect({ email, name, role }) {
-  if (!RESEND_API_KEY || !RESEND_FROM_EMAIL) return;
-  try {
-    const { subject, html, text } = welcomeEmail({
-      name: name || null,
-      role: role || 'client',
-      dashboardUrl: DASHBOARD_URL,
-    });
-    await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: RESEND_FROM_EMAIL, to: [email], subject, html, text }),
-    });
-  } catch (e) {
-    console.error('create-user: welcome email failed (non-blocking):', e?.message);
-  }
-}
 
 // Unified user-creation endpoint.
 // - Admin path (default): requires full_name + role, creates the user on

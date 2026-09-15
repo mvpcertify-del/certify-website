@@ -19,6 +19,7 @@ import { approveRegistration } from './_approveRegistration.js';
 import { deleteUser } from './_deleteUser.js';
 import { resendVerification } from './_resendVerification.js';
 import { sendWhatsApp } from './_notifyWhatsApp.js';
+import { sendWelcomeDirect } from './_sendWelcomeDirect.js';
 import { ROLES, getRegionFromCountry } from '../src/utils/roles.js';
 import { sanitizeAuditorTags } from '../src/utils/auditorOptions.js';
 
@@ -248,6 +249,16 @@ async function updateProfile(req, res) {
       });
     }
     return res.status(500).json({ error: error.message });
+  }
+
+  // A Google OAuth signup never touches api/create-user.js — it lands here to
+  // get its first role instead (see isOAuthRoleBootstrap above), so it never
+  // got the welcome email every email+password signup receives. Fire it on
+  // exactly that transition (no role -> 'client'): naturally once-only, since
+  // target.role is 'client' on every later call and isOAuthRoleBootstrap goes
+  // false. Best-effort — sendWelcomeDirect swallows its own failures.
+  if (isOAuthRoleBootstrap && target?.email) {
+    await sendWelcomeDirect({ email: target.email, name: full_name, role: 'client' });
   }
 
   if (email) {
