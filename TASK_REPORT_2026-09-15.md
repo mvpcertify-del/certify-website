@@ -140,10 +140,27 @@ already-correct code path** (`api/create-user.js`, doesn't touch this hook at
 all) — that part of "nothing is going out" is not accurate; it was verified
 delivered twice today with a live timestamp in Resend's own log.
 
+### Second round — tested against your own real inbox
+
+You asked for the same test against `heysamiul09@gmail.com` directly:
+
+| Attempt | Result |
+|---|---|
+| `heysamiuli09@gmail.com` (first spelling given) | ❌ Bounced — Gmail's own SMTP said the account doesn't exist (`550 5.1.1`). A typo, not a delivery problem. |
+| `heysamiul09@gmail.com` — signup | Already registered on Certify.cx (real account), so a fresh signup email couldn't be re-sent to it |
+| `heysamiul09@gmail.com` — password reset | ❌ Same `"Hook requires authorization token"` failure as before, on a real account this time |
+| `heysamiul09+test@gmail.com` (alias, new account) | ✅ **delivered**, from `noreply@certify.cx` — confirmed by you via screenshot |
+
+Consistent with round one: registration/welcome mail works end-to-end; password
+reset fails at Supabase before it ever reaches our code, on any account, real
+or test.
+
 ### Test accounts left behind (need your cleanup — same restriction as before)
 
-- `aromahomeofficial+certifytest15sep-b@gmail.com` — created during this
-  test, still live. Delete from Admin → Users when convenient.
+- `aromahomeofficial+certifytest15sep-b@gmail.com`
+- `heysamiul09+test@gmail.com`
+
+Both delete from Admin → Users when convenient.
 
 ### Not fixed by me
 
