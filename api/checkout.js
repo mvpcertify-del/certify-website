@@ -1612,7 +1612,7 @@ export default async function handler(req, res) {
         await supabaseAdmin.from('notifications').insert({
           user_id: referralRecord.referrer_id,
           title: 'Referral Converted!',
-          message: `Your referral (${referralRecord.referred_email}) completed a payment of $${saleAmount.toFixed(2)}. Your ${commissionPct}% commission (${tierData.label}) of $${commission.toFixed(2)} has been credited. Please send your bank/payment details to mvpcertify@gmail.com to receive your payout.`,
+          message: `Your referral (${referralRecord.referred_email}) completed a payment of $${saleAmount.toFixed(2)}. Your ${commissionPct}% commission (${tierData.label}) of $${commission.toFixed(2)} has been credited. Please send your bank/payment details to support@certify.cx to receive your payout.`,
           type: 'referral',
         });
       } catch (refErr) {

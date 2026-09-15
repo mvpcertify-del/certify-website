@@ -59,7 +59,7 @@ export default function Login() {
     if (searchParams.get('pending') === '1') {
       setError('Your registration is pending approval. A CertifyCX administrator will review and verify your account shortly.');
     } else if (searchParams.get('rejected') === '1') {
-      setError('Your registration has been declined. Please contact support at mvpcertify@gmail.com for more information.');
+      setError('Your registration has been declined. Please contact support at support@certify.cx for more information.');
     }
   }, [searchParams]);
 

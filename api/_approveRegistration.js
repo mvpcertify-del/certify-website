@@ -75,7 +75,7 @@ export async function approveRegistration(req, res) {
       : 'Registration Declined';
     const notifMessage = decision === 'approved'
       ? 'Your CertifyCX registration has been approved! You can now log in and access your dashboard.'
-      : 'Your CertifyCX registration has been declined. Please contact support at mvpcertify@gmail.com for more information.';
+      : 'Your CertifyCX registration has been declined. Please contact support at support@certify.cx for more information.';
 
     await supabaseAdmin.from('notifications').insert([{
       user_id: userId,

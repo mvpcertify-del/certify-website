@@ -268,7 +268,7 @@ export function AuthProvider({ children }) {
         await supabase.auth.signOut();
         return {
           success: false,
-          error: 'Your registration has been declined. Please contact support at mvpcertify@gmail.com for more information.',
+          error: 'Your registration has been declined. Please contact support at support@certify.cx for more information.',
         };
       }
     }
