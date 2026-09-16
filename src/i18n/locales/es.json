@@ -1533,6 +1533,9 @@
   "partnerContract": {
     "title": "Acuerdo de Socio",
     "subtitle": "Revise y firme electrónicamente su acuerdo de socio consultor.",
+    "welcomeTitle": "Un último paso para activar su cuenta",
+    "welcomeBody": "Lea y firme el acuerdo a continuación para desbloquear su panel de socio.",
+    "welcomeNote": "Solo toma un par de minutos.",
     "loading": "Cargando su acuerdo...",
     "retry": "Reintentar",
     "noneTitle": "Aún no se ha publicado ningún acuerdo",
@@ -2021,6 +2024,8 @@
     "paginationSummary": "Mostrando {{from}}–{{to}} de {{total}}",
     "prevPage": "Anterior",
     "nextPage": "Siguiente",
-    "pageOf": "Página {{page}} de {{pages}}"
+    "pageOf": "Página {{page}} de {{pages}}",
+    "rowsPerPage": "Opciones de visualización",
+    "showAll": "Todos"
   }
 }

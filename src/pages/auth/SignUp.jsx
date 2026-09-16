@@ -237,6 +237,7 @@ function SimpleClientSignUp() {
               type="email"
               id="signup-email"
               name="email"
+              autoComplete="username"
               placeholder={t('auth.enterYourEmail')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -281,6 +282,7 @@ function SimpleClientSignUp() {
             type={showPassword ? 'text' : 'password'}
             id="signup-password"
             name="password"
+            autoComplete="new-password"
             placeholder={t('auth.passwordPlaceholder')}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -301,6 +303,7 @@ function SimpleClientSignUp() {
             type={showConfirmPassword ? 'text' : 'password'}
             id="signup-confirm"
             name="confirmPassword"
+            autoComplete="new-password"
             placeholder={t('auth.confirmPasswordPlaceholder')}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
@@ -708,6 +711,7 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
               required />
 
             <Input label={t('auth.emailRequired')} type="email" id="signup-email" name="email"
+              autoComplete="username"
               placeholder="you@example.com"
               value={formData.email}
               onChange={handleChange} required />
@@ -746,6 +750,7 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
               value={formData.location} onChange={handleChange} onSelect={handleLocationSelect} required />
 
             <Input label={t('auth.passwordRequired')} type={showPassword ? 'text' : 'password'} id="signup-password" name="password"
+              autoComplete="new-password"
               placeholder={t('auth.passwordPlaceholder')} value={formData.password}
               onChange={handleChange} required
               rightElement={
@@ -760,6 +765,7 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
             />
 
             <Input label={t('auth.confirmPassword')} type={showConfirmPassword ? 'text' : 'password'} id="signup-confirm" name="confirmPassword"
+              autoComplete="new-password"
               placeholder={t('auth.confirmPasswordPlaceholder')} value={formData.confirmPassword}
               onChange={handleChange} required
               rightElement={
@@ -857,6 +863,7 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
             )}
 
             <Input label={t('auth.emailRequired')} type="email" id="signup-email" name="email"
+              autoComplete="username"
               placeholder={isPureIndividual ? 'you@example.com' : 'you@company.com'}
               value={formData.email}
               onChange={handleChange} required />
@@ -910,6 +917,7 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
             </div>
 
             <Input label={t('auth.passwordRequired')} type={showPassword ? "text" : "password"} id="signup-password" name="password"
+              autoComplete="new-password"
               placeholder={t('auth.passwordPlaceholder')} value={formData.password}
               onChange={handleChange} required
               rightElement={
@@ -924,6 +932,7 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
             />
 
             <Input label={t('auth.confirmPassword')} type={showConfirmPassword ? "text" : "password"} id="signup-confirm" name="confirmPassword"
+              autoComplete="new-password"
               placeholder={t('auth.confirmPasswordPlaceholder')} value={formData.confirmPassword}
               onChange={handleChange} required
               rightElement={

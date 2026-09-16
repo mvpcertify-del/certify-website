@@ -127,6 +127,7 @@ export default function ResetPassword() {
           label={t('settings.newPassword')}
           type="password"
           id="new-password"
+          autoComplete="new-password"
           placeholder={t('settings.newPasswordPlaceholder')}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -136,6 +137,7 @@ export default function ResetPassword() {
           label={t('settings.confirmPassword')}
           type="password"
           id="confirm-password"
+          autoComplete="new-password"
           placeholder={t('settings.confirmPasswordPlaceholder')}
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}

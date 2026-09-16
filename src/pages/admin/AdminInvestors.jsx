@@ -12,9 +12,14 @@ import RowActions from '../../components/ui/RowActions';
 import { Building2, CheckCircle2, Globe2, Mail, UserCheck } from 'lucide-react';
 
 // How many rows the register shows at once (client, 14 Sep: "the page line
-// should be in 50 contacts"). Filtering resets to page 1 so a search or
-// region change never leaves the view stranded on a now-empty page.
-const PAGE_SIZE = 50;
+// should be in 50 contacts"; 15 Sep: "Display Options to show 10 per page or
+// 50 or All"). PAGE_SIZE_OPTIONS is the selector's choices, in the order they
+// render; 'all' is a real distinct mode below, not a huge numeric page size,
+// so it can't run into Math.ceil/Infinity edge cases. Filtering resets to
+// page 1 so a search or region change never leaves the view stranded on a
+// now-empty page.
+const PAGE_SIZE_OPTIONS = [10, 50, 'all'];
+const DEFAULT_PAGE_SIZE = 50;
 
 // The groupings the client's fund list is organised by. Hardcoded rather than
 // derived from the rows so the dropdown keeps offering a region even when no
@@ -99,6 +104,7 @@ export default function AdminInvestors() {
   const [missingEmailOnly, setMissingEmailOnly] = useState(false);
   const [contactedOnly, setContactedOnly] = useState(false);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const regionRef = useRef(null);
 
   const [showModal, setShowModal] = useState(false);
@@ -148,14 +154,20 @@ export default function AdminInvestors() {
   }, [items, search, region, activeOnly, missingEmailOnly, contactedOnly]);
 
   // Any filter or search change can land the current page past the new
-  // result count, so every one of them resets back to page 1.
-  useEffect(() => { setPage(1); }, [search, region, activeOnly, missingEmailOnly, contactedOnly]);
+  // result count, so every one of them resets back to page 1. A page-size
+  // change is the same kind of event — 50 rows in at 10/page can be past the
+  // end of the list at 50/page — so it resets page 1 too.
+  useEffect(() => { setPage(1); }, [search, region, activeOnly, missingEmailOnly, contactedOnly, pageSize]);
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  // 'all' is handled as its own mode rather than a huge numeric page size:
+  // one page, the full filtered list, no slicing arithmetic that a giant
+  // number could get wrong.
+  const showAllRows = pageSize === 'all';
+  const pageCount = showAllRows ? 1 : Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, pageCount);
   const paged = useMemo(
-    () => filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
-    [filtered, currentPage],
+    () => (showAllRows ? filtered : filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize)),
+    [filtered, currentPage, pageSize, showAllRows],
   );
 
   const activeCount = items.filter((r) => r.is_active).length;
@@ -529,57 +541,75 @@ export default function AdminInvestors() {
             {REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
           </Select>
         </div>
+        <div style={{ flex: '0 1 160px' }}>
+          <Select
+            value={pageSize}
+            onChange={(e) => setPageSize(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+            aria-label={t('investors.rowsPerPage')}
+          >
+            {PAGE_SIZE_OPTIONS.map((size) => (
+              <option key={size} value={size}>
+                {size === 'all' ? t('investors.showAll') : size}
+              </option>
+            ))}
+          </Select>
+        </div>
       </div>
+
+      {/* Client, 15 Sep: "You can put it in the Top instead of the Bottom" —
+          the page-size choice was moved into the filter row above, and the
+          summary + Previous/Next now sit here, above the table, instead of
+          below it. */}
+      {!fetching && filtered.length > 0 && (
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 12,
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBlockEnd: 'var(--spacing-md)',
+        }}>
+          <span style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>
+            {t('investors.paginationSummary', {
+              from: showAllRows ? 1 : (currentPage - 1) * pageSize + 1,
+              to: showAllRows ? filtered.length : Math.min(currentPage * pageSize, filtered.length),
+              total: filtered.length,
+            })}
+          </span>
+          {!showAllRows && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={currentPage <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
+                {t('investors.prevPage')}
+              </Button>
+              <span style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>
+                {t('investors.pageOf', { page: currentPage, pages: pageCount })}
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={currentPage >= pageCount}
+                onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+              >
+                {t('investors.nextPage')}
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
 
       {fetching ? (
         <p>{t('investors.loading')}</p>
       ) : (
-        <>
-          <DataTable
-            columns={columns}
-            data={paged}
-            emptyMessage={t('investors.empty')}
-          />
-          {filtered.length > 0 && (
-            <div style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 12,
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBlockStart: 'var(--spacing-md)',
-            }}>
-              <span style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>
-                {t('investors.paginationSummary', {
-                  from: (currentPage - 1) * PAGE_SIZE + 1,
-                  to: Math.min(currentPage * PAGE_SIZE, filtered.length),
-                  total: filtered.length,
-                })}
-              </span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  disabled={currentPage <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                >
-                  {t('investors.prevPage')}
-                </Button>
-                <span style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>
-                  {t('investors.pageOf', { page: currentPage, pages: pageCount })}
-                </span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  disabled={currentPage >= pageCount}
-                  onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
-                >
-                  {t('investors.nextPage')}
-                </Button>
-              </div>
-            </div>
-          )}
-        </>
+        <DataTable
+          columns={columns}
+          data={paged}
+          emptyMessage={t('investors.empty')}
+        />
       )}
 
       <Modal isOpen={showModal} onClose={closeModal} title={t('investors.editTitle')} size="lg">

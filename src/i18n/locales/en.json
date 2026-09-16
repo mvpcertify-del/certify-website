@@ -1533,6 +1533,9 @@
   "partnerContract": {
     "title": "Partner Agreement",
     "subtitle": "Review and electronically sign your consultancy partner agreement.",
+    "welcomeTitle": "One last step to activate your account",
+    "welcomeBody": "Read and sign the agreement below to unlock your partner dashboard.",
+    "welcomeNote": "It only takes a couple of minutes.",
     "loading": "Loading your agreement...",
     "retry": "Try again",
     "noneTitle": "No agreement published yet",
@@ -2021,6 +2024,8 @@
     "paginationSummary": "Showing {{from}}–{{to}} of {{total}}",
     "prevPage": "Previous",
     "nextPage": "Next",
-    "pageOf": "Page {{page}} of {{pages}}"
+    "pageOf": "Page {{page}} of {{pages}}",
+    "rowsPerPage": "Display options",
+    "showAll": "All"
   }
 }

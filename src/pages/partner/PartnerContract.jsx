@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  FileSignature, CheckCircle2, Download, AlertTriangle, FileX2, RefreshCw,
+  FileSignature, CheckCircle2, Download, AlertTriangle, FileX2, RefreshCw, KeyRound,
 } from 'lucide-react';
 import { apiPost } from '../../lib/apiClient';
 import { Button } from '../../components/ui/FormElements';
@@ -198,6 +198,22 @@ export default function PartnerContract() {
           <p className="page-subtitle">{t('partnerContract.subtitle')}</p>
         </div>
       </div>
+
+      {/* ---- First-time welcome banner ----
+          Only for a brand-new partner who has never signed anything yet —
+          once `acceptance` exists (even an outdated one), this is a renewal
+          and the "activate your account" framing would be misleading, so the
+          updated-version notice below takes over instead. */}
+      {!signed && !acceptance && (
+        <div className="pcontract__welcome">
+          <KeyRound size={20} />
+          <div>
+            <div className="pcontract__welcome-title">{t('partnerContract.welcomeTitle')}</div>
+            <p className="pcontract__welcome-body">{t('partnerContract.welcomeBody')}</p>
+            <p className="pcontract__welcome-note">{t('partnerContract.welcomeNote')}</p>
+          </div>
+        </div>
+      )}
 
       {/* ---- Signed confirmation ---- */}
       {signed && (
