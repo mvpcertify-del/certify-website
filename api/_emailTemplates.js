@@ -651,6 +651,120 @@ export function stakeholderInviteEmail({ type, name, note, registerUrl }) {
 }
 
 // ---------------------------------------------------------------------------
+// Midhat -> Middle East prospect: bilingual ISO 9001:2026 outreach (demo)
+// ---------------------------------------------------------------------------
+// Client, 16-17 Sep: "for the Middle East, we will need to have Arabic at the
+// top & English below, with my name & title in Arabic & English inviting
+// them to start the Certification for ISO 9001:2026. Create one demo & send
+// it to me... along with some attachments or links to attachments in the
+// footer body of the email."
+//
+// Arabic block first (dir="rtl", right-aligned), a divider, then the same
+// message in English (dir="ltr") — NOT the whole email mirrored RTL, since an
+// Arabic reader wants the Arabic on top and an English-only reader further
+// down still reads their half left-to-right rather than a right-aligned
+// English paragraph, which would look broken rather than bilingual.
+//
+// Footer carries LINKS only (the website and the ISO 9001 page's own
+// buy/checkout button), no file attachment — decided 17 Sep rather than
+// hosting/attaching a PDF for a first demo.
+//
+// This is a ONE-OFF outreach letter, signed personally, not a system email:
+// callers should pass a `from` that resolves to a real reachable identity
+// (midhat@certify.cx once that mailbox exists; support@certify.cx with a
+// personal display name until then) — this function only builds the content.
+export function iso9001MiddleEastInviteEmail({ name, companyName, registerUrl, websiteUrl }) {
+  // Strip line breaks before anything else: `name`/`companyName` are typed
+  // into an admin form and this value ends up in an email Subject header —
+  // a bare newline there is a header-injection vector even before HTML is
+  // in the picture.
+  const cleanName = name ? String(name).replace(/[\r\n]+/g, ' ').trim() : '';
+  const cleanCompany = companyName ? String(companyName).replace(/[\r\n]+/g, ' ').trim() : '';
+
+  const greetArabic = escapeHtml(cleanName || 'عزيزي');
+  const greetEnglish = escapeHtml(cleanName || 'there');
+  const companyArabic = cleanCompany ? escapeHtml(cleanCompany) : '';
+  const companyEnglish = cleanCompany ? escapeHtml(cleanCompany) : '';
+
+  // Real Resend Subject header: plain text, so cleanName (not HTML-escaped)
+  // is correct here — escaping would show literal "&amp;" etc. in the
+  // recipient's inbox subject line.
+  const subject = cleanName
+    ? `${cleanName} — Start Your ISO 9001:2026 Certification with Certify.cx`
+    : 'Start Your ISO 9001:2026 Certification with Certify.cx';
+  // The SAME text also lands inside the HTML <title> tag via layout() below —
+  // that context needs HTML-escaping, or an admin-typed name containing
+  // "</title><script>" would break out of it. escapeHtml on the whole
+  // subject (rather than re-deriving it from the raw name) keeps this from
+  // silently drifting out of sync with the line above.
+  const htmlTitle = escapeHtml(subject);
+
+  const arabicBlock = `
+    <div dir="rtl" style="text-align:right;font-family:'Segoe UI',Tahoma,Arial,sans-serif;">
+      <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;line-height:1.4;color:${TEXT_PRIMARY};">ابدأوا رحلة اعتماد الأيزو 9001:2026 مع Certify.cx</h1>
+      <p style="margin:0 0 18px;font-size:15px;line-height:1.9;color:${TEXT_SECONDARY};">
+        عزيزي ${greetArabic}${companyArabic ? ` من ${companyArabic}` : ''}،<br>
+        يسرّني دعوتكم لبدء إجراءات الحصول على شهادة الأيزو ISO 9001:2026 لإدارة الجودة من خلال منصة Certify.cx — من التقديم إلى التدقيق وحتى استلام الشهادة المعتمدة، في مكان واحد.
+      </p>
+      <p style="margin:0 0 6px;font-size:14px;line-height:1.7;color:${TEXT_PRIMARY};font-weight:600;">مدحت أبو غزالة</p>
+      <p style="margin:0 0 26px;font-size:13px;line-height:1.6;color:${TEXT_TERTIARY};">المؤسس والرئيس التنفيذي — Certify.cx</p>
+    </div>`;
+
+  const englishBlock = `
+    <div dir="ltr" style="text-align:left;">
+      <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;line-height:1.35;color:${TEXT_PRIMARY};letter-spacing:-0.01em;">Start Your ISO 9001:2026 Certification</h1>
+      <p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:${TEXT_SECONDARY};">
+        Hi ${greetEnglish}${companyEnglish ? ` at ${companyEnglish}` : ''},<br>
+        I'd like to personally invite you to begin your ISO 9001:2026 Quality Management certification through Certify.cx — from application to audit to your accredited certificate, all on one platform.
+      </p>
+      <p style="margin:0 0 4px;font-size:14px;line-height:1.6;color:${TEXT_PRIMARY};font-weight:600;">Midhat Abu Ghazaleh</p>
+      <p style="margin:0 0 28px;font-size:13px;line-height:1.5;color:${TEXT_TERTIARY};">Founder &amp; CEO — Certify.cx</p>
+    </div>`;
+
+  const html = layout({
+    title: htmlTitle,
+    preheader: 'Start your ISO 9001:2026 certification with Certify.cx — a personal invitation.',
+    bodyHtml: `
+      ${arabicBlock}
+      <hr style="border:none;border-top:1px solid ${BORDER};margin:0 0 26px;">
+      ${englishBlock}
+      <p style="margin:0 0 28px;">${button(registerUrl, 'Start Certification / ابدأ الاعتماد')}</p>
+      ${linkFallback(registerUrl)}`,
+    footerHtml: `
+      <p style="margin:0 0 10px;font-size:13px;line-height:1.6;color:${TEXT_SECONDARY};">
+        <a href="${escapeHtml(websiteUrl || 'https://certify.cx')}" style="color:${ACCENT_ON_WHITE};text-decoration:none;font-weight:500;">${escapeHtml(websiteUrl || 'https://certify.cx')}</a>
+        &nbsp;·&nbsp;
+        <a href="${escapeHtml(registerUrl)}" style="color:${ACCENT_ON_WHITE};text-decoration:none;font-weight:500;">Start certification / بدء الاعتماد</a>
+      </p>
+      <p style="margin:0;font-size:13px;line-height:1.6;color:${TEXT_SECONDARY};">
+        Need help? Reach us at <a href="mailto:${SUPPORT_EMAIL}" style="color:${ACCENT_ON_WHITE};text-decoration:none;font-weight:500;">${SUPPORT_EMAIL}</a>.
+      </p>
+      <p style="margin:8px 0 0;font-size:12px;line-height:1.5;color:${TEXT_TERTIARY};">
+        ${BRAND_TEXT}™ — ISO certification, simplified.
+      </p>`,
+  });
+
+  const text = [
+    `[Arabic]`,
+    `عزيزي ${cleanName || 'عزيزي'}${cleanCompany ? ` من ${cleanCompany}` : ''}،`,
+    `يسرّني دعوتكم لبدء إجراءات الحصول على شهادة الأيزو ISO 9001:2026 لإدارة الجودة من خلال منصة Certify.cx.`,
+    `مدحت أبو غزالة — المؤسس والرئيس التنفيذي`,
+    ``,
+    `[English]`,
+    `Hi ${cleanName || 'there'}${cleanCompany ? ` at ${cleanCompany}` : ''},`,
+    `I'd like to personally invite you to begin your ISO 9001:2026 Quality Management certification through Certify.cx.`,
+    `Midhat Abu Ghazaleh — Founder & CEO`,
+    ``,
+    `Start certification: ${registerUrl}`,
+    `Website: ${websiteUrl || 'https://certify.cx'}`,
+    ``,
+    `— ${BRAND_TEXT}`,
+  ].filter(Boolean).join('\n');
+
+  return { subject, html, text };
+}
+
+// ---------------------------------------------------------------------------
 // Referral partner -> lead: the standard proposal letter (phase32)
 // ---------------------------------------------------------------------------
 // The client sent a real letter one of their partners had written to a
