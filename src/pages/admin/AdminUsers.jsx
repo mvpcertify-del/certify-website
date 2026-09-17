@@ -13,7 +13,6 @@ import { supabase } from '../../lib/supabase';
 import { apiPost } from '../../lib/apiClient';
 import RowActions from '../../components/ui/RowActions';
 import DetailModal from '../../components/ui/DetailModal';
-import InviteStakeholderButton from '../../components/ui/InviteStakeholderButton';
 
 // Client-role stakeholder variants an admin can pick when creating a client.
 // 'client' is the default (regular company client). The rest reuse the `client`
@@ -313,16 +312,13 @@ export default function AdminUsers() {
           <h1 className="page-title">{t('admin.userManagement')}</h1>
           <p className="page-subtitle">{t('admin.userManagementDesc')}</p>
         </div>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          {isSuperAdmin && <InviteStakeholderButton type="investor" variant="ghost" />}
-          <Button variant="primary" size="md" onClick={() => {
-            setError('');
-            setCreateForm({ full_name: '', email: '', password: '', role: '', country: '', stakeholder_type: '' });
-            setShowCreateModal(true);
-          }}>
-            <UserPlus size={18} /> {t('admin.createUser')}
-          </Button>
-        </div>
+        <Button variant="primary" size="md" onClick={() => {
+          setError('');
+          setCreateForm({ full_name: '', email: '', password: '', role: '', country: '', stakeholder_type: '' });
+          setShowCreateModal(true);
+        }}>
+          <UserPlus size={18} /> {t('admin.createUser')}
+        </Button>
       </div>
 
       {/* Role Info Banner */}

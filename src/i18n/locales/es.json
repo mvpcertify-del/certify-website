@@ -1644,13 +1644,6 @@
     "agreedRate": "Tarifa acordada",
     "editTitle": "Editar socio de referidos",
     "footnote": "Los socios de referidos ganan el {{percent}} % de la venta neta salvo que se acuerde una tarifa individual. La comisión se acredita cuando el cliente referido paga.",
-    "invitePartner": "Invitar socio de referidos",
-    "inviteTitle": "Invitar a un socio de referidos",
-    "inviteDesc": "Envía un correo con el enlace de registro, desde support@certify.cx — no necesita acceso al buzón.",
-    "inviteNoteLabel": "Nota personal (opcional)",
-    "inviteNotePlaceholder": "p. ej. Un gusto conocerte en la conferencia — creo que encajarías muy bien.",
-    "sendInvite": "Enviar invitación",
-    "inviteSent": "Invitación enviada a {{email}}",
     "status": {
       "pending": "Pendiente de aprobación",
       "rejected": "Rechazado",

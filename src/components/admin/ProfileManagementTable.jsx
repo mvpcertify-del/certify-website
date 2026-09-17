@@ -8,7 +8,6 @@ import DetailModal from '../ui/DetailModal';
 import MultiSelect from '../ui/MultiSelect';
 import { Input, Select, Button } from '../ui/FormElements';
 import NameFields from '../ui/NameFields';
-import InviteStakeholderButton from '../ui/InviteStakeholderButton';
 import { ROLES, REGIONS } from '../../utils/roles';
 import { COUNTRY_DIAL_CODES } from '../../utils/dialCodes';
 import { useAuth } from '../../contexts/AuthContext';
@@ -103,11 +102,6 @@ export default function ProfileManagementTable({
   createFields = [],
   addLabel,
   createTitle,
-  // Renders the shared "Invite <type>" button (client, 16-17 Sep) next to Add,
-  // for a STAKEHOLDER_TYPES slug (e.g. 'auditor', 'certification-body'). Omit
-  // it for a role this feature doesn't apply to (e.g. Regional Admin, who
-  // isn't a public self-registration type).
-  inviteType,
 }) {
   const { user } = useAuth();
   const { t } = useTranslation();
@@ -652,9 +646,6 @@ export default function ProfileManagementTable({
               placeholder={t('admin.filterByCountry')}
               style={{ width: '200px' }}
             />
-          )}
-          {isSuperAdmin && inviteType && (
-            <InviteStakeholderButton type={inviteType} variant="ghost" />
           )}
           {canCreate && (
             <Button variant="primary" size="md" onClick={openCreate}>

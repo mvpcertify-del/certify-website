@@ -31,7 +31,6 @@ export default function AdminCertBodies() {
       // that, and both screens showing the identical heading "Certification
       // Bodies" is exactly what the client asked about on 13 Sep. This one
       // lists login accounts, that one lists the organisations.
-      inviteType="certification-body"
       title={t('admin.certBodyAccountsTitle')}
       subtitle={(count) => t('admin.certBodyAccountsFound', { count })}
       hint={t('admin.certBodyAccountsHint')}

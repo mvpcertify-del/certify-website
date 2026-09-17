@@ -11,7 +11,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { apiPost } from '../../lib/apiClient';
 import { UserPlus, AlertCircle, CheckCircle } from 'lucide-react';
-import InviteStakeholderButton from '../../components/ui/InviteStakeholderButton';
 
 export default function AdminCompanies() {
   const { user } = useAuth();
@@ -235,16 +234,13 @@ export default function AdminCompanies() {
             />
           )}
           {isSuperAdmin && (
-            <>
-              <InviteStakeholderButton type="client" variant="ghost" />
-              <Button variant="primary" size="md" onClick={() => {
-                setError('');
-                setCreateForm({ full_name: '', email: '', password: '', company_name: '', country: '' });
-                setShowCreateModal(true);
-              }}>
-                <UserPlus size={18} /> {t('admin.addClient')}
-              </Button>
-            </>
+            <Button variant="primary" size="md" onClick={() => {
+              setError('');
+              setCreateForm({ full_name: '', email: '', password: '', company_name: '', country: '' });
+              setShowCreateModal(true);
+            }}>
+              <UserPlus size={18} /> {t('admin.addClient')}
+            </Button>
           )}
         </div>
       </div>

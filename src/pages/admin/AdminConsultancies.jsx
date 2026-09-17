@@ -18,7 +18,6 @@ import { ROLES } from '../../utils/roles';
 import { Button, Input } from '../../components/ui/FormElements';
 import NameFields from '../../components/ui/NameFields';
 import Modal from '../../components/ui/Modal';
-import InviteStakeholderButton from '../../components/ui/InviteStakeholderButton';
 import DetailModal from '../../components/ui/DetailModal';
 import RowActions from '../../components/ui/RowActions';
 import './AdminConsultancies.css';
@@ -384,7 +383,6 @@ export default function AdminConsultancies() {
           <h1 className="page-title">{t('adminConsultancies.title')}</h1>
           <p className="page-subtitle">{t('adminConsultancies.subtitle')}</p>
         </div>
-        {isSuperAdmin && <InviteStakeholderButton type="consultancy" variant="ghost" />}
       </div>
 
       <div className="adcon__tabs" role="tablist">

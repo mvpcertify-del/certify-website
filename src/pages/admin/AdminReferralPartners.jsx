@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Gift, RefreshCw, Search, AlertCircle, CheckCircle, UserPlus } from 'lucide-react';
+import { Gift, RefreshCw, Search, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { apiPost } from '../../lib/apiClient';
 import { Button, Input } from '../../components/ui/FormElements';
@@ -43,14 +43,6 @@ export default function AdminReferralPartners() {
   const [editingPartner, setEditingPartner] = useState(null);
   const [editForm, setEditForm] = useState({ full_name: '', email: '', company_name: '', country: '' });
   const [saving, setSaving] = useState(false);
-
-  // Invite a brand-new referral partner — client, 16-17 Sep: asked how SA
-  // could email prospects a registration link, was told support@certify.cx
-  // has no inbox of its own, then approved this instead so SA never has to
-  // touch a mailbox at all. Sends via /api/referrals { action: 'invite-partner' }.
-  const [showInvite, setShowInvite] = useState(false);
-  const [inviteForm, setInviteForm] = useState({ email: '', name: '', note: '' });
-  const [inviting, setInviting] = useState(false);
 
   const locale = i18n.language || undefined;
 
@@ -216,35 +208,6 @@ export default function AdminReferralPartners() {
     }
   };
 
-  const openInvite = () => {
-    setInviteForm({ email: '', name: '', note: '' });
-    setError('');
-    setShowInvite(true);
-  };
-
-  const submitInvite = async (e) => {
-    e.preventDefault();
-    setError('');
-    if (!inviteForm.email.trim()) {
-      setError(t('admin.fillRequired'));
-      return;
-    }
-    setInviting(true);
-    try {
-      await apiPost('/api/referrals', {
-        action: 'invite-partner',
-        email: inviteForm.email.trim(),
-        name: inviteForm.name.trim() || undefined,
-        note: inviteForm.note.trim() || undefined,
-      });
-      setShowInvite(false);
-      setSuccess(t('adminReferralPartners.inviteSent', { email: inviteForm.email.trim() }));
-    } catch (err) {
-      setError(err.message);
-    }
-    setInviting(false);
-  };
-
   // The View popup reuses the table's own fields so the two can never disagree.
   // DetailModal calls render(rawValue, row).
   const detailColumns = [
@@ -285,11 +248,6 @@ export default function AdminReferralPartners() {
           <h1 className="page-title">{t('adminReferralPartners.title')}</h1>
           <p className="page-subtitle">{t('adminReferralPartners.subtitle')}</p>
         </div>
-        {isSuperAdmin && (
-          <Button variant="primary" size="md" onClick={openInvite}>
-            <UserPlus size={16} /> {t('adminReferralPartners.invitePartner')}
-          </Button>
-        )}
       </div>
 
       <div className="adref__summary">
@@ -505,48 +463,6 @@ export default function AdminReferralPartners() {
             </Button>
             <Button type="submit" variant="primary" size="md" loading={saving}>
               {t('common.save')}
-            </Button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* Invite a new referral partner by email */}
-      <Modal isOpen={showInvite} onClose={() => setShowInvite(false)} title={t('adminReferralPartners.inviteTitle')}>
-        <form onSubmit={submitInvite} className="adref__form">
-          <p className="adref__muted" style={{ marginTop: 0 }}>{t('adminReferralPartners.inviteDesc')}</p>
-          {error && (
-            <div className="adref__alert adref__alert--error">
-              <AlertCircle size={16} /><span>{error}</span>
-            </div>
-          )}
-          <Input
-            label={`${t('auth.email')} *`}
-            type="email"
-            id="invite-partner-email"
-            name="email"
-            value={inviteForm.email}
-            onChange={(e) => setInviteForm((p) => ({ ...p, email: e.target.value }))}
-            required
-          />
-          <NameFields
-            idPrefix="invite-partner-name"
-            value={inviteForm.name}
-            onChange={(v) => setInviteForm((p) => ({ ...p, name: v }))}
-          />
-          <Input
-            label={t('adminReferralPartners.inviteNoteLabel')}
-            id="invite-partner-note"
-            name="note"
-            value={inviteForm.note}
-            onChange={(e) => setInviteForm((p) => ({ ...p, note: e.target.value }))}
-            placeholder={t('adminReferralPartners.inviteNotePlaceholder')}
-          />
-          <div className="adref__form-actions">
-            <Button type="button" variant="ghost" size="md" onClick={() => setShowInvite(false)}>
-              {t('common.cancel')}
-            </Button>
-            <Button type="submit" variant="primary" size="md" loading={inviting}>
-              {t('adminReferralPartners.sendInvite')}
             </Button>
           </div>
         </form>

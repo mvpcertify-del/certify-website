@@ -4,12 +4,15 @@ import { STAKEHOLDER_TYPES, getStakeholderCopy, getStakeholderRoleLabel } from '
 import { ISO_CATALOG_LIST } from '../../utils/isoCatalog';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { apiPost } from '../../lib/apiClient';
+import { Input } from '../../components/ui/FormElements';
+import Modal from '../../components/ui/Modal';
 import {
   Link2, Copy, Check, MessageCircle, Mail, ExternalLink,
   Award, Briefcase, Gift, Building2, UserCheck, TrendingUp,
   Globe2, Shield, Lock, Apple, GraduationCap, Zap, Scale, Activity, Stethoscope,
   ShieldCheck, BrainCircuit,
-  ToggleLeft, ToggleRight,
+  ToggleLeft, ToggleRight, Send, AlertCircle,
 } from 'lucide-react';
 import './ShareableLinks.css';
 
@@ -24,6 +27,17 @@ export default function ShareableLinks() {
   const { user } = useAuth();
   const [copiedId, setCopiedId] = useState(null);
   const baseUrl = window.location.origin;
+
+  // Send-by-email, in place (client, 17 Sep: too many separate "Invite" pages
+  // was confusing — one page, one Email button per card, is the whole flow).
+  // Sends through the platform (POST /api/referrals { action: 'invite-partner' })
+  // from support@certify.cx — no mailbox, no local mail client involved.
+  const [emailModalType, setEmailModalType] = useState(null);
+  const [emailValue, setEmailValue] = useState('');
+  const [emailNote, setEmailNote] = useState('');
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState('');
+  const [sentNotice, setSentNotice] = useState('');
 
   // Activation state for each ISO slug. Default: every ISO is active until a
   // row in `iso_link_settings` says otherwise.
@@ -78,15 +92,34 @@ export default function ShareableLinks() {
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
-  const handleEmail = (type) => {
-    const link = getStakeholderLink(type);
-    const copy = getStakeholderCopy(type, t);
-    // `article` only means anything in English ("a" vs "an Investor"); the
-    // other locales ignore the placeholder in their own phrasing.
-    const article = type.id === 'investor' ? 'an' : 'a';
-    const subject = `${t('admin.invitationSubject')} ${copy.title}`;
-    const body = `${t('admin.hello')}\n\n${t('admin.invitationBody', { article, type: copy.singularTitle })}\n\n${copy.description}\n\n${t('admin.learnMore')}\n${link}\n\n${t('admin.bestRegards')}\n${t('admin.certifyCXTeam')}`;
-    window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+  const openEmailModal = (type) => {
+    setEmailValue('');
+    setEmailNote('');
+    setSendError('');
+    setEmailModalType(type);
+  };
+
+  const submitEmailInvite = async (e) => {
+    e.preventDefault();
+    setSendError('');
+    if (!emailValue.trim()) {
+      setSendError(t('inviteStakeholder.emailRequired'));
+      return;
+    }
+    setSending(true);
+    try {
+      await apiPost('/api/referrals', {
+        action: 'invite-partner',
+        stakeholderType: emailModalType.id,
+        email: emailValue.trim(),
+        note: emailNote.trim() || undefined,
+      });
+      setSentNotice(t('inviteStakeholder.sent', { email: emailValue.trim() }));
+      setEmailModalType(null);
+    } catch (err) {
+      setSendError(err.message);
+    }
+    setSending(false);
   };
 
   const handlePreview = (link) => {
@@ -136,6 +169,23 @@ export default function ShareableLinks() {
           </p>
         </div>
       </div>
+
+      {sentNotice && (
+        <div
+          role="status"
+          style={{
+            marginBlockEnd: 'var(--spacing-md)',
+            padding: '10px 14px',
+            borderRadius: 8,
+            fontSize: '0.88rem',
+            background: 'rgba(16,185,129,0.10)',
+            border: '1px solid rgba(16,185,129,0.3)',
+            color: '#047857',
+          }}
+        >
+          {sentNotice}
+        </div>
+      )}
 
       {/* ---- Stakeholder Links ---- */}
       <div className="share-links__grid">
@@ -189,8 +239,8 @@ export default function ShareableLinks() {
                 </button>
                 <button
                   className="share-links__action-btn share-links__action-btn--email"
-                  onClick={() => handleEmail(type)}
-                  title={t('auth.email')}
+                  onClick={() => openEmailModal(type)}
+                  title={t('inviteStakeholder.button', { type: copy.singularTitle })}
                 >
                   <Mail size={16} />
                   {t('auth.email')}
@@ -297,6 +347,64 @@ export default function ShareableLinks() {
           );
         })}
       </div>
+
+      <Modal
+        isOpen={!!emailModalType}
+        onClose={() => setEmailModalType(null)}
+        title={emailModalType ? t('inviteStakeholder.title', { type: getStakeholderCopy(emailModalType, t).singularTitle }) : ''}
+      >
+        <form onSubmit={submitEmailInvite} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <p style={{ margin: 0, color: 'var(--color-text-secondary)', fontSize: '0.88rem' }}>
+            {t('inviteStakeholder.desc')}
+          </p>
+          {sendError && (
+            <div
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '8px 12px', borderRadius: 6, fontSize: '0.85rem',
+                background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444',
+              }}
+            >
+              <AlertCircle size={16} /><span>{sendError}</span>
+            </div>
+          )}
+          <Input
+            label={`${t('auth.email')} *`}
+            type="email"
+            id="shareable-invite-email"
+            name="email"
+            value={emailValue}
+            onChange={(e) => setEmailValue(e.target.value)}
+            required
+            autoFocus
+          />
+          <Input
+            label={t('inviteStakeholder.noteLabel')}
+            id="shareable-invite-note"
+            name="note"
+            value={emailNote}
+            onChange={(e) => setEmailNote(e.target.value)}
+            placeholder={t('inviteStakeholder.notePlaceholder')}
+          />
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginBlockStart: 8 }}>
+            <button
+              type="button"
+              className="share-links__action-btn"
+              onClick={() => setEmailModalType(null)}
+            >
+              {t('common.cancel')}
+            </button>
+            <button
+              type="submit"
+              className="share-links__action-btn share-links__action-btn--email"
+              disabled={sending}
+            >
+              <Send size={16} />
+              {sending ? t('common.loading') : t('inviteStakeholder.send')}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
