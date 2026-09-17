@@ -538,6 +538,49 @@ export function referralClientInviteEmail({
 }
 
 // ---------------------------------------------------------------------------
+// Super Admin -> prospect: recruit a new referral partner
+// ---------------------------------------------------------------------------
+// NOT the same email as referralClientInviteEmail above: that one is a
+// PARTNER inviting their own LEAD to buy a certification. This one is an
+// ADMIN inviting a PROSPECT to become a partner in the first place — the
+// registration link goes to /register/referral, not a checkout page, and
+// there is no discount code because the recipient isn't a customer yet.
+//
+// Client, 16-17 Sep: approved building an in-app "Invite Referral Partner"
+// action after being told support@certify.cx has no inbox of its own to
+// compose from — see api/referrals.js's invitePartner().
+export function referralPartnerRecruitEmail({ name, note, registerUrl }) {
+  const greetName = escapeHtml(name || 'there');
+  const noteHtml = note ? body(escapeHtml(note)) : '';
+  const subject = `You're invited to become a ${BRAND_TEXT} Referral Partner`;
+
+  const html = layout({
+    title: subject,
+    preheader: `Earn commission referring clients to ${BRAND_TEXT} — takes a minute to sign up.`,
+    bodyHtml: `
+      ${heading('Become a Certify.cx Referral Partner')}
+      ${body(`Hi ${greetName}, the ${BRAND_TEXT} team would like to invite you to join our Referral Partner program. Introduce prospective clients for ISO certification and training, and earn a commission on every deal that closes.`)}
+      ${noteHtml}
+      <p style="margin:0 0 28px;">${button(registerUrl, 'Register as a Referral Partner')}</p>
+      ${linkFallback(registerUrl)}
+      ${muted('Registration takes a couple of minutes — no cost to join.')}`,
+  });
+
+  const text = [
+    `Hi ${name || 'there'},`,
+    ``,
+    `The ${BRAND_TEXT} team would like to invite you to join our Referral Partner program. Introduce prospective clients for ISO certification and training, and earn a commission on every deal that closes.`,
+    note ? `\n${note}` : '',
+    ``,
+    `Register here: ${registerUrl}`,
+    ``,
+    `— ${BRAND_TEXT}`,
+  ].filter(Boolean).join('\n');
+
+  return { subject, html, text };
+}
+
+// ---------------------------------------------------------------------------
 // Referral partner -> lead: the standard proposal letter (phase32)
 // ---------------------------------------------------------------------------
 // The client sent a real letter one of their partners had written to a

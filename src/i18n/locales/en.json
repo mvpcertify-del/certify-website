@@ -1644,6 +1644,13 @@
     "agreedRate": "Agreed rate",
     "editTitle": "Edit referral partner",
     "footnote": "Referral partners earn {{percent}}% of the net sale unless an individual rate is agreed. Commission is credited when a referred client pays.",
+    "invitePartner": "Invite Referral Partner",
+    "inviteTitle": "Invite a referral partner",
+    "inviteDesc": "Sends an email with the registration link, from support@certify.cx — no mailbox access needed.",
+    "inviteNoteLabel": "Personal note (optional)",
+    "inviteNotePlaceholder": "e.g. Great meeting you at the conference — thought you'd be a great fit.",
+    "sendInvite": "Send invite",
+    "inviteSent": "Invite sent to {{email}}",
     "status": {
       "pending": "Pending approval",
       "rejected": "Rejected",

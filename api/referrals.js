@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { verifySession, verifyAdmin } from './_verifyAdmin.js';
 import { COMPANY_PROFILE_SLUG } from './_assetSlugs.js';
-import { referralClientInviteEmail, partnerOutreachEmail } from './_emailTemplates.js';
+import { referralClientInviteEmail, partnerOutreachEmail, referralPartnerRecruitEmail } from './_emailTemplates.js';
 import { getOutreachCopy } from './_outreachCopy.js';
 import { ensureConversation, appendMessage, discardConversation } from './_conversations.js';
 import { ISO_CATALOG } from '../src/utils/isoCatalog.js';
@@ -77,6 +77,7 @@ export default async function handler(req, res) {
     if (action === 'check-discount') return await checkDiscount(req, res);
     if (action === 'send-client-invite') return await sendClientInvite(req, res);
     if (action === 'send-outreach') return await sendOutreach(req, res);
+    if (action === 'invite-partner') return await invitePartner(req, res);
     return res.status(400).json({ error: 'Unknown action' });
   } catch (error) {
     // Log the detail server-side; never hand the raw Postgres/PostgREST text to
@@ -592,6 +593,92 @@ async function sendClientInvite(req, res) {
       subject,
       bodyText: text,
     });
+  }
+
+  return res.status(200).json({ ok: true, sentTo: recipient });
+}
+
+// ---- Super Admin recruits a brand-new referral partner --------------------
+//
+// Client, 16-17 Sep: "How to access support@certify.cx so SA can send email
+// with registration link to new referral Partners?" — answered that there is
+// no inbox, only Cloudflare-forward-to-Gmail; then approved building this
+// instead, so SA never has to touch a mailbox at all.
+//
+// Unlike sendClientInvite/sendOutreach (a referral PARTNER emailing their own
+// LEAD), this is an ADMIN emailing a PROSPECT who does not exist in the
+// system yet — there is no referral row to own, so auth is verifyAdmin
+// (super admin only, matching who asked for this), not verifySession +
+// partnerActive.
+//
+// Reuses referral_invites for the audit trail AND the rate limit (see
+// checkSendCaps above it) — referrer_id is nullable-in-spirit-but-not-in-
+// schema, so the admin's own profile id fills it; `kind: 'partner_recruit'`
+// keeps this cleanly distinguishable from the phase27/phase32 partner-sent
+// rows sharing the same table.
+async function invitePartner(req, res) {
+  const auth = await verifyAdmin(req, { requireSuperAdmin: true });
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const caller = auth.caller;
+
+  if (!RESEND_API_KEY || !RESEND_FROM_EMAIL) {
+    return res.status(503).json({ error: 'Email is not configured on the server' });
+  }
+
+  const recipient = String(req.body?.email || '').trim().toLowerCase();
+  if (!EMAIL_RE.test(recipient)) {
+    return res.status(400).json({ error: 'Enter a valid email address' });
+  }
+  // Optional; shown in the email if given. Never trusted as markup — the
+  // template HTML-escapes it like every other admin-typed field.
+  const name = String(req.body?.name || '').trim().slice(0, 120) || null;
+  const note = String(req.body?.note || '').trim().slice(0, 500) || null;
+
+  // Same two caps send-client-invite and send-outreach already share — one
+  // admin blasting hundreds of these still goes out over certify.cx's shared
+  // reputation, so it is bounded the same way.
+  const capError = await checkSendCaps(caller.id, recipient);
+  if (capError) return res.status(429).json({ error: capError });
+
+  const { data: reservation, error: reserveErr } = await supabaseAdmin
+    .from('referral_invites')
+    .insert({ referrer_id: caller.id, referred_email: recipient, kind: 'partner_recruit' })
+    .select('id')
+    .single();
+  if (reserveErr) {
+    console.error('invite-partner: reservation failed', reserveErr?.message);
+    return res.status(500).json({ error: 'Could not send the invite. Please try again.' });
+  }
+
+  const registerUrl = `${APP_URL}/register/referral`;
+  const { subject, html, text } = referralPartnerRecruitEmail({ name, note, registerUrl });
+
+  // From the BUSINESS identity (support@certify.cx), same as every other
+  // partner-facing letter in this file — this is exactly the address the
+  // client asked to send these from.
+  const resp = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: PARTNER_FROM_EMAIL,
+      to: [recipient],
+      reply_to: 'support@certify.cx',
+      subject,
+      html,
+      text,
+    }),
+  });
+
+  if (!resp.ok) {
+    const detail = await resp.text().catch(() => '');
+    console.error('invite-partner: Resend failed', resp.status, detail);
+    // Release the reservation so a transient failure does not permanently eat
+    // one of the admin's daily/per-recipient allowance.
+    await supabaseAdmin.from('referral_invites').delete().eq('id', reservation.id);
+    return res.status(502).json({ error: 'Could not send the email. Please try again.' });
   }
 
   return res.status(200).json({ ok: true, sentTo: recipient });
