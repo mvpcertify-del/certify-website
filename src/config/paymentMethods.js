@@ -1,10 +1,10 @@
 // -------------------------------------------------------
 // Certify.cx — Payment Methods
 //
-// The three payment methods offered at checkout. One is processed online
-// through Stripe (card); two are offline/manual (cash, bank transfer) where
-// the buyer pays out-of-band and an admin verifies receipt before the
-// certification proceeds and the buyer is granted dashboard access.
+// The payment methods offered at checkout. One is processed online through
+// Stripe (card); the other is offline/manual (bank transfer) where the buyer
+// pays out-of-band and an admin verifies receipt before the certification
+// proceeds and the buyer is granted dashboard access.
 //
 //   online  → api/checkout.js creates a Stripe Checkout session whose
 //             payment_method_types is set from `stripeMethod`.
@@ -15,8 +15,18 @@
 //
 // Labels/descriptions are i18n keys resolved with t() in the UI — the raw
 // account details (IBAN, cash office) are NOT translated.
-// -------------------------------------------------------
-
+//
+// Cash removed from checkout entirely (client, 17 Sep: "Remove Cash payment
+// option for all Products Standards") — this list is the single source both
+// the checkout UI and api/checkout.js's server-side validation read from
+// (PAYMENT_METHOD_IDS below, checked at every new-order submission), so
+// dropping the entry here removes it everywhere a buyer could choose it,
+// for every standard, in one place. CASH_DETAILS stays below (not deleted):
+// existing orders already placed with payment_method='cash' still need it to
+// render correctly in the admin billing views, and api/checkout.js's
+// separate DB-constraint whitelist (PAYMENT_METHOD_VALUES, for editing an
+// EXISTING order) deliberately still accepts 'cash' for that reason — only
+// the ability to choose it as a NEW order goes away.
 export const PAYMENT_METHODS = [
   {
     id: 'card',
@@ -25,13 +35,6 @@ export const PAYMENT_METHODS = [
     icon: 'CreditCard',
     labelKey: 'payment.methodCard',
     descKey: 'payment.methodCardDesc',
-  },
-  {
-    id: 'cash',
-    type: 'offline',
-    icon: 'Banknote',
-    labelKey: 'payment.methodCash',
-    descKey: 'payment.methodCashDesc',
   },
   {
     id: 'bank_transfer',
