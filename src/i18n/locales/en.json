@@ -1657,6 +1657,16 @@
       "approved": "Approved"
     }
   },
+  "inviteStakeholder": {
+    "button": "Invite {{type}}",
+    "title": "Invite a {{type}}",
+    "desc": "Sends an email with the registration link, from support@certify.cx — no mailbox access needed.",
+    "emailRequired": "Enter an email address",
+    "noteLabel": "Personal note (optional)",
+    "notePlaceholder": "e.g. Great meeting you at the conference — thought you'd be a great fit.",
+    "send": "Send invite",
+    "sent": "Invite sent to {{email}}"
+  },
   "adminBilling": {
     "title": "Invoices & Receipts",
     "subtitle": "Prepare and issue invoices and payment receipts, and review everything billed to date.",

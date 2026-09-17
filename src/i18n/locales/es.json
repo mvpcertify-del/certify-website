@@ -1657,6 +1657,16 @@
       "approved": "Aprobado"
     }
   },
+  "inviteStakeholder": {
+    "button": "Invitar a {{type}}",
+    "title": "Invitar a un/a {{type}}",
+    "desc": "Envía un correo con el enlace de registro, desde support@certify.cx — no necesita acceso al buzón.",
+    "emailRequired": "Ingrese un correo electrónico",
+    "noteLabel": "Nota personal (opcional)",
+    "notePlaceholder": "p. ej. Un gusto conocerte en la conferencia — creo que encajarías muy bien.",
+    "send": "Enviar invitación",
+    "sent": "Invitación enviada a {{email}}"
+  },
   "adminBilling": {
     "title": "Facturas y recibos",
     "subtitle": "Prepara y emite facturas y recibos de pago, y revisa todo lo facturado hasta la fecha.",

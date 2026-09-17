@@ -145,6 +145,7 @@ export default function AdminAuditors() {
       createFields={createFields}
       addLabel={t('admin.addAuditor')}
       createTitle={t('admin.addAuditor')}
+      inviteType="auditor"
       title={t('admin.auditorsTitle')}
       subtitle={(count) => t('admin.auditorsFound', { count })}
       loadingText={t('admin.loadingAuditors')}

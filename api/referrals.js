@@ -1,10 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 import { verifySession, verifyAdmin } from './_verifyAdmin.js';
 import { COMPANY_PROFILE_SLUG } from './_assetSlugs.js';
-import { referralClientInviteEmail, partnerOutreachEmail, referralPartnerRecruitEmail } from './_emailTemplates.js';
+import { referralClientInviteEmail, partnerOutreachEmail, referralPartnerRecruitEmail, stakeholderInviteEmail } from './_emailTemplates.js';
 import { getOutreachCopy } from './_outreachCopy.js';
 import { ensureConversation, appendMessage, discardConversation } from './_conversations.js';
 import { ISO_CATALOG } from '../src/utils/isoCatalog.js';
+import { STAKEHOLDER_TYPES } from '../src/utils/stakeholderTypes.js';
 import { APP_URL } from './_appUrl.js';
 
 const supabaseAdmin = createClient(
@@ -598,24 +599,29 @@ async function sendClientInvite(req, res) {
   return res.status(200).json({ ok: true, sentTo: recipient });
 }
 
-// ---- Super Admin recruits a brand-new referral partner --------------------
+// ---- Super Admin recruits a brand-new stakeholder (any of the 6 types) ----
 //
 // Client, 16-17 Sep: "How to access support@certify.cx so SA can send email
 // with registration link to new referral Partners?" — answered that there is
-// no inbox, only Cloudflare-forward-to-Gmail; then approved building this
-// instead, so SA never has to touch a mailbox at all.
+// no inbox, only Cloudflare-forward-to-Gmail; approved building this instead
+// for referral partners, then asked for the same button on all six
+// stakeholder types (client, auditor, certification-body, consultancy,
+// referral, investor) once they tested and liked the referral one.
 //
-// Unlike sendClientInvite/sendOutreach (a referral PARTNER emailing their own
-// LEAD), this is an ADMIN emailing a PROSPECT who does not exist in the
-// system yet — there is no referral row to own, so auth is verifyAdmin
-// (super admin only, matching who asked for this), not verifySession +
-// partnerActive.
+// Unlike sendClientInvite/sendOutreach (a PARTNER emailing their own LEAD),
+// this is an ADMIN emailing a PROSPECT who does not exist in the system yet —
+// there is no referral row to own, so auth is verifyAdmin (super admin only,
+// matching who asked for this), not verifySession + partnerActive.
+//
+// The referral case keeps its own approved copy (referralPartnerRecruitEmail)
+// untouched rather than folding it into stakeholderInviteEmail's generic
+// wording — the client already tested and signed off on that exact text.
 //
 // Reuses referral_invites for the audit trail AND the rate limit (see
 // checkSendCaps above it) — referrer_id is nullable-in-spirit-but-not-in-
-// schema, so the admin's own profile id fills it; `kind: 'partner_recruit'`
-// keeps this cleanly distinguishable from the phase27/phase32 partner-sent
-// rows sharing the same table.
+// schema, so the admin's own profile id fills it; `kind: 'invite_<type>'`
+// keeps each type cleanly distinguishable from the phase27/phase32
+// partner-sent rows sharing the same table.
 async function invitePartner(req, res) {
   const auth = await verifyAdmin(req, { requireSuperAdmin: true });
   if (auth.error) return res.status(auth.status).json({ error: auth.error });
@@ -623,6 +629,13 @@ async function invitePartner(req, res) {
 
   if (!RESEND_API_KEY || !RESEND_FROM_EMAIL) {
     return res.status(503).json({ error: 'Email is not configured on the server' });
+  }
+
+  // Defaults to 'referral' so the original caller shape (no stakeholderType
+  // sent) keeps working unchanged.
+  const stakeholderType = String(req.body?.stakeholderType || 'referral');
+  if (stakeholderType !== 'referral' && !STAKEHOLDER_TYPES[stakeholderType]) {
+    return res.status(400).json({ error: 'Unknown stakeholder type' });
   }
 
   const recipient = String(req.body?.email || '').trim().toLowerCase();
@@ -642,7 +655,7 @@ async function invitePartner(req, res) {
 
   const { data: reservation, error: reserveErr } = await supabaseAdmin
     .from('referral_invites')
-    .insert({ referrer_id: caller.id, referred_email: recipient, kind: 'partner_recruit' })
+    .insert({ referrer_id: caller.id, referred_email: recipient, kind: `invite_${stakeholderType}` })
     .select('id')
     .single();
   if (reserveErr) {
@@ -650,8 +663,10 @@ async function invitePartner(req, res) {
     return res.status(500).json({ error: 'Could not send the invite. Please try again.' });
   }
 
-  const registerUrl = `${APP_URL}/register/referral`;
-  const { subject, html, text } = referralPartnerRecruitEmail({ name, note, registerUrl });
+  const registerUrl = `${APP_URL}/register/${stakeholderType}`;
+  const { subject, html, text } = stakeholderType === 'referral'
+    ? referralPartnerRecruitEmail({ name, note, registerUrl })
+    : stakeholderInviteEmail({ type: stakeholderType, name, note, registerUrl });
 
   // From the BUSINESS identity (support@certify.cx), same as every other
   // partner-facing letter in this file — this is exactly the address the

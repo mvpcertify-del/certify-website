@@ -581,6 +581,76 @@ export function referralPartnerRecruitEmail({ name, note, registerUrl }) {
 }
 
 // ---------------------------------------------------------------------------
+// Super Admin -> prospect: recruit any OTHER stakeholder type
+// ---------------------------------------------------------------------------
+// Sibling to referralPartnerRecruitEmail above, which stays untouched — the
+// client already tested and approved that exact copy, and this file does not
+// risk drifting wording they signed off on. This one covers the other five
+// stakeholder types the client asked to extend the same "Invite" button to
+// (16-17 Sep): client, auditor, certification-body, consultancy, investor.
+// See api/referrals.js's invitePartner(), which picks this vs. the referral
+// one based on `stakeholderType`.
+const STAKEHOLDER_INVITE_COPY = {
+  client: {
+    heading: 'Get ISO certified with Certify.cx',
+    pitch: 'the Certify.cx team would like to invite you to start your ISO certification journey — apply online, get audited, and receive your accredited certificate, all from one platform.',
+    cta: 'Start your certification',
+  },
+  auditor: {
+    heading: 'Join Certify.cx as a Lead Auditor',
+    pitch: 'the Certify.cx team would like to invite you to join our network of certified auditors, conducting ISO compliance audits for our client base.',
+    cta: 'Register as an Auditor',
+  },
+  'certification-body': {
+    heading: 'Join Certify.cx as a Certification Body',
+    pitch: 'the Certify.cx team would like to invite you to partner with us as an accredited Certification Body, issuing certificates to clients through our platform.',
+    cta: 'Register as a Certification Body',
+  },
+  consultancy: {
+    heading: 'Join Certify.cx as a Consultancy Partner',
+    pitch: 'the Certify.cx team would like to invite you to join as a Consultancy Partner, guiding your clients through ISO certification on our platform and earning commission on every deal that closes.',
+    cta: 'Register as a Consultancy Partner',
+  },
+  investor: {
+    heading: 'An investment opportunity with Certify.cx',
+    pitch: 'the Certify.cx team would like to invite you to learn more about investing in Certify.cx — our platform for accredited ISO certification.',
+    cta: 'Register as an Investor',
+  },
+};
+
+export function stakeholderInviteEmail({ type, name, note, registerUrl }) {
+  const copy = STAKEHOLDER_INVITE_COPY[type] || STAKEHOLDER_INVITE_COPY.client;
+  const greetName = escapeHtml(name || 'there');
+  const noteHtml = note ? body(escapeHtml(note)) : '';
+  const subject = copy.heading;
+
+  const html = layout({
+    title: subject,
+    preheader: `${BRAND_TEXT} would like to invite you — takes a minute to sign up.`,
+    bodyHtml: `
+      ${heading(copy.heading)}
+      ${body(`Hi ${greetName}, ${copy.pitch}`)}
+      ${noteHtml}
+      <p style="margin:0 0 28px;">${button(registerUrl, copy.cta)}</p>
+      ${linkFallback(registerUrl)}
+      ${muted('Registration takes a couple of minutes — no cost to join.')}`,
+  });
+
+  const text = [
+    `Hi ${name || 'there'},`,
+    ``,
+    copy.pitch.charAt(0).toUpperCase() + copy.pitch.slice(1),
+    note ? `\n${note}` : '',
+    ``,
+    `Register here: ${registerUrl}`,
+    ``,
+    `— ${BRAND_TEXT}`,
+  ].filter(Boolean).join('\n');
+
+  return { subject, html, text };
+}
+
+// ---------------------------------------------------------------------------
 // Referral partner -> lead: the standard proposal letter (phase32)
 // ---------------------------------------------------------------------------
 // The client sent a real letter one of their partners had written to a
