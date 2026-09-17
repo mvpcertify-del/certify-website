@@ -1,6 +1,6 @@
 # Task report — 17 September
 
-**Commits:** `55bea72` → `0ec39f6` · **Branch:** `main` · **Status:** pushed
+**Commits:** `55bea72` → `307782e` · **Branch:** `main` · **Status:** pushed, DB migration applied
 **Build:** passing · **Lint:** 53 problems (unchanged baseline — no new errors)
 **Locales:** es/ar — 0 missing keys against en
 
@@ -26,7 +26,19 @@ Client asked how a Super Admin could get into `support@certify.cx` to email new 
 
 **Built:** `api/referrals.js` gained a super-admin-only action (`invite-partner`) that emails a prospect the registration link from `support@certify.cx`, reusing the same rate-limit/audit table (`referral_invites`) two existing partner-facing sends already share. Client tested the referral version and approved it, then asked for the same on Clients, Auditors, Certification Bodies, Consultancies, and Investors.
 
-Generalized the action to take a `stakeholderType`, added a per-type email template (`stakeholderInviteEmail` — the referral copy the client already approved was left untouched rather than folded into the generic wording), and dropped a shared `<InviteStakeholderButton>` onto each admin list page. Investors has no dedicated "Investor accounts" page the way the other five do, so that one lives on the general Users management screen instead.
+Generalized the action to take a `stakeholderType`, added a per-type email template (`stakeholderInviteEmail` — the referral copy the client already approved was left untouched rather than folded into the generic wording).
+
+**First pass** dropped a separate "Invite" button onto six different admin list pages (Companies, Auditors, Cert Bodies, Consultancies, Referral Partners, Users). Client feedback: *"main khud confuse ho gaya, user aur confuse hoga — isko simple karo"* — six different places to remember was the actual problem. **Consolidated into one page instead**: Shareable Links already listed all six stakeholder types as cards with Copy / WhatsApp / Email / Preview actions, so the existing "Email" button (which used to just open the admin's own local mail app via a `mailto:` link) now opens a small modal and sends through the platform — one button, one page, works for all six. The five other scattered entry points were removed.
+
+### How to use it now
+
+Go to **Shareable Links** in the sidebar → find the card for the stakeholder type you want (Client, Auditor, Certification Body, Consultancy, Referral Partner, or Investor) → click **Email** → enter the prospect's email (and an optional personal note) → **Send invite**. It goes out from `support@certify.cx` with that type's registration link — no mailbox login needed.
+
+### A bug this surfaced, now fixed
+
+Testing this live turned up a real bug: every single invite (all six types) was failing with *"Could not send the invite. Please try again."* The code was writing a per-type audit tag (e.g. `invite_certification-body`) to the database, but an existing constraint on that column only allowed two fixed values — so the save was rejected before the email was ever sent. This had been broken since the six-type version first shipped.
+
+**Fixed with a migration** (`phase38_referral_invites_kind_widen.sql`) that widens the constraint to accept the per-type tags while keeping the audit trail's detail (which type each invite was for) rather than throwing it away. **You've already run this migration** — the feature should now work end to end. Please try one more invite from Shareable Links to confirm; I can't click the button myself (it requires your Super Admin login), but I can confirm delivery from Resend's log the moment you send one.
 
 ## 3 — Bilingual ISO 9001:2026 demo
 
