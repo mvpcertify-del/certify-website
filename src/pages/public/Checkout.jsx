@@ -22,6 +22,7 @@ import LanguageSwitcher from '../../components/LanguageSwitcher';
 import BrandLogo from '../../components/ui/BrandLogo';
 import BackButton from '../../components/ui/BackButton';
 import { useNameParts } from '../../components/ui/NameFields';
+import IsoBadge from '../../components/ui/IsoBadge';
 import './Checkout.css';
 
 const METHOD_ICONS = { CreditCard, Banknote, Landmark };
@@ -127,7 +128,7 @@ function CheckoutForm() {
   // Either catalog. The compliance lookup has to come second only because the
   // ISO one is the far more common case — the two slug spaces do not overlap.
   const isoConfig = getIsoBySlug(isoSlug) || getComplianceBySlug(isoSlug);
-  const isoCode = isoConfig?.code || 'ISO 9001';
+  const isoCode = isoConfig?.fullCode || isoConfig?.code || 'ISO 9001:2015';
   const packageLabel = PACKAGE_LABEL;
 
   // Organization size. The buyer types real numbers — total headcount and total
@@ -412,7 +413,8 @@ function CheckoutForm() {
         className={`checkout__iso-card ${active ? 'checkout__iso-card--active' : ''}`}
         onClick={() => selectStandard(item.slug)}
       >
-        <span className="checkout__iso-code">{item.code}</span>
+        {item.fullCode && <IsoBadge code={item.code} size={44} />}
+        <span className="checkout__iso-code">{item.fullCode || item.code}</span>
         <span className="checkout__iso-name">{t(item.titleKey)}</span>
         <span className="checkout__iso-price">
           {coupon && afterDiscount < listPrice && (

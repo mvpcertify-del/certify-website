@@ -85,7 +85,7 @@ export default function IsoLanding() {
             the price. PricingTiers carries the standard's code so the page
             still identifies which certification it is selling. */}
         <section className="iso-landing__section">
-          <PricingTiers standardSlug={config.slug} standardCode={config.code} />
+          <PricingTiers standardSlug={config.slug} standardCode={config.fullCode || config.code} />
         </section>
 
         <div className="iso-landing__footer">

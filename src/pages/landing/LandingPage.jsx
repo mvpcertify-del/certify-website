@@ -12,6 +12,7 @@ import ComplianceLogo from '../../components/ui/ComplianceLogo';
 import SaraChatWidget from '../../components/sara/SaraChatWidget';
 import PublicNav from '../../components/layout/PublicNav';
 import BrandLogo from '../../components/ui/BrandLogo';
+import IsoBadge from '../../components/ui/IsoBadge';
 import './LandingPage.css';
 
 // Phase 1 (retired): we originally featured ISO 9001 only and hid the rest of
@@ -38,6 +39,7 @@ export default function LandingPage() {
   const ISO_STANDARDS = visibleIsos.map(iso => ({
     slug: iso.slug,
     code: iso.code,
+    fullCode: iso.fullCode,
     title: t(iso.titleKey),
     desc: t(iso.descKey),
     icon: ICON_MAP[iso.icon] || Award,
@@ -143,8 +145,8 @@ export default function LandingPage() {
                 className="landing__standard-card landing__standard-card--clickable"
                 style={{ '--card-accent': std.color }}
               >
-                <div className="landing__standard-icon"><std.icon size={28} /></div>
-                <div className="landing__standard-code">{std.code}</div>
+                <div className="landing__standard-logo"><IsoBadge code={std.code} size={64} /></div>
+                <div className="landing__standard-code">{std.fullCode || std.code}</div>
                 <h3 className="landing__standard-title">{std.title}</h3>
                 <p className="landing__standard-desc">{std.desc}</p>
                 <span className="landing__standard-cta">

@@ -284,7 +284,7 @@ export default function ShareableLinks() {
                   <IconComponent size={22} />
                 </div>
                 <div className="share-links__card-header-text">
-                  <h3 className="share-links__card-title">{iso.code}</h3>
+                  <h3 className="share-links__card-title">{iso.fullCode || iso.code}</h3>
                   <span className="share-links__card-role">{t(iso.titleKey)}</span>
                 </div>
                 <button
