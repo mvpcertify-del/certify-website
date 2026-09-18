@@ -5,8 +5,8 @@
 // "Standard" certification package. (The client dropped the old Bronze /
 // Silver / Gold three-tier model and the 12-month support/audit add-ons.)
 //
-// TWO price points, set by the client on 12 Aug:
-//   ISO 9001 / ISO 14001 / ISO 45001 ....... US$   999
+// TWO price points, set by the client on 12 Aug (core trio raised from $999 to $1,500 on 18 Sep):
+//   ISO 9001 / ISO 14001 / ISO 45001 ....... US$ 1,500
 //   every other standard ................... US$ 1,999
 // The three cheaper standards are the high-volume management-system trio;
 // everything else (food safety, information security, AI, medical devices, …)
@@ -34,7 +34,7 @@ import { ISO_CATALOG, getIsoBySlug, getIsoByCode } from './isoCatalog.js';
 import { resolveComplianceService } from './complianceServices.js';
 
 // Price of the three core management-system standards (USD, one-time).
-export const CORE_PRICE = 999;
+export const CORE_PRICE = 1500;
 // Price of every other standard in the catalog.
 export const BASE_PRICE = 1999;
 // The standards that carry CORE_PRICE, by catalog slug.

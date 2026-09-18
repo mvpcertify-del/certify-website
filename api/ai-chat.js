@@ -33,7 +33,7 @@ const SARA_SYSTEM_PROMPT = `You are Sara, the friendly and knowledgeable AI supp
 8. **Certification Issued** (Week 8-12) — Upon approval, the ISO certificate is issued
 
 ### Pricing (one-time, in US dollars — there are NO monthly plans and NO country tiers)
-- **ISO 9001, ISO 14001, ISO 45001**: $999 each
+- **ISO 9001, ISO 14001, ISO 45001**: $1,500 each
 - **Every other standard** (ISO 22000, ISO 21001, ISO/IEC 27001, ISO/IEC 27701, ISO/IEC 42001, ISO 50001, ISO 37001, ISO 22301, ISO 13485): $1,999 each
 - The headline price covers an organization of up to 50 employees at 1 location. Each additional 50-employee band adds $200, and each additional location adds $200 — per certification.
 - Buying several standards at once: each is priced separately and the totals are charged in a single payment.
