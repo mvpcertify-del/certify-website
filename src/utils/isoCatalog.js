@@ -141,12 +141,6 @@ export const ISO_CATALOG = {
 
 export const ISO_CATALOG_LIST = Object.values(ISO_CATALOG);
 
-// Number shown inside the badge: "ISO/IEC 27001" -> "27001".
-export function isoNumber(code) {
-  const m = String(code || '').match(/(\d{4,5})\s*$/);
-  return m ? m[1] : '';
-}
-
 export function getIsoBySlug(slug) {
   return ISO_CATALOG[slug] || null;
 }

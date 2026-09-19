@@ -9,7 +9,6 @@ import { COMPLIANCE_AUDIT_LIST } from '../../utils/complianceAudits';
 import ComplianceLogo from '../../components/ui/ComplianceLogo';
 import PublicNav from '../../components/layout/PublicNav';
 import BackButton from '../../components/ui/BackButton';
-import IsoBadge from '../../components/ui/IsoBadge';
 import './Certifications.css';
 
 const ICON_MAP = {
@@ -46,7 +45,7 @@ export default function Certifications() {
               className="certs__card"
               style={{ '--card-accent': iso.color }}
             >
-              <div className="certs__card-logo"><IsoBadge code={iso.code} size={64} /></div>
+              <div className="certs__card-icon"><Icon size={26} /></div>
               <div className="certs__card-code">{iso.fullCode || iso.code}</div>
               <h3 className="certs__card-name">{t(iso.titleKey)}</h3>
               <p className="certs__card-desc">{t(iso.descKey)}</p>

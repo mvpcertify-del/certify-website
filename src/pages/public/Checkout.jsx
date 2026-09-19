@@ -22,7 +22,6 @@ import LanguageSwitcher from '../../components/LanguageSwitcher';
 import BrandLogo from '../../components/ui/BrandLogo';
 import BackButton from '../../components/ui/BackButton';
 import { useNameParts } from '../../components/ui/NameFields';
-import IsoBadge from '../../components/ui/IsoBadge';
 import './Checkout.css';
 
 const METHOD_ICONS = { CreditCard, Banknote, Landmark };
@@ -413,7 +412,6 @@ function CheckoutForm() {
         className={`checkout__iso-card ${active ? 'checkout__iso-card--active' : ''}`}
         onClick={() => selectStandard(item.slug)}
       >
-        {item.fullCode && <IsoBadge code={item.code} size={44} />}
         <span className="checkout__iso-code">{item.fullCode || item.code}</span>
         <span className="checkout__iso-name">{t(item.titleKey)}</span>
         <span className="checkout__iso-price">
