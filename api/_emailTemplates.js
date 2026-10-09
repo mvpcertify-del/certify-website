@@ -765,6 +765,62 @@ export function iso9001MiddleEastInviteEmail({ name, companyName, registerUrl, w
 }
 
 // ---------------------------------------------------------------------------
+// Midhat -> investment fund: outreach letter (demo)
+// ---------------------------------------------------------------------------
+// Client, 10 Oct: wanted this sent "by prompting Sara AI" — Sara (api/ai-chat.js)
+// is a visitor-facing support chatbot with no email-sending capability and no
+// access to the investors list, so that path doesn't exist. This is the actual
+// deliverable instead: a real, sendable template, content-only for now (no
+// bulk-send action wired up — that's a separate feature decision).
+//
+// Deliberately does NOT invent traction numbers, revenue, or user counts —
+// nothing here is sourced from real figures, so none are claimed. The letter
+// introduces the platform and invites a conversation; it is not a pitch deck.
+export function investorOutreachEmail({ contactName, fundName, replyUrl }) {
+  const greetName = escapeHtml(contactName || 'there');
+  const fundLine = fundName ? body(`I'm reaching out from ${escapeHtml(fundName)}'s network as a fund we'd value hearing from.`) : '';
+  const subject = fundName
+    ? `Certify.cx — an introduction for ${fundName}`
+    : 'Certify.cx — an introduction';
+
+  const html = layout({
+    title: subject,
+    preheader: 'Certify.cx — ISO certification, simplified. An introduction and an invitation to talk.',
+    bodyHtml: `
+      ${heading('A quick introduction from Certify.cx')}
+      ${body(`Hi ${greetName}, I'm Midhat Abu Ghazaleh, Founder &amp; CEO of <strong style="color:${TEXT_PRIMARY};">${BRAND_TEXT}</strong> — a platform that takes a business from ISO certification application through audit to an accredited certificate, all in one place.`)}
+      ${fundLine}
+      ${body(`We're building out the next stage of the business and I wanted to open a conversation with investors we respect. If this is of interest, I'd welcome a short call to share more and hear your thoughts.`)}
+      <p style="margin:0 0 28px;">${button(replyUrl || 'https://certify.cx', "Learn more about Certify.cx")}</p>
+      ${replyUrl ? linkFallback(replyUrl) : ''}
+      ${muted('Reply directly to this email — it reaches me.')}`,
+    footerHtml: `
+      <p style="margin:0 0 4px;font-size:13px;line-height:1.6;color:${TEXT_SECONDARY};font-weight:600;">Midhat Abu Ghazaleh</p>
+      <p style="margin:0 0 14px;font-size:13px;line-height:1.5;color:${TEXT_TERTIARY};">Founder &amp; CEO — ${BRAND_TEXT}</p>
+      <p style="margin:0;font-size:12px;line-height:1.5;color:${TEXT_TERTIARY};">
+        ${BRAND_TEXT}™ — ISO certification, simplified.
+      </p>`,
+  });
+
+  const text = [
+    `Hi ${contactName || 'there'},`,
+    ``,
+    `I'm Midhat Abu Ghazaleh, Founder & CEO of ${BRAND_TEXT} — a platform that takes a business from ISO certification application through audit to an accredited certificate, all in one place.`,
+    fundName ? `I'm reaching out from ${fundName}'s network as a fund we'd value hearing from.` : '',
+    ``,
+    `We're building out the next stage of the business and I wanted to open a conversation with investors we respect. If this is of interest, I'd welcome a short call to share more and hear your thoughts.`,
+    ``,
+    replyUrl ? `Learn more: ${replyUrl}` : '',
+    `Reply directly to this email — it reaches me.`,
+    ``,
+    `Midhat Abu Ghazaleh`,
+    `Founder & CEO — ${BRAND_TEXT}`,
+  ].filter(Boolean).join('\n');
+
+  return { subject, html, text };
+}
+
+// ---------------------------------------------------------------------------
 // Referral partner -> lead: the standard proposal letter (phase32)
 // ---------------------------------------------------------------------------
 // The client sent a real letter one of their partners had written to a
