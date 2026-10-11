@@ -778,7 +778,9 @@ export function iso9001MiddleEastInviteEmail({ name, companyName, registerUrl, w
 // introduces the platform and invites a conversation; it is not a pitch deck.
 export function investorOutreachEmail({ contactName, fundName, replyUrl }) {
   const greetName = escapeHtml(contactName || 'there');
-  const fundLine = fundName ? body(`I'm reaching out from ${escapeHtml(fundName)}'s network as a fund we'd value hearing from.`) : '';
+  // Client, 11 Oct, corrected this exactly: "I'm reaching out FROM [fund]"
+  // read as if Midhat worked at the fund; it has to be "reaching out TO".
+  const fundLine = fundName ? body(`I'm reaching out to ${escapeHtml(fundName)} as a fund we'd value hearing from.`) : '';
   const subject = fundName
     ? `Certify.cx — an introduction for ${fundName}`
     : 'Certify.cx — an introduction';
@@ -806,7 +808,7 @@ export function investorOutreachEmail({ contactName, fundName, replyUrl }) {
     `Hi ${contactName || 'there'},`,
     ``,
     `I'm Midhat Abu Ghazaleh, Founder & CEO of ${BRAND_TEXT} — a platform that takes a business from ISO certification application through audit to an accredited certificate, all in one place.`,
-    fundName ? `I'm reaching out from ${fundName}'s network as a fund we'd value hearing from.` : '',
+    fundName ? `I'm reaching out to ${fundName} as a fund we'd value hearing from.` : '',
     ``,
     `We're building out the next stage of the business and I wanted to open a conversation with investors we respect. If this is of interest, I'd welcome a short call to share more and hear your thoughts.`,
     ``,
