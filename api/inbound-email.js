@@ -54,6 +54,15 @@ const supabaseAdmin = createClient(
 
 const INBOUND_WEBHOOK_SECRET = process.env.INBOUND_WEBHOOK_SECRET;
 
+// Investor-campaign tracking events (phase39, 10-11 Oct) — email.opened/
+// clicked/bounced/complained/delivered. This is a SEPARATE webhook
+// subscription in Resend from the inbound-receiving one above (Resend signs
+// each webhook endpoint with its own secret), so it needs its own secret
+// even though both land on this same URL. Set it to whatever secret Resend
+// shows when you add that second endpoint, pointed at
+// {APP_URL}/api/inbound-email, subscribed to the email.* delivery events.
+const RESEND_WEBHOOK_SECRET = process.env.RESEND_WEBHOOK_SECRET;
+
 // Used to pull the message body back (see fetchBody). The same key that sends.
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
@@ -146,24 +155,78 @@ async function fetchBody(emailId) {
   }
 }
 
+// Investor-campaign recipient events this endpoint tracks. Deliberately NOT
+// in this list, because no sender-side webhook anywhere can report it: "landed
+// in spam/junk". bounced/complained are the real, trackable proxy for
+// deliverability health — see api/_investorCampaigns.js's header comment.
+const CAMPAIGN_EVENT_STATUS = {
+  'email.delivered': 'delivered',
+  'email.opened': 'opened',
+  'email.clicked': 'clicked',
+  'email.bounced': 'bounced',
+  'email.complained': 'complained',
+};
+
 export default async function handler(req, res) {
+  // Unsubscribe link from an investor campaign email (phase39) — a plain GET,
+  // no signature: the link itself (an unguessable investor uuid) is the only
+  // credential a one-click unsubscribe needs, same as every bulk-mail sender.
+  //
+  // Parsed off req.url directly rather than req.query: the local dev shim
+  // (vite.config.js's vercelApiPlugin) never populates req.query, only real
+  // Vercel does, and this has to work identically in both.
+  if (req.method === 'GET') {
+    const unsubscribeId = new URL(req.url, 'http://localhost').searchParams.get('unsubscribe');
+    if (unsubscribeId) {
+      const { error } = await supabaseAdmin
+        .from('investors')
+        .update({ unsubscribed_at: new Date().toISOString() })
+        .eq('id', unsubscribeId);
+      res.statusCode = error ? 500 : 200;
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.end(error
+        ? '<p>Something went wrong. Please email support@certify.cx to be removed.</p>'
+        : '<p>You have been unsubscribed from Certify.cx investor updates.</p>');
+    }
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  if (!INBOUND_WEBHOOK_SECRET) {
-    console.error('inbound-email: INBOUND_WEBHOOK_SECRET is not set — refusing');
+  if (!INBOUND_WEBHOOK_SECRET && !RESEND_WEBHOOK_SECRET) {
+    console.error('inbound-email: neither INBOUND_WEBHOOK_SECRET nor RESEND_WEBHOOK_SECRET is set — refusing');
     return res.status(503).json({ error: 'Inbound email is not configured' });
   }
 
+  // Two independent webhook subscriptions land on this one URL (see the
+  // RESEND_WEBHOOK_SECRET comment above), each signed with its own secret —
+  // try whichever is configured rather than assuming which one sent this
+  // request.
   let payload;
-  try {
-    const raw = await readRawBody(req);
-    const secret = INBOUND_WEBHOOK_SECRET.replace(/^v1,whsec_/, '');
-    payload = new Webhook(secret).verify(raw, webhookHeaders(req));
-  } catch (err) {
-    console.error('inbound-email: signature verification failed', err?.message);
+  let verifyErr;
+  const raw = await readRawBody(req);
+  for (const secret of [INBOUND_WEBHOOK_SECRET, RESEND_WEBHOOK_SECRET]) {
+    if (!secret) continue;
+    try {
+      payload = new Webhook(secret.replace(/^v1,whsec_/, '')).verify(raw, webhookHeaders(req));
+      verifyErr = null;
+      break;
+    } catch (err) {
+      verifyErr = err;
+    }
+  }
+  if (!payload) {
+    console.error('inbound-email: signature verification failed', verifyErr?.message);
     return res.status(401).json({ error: 'Invalid signature' });
+  }
+
+  // Investor-campaign tracking events — handled and returned here, before the
+  // inbound-reply logic below (which assumes a received message, not a
+  // delivery event) ever sees them.
+  const campaignEventType = payload?.type;
+  if (campaignEventType && CAMPAIGN_EVENT_STATUS[campaignEventType]) {
+    return handleCampaignEvent(req, res, payload);
   }
 
   try {
@@ -192,6 +255,27 @@ export default async function handler(req, res) {
       conversation = data || null;
     }
 
+    // Same token, but it's a reply to an investor campaign (phase39), not a
+    // referral-partner lead — checked before the conversation fallback below,
+    // same priority order as the partner_conversations check just above: an
+    // exact token match is never a guess, so it always wins over one.
+    if (!conversation && token) {
+      const { data: byToken } = await supabaseAdmin
+        .from('investor_campaign_recipients')
+        .select('id, replied_at')
+        .eq('reply_token', token)
+        .maybeSingle();
+      if (byToken && !byToken.replied_at) {
+        await supabaseAdmin
+          .from('investor_campaign_recipients')
+          .update({ replied_at: new Date().toISOString() })
+          .eq('id', byToken.id);
+      }
+      if (byToken) {
+        return res.status(200).json({ ok: true, matched: true, kind: 'investor_campaign_reply' });
+      }
+    }
+
     // Last resort: no token in any recipient field, but the sender is a lead
     // we have written to. This covers a reply composed fresh rather than
     // hit-reply (the address is then whatever they typed) and forwards that
@@ -213,6 +297,31 @@ export default async function handler(req, res) {
       conversation = data || null;
       if (conversation) {
         console.warn('inbound-email: matched by sender address, no token present', from.email);
+      }
+    }
+
+    // Not a referral-partner lead reply — check whether it's a reply to an
+    // investor campaign instead (phase39), matched the same "last resort" way:
+    // most recent send to that exact address. There is no per-thread token
+    // here (campaign mail doesn't route through reply.certify.cx), so this
+    // is the only signal available; same guess-when-ambiguous trade-off as
+    // the partner_conversations fallback just above.
+    if (!conversation && from.email) {
+      const { data: recipientRow } = await supabaseAdmin
+        .from('investor_campaign_recipients')
+        .select('id, replied_at')
+        .eq('email', from.email.toLowerCase())
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (recipientRow && !recipientRow.replied_at) {
+        await supabaseAdmin
+          .from('investor_campaign_recipients')
+          .update({ replied_at: new Date().toISOString() })
+          .eq('id', recipientRow.id);
+      }
+      if (recipientRow) {
+        return res.status(200).json({ ok: true, matched: true, kind: 'investor_campaign_reply' });
       }
     }
 
@@ -266,6 +375,65 @@ export default async function handler(req, res) {
     // right: the message exists and we want it.
     console.error('inbound-email error:', err);
     return res.status(500).json({ error: 'Could not process the message' });
+  }
+}
+
+// Investor-campaign delivery/engagement event (phase39) — matched to the
+// recipient row primarily by the tags echoed back on the webhook payload
+// (set at send time in api/_investorCampaigns.js), falling back to the
+// Resend message id for an older payload shape that carries tags
+// differently. Status only ever moves forward (see the column comment on
+// investor_campaign_recipients in phase39) — an out-of-order delivery of a
+// webhook retry can't downgrade a row from 'opened' back to 'delivered'.
+const STATUS_RANK = ['queued', 'sent', 'delivered', 'opened', 'clicked'];
+async function handleCampaignEvent(req, res, payload) {
+  try {
+    const data = unwrap(payload);
+    const tags = Array.isArray(data?.tags) ? data.tags : [];
+    const tag = (name) => tags.find((t) => t?.name === name)?.value || null;
+    const recipientId = tag('recipient_id');
+    const emailId = data?.email_id || data?.id || null;
+    const newStatus = CAMPAIGN_EVENT_STATUS[payload.type];
+    const now = new Date().toISOString();
+
+    const { data: row } = recipientId
+      ? await supabaseAdmin.from('investor_campaign_recipients').select('*').eq('id', recipientId).maybeSingle()
+      : emailId
+        ? await supabaseAdmin.from('investor_campaign_recipients').select('*').eq('resend_message_id', emailId).maybeSingle()
+        : { data: null };
+
+    if (!row) {
+      console.warn('inbound-email: campaign event unmatched', payload.type, recipientId || emailId);
+      return res.status(200).json({ ok: true, matched: false });
+    }
+
+    const updates = {};
+    if (newStatus === 'bounced') {
+      updates.status = 'bounced';
+      updates.bounced_at = now;
+      updates.bounce_reason = data?.bounce?.message || data?.reason || null;
+    } else if (newStatus === 'complained') {
+      updates.status = 'complained';
+      updates.complained_at = now;
+    } else {
+      // delivered/opened/clicked only ever move status forward.
+      const currentRank = STATUS_RANK.indexOf(row.status);
+      const newRank = STATUS_RANK.indexOf(newStatus);
+      if (newRank > currentRank) updates.status = newStatus;
+      if (newStatus === 'delivered') updates.delivered_at = updates.delivered_at || row.delivered_at || now;
+      if (newStatus === 'opened') updates.opened_at = row.opened_at || now;
+      if (newStatus === 'clicked') updates.first_clicked_at = row.first_clicked_at || now;
+    }
+
+    if (Object.keys(updates).length) {
+      await supabaseAdmin.from('investor_campaign_recipients').update(updates).eq('id', row.id);
+    }
+    return res.status(200).json({ ok: true, matched: true });
+  } catch (err) {
+    console.error('inbound-email: campaign event error', err?.message);
+    // 200, not 500 — a malformed/unexpected event payload must not make
+    // Resend retry forever; the worst case is one missed tracking update.
+    return res.status(200).json({ ok: false, error: err.message });
   }
 }
 

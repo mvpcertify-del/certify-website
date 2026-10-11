@@ -7,6 +7,9 @@ import { ensureConversation, appendMessage, discardConversation } from './_conve
 import { ISO_CATALOG } from '../src/utils/isoCatalog.js';
 import { STAKEHOLDER_TYPES } from '../src/utils/stakeholderTypes.js';
 import { APP_URL } from './_appUrl.js';
+import {
+  listInvestorCampaigns, getInvestorCampaign, saveInvestorCampaign, sendInvestorCampaign,
+} from './_investorCampaigns.js';
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -79,6 +82,10 @@ export default async function handler(req, res) {
     if (action === 'send-client-invite') return await sendClientInvite(req, res);
     if (action === 'send-outreach') return await sendOutreach(req, res);
     if (action === 'invite-partner') return await invitePartner(req, res);
+    if (action === 'list-investor-campaigns') return await listInvestorCampaigns(req, res, supabaseAdmin);
+    if (action === 'get-investor-campaign') return await getInvestorCampaign(req, res, supabaseAdmin);
+    if (action === 'save-investor-campaign') return await saveInvestorCampaign(req, res, supabaseAdmin);
+    if (action === 'send-investor-campaign') return await sendInvestorCampaign(req, res, supabaseAdmin);
     return res.status(400).json({ error: 'Unknown action' });
   } catch (error) {
     // Log the detail server-side; never hand the raw Postgres/PostgREST text to

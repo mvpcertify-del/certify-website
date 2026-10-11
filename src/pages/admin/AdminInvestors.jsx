@@ -9,7 +9,8 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROLES } from '../../utils/roles';
 import RowActions from '../../components/ui/RowActions';
-import { Building2, CheckCircle2, Globe2, Mail, UserCheck } from 'lucide-react';
+import { Building2, CheckCircle2, Globe2, Mail, UserCheck, Megaphone, List } from 'lucide-react';
+import InvestorCampaigns from './InvestorCampaigns';
 
 // How many rows the register shows at once (client, 14 Sep: "the page line
 // should be in 50 contacts"; 15 Sep: "Display Options to show 10 per page or
@@ -92,6 +93,12 @@ export default function AdminInvestors() {
   const { user, loading } = useAuth();
 
   const isSuperAdmin = user?.role === ROLES.SUPER_ADMIN;
+
+  // Funds (the register below) vs Campaigns (phase39, client 10-11 Oct —
+  // bulk-email the register, with per-recipient tracking). A tab rather than
+  // a separate route/sidebar entry, so there's one place to go to work the
+  // investors list either way.
+  const [view, setView] = useState('funds');
 
   const [items, setItems] = useState([]);
   const [fetching, setFetching] = useState(false);
@@ -498,6 +505,41 @@ export default function AdminInvestors() {
         </div>
       </div>
 
+      <div style={{ display: 'flex', gap: 8, marginBlockEnd: 'var(--spacing-lg)', borderBottom: '1px solid var(--color-border)' }}>
+        <button
+          type="button"
+          onClick={() => setView('funds')}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '10px 4px', marginBlockEnd: -1,
+            background: 'none', border: 'none', cursor: 'pointer',
+            borderBottom: `2px solid ${view === 'funds' ? 'var(--color-accent)' : 'transparent'}`,
+            color: view === 'funds' ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+            fontWeight: view === 'funds' ? 600 : 500,
+          }}
+        >
+          <List size={16} /> {t('investors.title')}
+        </button>
+        <button
+          type="button"
+          onClick={() => setView('campaigns')}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '10px 4px', marginBlockEnd: -1,
+            background: 'none', border: 'none', cursor: 'pointer',
+            borderBottom: `2px solid ${view === 'campaigns' ? 'var(--color-accent)' : 'transparent'}`,
+            color: view === 'campaigns' ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+            fontWeight: view === 'campaigns' ? 600 : 500,
+          }}
+        >
+          <Megaphone size={16} /> {t('investorCampaigns.tabLabel')}
+        </button>
+      </div>
+
+      {view === 'campaigns' ? (
+        <InvestorCampaigns />
+      ) : (
+        <>
       <DashboardBoxes boxes={boxes} loading={fetching} />
 
       {(error || notice) && (
@@ -726,6 +768,8 @@ export default function AdminInvestors() {
         row={viewingRow}
         extraFields={detailExtras}
       />
+        </>
+      )}
     </div>
   );
 }

@@ -28,6 +28,7 @@ import {
   renewalReminderEmail,
 } from './_emailTemplates.js';
 import { APP_URL } from './_appUrl.js';
+import { draftWeeklyInvestorCampaign } from './_investorCampaigns.js';
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -66,8 +67,16 @@ async function authenticate(req) {
 }
 
 export default async function handler(req, res) {
-  // GET = the daily Vercel Cron hitting this route for renewal reminders.
+  // GET = Vercel Cron. Two independent jobs share this route (the 12-function
+  // Hobby cap means a new file per cron isn't an option — see CLAUDE.md) and
+  // are told apart by a ?job= query param set per-entry in vercel.json's
+  // crons array; the daily renewal reminder is the unmarked default so its
+  // existing URL keeps working unchanged.
   if (req.method === 'GET') {
+    const job = new URL(req.url, 'http://localhost').searchParams.get('job');
+    if (job === 'investor-campaign-draft') {
+      return await handleInvestorCampaignDraftCron(req, res);
+    }
     return await handleRenewalCron(req, res);
   }
   if (req.method !== 'POST') {
@@ -275,4 +284,34 @@ async function handleRenewalCron(req, res) {
   }
 
   return res.status(200).json({ success: true, reminded });
+}
+
+// Weekly cron (Monday 01:00 Gulf Standard Time = Sunday 21:00 UTC — see
+// vercel.json): AI-drafts a new investor-update email and notifies the Super
+// Admin it's ready to review. Deliberately does NOT send it — client, 11 Oct,
+// explicit: an AI-written draft must be reviewed before 150 real investors
+// ever see it. Reuses the same CRON_SECRET check as the renewal reminder;
+// both are the same trusted caller (Vercel Cron), so there's no reason for a
+// second secret.
+async function handleInvestorCampaignDraftCron(req, res) {
+  const secret = process.env.CRON_SECRET;
+  const auth = req.headers?.authorization || req.headers?.Authorization || '';
+  if (!secret || auth !== `Bearer ${secret}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const campaign = await draftWeeklyInvestorCampaign(supabaseAdmin);
+  if (!campaign) {
+    // Logged in detail inside draftWeeklyInvestorCampaign already. 200, not
+    // 500: this is a soft failure (no draft this week) that Vercel Cron
+    // retrying hourly would not fix — the next Monday's run is the real retry.
+    return res.status(200).json({ success: false, reason: 'draft generation failed, see logs' });
+  }
+
+  await notifyAdmins(supabaseAdmin, {
+    title: 'New investor campaign draft ready for review',
+    message: `This week's AI-drafted investor update ("${campaign.subject}") is waiting in Investors -> Campaigns. Nothing is sent until you review and press Send.`,
+  });
+
+  return res.status(200).json({ success: true, campaignId: campaign.id });
 }

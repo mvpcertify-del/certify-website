@@ -1053,3 +1053,50 @@ export function partnerReplyEmail({ bodyText, partnerName }) {
 
   return { html, text };
 }
+
+// ---------------------------------------------------------------------------
+// Investor campaigns (phase39, client 10-11 Oct)
+// ---------------------------------------------------------------------------
+// `body` is admin-authored PLAIN TEXT, same contract as contract_templates.body
+// (phase29) — split on blank lines into paragraphs, never interpreted as HTML,
+// so nothing typed in the campaign composer can inject markup. escapeHtml runs
+// on each paragraph before it is wrapped.
+//
+// `unsubscribeUrl` is REQUIRED, not optional — this is a recurring marketing
+// send to an external list, and every regime it could be regulated under
+// (CAN-SPAM, PECR/GDPR, ...) requires a working opt-out on every send. Throws
+// rather than silently omitting it, so a caller can't accidentally ship a
+// non-compliant email by forgetting the argument.
+export function investorCampaignEmail({ subject, body: bodyText, unsubscribeUrl }) {
+  if (!unsubscribeUrl) {
+    throw new Error('investorCampaignEmail: unsubscribeUrl is required on every send');
+  }
+  const paragraphs = String(bodyText || '')
+    .split(/\n{2,}/)
+    .map((block) => escapeHtml(block).replace(/\n/g, '<br>'))
+    .filter(Boolean);
+  const bodyHtml = paragraphs.map((p) => body(p)).join('');
+
+  const html = layout({
+    title: escapeHtml(subject || ''),
+    preheader: paragraphs[0]?.replace(/<br>/g, ' ').slice(0, 140),
+    bodyHtml,
+    footerHtml: `
+      <p style="margin:0 0 10px;font-size:13px;line-height:1.6;color:${TEXT_SECONDARY};">
+        Reach us at <a href="mailto:${SUPPORT_EMAIL}" style="color:${ACCENT_ON_WHITE};text-decoration:none;font-weight:500;">${SUPPORT_EMAIL}</a>.
+      </p>
+      <p style="margin:0;font-size:12px;line-height:1.6;color:${TEXT_TERTIARY};">
+        ${BRAND_TEXT}™ — ISO certification, simplified. ·
+        <a href="${escapeHtml(unsubscribeUrl)}" style="color:${TEXT_TERTIARY};text-decoration:underline;">Unsubscribe</a>
+      </p>`,
+  });
+
+  const text = [
+    String(bodyText || ''),
+    ``,
+    `— ${BRAND_TEXT}`,
+    `Unsubscribe: ${unsubscribeUrl}`,
+  ].join('\n');
+
+  return { subject, html, text };
+}
