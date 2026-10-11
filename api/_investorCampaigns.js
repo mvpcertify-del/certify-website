@@ -29,12 +29,16 @@ import { newReplyToken, buildReplyTo } from './_replyAddress.js';
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL;
-// Business identity — a reply to a campaign should reach a person, same
-// reasoning as every other partner-facing letter in api/referrals.js.
+// Personal identity, not the generic business one — this is Midhat speaking
+// to a fund directly (the template now signs it as him too, see
+// investorCampaignEmail in _emailTemplates.js), same register
+// investorOutreachEmail already uses for one-to-one fund outreach. A reply
+// still reaches a person either way; this just matches who the letter reads
+// as being from. Override via env if ceo@certify.cx ever needs to change
+// without a code deploy.
 const CAMPAIGN_FROM_EMAIL =
-  process.env.RESEND_SUPPORT_FROM_EMAIL ||
-  process.env.RESEND_FROM_EMAIL ||
-  'Certify.cx Support <support@certify.cx>';
+  process.env.RESEND_INVESTOR_FROM_EMAIL ||
+  'Midhat Abu Ghazaleh <ceo@certify.cx>';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

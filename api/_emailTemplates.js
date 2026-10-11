@@ -1067,20 +1067,59 @@ export function partnerReplyEmail({ bodyText, partnerName }) {
 // (CAN-SPAM, PECR/GDPR, ...) requires a working opt-out on every send. Throws
 // rather than silently omitting it, so a caller can't accidentally ship a
 // non-compliant email by forgetting the argument.
-export function investorCampaignEmail({ subject, body: bodyText, unsubscribeUrl }) {
+//
+// Design, 11 Oct: the plain-paragraphs-in-a-box version read as an internal
+// notice, not something a VC fund expects from a company courting them.
+// Re-styled as an investor-relations update: a small "INVESTOR UPDATE"
+// eyebrow above the subject as the headline, generous paragraph spacing, one
+// deliberate CTA (gives Resend's click-tracking something real to track, not
+// decoration), and closed with Midhat's own signature rather than a generic
+// "the team" sign-off — the same personal register investorOutreachEmail
+// already uses for one-to-one fund outreach, kept consistent here for the
+// recurring version.
+export function investorCampaignEmail({ subject, body: bodyText, unsubscribeUrl, ctaUrl }) {
   if (!unsubscribeUrl) {
     throw new Error('investorCampaignEmail: unsubscribeUrl is required on every send');
   }
+  const safeSubject = escapeHtml(subject || '');
   const paragraphs = String(bodyText || '')
     .split(/\n{2,}/)
     .map((block) => escapeHtml(block).replace(/\n/g, '<br>'))
     .filter(Boolean);
   const bodyHtml = paragraphs.map((p) => body(p)).join('');
+  const resolvedCtaUrl = escapeHtml(ctaUrl || 'https://certify.cx');
+
+  const headerHtml = `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+      <tr>
+        <td style="vertical-align:middle;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td style="padding-right:12px;vertical-align:middle;">${logoMark(36)}</td>
+              <td style="vertical-align:middle;">${wordmark(22)}</td>
+            </tr>
+          </table>
+        </td>
+        <td align="right" style="vertical-align:middle;">
+          <span style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${TEXT_TERTIARY};">Investor Update</span>
+        </td>
+      </tr>
+    </table>`;
 
   const html = layout({
-    title: escapeHtml(subject || ''),
+    title: safeSubject,
     preheader: paragraphs[0]?.replace(/<br>/g, ' ').slice(0, 140),
-    bodyHtml,
+    headerHtml,
+    bodyHtml: `
+      ${heading(safeSubject)}
+      ${bodyHtml}
+      <p style="margin:8px 0 28px;">${button(resolvedCtaUrl, 'Visit Certify.cx')}</p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 0;border-top:1px solid ${BORDER};">
+        <tr><td style="padding:22px 0 0;">
+          <p style="margin:0 0 2px;font-size:14px;line-height:1.6;color:${TEXT_PRIMARY};font-weight:600;">Midhat Abu Ghazaleh</p>
+          <p style="margin:0;font-size:13px;line-height:1.5;color:${TEXT_TERTIARY};">Founder &amp; CEO — ${BRAND_TEXT}</p>
+        </td></tr>
+      </table>`,
     footerHtml: `
       <p style="margin:0 0 10px;font-size:13px;line-height:1.6;color:${TEXT_SECONDARY};">
         Reach us at <a href="mailto:${SUPPORT_EMAIL}" style="color:${ACCENT_ON_WHITE};text-decoration:none;font-weight:500;">${SUPPORT_EMAIL}</a>.
@@ -1094,7 +1133,11 @@ export function investorCampaignEmail({ subject, body: bodyText, unsubscribeUrl 
   const text = [
     String(bodyText || ''),
     ``,
-    `— ${BRAND_TEXT}`,
+    `Visit Certify.cx: ${ctaUrl || 'https://certify.cx'}`,
+    ``,
+    `Midhat Abu Ghazaleh`,
+    `Founder & CEO — ${BRAND_TEXT}`,
+    ``,
     `Unsubscribe: ${unsubscribeUrl}`,
   ].join('\n');
 
