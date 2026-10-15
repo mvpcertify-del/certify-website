@@ -249,9 +249,13 @@ export default function LandingPage() {
               <Link to="/privacy" className="landing__footer-link">{t('auth.privacyLink')}</Link>
               <Link to="/terms" className="landing__footer-link">{t('auth.termsLink')}</Link>
             </div>
-            {/* Phase 1: stakeholder registration links (auditor/CB/referral/etc.) hidden
-                until customer onboarding is perfected. The /register/:type routes still
-                resolve when accessed directly. */}
+            <div className="landing__footer-col">
+              <h4 className="landing__footer-heading">{t('landing.footerJoinNetwork')}</h4>
+              <Link to="/register/auditor" className="landing__footer-link">{t('stakeholder.auditor.singular')}</Link>
+              <Link to="/register/certification-body" className="landing__footer-link">{t('stakeholder.certificationBody.singular')}</Link>
+              <Link to="/register/consultancy" className="landing__footer-link">{t('stakeholder.consultancy.singular')}</Link>
+              <Link to="/register/referral" className="landing__footer-link">{t('stakeholder.referral.singular')}</Link>
+            </div>
           </div>
           <div className="landing__footer-bottom">
             <p className="landing__footer-text">{t('common.allRightsReserved')}</p>

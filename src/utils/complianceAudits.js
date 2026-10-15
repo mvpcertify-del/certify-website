@@ -37,9 +37,10 @@ import pciLogo from '../assets/compliance/pci-dss.png';
 import ccpaLogo from '../assets/compliance/ccpa-cpra.png';
 import hitrustLogo from '../assets/compliance/hitrust.png';
 import hipaaLogo from '../assets/compliance/hipaa.png';
-import pentestLogo from '../assets/compliance/pentesting.png';
-import soxLogo from '../assets/compliance/sox.png';
 
+// GMP and CE (replaced Penetration Testing / SOX ITGC, client 15 Oct) have no
+// logo asset yet — ComplianceLogo renders nothing when `logo` is null/absent,
+// same fallback every other service without a mark already uses.
 const LOGOS = {
   soc: socLogo,
   gdpr: gdprLogo,
@@ -47,8 +48,6 @@ const LOGOS = {
   'ccpa-cpra': ccpaLogo,
   hitrust: hitrustLogo,
   hipaa: hipaaLogo,
-  'penetration-testing': pentestLogo,
-  'sox-itgc': soxLogo,
 };
 
 export const COMPLIANCE_AUDITS = Object.fromEntries(
