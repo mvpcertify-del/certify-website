@@ -102,6 +102,12 @@ export default function ProfileManagementTable({
   createFields = [],
   addLabel,
   createTitle,
+  // Optional: (row) => Promise<[{label, value}]>, appended to the View popup
+  // after the custom-field answers. Added for Auditors (client, 16 Oct: "I
+  // need to see full details, not a summary") — the Edit form has file
+  // inputs to ADD a certificate/CV but the View popup never showed what was
+  // already on file, which is exactly the "summary, not full details" gap.
+  fetchDetailExtras,
 }) {
   const { user } = useAuth();
   const { t } = useTranslation();
@@ -128,6 +134,7 @@ export default function ProfileManagementTable({
   // but it was write-only). The definitions give the labels and the order;
   // profiles.custom_fields holds the answers, keyed by field_key.
   const [customFieldDefs, setCustomFieldDefs] = useState([]);
+  const [detailExtras, setDetailExtras] = useState([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -309,7 +316,13 @@ export default function ProfileManagementTable({
 
   const openView = (row) => {
     setViewingRow(row);
+    setDetailExtras([]);
     setShowView(true);
+    if (fetchDetailExtras) {
+      fetchDetailExtras(row)
+        .then((extras) => setDetailExtras(Array.isArray(extras) ? extras : []))
+        .catch((err) => console.error('fetchDetailExtras failed:', err));
+    }
   };
 
   const blankCreateForm = () => {
@@ -723,7 +736,7 @@ export default function ProfileManagementTable({
         title={viewingRow ? rowName(viewingRow) : t('common.view')}
         columns={columns.map(c => (c.renderDetail ? { ...c, render: c.renderDetail } : c))}
         row={viewingRow}
-        extraFields={customFieldAnswers}
+        extraFields={[...customFieldAnswers, ...detailExtras]}
       />
     </div>
   );

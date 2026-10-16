@@ -87,17 +87,17 @@ export default function LandingPage() {
           </div>
           <div className="landing__hero-stats">
             <div className="landing__hero-stat">
-              <span className="landing__hero-stat-number">2,500+</span>
+              <span className="landing__hero-stat-number">30 {t('landing.statDays')}</span>
               <span className="landing__hero-stat-label">{t('landing.statCompanies')}</span>
             </div>
             <div className="landing__hero-stat-divider" />
             <div className="landing__hero-stat">
-              <span className="landing__hero-stat-number">5</span>
+              <span className="landing__hero-stat-number">{t('landing.statUpTo')} 60%</span>
               <span className="landing__hero-stat-label">{t('landing.statRegions')}</span>
             </div>
             <div className="landing__hero-stat-divider" />
             <div className="landing__hero-stat">
-              <span className="landing__hero-stat-number">98%</span>
+              <span className="landing__hero-stat-number">150+</span>
               <span className="landing__hero-stat-label">{t('landing.statApproval')}</span>
             </div>
           </div>

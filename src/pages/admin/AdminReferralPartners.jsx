@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Gift, RefreshCw, Search, AlertCircle, CheckCircle } from 'lucide-react';
+import { Gift, RefreshCw, Search, AlertCircle, CheckCircle, List, FileText } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { apiPost } from '../../lib/apiClient';
 import { Button, Input } from '../../components/ui/FormElements';
@@ -8,6 +8,7 @@ import NameFields from '../../components/ui/NameFields';
 import Modal from '../../components/ui/Modal';
 import DetailModal from '../../components/ui/DetailModal';
 import RowActions from '../../components/ui/RowActions';
+import ContractTemplateEditor from '../../components/admin/ContractTemplateEditor';
 import { ROLES } from '../../utils/roles';
 import './AdminReferralPartners.css';
 
@@ -29,6 +30,9 @@ export default function AdminReferralPartners() {
   const { user, loading: authLoading } = useAuth();
   const isSuperAdmin = user?.role === ROLES.SUPER_ADMIN;
 
+  // Agreement tab added 16 Oct — the contract template editor existed only
+  // for Consultancies; the Referral/Affiliate contract had no editor at all.
+  const [view, setView] = useState('partners');
   const [partners, setPartners] = useState([]);
   const [defaultPercent, setDefaultPercent] = useState(10);
   const [loading, setLoading] = useState(true);
@@ -41,7 +45,7 @@ export default function AdminReferralPartners() {
   const [viewingPartner, setViewingPartner] = useState(null);
   const [showEdit, setShowEdit] = useState(false);
   const [editingPartner, setEditingPartner] = useState(null);
-  const [editForm, setEditForm] = useState({ full_name: '', email: '', company_name: '', country: '' });
+  const [editForm, setEditForm] = useState({ full_name: '', email: '', company_name: '', country: '', commission_percent_override: '' });
   const [saving, setSaving] = useState(false);
 
   const locale = i18n.language || undefined;
@@ -142,6 +146,10 @@ export default function AdminReferralPartners() {
       email: p.email || '',
       company_name: p.company_name || '',
       country: p.country || '',
+      // Blank means "no agreed rate — uses the flat default". has_agreed_rate
+      // is only true when commission_percent_override is actually set, and in
+      // that case commission_percent IS that override (see api/referrals.js).
+      commission_percent_override: p.has_agreed_rate ? String(p.commission_percent) : '',
     });
     setError('');
     setShowEdit(true);
@@ -154,6 +162,20 @@ export default function AdminReferralPartners() {
       setError(t('admin.fillRequired'));
       return;
     }
+    const rateRaw = editForm.commission_percent_override.trim();
+    let rateOverride; // undefined = field omitted from payload entirely
+    if (rateRaw === '') {
+      // Only send `null` (clear the override) when one was actually set —
+      // omitting the field otherwise avoids a no-op write.
+      rateOverride = editingPartner.has_agreed_rate ? null : undefined;
+    } else {
+      const pct = Number(rateRaw);
+      if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
+        setError(t('adminReferralPartners.invalidRate'));
+        return;
+      }
+      rateOverride = pct;
+    }
     setSaving(true);
     try {
       await apiPost('/api/user', {
@@ -163,14 +185,21 @@ export default function AdminReferralPartners() {
         email: editForm.email,
         company_name: editForm.company_name || null,
         country: editForm.country || null,
+        ...(rateOverride !== undefined ? { commission_percent_override: rateOverride } : {}),
       });
       // Patch the row in place rather than refetching: only a Super Admin can
       // reach this form and they are not region-scoped, so an edited country
       // (which the API turns into a new `region`) cannot move the partner out
       // of the list being shown.
-      setPartners((prev) => prev.map((p) =>
-        p.profile_id === editingPartner.profile_id ? { ...p, ...editForm } : p
-      ));
+      setPartners((prev) => prev.map((p) => {
+        if (p.profile_id !== editingPartner.profile_id) return p;
+        const next = { ...p, ...editForm };
+        if (rateOverride !== undefined) {
+          next.commission_percent = rateOverride == null ? defaultPercent : rateOverride;
+          next.has_agreed_rate = rateOverride != null;
+        }
+        return next;
+      }));
       setShowEdit(false);
       setSuccess(`${t('common.save')}: ${editForm.full_name || editForm.email}`);
     } catch (err) {
@@ -250,6 +279,43 @@ export default function AdminReferralPartners() {
         </div>
       </div>
 
+      {isSuperAdmin && (
+        <div style={{ display: 'flex', gap: 8, marginBlockEnd: 'var(--spacing-lg)', borderBottom: '1px solid var(--color-border)' }}>
+          <button
+            type="button"
+            onClick={() => setView('partners')}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '10px 4px', marginBlockEnd: -1,
+              background: 'none', border: 'none', cursor: 'pointer',
+              borderBottom: `2px solid ${view === 'partners' ? 'var(--color-accent)' : 'transparent'}`,
+              color: view === 'partners' ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+              fontWeight: view === 'partners' ? 600 : 500,
+            }}
+          >
+            <List size={16} /> {t('adminReferralPartners.title')}
+          </button>
+          <button
+            type="button"
+            onClick={() => setView('agreement')}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '10px 4px', marginBlockEnd: -1,
+              background: 'none', border: 'none', cursor: 'pointer',
+              borderBottom: `2px solid ${view === 'agreement' ? 'var(--color-accent)' : 'transparent'}`,
+              color: view === 'agreement' ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+              fontWeight: view === 'agreement' ? 600 : 500,
+            }}
+          >
+            <FileText size={16} /> {t('adminReferralPartners.tabAgreement')}
+          </button>
+        </div>
+      )}
+
+      {view === 'agreement' && isSuperAdmin ? (
+        <ContractTemplateEditor partnerType="referral" />
+      ) : (
+      <>
       <div className="adref__summary">
         <div className="adref__stat">
           <span className="adref__stat-label">{t('adminReferralPartners.statPartners')}</span>
@@ -418,6 +484,8 @@ export default function AdminReferralPartners() {
       <p className="adref__footnote">
         {t('adminReferralPartners.footnote', { percent: defaultPercent })}
       </p>
+      </>
+      )}
 
       {/* Edit partner */}
       <Modal isOpen={showEdit} onClose={() => setShowEdit(false)} title={t('adminReferralPartners.editTitle')}>
@@ -457,6 +525,21 @@ export default function AdminReferralPartners() {
             value={editForm.country}
             onChange={(e) => setEditForm((p) => ({ ...p, country: e.target.value }))}
           />
+          <Input
+            label={t('adminReferralPartners.rateFieldLabel', { percent: defaultPercent })}
+            type="number"
+            min="0"
+            max="100"
+            step="0.01"
+            id="edit-partner-rate"
+            name="commission_percent_override"
+            placeholder={String(defaultPercent)}
+            value={editForm.commission_percent_override}
+            onChange={(e) => setEditForm((p) => ({ ...p, commission_percent_override: e.target.value }))}
+          />
+          <span className="form-hint" style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', marginTop: '-12px', display: 'block' }}>
+            {t('adminReferralPartners.rateFieldHint')}
+          </span>
           <div className="adref__form-actions">
             <Button type="button" variant="ghost" size="md" onClick={() => setShowEdit(false)}>
               {t('common.cancel')}

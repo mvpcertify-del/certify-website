@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import ProfileManagementTable from '../../components/admin/ProfileManagementTable';
 import { ROLES } from '../../utils/roles';
+import { apiPost } from '../../lib/apiClient';
 import {
   AUDITOR_LEVELS,
   AUDITOR_STANDARD_OPTIONS,
@@ -10,6 +11,13 @@ import {
 } from '../../utils/auditorOptions';
 
 const FILE_ACCEPT = '.pdf,.jpg,.jpeg,.png,.doc,.docx';
+
+const DOC_TYPE_KEYS = {
+  certificate: 'admin.docCertificate',
+  cv: 'admin.docCv',
+  audit_log: 'admin.docAuditLog',
+  other: 'admin.docOther',
+};
 
 // A qualification list can hold 39 IAF codes; a table cell cannot. Show the
 // first two and a "+N" counter (the same idiom MultiSelect uses for its chips)
@@ -31,6 +39,24 @@ function arrayCell(values, labelFn) {
 function arrayDetail(values, labelFn) {
   const list = Array.isArray(values) ? values : [];
   return list.length ? list.map(labelFn).join(', ') : '—';
+}
+
+// Fetched when the View popup opens (client, 16 Oct: "I need to see full
+// details, not a summary") — the Edit form has file inputs to ADD a
+// certificate/CV but never showed what was already on file, which was
+// exactly the gap. Each uploaded document becomes one {label, value} row
+// with a short-lived download link; api/user.js signs it server-side.
+async function fetchAuditorDocuments(row, t) {
+  const { documents } = await apiPost('/api/user', { action: 'list-auditor-documents', auditorId: row.id });
+  if (!documents || documents.length === 0) {
+    return [{ label: t('admin.documents'), value: t('admin.docNoneUploaded') }];
+  }
+  return documents.map((doc) => ({
+    label: t(DOC_TYPE_KEYS[doc.doc_type] || DOC_TYPE_KEYS.other),
+    value: doc.url
+      ? <a href={doc.url} target="_blank" rel="noopener noreferrer">{doc.file_name}</a>
+      : doc.file_name,
+  }));
 }
 
 export default function AdminAuditors() {
@@ -149,6 +175,7 @@ export default function AdminAuditors() {
       subtitle={(count) => t('admin.auditorsFound', { count })}
       loadingText={t('admin.loadingAuditors')}
       emptyText={t('admin.noAuditorsFound')}
+      fetchDetailExtras={(row) => fetchAuditorDocuments(row, t)}
     />
   );
 }

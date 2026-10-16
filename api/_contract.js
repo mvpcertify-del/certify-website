@@ -70,6 +70,38 @@ export class ContractError extends Error {
 // partner_type values below key contract_templates and contract_acceptances.
 export const PARTNER_TYPES = ['referral', 'country_admin', 'auditor', 'consultancy'];
 
+// Lets a referral/consultancy contract template say "{{commission_percent}}%"
+// once and have it read correctly for every signer, instead of a flat number
+// typed into the template that goes stale the moment an admin agrees a
+// different rate with one partner (client, 16 Oct: a Business Developer tier
+// at 25%, contract still needs to show their real number). Mirrors
+// getReferrerTier() in api/checkout.js, kept independent rather than imported
+// — checkout.js is payment-critical and this module must not create a runtime
+// dependency on it. If the two ever drift, the signed contract and the actual
+// payout could disagree; search "REFERRAL_FLAT_COMMISSION_PERCENT" across
+// api/ before changing either number.
+const REFERRAL_FLAT_COMMISSION_PERCENT = 10;
+const CONSULTANCY_COMMISSION_PERCENT = 25;
+
+function resolveCommissionPercent(profile) {
+  if (profile?.commission_percent_override != null) {
+    return Number(profile.commission_percent_override);
+  }
+  return profile?.stakeholder_type === 'consultancy'
+    ? CONSULTANCY_COMMISSION_PERCENT
+    : REFERRAL_FLAT_COMMISSION_PERCENT;
+}
+
+// A no-op for any template that doesn't use the token, so existing
+// hand-typed "10%" text is untouched until an admin opts a template in.
+function withCommissionToken(body, partnerType, profile) {
+  if (partnerType !== 'referral' && partnerType !== 'consultancy') return body;
+  if (!body || !body.includes('{{commission_percent}}')) return body;
+  const pct = resolveCommissionPercent(profile);
+  const formatted = Number.isInteger(pct) ? String(pct) : pct.toFixed(2);
+  return body.split('{{commission_percent}}').join(formatted);
+}
+
 export function partnerTypeForProfile(profile) {
   if (!profile) return null;
   const r = profile.role;
@@ -382,7 +414,7 @@ export async function acceptContract(supabaseAdmin, input, caller, req) {
 
   const { data: profile } = await supabaseAdmin
     .from('profiles')
-    .select('id, full_name, company_name, email, country, approved_at, role, stakeholder_type')
+    .select('id, full_name, company_name, email, country, approved_at, role, stakeholder_type, commission_percent_override')
     .eq('id', profileId)
     .maybeSingle();
 
@@ -396,6 +428,9 @@ export async function acceptContract(supabaseAdmin, input, caller, req) {
   }
 
   const template = await getActiveTemplate(supabaseAdmin, partnerType);
+  // Resolved once, here, and snapshotted — a later rate change must not
+  // rewrite what this person already signed.
+  const bodyForSigner = withCommissionToken(template.body, partnerType, profile);
 
   const effectiveFrom = resolveEffectiveFrom(profile);
   const expiresAt = effectiveFrom
@@ -411,7 +446,7 @@ export async function acceptContract(supabaseAdmin, input, caller, req) {
     contract_version_label: `v${template.version}_UIL_NetSales`,
     is_accepted: true,
     title_snapshot: template.title,
-    body_snapshot: template.body,
+    body_snapshot: bodyForSigner,
     signed_name: signedName,
     accepted_ip: clientIp(req),
     user_agent: (req?.headers?.['user-agent'] || '').slice(0, 500) || null,
@@ -534,7 +569,7 @@ export async function getContractForPartner(supabaseAdmin, caller) {
   // Derive the contract from the caller's role — the page never chooses it.
   const { data: profile } = await supabaseAdmin
     .from('profiles')
-    .select('role, stakeholder_type')
+    .select('role, stakeholder_type, commission_percent_override')
     .eq('id', caller.id)
     .maybeSingle();
   const partnerType = partnerTypeForProfile(profile);
@@ -543,6 +578,7 @@ export async function getContractForPartner(supabaseAdmin, caller) {
   }
 
   const template = await getActiveTemplate(supabaseAdmin, partnerType);
+  const bodyForSigner = withCommissionToken(template.body, partnerType, profile);
 
   const { data: acceptance } = await supabaseAdmin
     .from('contract_acceptances')
@@ -564,7 +600,7 @@ export async function getContractForPartner(supabaseAdmin, caller) {
       id: template.id,
       version: template.version,
       title: template.title,
-      body: template.body,
+      body: bodyForSigner,
       term_months: template.term_months,
     },
     acceptance: acceptance || null,

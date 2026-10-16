@@ -68,6 +68,7 @@ export default async function handler(req, res) {
     // actions above: api/ is at the Vercel Hobby 12-route ceiling.
     if (action === 'add-auditor-document') return await addAuditorDocument(req, res);
     if (action === 'save-auditor-qualifications') return await saveAuditorQualifications(req, res);
+    if (action === 'list-auditor-documents') return await listAuditorDocuments(req, res);
     return res.status(400).json({ error: 'Unknown action' });
   } catch (error) {
     console.error('User route error:', error);
@@ -108,7 +109,7 @@ async function updateProfile(req, res) {
     auditor_standards, auditor_levels, auditor_sectors,
   } = req.body;
   // Privileged fields are `let` because authorization below may strip them.
-  let { role, region, email, stakeholder_type, approval_status } = req.body;
+  let { role, region, email, stakeholder_type, approval_status, commission_percent_override } = req.body;
 
   if (!userId) {
     return res.status(400).json({ error: 'Missing userId' });
@@ -130,7 +131,7 @@ async function updateProfile(req, res) {
 
   const { data: target } = await supabaseAdmin
     .from('profiles')
-    .select('id, role, region, email, stakeholder_type, approval_status')
+    .select('id, role, region, email, stakeholder_type, approval_status, commission_percent_override')
     .eq('id', userId)
     .maybeSingle();
 
@@ -159,7 +160,11 @@ async function updateProfile(req, res) {
   // an in-region user's email — that value is pushed into auth.users below, so
   // it is a password-reset account takeover — nor move somebody out of their
   // own scope, which create-user.js clamps for the same reason.
-  const PRIVILEGED = { role, region, email, stakeholder_type, approval_status };
+  // commission_percent_override is here too: it is what getReferrerTier() in
+  // api/checkout.js pays out on every future sale, so letting a non-super
+  // admin (or the partner themselves) set it would be a direct payroll
+  // escalation, not just a profile edit.
+  const PRIVILEGED = { role, region, email, stakeholder_type, approval_status, commission_percent_override };
   if (!isSuper) {
     const attempted = Object.entries(PRIVILEGED).filter(
       ([field, value]) => value !== undefined && value !== target?.[field],
@@ -180,6 +185,7 @@ async function updateProfile(req, res) {
     email = undefined;
     stakeholder_type = undefined;
     approval_status = undefined;
+    commission_percent_override = undefined;
   }
 
   // updateRole() validates its input; this path wrote profiles.role with no
@@ -197,6 +203,20 @@ async function updateProfile(req, res) {
   if (stakeholder_type !== undefined) updates.stakeholder_type = stakeholder_type;
   if (approval_status !== undefined) updates.approval_status = approval_status;
   if (custom_fields && typeof custom_fields === 'object') updates.custom_fields = custom_fields;
+  // null clears an agreed rate back to the flat default; any other value must
+  // be a plausible commission percentage, not a number typed into a form by
+  // mistake (getReferrerTier() in api/checkout.js applies this on every sale).
+  if (commission_percent_override !== undefined) {
+    if (commission_percent_override === null) {
+      updates.commission_percent_override = null;
+    } else {
+      const pct = Number(commission_percent_override);
+      if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
+        return res.status(400).json({ error: 'commission_percent_override must be a number between 0 and 100' });
+      }
+      updates.commission_percent_override = pct;
+    }
+  }
   // phone and city were accepted here and then dropped on the floor: they were
   // pulled out of the body, copied into auth user_metadata, and never written
   // to the profiles columns the UI actually reads. Editing either from an admin
@@ -593,8 +613,17 @@ const BOOTSTRAP_MAX_DOCS = 8;
 // Decide whether this caller may write to this auditor's record.
 // The auditorId in the body is never trusted on its own — it is always checked
 // against the identity in the verified token.
+//
+// allowBootstrap: false turns off the token-less registration-window branch
+// below. That branch was written for the WRITE path — a brand-new auditor
+// adding their own first documents before they have a session — and its
+// blast radius is "an unauthenticated holder of a fresh UUID may append a
+// file". Reusing it unchanged for a READ (listAuditorDocuments) would widen
+// that to "may read back and get signed download URLs for every document
+// already on file", which is a materially different exposure (security
+// review, 16 Oct). Callers that only need to read pass { allowBootstrap: false }.
 // Returns { target, actorId } or { error, status }.
-async function resolveAuditorWriteAccess(req, auditorId) {
+async function resolveAuditorWriteAccess(req, auditorId, { allowBootstrap = true } = {}) {
   if (!auditorId || typeof auditorId !== 'string') {
     return { error: 'Missing auditorId', status: 400 };
   }
@@ -628,6 +657,10 @@ async function resolveAuditorWriteAccess(req, auditorId) {
   // into the bootstrap path.
   if (req.headers?.authorization || req.headers?.Authorization) {
     return { error: session.error || 'Unauthorized', status: session.status || 401 };
+  }
+
+  if (!allowBootstrap) {
+    return { error: 'Unauthorized: sign in to view this auditor\'s documents', status: 401 };
   }
 
   // No session at all — registration bootstrap only (see the note above).
@@ -745,6 +778,45 @@ async function addAuditorDocument(req, res) {
   }
 
   return res.status(200).json({ success: true, id: row.id, storagePath: path });
+}
+
+// List an auditor's uploaded certificates/CV with short-lived download links.
+// Added so the admin View popup (AdminAuditors) can show "full details, not a
+// summary" — the Edit form lets an admin ADD documents but never showed what
+// was already on file. Same access rule as addAuditorDocument: the auditor
+// themselves, the super admin, or a regional admin scoped to that auditor's
+// region. Signed with the service role, same reasoning as the upload path —
+// an admin viewing someone else's files has a different auth.uid() than the
+// folder owner, so a direct client-side createSignedUrl would need a storage
+// policy wider than any of these callers should have.
+const DOC_SIGNED_URL_TTL = 60 * 5;
+
+async function listAuditorDocuments(req, res) {
+  const { auditorId } = req.body;
+  if (!auditorId) return res.status(400).json({ error: 'Missing auditorId parameter' });
+
+  const access = await resolveAuditorWriteAccess(req, auditorId, { allowBootstrap: false });
+  if (access.error) return res.status(access.status).json({ error: access.error });
+
+  const { data: docs, error } = await supabaseAdmin
+    .from('auditor_documents')
+    .select('id, doc_type, file_name, storage_path, mime_type, size_bytes, created_at')
+    .eq('auditor_id', auditorId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('listAuditorDocuments: query failed', error);
+    return res.status(500).json({ error: 'Could not load the auditor\'s documents.' });
+  }
+
+  const withUrls = await Promise.all((docs || []).map(async (doc) => {
+    const { data: signed } = await supabaseAdmin.storage
+      .from(AUDITOR_DOC_BUCKET)
+      .createSignedUrl(doc.storage_path, DOC_SIGNED_URL_TTL, { download: doc.file_name });
+    return { ...doc, url: signed?.signedUrl || null };
+  }));
+
+  return res.status(200).json({ documents: withUrls });
 }
 
 // Persist the three qualification arrays.
