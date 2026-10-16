@@ -155,6 +155,15 @@
   background: var(--color-border);
 }
 
+.landing__hero-stats-disclaimer {
+  max-width: 640px;
+  margin: var(--spacing-md) auto 0;
+  text-align: center;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  line-height: 1.5;
+}
+
 /* ---- Sections ---- */
 .landing__section {
   padding: 100px var(--spacing-lg);
