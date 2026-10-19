@@ -4,6 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+    <!-- ==== Google Analytics (GA4) ===========================================
+         Client, 20 Oct: property G-TXJ62L5PZ4. Placed as early in <head> as
+         possible per Google's own install instructions, so pageview timing
+         isn't skewed by everything else below it. This is the ONLY analytics
+         script on the site — no other tracker is installed anywhere.
+    ==================================================================== -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TXJ62L5PZ4"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-TXJ62L5PZ4');
+    </script>
+
     <!-- ==== Favicon ==========================================================
          The tab icon is the client's official mark (teal outlined "C" enclosing
          a checkmark) — the same artwork used in the app lockup, the invoice and
