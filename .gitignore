@@ -29,3 +29,6 @@ dist-ssr
 # Supabase service-role keys). Project-level .claude/settings.json is checked
 # in; local overrides are not.
 .claude/settings.local.json
+
+# Local SEO audit reports
+.local-reports/
