@@ -504,7 +504,7 @@
     "proceedCheckout": "المتابعة إلى الدفع الآمن",
     "sslEncrypted": "مشفر بـ SSL",
     "securePayment": "دفع آمن",
-    "poweredByStripe": "بواسطة Stripe",
+    "poweredByWhop": "بواسطة Whop",
     "cancelReturn": "إلغاء والعودة إلى لوحة التحكم",
     "preparingTitle": "جارٍ تحضير عملية الدفع…",
     "preparingSubtitle": "نقوم بإعداد طلب {{package}} الخاص بـ {{iso}}.",

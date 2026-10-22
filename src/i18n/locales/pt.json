@@ -501,7 +501,7 @@
     "proceedCheckout": "Prosseguir para o Checkout Seguro",
     "sslEncrypted": "Criptografado por SSL",
     "securePayment": "Pagamento Seguro",
-    "poweredByStripe": "Desenvolvido pela Stripe",
+    "poweredByWhop": "Desenvolvido pela Whop",
     "cancelReturn": "Cancelar e voltar ao painel",
     "preparingTitle": "Preparando seu checkout…",
     "preparingSubtitle": "Configurando seu pedido {{package}} para {{iso}}.",

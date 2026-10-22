@@ -1,5 +1,4 @@
 import crypto from 'node:crypto';
-import Stripe from 'stripe';
 import { WhopClient } from '@whop/sdk';
 import { unwrapWebhook } from '@whop/sdk/helpers';
 import { createClient } from '@supabase/supabase-js';
@@ -15,18 +14,15 @@ import {
   // recorded and receipted under their raw URL slug.
   resolveOrderStandardCode,
 } from '../src/utils/pricing.js';
-import { isOfflineMethod, stripeMethodTypesFor, PAYMENT_METHOD_IDS } from '../src/config/paymentMethods.js';
+import { isOfflineMethod, PAYMENT_METHOD_IDS } from '../src/config/paymentMethods.js';
 import { getRegionFromCountry } from '../src/utils/roles.js';
 import { sendVerificationEmail } from './_sendVerificationEmail.js';
 import { notifyAdmins } from './_notifyAdmins.js';
 import { verifyAdmin } from './_verifyAdmin.js';
 import { issueInvoice, issueReceipt, signedUrlFor } from './_billing.js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-10-16',
-});
-
-// Replacing Stripe as the card processor (client decision, 22 Oct 2026). A
+// Whop is the card processor (client decision, 22 Oct 2026 — fully replaced
+// Stripe, no fallback). A
 // one-time-priced "variant" is created per order under the single product
 // configured in WHOP_PRODUCT_ID, and the buyer pays on Whop's hosted
 // purchase_url. Confirmation is webhook-driven (see whopWebhookHandler below),
@@ -45,13 +41,14 @@ const supabaseAdmin = createClient(
 // `payment.succeeded` webhook event's `data.metadata`, so it carries
 // everything the webhook needs to fulfil the order — the Whop analogue of a
 // Stripe Checkout Session's `metadata`.
-async function createWhopCheckout({ amount, title, metadata }) {
+async function createWhopCheckout({ amount, title, description, metadata }) {
   const variant = await whop.variants.create({
     account_id: WHOP_ACCOUNT_ID,
     product_id: WHOP_PRODUCT_ID,
     initial_price: Math.round(Number(amount) * 100) / 100,
     plan_type: 'one_time',
     title: title ? String(title).slice(0, 30) : undefined,
+    description: description || undefined,
     // Reachable only via its own purchase_url, not listed on the public
     // product page — each order gets its own variant, so the page would
     // otherwise fill up with one-off, differently-priced entries.
@@ -854,16 +851,23 @@ async function whopWebhookHandler(req, res, rawBody) {
   return res.status(200).json({ ok: true });
 }
 
-// Fulfils a confirmed `payment.succeeded` event for the guest checkout flow.
-// Metadata was attached when the variant was created (see
-// guestCheckoutHandler's createWhopCheckout call) and Whop echoes it back
-// verbatim, so no lookup by whop_variant_id is needed — but the application
-// row is still re-fetched fresh rather than trusting anything else in the
-// event for money or identity.
+// Dispatches a confirmed `payment.succeeded` event to the right fulfillment
+// path. Metadata was attached when the variant was created (either
+// guestCheckoutHandler's or the logged-in default handler's createWhopCheckout
+// call, above) and Whop echoes it back verbatim — `guest` tells them apart.
 async function handleWhopPaymentSucceeded(payment) {
+  if (payment?.metadata?.guest === 'true') {
+    return fulfillGuestWebhookPayment(payment);
+  }
+  return fulfillLoggedInWebhookPayment(payment);
+}
+
+// Guest (pay-first) checkout confirmation. The application row is re-fetched
+// fresh rather than trusting anything else in the event for money or identity.
+async function fulfillGuestWebhookPayment(payment) {
   const applicationId = payment?.metadata?.applicationId;
   if (!applicationId) {
-    console.error('Whop payment.succeeded with no applicationId in metadata:', payment?.id);
+    console.error('Whop payment.succeeded (guest) with no applicationId in metadata:', payment?.id);
     return;
   }
 
@@ -873,7 +877,7 @@ async function handleWhopPaymentSucceeded(payment) {
     .eq('id', applicationId)
     .maybeSingle();
   if (!app) {
-    console.error(`Whop payment.succeeded for unknown application ${applicationId}`);
+    console.error(`Whop payment.succeeded (guest) for unknown application ${applicationId}`);
     return;
   }
 
@@ -886,6 +890,119 @@ async function handleWhopPaymentSucceeded(payment) {
     .eq('id', app.client_id).maybeSingle();
 
   await fulfillGuestCardPayment(app, { email: prof?.email || null, prof });
+}
+
+// Logged-in client checkout confirmation (buying one or more additional
+// certifications from the dashboard). Mirrors what the old Stripe path did
+// optimistically at session-creation time — mark every row in the basket
+// paid, burn the coupon once per order, credit the referrer once per order —
+// except now gated on the webhook actually confirming money moved, same
+// guarantee the guest flow has always had.
+async function fulfillLoggedInWebhookPayment(payment) {
+  const meta = payment?.metadata || {};
+  const clientId = meta.clientId;
+  const requestedIds = String(meta.applicationIds || meta.applicationId || '')
+    .split(',').map(s => s.trim()).filter(Boolean);
+  if (!clientId || !requestedIds.length) {
+    console.error('Whop payment.succeeded (logged-in) missing clientId/applicationIds in metadata:', payment?.id);
+    return;
+  }
+
+  const { data: rows } = await supabaseAdmin
+    .from('applications')
+    .select('id, client_id, payment_status')
+    .in('id', requestedIds);
+  const owned = (rows || []).filter(r => r.client_id === clientId);
+  if (!owned.length) {
+    console.error(`Whop payment.succeeded (logged-in) found no owned applications for ${requestedIds.join(',')}`);
+    return;
+  }
+
+  // Idempotent: a retried delivery (or the row having been marked paid by
+  // some other path in the meantime) must not burn the coupon or credit the
+  // referrer twice. All rows in one order move together, so checking the
+  // first is enough.
+  if (owned[0].payment_status === 'paid' || owned[0].payment_status === 'verified') return;
+
+  await supabaseAdmin
+    .from('applications')
+    .update({ payment_status: 'paid', payment_method: meta.paymentMethod || 'card' })
+    .in('id', owned.map(r => r.id));
+
+  const finalPrice = Number(meta.discountAmount) >= 0 && meta.subtotal
+    ? Number(meta.subtotal) - Number(meta.discountAmount)
+    : (payment.total?.amount ?? null);
+
+  // ---- Coupon redemption (once per order, not once per row in the basket) ----
+  if (meta.couponCode) {
+    try {
+      const { data: coupon } = await supabaseAdmin
+        .from('discount_coupons').select('*').ilike('code', normalizeCouponCode(meta.couponCode)).maybeSingle();
+      if (coupon) {
+        await supabaseAdmin.from('coupon_redemptions').insert({
+          coupon_id: coupon.id,
+          client_id: clientId,
+          application_id: meta.applicationId || owned[0].id,
+          discount_type: coupon.discount_type || 'percent',
+          discount_percent: coupon.discount_percent == null ? null : Number(coupon.discount_percent),
+          discount_amount: coupon.discount_amount == null ? null : Number(coupon.discount_amount),
+          original_amount: meta.subtotal != null ? Number(meta.subtotal) : null,
+          discounted_amount: finalPrice,
+        });
+        await supabaseAdmin
+          .from('discount_coupons')
+          .update({ redemption_count: (coupon.redemption_count || 0) + 1 })
+          .eq('id', coupon.id);
+      }
+    } catch (cErr) {
+      console.error('Coupon redemption recording error (non-blocking):', cErr);
+    }
+  }
+
+  // ---- Referral commission ----
+  // Re-resolved from the client's email here — the same lookup the original
+  // Stripe path did right before creating the session — rather than trusted
+  // from the event, so a forged metadata field can't invent a commission.
+  try {
+    const { data: userMeta } = await supabaseAdmin.auth.admin.getUserById(clientId);
+    const clientEmail = userMeta?.user?.email;
+    if (clientEmail) {
+      const { data: referralRecord } = await supabaseAdmin
+        .from('referrals')
+        .select('*')
+        .eq('referred_email', clientEmail)
+        .in('status', ['pending', 'signed_up'])
+        .maybeSingle();
+      if (referralRecord && finalPrice != null) {
+        const tierData = await getReferrerTier(referralRecord.referrer_id);
+        const commissionPct = Number(tierData.commission_percent);
+        const commission = Math.round(finalPrice * (commissionPct / 100) * 100) / 100;
+
+        await supabaseAdmin
+          .from('referrals')
+          .update({
+            status: 'converted',
+            payment_amount: finalPrice,
+            commission_amount: commission,
+            commission_percent: commissionPct,
+            tier_label: tierData.label,
+            referred_id: clientId,
+            converted_at: new Date().toISOString(),
+            payout_status: 'pending',
+          })
+          .eq('id', referralRecord.id);
+
+        await supabaseAdmin.from('notifications').insert({
+          user_id: referralRecord.referrer_id,
+          title: 'Referral Converted!',
+          message: `Your referral (${referralRecord.referred_email}) completed a payment of $${finalPrice.toFixed(2)}. Your ${commissionPct}% commission (${tierData.label}) of $${commission.toFixed(2)} has been credited. Please send your bank/payment details to support@certify.cx to receive your payout.`,
+          type: 'referral',
+        });
+      }
+    }
+  } catch (refErr) {
+    console.error('Referral commission error (non-blocking):', refErr);
+  }
 }
 
 async function confirmGuestPaymentHandler(req, res) {
@@ -902,24 +1019,15 @@ async function confirmGuestPaymentHandler(req, res) {
       .maybeSingle();
     if (!app) return res.status(404).json({ error: 'Order not found' });
 
-    // Two callers reach this: the legacy Stripe success page (carries a real
-    // Stripe sessionId, verified here) and the Whop success page (no
-    // sessionId — Whop confirms asynchronously via webhook, see
-    // whopWebhookHandler, which may already have marked this order paid by
-    // the time the buyer's browser gets here, or may not have landed yet).
-    if (sessionId) {
-      let session;
-      try {
-        session = await stripe.checkout.sessions.retrieve(sessionId);
-      } catch {
-        return res.status(400).json({ error: 'Invalid payment session' });
-      }
-      if (!session || session.payment_status !== 'paid' || session.metadata?.applicationId !== String(applicationId)) {
-        return res.status(402).json({ error: 'Payment not confirmed' });
-      }
-    } else if (app.payment_status !== 'paid' && app.payment_status !== 'verified') {
-      // Whop's webhook hasn't landed yet. Not an error — the buyer's own
-      // dashboard/email will reflect it once it does; ask the page to retry.
+    // The success page calls this after Whop redirects back, but the real
+    // confirmation is whopWebhookHandler — asynchronous, and possibly not
+    // landed yet by the time the buyer's browser gets here. `sessionId` is
+    // accepted but unused: it only ever carried a Stripe Checkout Session id,
+    // which nothing creates any more.
+    void sessionId;
+    if (app.payment_status !== 'paid' && app.payment_status !== 'verified') {
+      // Not an error — the buyer's own dashboard/email will reflect it once
+      // the webhook lands; ask the page to retry.
       return res.status(202).json({ pending: true });
     }
 
@@ -1642,57 +1750,35 @@ export default async function handler(req, res) {
       });
     }
 
-    // ---- 4a. Stripe session (card / PayPal) — full one-time payment ----
-    const lineItem = {
-      price_data: {
-        currency: 'usd',
-        product_data: {
-          name: standardsCount > 1
-            ? `${standardsCount} certifications - ${PACKAGE_LABEL} Package`
-            : `${resolveOrderStandardCode(isoName) || isoName} - ${PACKAGE_LABEL} Package`,
-          // Stripe shows this under the item, so the buyer can see on the
-          // payment page itself exactly which standards they are paying for.
-          description: standardsCount > 1 && orderStandards.length
-            ? orderStandards.join(' · ')
-            : 'One-Time Payment',
-        },
-        unit_amount: Math.round(finalPrice * 100),
-      },
-      quantity: 1,
-    };
-
-    const baseUrl = process.env.VITE_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://certify.cx');
-    // The rest of the basket travels back from Stripe so the registration form
-    // can complete every application that was just paid for.
-    const alsoQuery = requestedIds.length > 1
-      ? `&also=${requestedIds.slice(1).join(',')}`
-      : '';
-
-    const sessionConfig = {
-      payment_method_types: stripeMethodTypesFor(paymentMethod),
-      line_items: [lineItem],
-      mode: 'payment',
-      // Allow coupons created directly in the Stripe dashboard to also work,
-      // alongside our app-managed discount_coupons table.
-      allow_promotion_codes: true,
-      success_url: `${baseUrl}/client/apply/${applicationId}?payment=success${alsoQuery}`,
-      cancel_url: `${baseUrl}/client/checkout/${applicationId}?payment=cancelled`,
+    // ---- 4a. Whop hosted checkout — full one-time payment ----
+    // Coupon redemption and referral crediting (previously steps 5 & 6, done
+    // optimistically right here before any payment existed) now happen in
+    // whopWebhookHandler's handleWhopLoggedInPaymentSucceeded, gated on the
+    // confirmed `payment.succeeded` event — the same guarantee the guest flow
+    // already had. Everything this order needs to be fulfilled travels in the
+    // variant's metadata, since Whop echoes it back on the webhook verbatim;
+    // referrer identity is deliberately NOT included; it's re-resolved
+    // server-side from clientId at webhook time, exactly as it was here.
+    const variant = await createWhopCheckout({
+      amount: finalPrice,
+      title: standardsCount > 1
+        ? `${standardsCount} certifications - ${PACKAGE_LABEL}`
+        : `${resolveOrderStandardCode(isoName) || isoName} - ${PACKAGE_LABEL}`,
+      description: standardsCount > 1 && orderStandards.length ? orderStandards.join(' · ') : undefined,
       metadata: {
         applicationId: applicationId,
         applicationIds: requestedIds.join(','),
         clientId: clientId,
         paymentMethod,
-        referralDiscount: referralRecord ? 'true' : 'false',
         couponCode: coupon?.code || '',
+        subtotal: String(price),
         discountAmount: String(discountAmount),
-        employeeBands: String(totals.employeeSurchargeTotal / 200 || 0),
-        additionalLocations: String(totals.locationSurchargeTotal / 200 || 0),
+        employeeBands: String(employeeBands || 0),
+        additionalLocations: String(additionalLocations || 0),
       },
-    };
+    });
 
-    const session = await stripe.checkout.sessions.create(sessionConfig);
-
-    // ---- 4b. Persist surcharge counts + total to the application row ----
+    // ---- 4b. Persist surcharge counts + total + the variant id ----
     // The applications table has additional_employee_bands /
     // additional_locations / total_amount columns (see Phase B migration).
     if (requestedIds.length) {
@@ -1709,6 +1795,7 @@ export default async function handler(req, res) {
               total_amount: shares[i],
               payment_method: paymentMethod,
               payment_status: 'pending',
+              whop_variant_id: variant.id,
             })
             .eq('id', requestedIds[i]);
         }
@@ -1717,73 +1804,8 @@ export default async function handler(req, res) {
       }
     }
 
-    // ---- 5. Record coupon redemption ----
-    if (coupon) {
-      try {
-        await supabaseAdmin.from('coupon_redemptions').insert({
-          coupon_id: coupon.id,
-          client_id: clientId || null,
-          application_id: applicationId || null,
-          discount_type: coupon.discount_type || 'percent',
-          discount_percent: coupon.discount_percent == null ? null : Number(coupon.discount_percent),
-          discount_amount: coupon.discount_amount == null ? null : Number(coupon.discount_amount),
-          original_amount: price,
-          discounted_amount: finalPrice,
-        });
-
-        await supabaseAdmin
-          .from('discount_coupons')
-          .update({ redemption_count: (coupon.redemption_count || 0) + 1 })
-          .eq('id', coupon.id);
-
-        if (applicationId) {
-          await supabaseAdmin
-            .from('applications')
-            .update({ coupon_code: coupon.code })
-            .eq('id', applicationId);
-        }
-      } catch (cErr) {
-        console.error('Coupon redemption recording error (non-blocking):', cErr);
-      }
-    }
-
-    // ---- 6. Commission + referrer notification ----
-    // Referral conversion commission uses the referrer's CURRENT tier,
-    // evaluated on rolling 12-month conversion count.
-    if (referralRecord) {
-      try {
-        const saleAmount = finalPrice;
-        const tierData = await getReferrerTier(referralRecord.referrer_id);
-        const commissionPct = Number(tierData.commission_percent);
-        const commission = Math.round(saleAmount * (commissionPct / 100) * 100) / 100;
-
-        await supabaseAdmin
-          .from('referrals')
-          .update({
-            status: 'converted',
-            payment_amount: saleAmount,
-            commission_amount: commission,
-            commission_percent: commissionPct,
-            tier_label: tierData.label,
-            referred_id: clientId,
-            converted_at: new Date().toISOString(),
-            payout_status: 'pending',
-          })
-          .eq('id', referralRecord.id);
-
-        await supabaseAdmin.from('notifications').insert({
-          user_id: referralRecord.referrer_id,
-          title: 'Referral Converted!',
-          message: `Your referral (${referralRecord.referred_email}) completed a payment of $${saleAmount.toFixed(2)}. Your ${commissionPct}% commission (${tierData.label}) of $${commission.toFixed(2)} has been credited. Please send your bank/payment details to support@certify.cx to receive your payout.`,
-          type: 'referral',
-        });
-      } catch (refErr) {
-        console.error('Referral commission error (non-blocking):', refErr);
-      }
-    }
-
     return res.status(200).json({
-      url: session.url,
+      url: variant.purchase_url,
       referralDiscount: !!referralRecord,
       coupon: coupon ? {
         code: coupon.code,
@@ -1794,7 +1816,7 @@ export default async function handler(req, res) {
       appliedDiscountAmount: discountAmount,
     });
   } catch (error) {
-    console.error('Stripe checkout error:', error);
+    console.error('Whop checkout error:', error);
     return res.status(500).json({ error: error.message || 'Internal Server Error' });
   }
 }

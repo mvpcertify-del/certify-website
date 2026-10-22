@@ -501,7 +501,7 @@
     "proceedCheckout": "Procéder au paiement sécurisé",
     "sslEncrypted": "Chiffré SSL",
     "securePayment": "Paiement sécurisé",
-    "poweredByStripe": "Propulsé par Stripe",
+    "poweredByWhop": "Propulsé par Whop",
     "cancelReturn": "Annuler et revenir au tableau de bord",
     "preparingTitle": "Préparation de votre paiement…",
     "preparingSubtitle": "Configuration de votre commande {{package}} pour {{iso}}.",

@@ -501,7 +501,7 @@
     "proceedCheckout": "前往安全结账",
     "sslEncrypted": "SSL 加密",
     "securePayment": "安全付款",
-    "poweredByStripe": "由 Stripe 提供支持",
+    "poweredByWhop": "由 Whop 提供支持",
     "cancelReturn": "取消并返回仪表板",
     "preparingTitle": "正在准备您的结账…",
     "preparingSubtitle": "正在为您设置 {{iso}} 的 {{package}} 订单。",

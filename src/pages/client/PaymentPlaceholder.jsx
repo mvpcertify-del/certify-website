@@ -769,7 +769,7 @@ export default function PaymentPlaceholder() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <Sparkles size={13} color="#94a3b8" />
-                <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 500 }}>{t('payment.poweredByStripe')}</span>
+                <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 500 }}>{t('payment.poweredByWhop')}</span>
               </div>
             </div>
 

@@ -501,7 +501,7 @@
     "proceedCheckout": "Перейти к безопасной оплате",
     "sslEncrypted": "Шифрование SSL",
     "securePayment": "Безопасный платёж",
-    "poweredByStripe": "Работает на Stripe",
+    "poweredByWhop": "Работает на Whop",
     "cancelReturn": "Отменить и вернуться в панель управления",
     "preparingTitle": "Подготовка вашей оплаты…",
     "preparingSubtitle": "Настройка вашего заказа {{package}} для {{iso}}.",

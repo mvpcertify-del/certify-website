@@ -501,7 +501,7 @@
     "proceedCheckout": "सुरक्षित चेकआउट पर आगे बढ़ें",
     "sslEncrypted": "SSL एन्क्रिप्टेड",
     "securePayment": "सुरक्षित भुगतान",
-    "poweredByStripe": "Stripe द्वारा संचालित",
+    "poweredByWhop": "Whop द्वारा संचालित",
     "cancelReturn": "रद्द करें और डैशबोर्ड पर वापस जाएं",
     "preparingTitle": "आपका चेकआउट तैयार हो रहा है…",
     "preparingSubtitle": "{{iso}} के लिए आपका {{package}} ऑर्डर सेट अप हो रहा है।",
