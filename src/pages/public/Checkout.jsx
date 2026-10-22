@@ -15,6 +15,7 @@ import { getIsoBySlug, ISO_CATALOG_LIST } from '../../utils/isoCatalog';
 import {
   getComplianceBySlug, COMPLIANCE_SERVICE_LIST,
 } from '../../utils/complianceServices';
+import { getTestCheckoutItem } from '../../utils/testCheckoutItem';
 import {
   PAYMENT_METHODS, isOfflineMethod, BANK_TRANSFER_DETAILS, CASH_DETAILS,
 } from '../../config/paymentMethods';
@@ -107,7 +108,7 @@ function CheckoutForm() {
   // still resolves; what it names is now "the thing being bought", not
   // necessarily an ISO standard.
   const isoParam = searchParams.get('iso');
-  const paramSlug = (getIsoBySlug(isoParam || '') || getComplianceBySlug(isoParam || ''))
+  const paramSlug = (getIsoBySlug(isoParam || '') || getComplianceBySlug(isoParam || '') || getTestCheckoutItem(isoParam || ''))
     ? isoParam
     : null;
   const [chosenSlug, setChosenSlug] = useState(paramSlug);
@@ -124,9 +125,11 @@ function CheckoutForm() {
   const referralCode = (searchParams.get('ref') || searchParams.get('coupon') || '').trim();
 
   const isoSlug = chosenSlug || 'iso-9001';
-  // Either catalog. The compliance lookup has to come second only because the
-  // ISO one is the far more common case — the two slug spaces do not overlap.
-  const isoConfig = getIsoBySlug(isoSlug) || getComplianceBySlug(isoSlug);
+  // Either catalog, or the hidden $1 test item (checked last — it only ever
+  // matches its own slug, never a real standard). The compliance lookup has
+  // to come second only because the ISO one is the far more common case —
+  // the three slug spaces do not overlap.
+  const isoConfig = getIsoBySlug(isoSlug) || getComplianceBySlug(isoSlug) || getTestCheckoutItem(isoSlug);
   const isoCode = isoConfig?.fullCode || isoConfig?.code || 'ISO 9001:2015';
   const packageLabel = PACKAGE_LABEL;
 
