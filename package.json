@@ -12,6 +12,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.99.1",
+    "@whop/sdk": "^2.6.0",
     "dotenv": "^17.3.1",
     "i18next": "^26.0.4",
     "i18next-browser-languagedetector": "^8.2.1",

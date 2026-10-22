@@ -34,11 +34,15 @@ function vercelApiPlugin() {
           const module = await import(/* @vite-ignore */ modulePath);
           const handler = module.default;
 
-          // Parse JSON body for POST requests
+          // Parse JSON body for POST requests. The raw bytes are kept on
+          // req.rawBody too — api/checkout.js needs the exact wire bytes
+          // (not a re-serialized object) to verify the Whop webhook
+          // signature; every other handler keeps reading req.body as before.
           if (req.method === 'POST') {
             const chunks = [];
             for await (const chunk of req) chunks.push(chunk);
-            req.body = JSON.parse(Buffer.concat(chunks).toString());
+            req.rawBody = Buffer.concat(chunks).toString();
+            req.body = req.rawBody ? JSON.parse(req.rawBody) : {};
           }
 
           // Adapt res to include .status().json() like Vercel

@@ -1,5 +1,7 @@
 import crypto from 'node:crypto';
 import Stripe from 'stripe';
+import { WhopClient } from '@whop/sdk';
+import { unwrapWebhook } from '@whop/sdk/helpers';
 import { createClient } from '@supabase/supabase-js';
 // applyCoupon is no longer imported directly: every pricing path now goes
 // through bestDiscount, which resolves a coupon and the referral discount
@@ -24,10 +26,58 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2023-10-16',
 });
 
+// Replacing Stripe as the card processor (client decision, 22 Oct 2026). A
+// one-time-priced "variant" is created per order under the single product
+// configured in WHOP_PRODUCT_ID, and the buyer pays on Whop's hosted
+// purchase_url. Confirmation is webhook-driven (see whopWebhookHandler below),
+// never trusted from the browser's redirect back.
+const whop = new WhopClient({ token: process.env.WHOP_API_KEY });
+const WHOP_ACCOUNT_ID = process.env.WHOP_COMPANY_ID;
+const WHOP_PRODUCT_ID = process.env.WHOP_PRODUCT_ID;
+
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
+
+// Creates a one-off priced Whop variant for a single order and returns its
+// hosted checkout URL. `metadata` is echoed back verbatim on the
+// `payment.succeeded` webhook event's `data.metadata`, so it carries
+// everything the webhook needs to fulfil the order — the Whop analogue of a
+// Stripe Checkout Session's `metadata`.
+async function createWhopCheckout({ amount, title, metadata }) {
+  const variant = await whop.variants.create({
+    account_id: WHOP_ACCOUNT_ID,
+    product_id: WHOP_PRODUCT_ID,
+    initial_price: Math.round(Number(amount) * 100) / 100,
+    plan_type: 'one_time',
+    title: title ? String(title).slice(0, 30) : undefined,
+    // Reachable only via its own purchase_url, not listed on the public
+    // product page — each order gets its own variant, so the page would
+    // otherwise fill up with one-off, differently-priced entries.
+    visibility: 'hidden',
+    metadata,
+  });
+  return variant; // { id: 'plan_...', purchase_url, ... }
+}
+
+// Reads the exact wire bytes of the request body. In local dev, vite.config.js
+// already collected them onto req.rawBody (see that file). In production,
+// Vercel leaves the stream untouched because this file's `config.api.bodyParser`
+// below is false, so it's read here directly. Whop's webhook signature covers
+// the exact bytes sent — parsing and re-serializing JSON first changes them
+// and breaks verification.
+async function readRawBody(req) {
+  if (typeof req.rawBody === 'string') return req.rawBody;
+  const chunks = [];
+  for await (const chunk of req) chunks.push(chunk);
+  return Buffer.concat(chunks).toString('utf8');
+}
+
+// Vercel: don't auto-parse the body for this route — see readRawBody above.
+// Local dev's vite.config.js middleware doesn't consult this; it always
+// hands back both req.rawBody and the parsed req.body itself.
+export const config = { api: { bodyParser: false } };
 
 // Consultancy partners earn a flat agreed rate on net sales rather than
 // climbing the volume ladder (client, 21 Jul: "the consultancies will get 25%
@@ -635,39 +685,21 @@ async function guestCheckoutHandler(req, res) {
       return res.status(200).json({ offline: true, paymentMethod, amount: finalPrice, applicationId });
     }
 
-    // ---- 4b. Card → Stripe Checkout session ----
-    const baseUrl = process.env.VITE_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://certify.cx');
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: stripeMethodTypesFor(paymentMethod),
-      line_items: [{
-        price_data: {
-          currency: 'usd',
-          product_data: { name: `${recommendedIso} - ${selectedPackage} Package`, description: 'One-Time Payment' },
-          unit_amount: Math.round(finalPrice * 100),
-        },
-        quantity: 1,
-      }],
-      mode: 'payment',
-      customer_email: email,
-      allow_promotion_codes: true,
-      // {CHECKOUT_SESSION_ID} is verified server-side on the success page before
-      // we unlock the account, so this redirect cannot be forged.
-      success_url: `${baseUrl}/checkout/success?app=${applicationId}&session_id={CHECKOUT_SESSION_ID}`,
-      // Carry the whole order back on cancel. Previously only the standard
-      // survived, so a buyer who backed out of Stripe returned to a reset form
-      // — org size gone, and the partner's referral code gone with it, which
-      // cost the partner the commission on the retry.
-      cancel_url: `${baseUrl}/checkout?${new URLSearchParams({
-        iso: isoName || '',
-        staff: String(bands),
-        locations: String(extraLocations),
-        ...(usedReferralCode ? { ref: usedReferralCode } : {}),
-        cancelled: '1',
-      }).toString()}`,
+    // ---- 4b. Card → Whop hosted checkout ----
+    // No success_url/cancel_url here: Whop's hosted purchase_url has no
+    // per-request redirect field (unlike a Stripe Checkout Session), so the
+    // post-purchase and cancel destinations are whatever the product's own
+    // settings in the Whop dashboard say. The buyer's actual access is never
+    // gated on them returning to our site anyway — see whopWebhookHandler.
+    const variant = await createWhopCheckout({
+      amount: finalPrice,
+      title: `${recommendedIso} - ${selectedPackage}`,
       metadata: { applicationId, clientId: userId, guest: 'true', paymentMethod, couponCode: coupon?.code || '', discountAmount: String(discountAmount) },
     });
 
-    return res.status(200).json({ url: session.url });
+    await supabaseAdmin.from('applications').update({ whop_variant_id: variant.id }).eq('id', applicationId);
+
+    return res.status(200).json({ url: variant.purchase_url });
   } catch (error) {
     console.error('guest-checkout error:', error);
     return res.status(500).json({ error: error.message || 'Internal Server Error' });
@@ -699,21 +731,168 @@ async function emailDashboardLink(clientId) {
   return { ok: !!r.ok, email };
 }
 
+// Everything that fires once a guest card order is confirmed paid: stamp the
+// application, burn the coupon, credit the referrer, alert admins, and notify
+// the buyer. Shared by confirmGuestPaymentHandler (the success page, reached
+// after a Stripe redirect or an optimistic Whop return) and whopWebhookHandler
+// (the actual source of truth for a Whop order) so an order is fulfilled
+// exactly once no matter which one gets there first — both gate on the same
+// `alreadyPaid` check against the row's current payment_status.
+async function fulfillGuestCardPayment(app, { email, prof }) {
+  // Stamp the method as well as the status: this is the automatic
+  // "reflected from the payment gateway" link the client asked for — an order
+  // then reads back as "Paid — Credit/Debit Card" in the admin Payment Status
+  // dropdown without anybody touching it. 'card' is the only online method
+  // (see src/config/paymentMethods.js), so it is unambiguous regardless of
+  // whether Stripe or Whop processed it.
+  await supabaseAdmin
+    .from('applications')
+    .update({ payment_status: 'paid', payment_method: 'card' })
+    .eq('id', app.id);
+  // Burn the coupon now that money has actually arrived (first confirm only).
+  await burnCoupon(app.coupon_code, {
+    clientId: app.client_id, applicationId: app.id, finalAmount: app.total_amount,
+  });
+
+  // Credit the referring partner. This path does not run
+  // applyPaymentLandedSideEffects (it deliberately leaves the buyer
+  // pending for admin approval), so the credit has to be raised here too —
+  // otherwise every CARD sale, the most common kind, would still pay
+  // nobody. Idempotent, so an admin later marking the same order paid
+  // cannot double it.
+  if (app.referrer_id) {
+    await creditReferralForOrder({
+      applicationId: app.id,
+      referrerId: app.referrer_id,
+      clientId: app.client_id,
+      clientEmail: email || '',
+      finalAmount: app.total_amount,
+      source: 'code',
+    });
+  }
+  // The client asked that a client account be activated in the dashboard
+  // ONLY AFTER a Super Admin approves. So payment no longer auto-approves:
+  // the buyer stays 'pending' and we alert the admins that a paid client is
+  // waiting. Access (the magic link) is issued by the approve-client-access
+  // action, not here.
+  await notifyAdmins(supabaseAdmin, {
+    title: 'New paid client awaiting approval',
+    message: `${prof?.full_name || email || 'A client'}${prof?.company_name ? ` (${prof.company_name})` : ''} has paid and is awaiting dashboard approval.`,
+    region: prof?.region || null,
+  }).catch(() => {});
+
+  // The buyer gets a receipt notification of their own. This path does NOT
+  // go through applyPaymentLandedSideEffects (it deliberately leaves the
+  // client 'pending' for admin approval), so without this a card buyer had
+  // no record of their payment anywhere in the product. It is waiting for
+  // them the moment the admin approves their access.
+  try {
+    await supabaseAdmin.from('notifications').insert({
+      user_id: app.client_id,
+      type: 'system',
+      title: 'Payment received',
+      message: app.total_amount != null
+        ? `We have received your card payment of ${Number(app.total_amount).toFixed(2)}. Your account is being activated.`
+        : 'We have received your card payment. Your account is being activated.',
+    });
+  } catch (e) {
+    console.error('payment-received notification failed (non-blocking):', e?.message);
+  }
+}
+
+// ---- Whop webhook receiver ----
+// Shares this one file/route with every JSON `action` handler above (the
+// project is pinned at the Vercel Hobby 12-function cap — see CLAUDE.md), so
+// it's dispatched by the presence of Whop's `webhook-signature` header rather
+// than by `action`, before any JSON-action routing runs.
+async function whopWebhookHandler(req, res, rawBody) {
+  let event;
+  try {
+    event = unwrapWebhook(rawBody, {
+      headers: req.headers,
+      key: process.env.WHOP_WEBHOOK_SECRET,
+    });
+  } catch (e) {
+    console.error('Whop webhook signature verification failed:', e?.message);
+    return res.status(400).json({ error: 'Invalid signature' });
+  }
+
+  // Log every verified event (supabase/phase40_whop_payment_provider.sql) for
+  // reconciliation — the exact field names Whop sends have only been confirmed
+  // from the SDK's type definitions, never against a real live payload yet.
+  const webhookId = req.headers['webhook-id'] || null;
+  const { data: logRow, error: logErr } = await supabaseAdmin
+    .from('whop_webhook_events')
+    .insert({ webhook_id: webhookId, event_type: event.type, payload: event })
+    .select('id')
+    .maybeSingle();
+  if (logErr) {
+    // 23505 = the partial unique index on webhook_id fired: Whop retried a
+    // delivery we already logged. Acknowledge and stop — processing it again
+    // would burn the coupon / credit the referrer a second time.
+    if (logErr.code === '23505') return res.status(200).json({ ok: true, duplicate: true });
+    console.error('whop_webhook_events insert failed (non-blocking):', logErr);
+  }
+
+  try {
+    if (event.type === 'payment.succeeded') {
+      await handleWhopPaymentSucceeded(event.data);
+      if (logRow?.id) {
+        await supabaseAdmin.from('whop_webhook_events').update({ processed: true }).eq('id', logRow.id);
+      }
+    }
+  } catch (e) {
+    console.error('Whop webhook handling error:', e);
+    if (logRow?.id) {
+      await supabaseAdmin.from('whop_webhook_events').update({ error: e?.message || String(e) }).eq('id', logRow.id);
+    }
+    // Still acknowledge with 200: Whop retries on a non-2xx response, and a
+    // bug in our handler won't be fixed by retrying. The logged row above is
+    // what reconciliation works from instead.
+  }
+
+  return res.status(200).json({ ok: true });
+}
+
+// Fulfils a confirmed `payment.succeeded` event for the guest checkout flow.
+// Metadata was attached when the variant was created (see
+// guestCheckoutHandler's createWhopCheckout call) and Whop echoes it back
+// verbatim, so no lookup by whop_variant_id is needed — but the application
+// row is still re-fetched fresh rather than trusting anything else in the
+// event for money or identity.
+async function handleWhopPaymentSucceeded(payment) {
+  const applicationId = payment?.metadata?.applicationId;
+  if (!applicationId) {
+    console.error('Whop payment.succeeded with no applicationId in metadata:', payment?.id);
+    return;
+  }
+
+  const { data: app } = await supabaseAdmin
+    .from('applications')
+    .select('id, client_id, payment_status, coupon_code, total_amount, referrer_id, referral_code')
+    .eq('id', applicationId)
+    .maybeSingle();
+  if (!app) {
+    console.error(`Whop payment.succeeded for unknown application ${applicationId}`);
+    return;
+  }
+
+  const alreadyPaid = app.payment_status === 'paid' || app.payment_status === 'verified';
+  if (alreadyPaid) return; // confirmGuestPaymentHandler's optimistic path got there first — fine.
+
+  const { data: prof } = await supabaseAdmin
+    .from('profiles')
+    .select('email, full_name, company_name, region, approval_status')
+    .eq('id', app.client_id).maybeSingle();
+
+  await fulfillGuestCardPayment(app, { email: prof?.email || null, prof });
+}
+
 async function confirmGuestPaymentHandler(req, res) {
   try {
     const { applicationId, sessionId } = req.body || {};
-    if (!applicationId || !sessionId) {
-      return res.status(400).json({ error: 'Missing order or session reference' });
-    }
-
-    let session;
-    try {
-      session = await stripe.checkout.sessions.retrieve(sessionId);
-    } catch {
-      return res.status(400).json({ error: 'Invalid payment session' });
-    }
-    if (!session || session.payment_status !== 'paid' || session.metadata?.applicationId !== String(applicationId)) {
-      return res.status(402).json({ error: 'Payment not confirmed' });
+    if (!applicationId) {
+      return res.status(400).json({ error: 'Missing order reference' });
     }
 
     const { data: app } = await supabaseAdmin
@@ -722,6 +901,27 @@ async function confirmGuestPaymentHandler(req, res) {
       .eq('id', applicationId)
       .maybeSingle();
     if (!app) return res.status(404).json({ error: 'Order not found' });
+
+    // Two callers reach this: the legacy Stripe success page (carries a real
+    // Stripe sessionId, verified here) and the Whop success page (no
+    // sessionId — Whop confirms asynchronously via webhook, see
+    // whopWebhookHandler, which may already have marked this order paid by
+    // the time the buyer's browser gets here, or may not have landed yet).
+    if (sessionId) {
+      let session;
+      try {
+        session = await stripe.checkout.sessions.retrieve(sessionId);
+      } catch {
+        return res.status(400).json({ error: 'Invalid payment session' });
+      }
+      if (!session || session.payment_status !== 'paid' || session.metadata?.applicationId !== String(applicationId)) {
+        return res.status(402).json({ error: 'Payment not confirmed' });
+      }
+    } else if (app.payment_status !== 'paid' && app.payment_status !== 'verified') {
+      // Whop's webhook hasn't landed yet. Not an error — the buyer's own
+      // dashboard/email will reflect it once it does; ask the page to retry.
+      return res.status(202).json({ pending: true });
+    }
 
     const alreadyPaid = app.payment_status === 'paid' || app.payment_status === 'verified';
 
@@ -733,64 +933,7 @@ async function confirmGuestPaymentHandler(req, res) {
     const email = prof?.email || null;
 
     if (!alreadyPaid) {
-      // Stamp the method as well as the status: this is the automatic
-      // "reflected from the payment gateway" link the client asked for — a
-      // Stripe order then reads back as "Paid — Credit/Debit Card" in the admin
-      // Payment Status dropdown without anybody touching it. 'card' is the only
-      // online method (see src/config/paymentMethods.js), so it is unambiguous.
-      await supabaseAdmin
-        .from('applications')
-        .update({ payment_status: 'paid', payment_method: 'card' })
-        .eq('id', applicationId);
-      // Burn the coupon now that money has actually arrived (first confirm only).
-      await burnCoupon(app.coupon_code, {
-        clientId: app.client_id, applicationId, finalAmount: app.total_amount,
-      });
-
-      // Credit the referring partner. This path does not run
-      // applyPaymentLandedSideEffects (it deliberately leaves the buyer
-      // pending for admin approval), so the credit has to be raised here too —
-      // otherwise every CARD sale, the most common kind, would still pay
-      // nobody. Idempotent, so an admin later marking the same order paid
-      // cannot double it.
-      if (app.referrer_id) {
-        await creditReferralForOrder({
-          applicationId,
-          referrerId: app.referrer_id,
-          clientId: app.client_id,
-          clientEmail: email || '',
-          finalAmount: app.total_amount,
-          source: 'code',
-        });
-      }
-      // The client asked that a client account be activated in the dashboard
-      // ONLY AFTER a Super Admin approves. So payment no longer auto-approves:
-      // the buyer stays 'pending' and we alert the admins that a paid client is
-      // waiting. Access (the magic link) is issued by the approve-client-access
-      // action, not here.
-      await notifyAdmins(supabaseAdmin, {
-        title: 'New paid client awaiting approval',
-        message: `${prof?.full_name || email || 'A client'}${prof?.company_name ? ` (${prof.company_name})` : ''} has paid and is awaiting dashboard approval.`,
-        region: prof?.region || null,
-      }).catch(() => {});
-
-      // The buyer gets a receipt notification of their own. This path does NOT
-      // go through applyPaymentLandedSideEffects (it deliberately leaves the
-      // client 'pending' for admin approval), so without this a card buyer had
-      // no record of their payment anywhere in the product. It is waiting for
-      // them the moment the admin approves their access.
-      try {
-        await supabaseAdmin.from('notifications').insert({
-          user_id: app.client_id,
-          type: 'system',
-          title: 'Payment received',
-          message: app.total_amount != null
-            ? `We have received your card payment of ${Number(app.total_amount).toFixed(2)}. Your account is being activated.`
-            : 'We have received your card payment. Your account is being activated.',
-        });
-      } catch (e) {
-        console.error('payment-received notification failed (non-blocking):', e?.message);
-      }
+      await fulfillGuestCardPayment(app, { email, prof });
     }
 
     // Never downgrade an already-approved client (idempotent re-confirm).
@@ -1231,6 +1374,25 @@ async function bookConsultationHandler(req, res) {
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  // bodyParser is disabled for this route (see `config` above) so every path
+  // below has to populate req.body itself; in local dev it's already there
+  // (vite.config.js), so this only actually reads the stream in production.
+  const rawBody = await readRawBody(req);
+  if (req.body === undefined) {
+    try {
+      req.body = rawBody ? JSON.parse(rawBody) : {};
+    } catch {
+      req.body = {};
+    }
+  }
+
+  // Whop webhook delivery — detected by its signature header and handled
+  // before any `action`-based JSON routing, since it's not one of our own
+  // JSON actions and must be verified against the raw, unparsed bytes.
+  if (req.headers['webhook-signature']) {
+    return whopWebhookHandler(req, res, rawBody);
   }
 
   // Route on the `action` field. These sub-routes used to warrant their own
