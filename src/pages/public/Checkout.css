@@ -52,7 +52,13 @@
   max-width: 1000px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 340px 1fr;
+  /* minmax(0, 1fr), not a bare 1fr: a grid track's implicit minimum is its
+     content's min-content size, not 0 — so a bare 1fr column refuses to
+     shrink below whatever its widest child needs and pushes the form
+     column (and everything in it, like the payment method row and the
+     submit button) off the right edge of the viewport instead of
+     reflowing, on any width between this and the 820px breakpoint below. */
+  grid-template-columns: 340px minmax(0, 1fr);
   gap: 24px;
   align-items: start;
 }
@@ -162,7 +168,10 @@
 
 .checkout__fields {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* Same minmax(0, 1fr) fix as .checkout__grid above — First/Last Name (or
+     any other paired field) would otherwise refuse to shrink and overflow
+     the form rather than wrap. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 14px;
 }
 .checkout__field { display: flex; flex-direction: column; gap: 6px; }
@@ -594,7 +603,7 @@
    ------------------------------------------------------- */
 .checkout__org {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 16px;
   margin-bottom: 22px;
 }
