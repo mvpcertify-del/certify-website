@@ -17,6 +17,7 @@ export const TEST_CHECKOUT_ITEM = {
   code: 'TEST PAYMENT',
   fullCode: 'TEST PAYMENT ($1)',
   titleKey: 'checkout.testPaymentTitle',
+  descKey: 'certifications.testCardDesc',
   price: 1,
 };
 

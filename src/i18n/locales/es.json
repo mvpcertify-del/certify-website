@@ -1488,7 +1488,10 @@
     "tag": "Certificaciones",
     "title": "Elige tu certificación",
     "subtitle": "Selecciona una norma para ver detalles, precios y comenzar. Puedes certificar más de una.",
-    "select": "Seleccionar"
+    "select": "Seleccionar",
+    "testSectionTitle": "Prueba interna",
+    "testSectionDesc": "Una tarjeta de $1 para verificar el flujo de pago en vivo de principio a fin. No es una certificación real.",
+    "testCardDesc": "Verifica el flujo de pago en vivo de principio a fin."
   },
   "billing": {
     "title": "Facturación",

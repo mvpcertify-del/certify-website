@@ -2,10 +2,11 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Shield, Award, Globe2, Lock, Apple, GraduationCap, Zap, Scale,
-  Activity, Stethoscope, ShieldCheck, BrainCircuit, ArrowRight,
+  Activity, Stethoscope, ShieldCheck, BrainCircuit, ArrowRight, FlaskConical,
 } from 'lucide-react';
 import { ISO_CATALOG_LIST } from '../../utils/isoCatalog';
 import { COMPLIANCE_AUDIT_LIST } from '../../utils/complianceAudits';
+import { TEST_CHECKOUT_ITEM } from '../../utils/testCheckoutItem';
 import ComplianceLogo from '../../components/ui/ComplianceLogo';
 import PublicNav from '../../components/layout/PublicNav';
 import BackButton from '../../components/ui/BackButton';
@@ -84,6 +85,32 @@ export default function Certifications() {
             </span>
           </Link>
         ))}
+      </div>
+
+      {/* ---- Internal-only $1 card for verifying the live Whop checkout ---- */}
+      {/* Links straight to /checkout, skipping an /iso/:slug detail page —
+          there is nothing to market, it only exists to let staff pay through
+          the real flow with a real card. See src/utils/testCheckoutItem.js.
+          Remove this block once Whop is verified in production. */}
+      <div className="certs__section-header" id="internal-test">
+        <h2 className="certs__section-title">{t('certifications.testSectionTitle')}</h2>
+        <p className="certs__section-desc">{t('certifications.testSectionDesc')}</p>
+      </div>
+
+      <div className="certs__grid">
+        <Link
+          to={`/checkout?iso=${TEST_CHECKOUT_ITEM.slug}`}
+          className="certs__card"
+          style={{ '--card-accent': '#f59e0b' }}
+        >
+          <div className="certs__card-icon"><FlaskConical size={26} /></div>
+          <div className="certs__card-code">{TEST_CHECKOUT_ITEM.fullCode}</div>
+          <h3 className="certs__card-name">{t(TEST_CHECKOUT_ITEM.titleKey)}</h3>
+          <p className="certs__card-desc">{t(TEST_CHECKOUT_ITEM.descKey)}</p>
+          <span className="certs__card-cta">
+            {t('certifications.select')} <ArrowRight size={14} />
+          </span>
+        </Link>
       </div>
 
       <div className="certs__footer">
