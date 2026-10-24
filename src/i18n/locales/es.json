@@ -1422,6 +1422,8 @@
   "checkout": {
     "chooseStandardTitle": "Elige tu certificación",
     "isoGroupTitle": "Normas ISO",
+    "testGroupTitle": "Prueba interna",
+    "testPaymentTitle": "Pago de prueba (uso interno)",
     "chooseStandardDesc": "Selecciona la norma con la que quieres certificarte. Puedes cambiarla antes de pagar.",
     "selectStandard": "Seleccionar",
     "changeStandard": "Cambiar",

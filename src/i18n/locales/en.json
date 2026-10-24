@@ -1422,6 +1422,8 @@
   "checkout": {
     "chooseStandardTitle": "Choose your certification",
     "isoGroupTitle": "ISO Standards",
+    "testGroupTitle": "Internal Test",
+    "testPaymentTitle": "Test Payment (internal use only)",
     "chooseStandardDesc": "Pick the standard you want to be certified against. You can change it before you pay.",
     "selectStandard": "Select",
     "changeStandard": "Change",

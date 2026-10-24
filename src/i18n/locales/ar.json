@@ -1422,6 +1422,8 @@
   "checkout": {
     "chooseStandardTitle": "اختر شهادتك",
     "isoGroupTitle": "معايير الأيزو",
+    "testGroupTitle": "اختبار داخلي",
+    "testPaymentTitle": "دفعة اختبار (للاستخدام الداخلي فقط)",
     "chooseStandardDesc": "اختر المواصفة التي تريد الحصول على شهادة بها. يمكنك تغييرها قبل الدفع.",
     "selectStandard": "اختيار",
     "changeStandard": "تغيير",

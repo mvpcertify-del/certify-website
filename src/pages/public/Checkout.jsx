@@ -15,7 +15,7 @@ import { getIsoBySlug, ISO_CATALOG_LIST } from '../../utils/isoCatalog';
 import {
   getComplianceBySlug, COMPLIANCE_SERVICE_LIST,
 } from '../../utils/complianceServices';
-import { getTestCheckoutItem } from '../../utils/testCheckoutItem';
+import { getTestCheckoutItem, TEST_CHECKOUT_ITEM_LIST } from '../../utils/testCheckoutItem';
 import {
   PAYMENT_METHODS, isOfflineMethod, BANK_TRANSFER_DETAILS, CASH_DETAILS,
 } from '../../config/paymentMethods';
@@ -470,6 +470,14 @@ function CheckoutForm() {
           <h2 className="checkout__picker-group">{t('compliance.title')}</h2>
           <div className="checkout__iso-grid">
             {COMPLIANCE_SERVICE_LIST.map(renderStandardCard)}
+          </div>
+
+          {/* Internal-only $1 card for verifying the live Whop checkout with a
+              real card charge — see src/utils/testCheckoutItem.js. Remove this
+              block once Whop is verified in production. */}
+          <h2 className="checkout__picker-group">{t('checkout.testGroupTitle')}</h2>
+          <div className="checkout__iso-grid">
+            {TEST_CHECKOUT_ITEM_LIST.map(renderStandardCard)}
           </div>
 
           <p className="checkout__summary-note checkout__picker-note">{t('pricing.disclaimer')}</p>
