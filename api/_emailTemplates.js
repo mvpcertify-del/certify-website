@@ -248,6 +248,65 @@ export function auditCompletedEmail({ name, companyName, isoStandard, dashboardU
   return { subject, html, text };
 }
 
+// Contractor task outcome — phase43/44 (28 Oct). Sent either by a cron job
+// (deadline passed, nobody completed it → 'missed', 0%) or immediately when
+// an admin reviews a submission as 'completed' (100%). Binary by design (see
+// api/_contractorTaskScoring.js) — there is no partial-credit copy here.
+export function contractorTaskStatusEmail({ name, taskDescription, status, achievedPercent, dashboardUrl }) {
+  const greeting = name ? `Hi ${name},` : 'Hello,';
+  const isCompleted = status === 'completed';
+  const subject = isCompleted
+    ? `Task completed — ${achievedPercent}% achieved`
+    : `Task missed — deadline passed`;
+  const statusColor = isCompleted ? ACCENT_ON_WHITE : '#dc2626';
+  const html = layout({
+    title: subject,
+    bodyHtml: `
+      ${heading(isCompleted ? 'Task marked completed' : 'Task marked missed')}
+      ${body(`${greeting} your task has been reviewed${isCompleted ? '' : ' — its deadline passed without a completed submission'}.`)}
+      ${detailsBox([
+        ['Task', escapeHtml(taskDescription || '')],
+        ['Status', `<span style="color:${statusColor};font-weight:700;">${isCompleted ? 'Completed' : 'Missed'}</span>`],
+        ['Achieved', `${achievedPercent}%`],
+      ])}
+      <p style="margin:0 0 28px;">${button(dashboardUrl, 'View your tasks')}</p>
+      ${muted('Questions about this task? Reply to this email.')}`,
+  });
+  const text = `${greeting}\n\nYour task "${taskDescription || ''}" was marked ${isCompleted ? 'Completed' : 'Missed'} (${achievedPercent}% achieved).\n\nView your tasks: ${dashboardUrl}\n\nQuestions? ${SUPPORT_EMAIL}\n\n— ${BRAND_TEXT}`;
+  return { subject, html, text };
+}
+
+// Contractor payment decision — phase44 (28 Oct). Sent only after Finance
+// decides; an admin raising the request does not notify the contractor at
+// all (there is nothing for them to see yet — see
+// client's instruction: "Do not treat a task's completion as automatic
+// financial approval").
+export function contractorPaymentDecisionEmail({ name, amount, currency, description, status, rejectionReason, dashboardUrl }) {
+  const greeting = name ? `Hi ${name},` : 'Hello,';
+  const isApproved = status === 'approved';
+  const formattedAmount = `${currency} ${Number(amount).toLocaleString()}`;
+  const subject = isApproved
+    ? `Payment approved — ${formattedAmount}`
+    : `Payment request not approved`;
+  const html = layout({
+    title: subject,
+    bodyHtml: `
+      ${heading(isApproved ? 'Payment approved' : 'Payment request not approved')}
+      ${body(`${greeting} ${isApproved
+        ? `Finance has approved a payment and it now shows as credit on your dashboard.`
+        : `Finance reviewed a payment request for you and it was not approved.`}`)}
+      ${detailsBox([
+        ['Amount', formattedAmount],
+        ['For', escapeHtml(description || '')],
+        ...(isApproved ? [] : [['Reason', escapeHtml(rejectionReason || 'Not specified')]]),
+      ])}
+      <p style="margin:0 0 28px;">${button(dashboardUrl, 'View your dashboard')}</p>
+      ${muted('Questions? Reply to this email.')}`,
+  });
+  const text = `${greeting}\n\n${isApproved ? 'Payment approved' : 'Payment request not approved'}: ${formattedAmount} — ${description || ''}${!isApproved && rejectionReason ? `\nReason: ${rejectionReason}` : ''}\n\nView your dashboard: ${dashboardUrl}\n\nQuestions? ${SUPPORT_EMAIL}\n\n— ${BRAND_TEXT}`;
+  return { subject, html, text };
+}
+
 export function renewalReminderEmail({ name, companyName, isoStandard, certificateNumber, expiresOn, dashboardUrl }) {
   const greeting = name ? `Hi ${name},` : 'Hello,';
   const subject = `Your ${BRAND_TEXT} certificate is due for renewal`;

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Trash2, FileText, Send, CheckCircle2, Download, Clock, ListChecks, XCircle, Link as LinkIcon } from 'lucide-react';
+import { Plus, Trash2, FileText, Send, CheckCircle2, Download, Clock, ListChecks, XCircle, Link as LinkIcon, DollarSign } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { apiPost } from '../../lib/apiClient';
 import { Button, Input, Select, Textarea } from '../../components/ui/FormElements';
@@ -38,6 +38,7 @@ const STATUS_COLOR = {
 const EMPTY_TASK_FORM = { taskDescription: '', kpiTarget: '', deadlineDate: '', contractId: '' };
 const TASK_STATUS_LABEL = { pending: 'Pending', submitted: 'Submitted — needs review', completed: 'Completed', missed: 'Missed' };
 const TASK_STATUS_COLOR = { pending: '#94a3b8', submitted: '#2563eb', completed: '#059669', missed: '#dc2626' };
+const EMPTY_PAYMENT_FORM = { amount: '', currency: 'USD', description: '' };
 
 export default function AdminContractors() {
   const { t } = useTranslation();
@@ -62,6 +63,12 @@ export default function AdminContractors() {
   const [taskFormError, setTaskFormError] = useState('');
   const [taskSaving, setTaskSaving] = useState(false);
   const [taskActionLoading, setTaskActionLoading] = useState(null);
+
+  const [showPaymentCreate, setShowPaymentCreate] = useState(false);
+  const [paymentTask, setPaymentTask] = useState(null); // the completed task this payment is for, if any
+  const [paymentForm, setPaymentForm] = useState(EMPTY_PAYMENT_FORM);
+  const [paymentFormError, setPaymentFormError] = useState('');
+  const [paymentSaving, setPaymentSaving] = useState(false);
 
   const fetchContractors = useCallback(async () => {
     setLoading(true);
@@ -160,6 +167,34 @@ export default function AdminContractors() {
     setForm(EMPTY_FORM);
     setFormError('');
     setShowCreate(true);
+  };
+
+  const openPaymentCreate = (task) => {
+    setPaymentTask(task || null);
+    setPaymentForm(EMPTY_PAYMENT_FORM);
+    setPaymentFormError('');
+    setShowPaymentCreate(true);
+  };
+
+  const submitPaymentCreate = async (e) => {
+    e.preventDefault();
+    if (!selected) return;
+    setPaymentFormError('');
+    setPaymentSaving(true);
+    try {
+      await apiPost('/api/user', {
+        action: 'create-contractor-payment',
+        contractorId: selected.id,
+        taskId: paymentTask?.id || null,
+        amount: paymentForm.amount,
+        currency: paymentForm.currency,
+        description: paymentForm.description,
+      });
+      setShowPaymentCreate(false);
+    } catch (err) {
+      setPaymentFormError(err?.message || 'Could not raise the payment request.');
+    }
+    setPaymentSaving(false);
   };
 
   const updateKpi = (i, field, value) => {
@@ -297,7 +332,12 @@ export default function AdminContractors() {
 
               <div className="adctr__detail-header" style={{ marginTop: 28 }}>
                 <h3 className="adctr__section-title"><ListChecks size={16} /> {t('adminContractors.tasks', 'Tasks')}</h3>
-                <Button size="sm" onClick={openTaskCreate}><Plus size={14} /> {t('adminContractors.newTask', 'New Task')}</Button>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <Button size="sm" variant="secondary" onClick={() => openPaymentCreate(null)}>
+                    <DollarSign size={14} /> {t('adminContractors.requestPayment', 'Request Payment')}
+                  </Button>
+                  <Button size="sm" onClick={openTaskCreate}><Plus size={14} /> {t('adminContractors.newTask', 'New Task')}</Button>
+                </div>
               </div>
 
               {tasksLoading ? <p>{t('common.loading')}</p> : tasks.length === 0 ? (
@@ -338,6 +378,11 @@ export default function AdminContractors() {
                         {task.status === 'pending' && (
                           <span className="adctr__waiting"><Clock size={13} /> {t('adminContractors.waitingSubmission', 'Waiting for contractor')}</span>
                         )}
+                        {task.status === 'completed' && (
+                          <Button size="sm" variant="secondary" onClick={() => openPaymentCreate(task)}>
+                            <DollarSign size={14} /> {t('adminContractors.requestPayment', 'Request Payment')}
+                          </Button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -363,6 +408,26 @@ export default function AdminContractors() {
           <div className="adctr__form-actions">
             <Button type="submit" loading={taskSaving} fullWidth>
               <Send size={16} /> {t('adminContractors.assignTask', 'Assign Task')}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal isOpen={showPaymentCreate} onClose={() => setShowPaymentCreate(false)} title={t('adminContractors.requestPayment', 'Request Payment')}>
+        <form onSubmit={submitPaymentCreate} className="adctr__form">
+          {paymentFormError && <div className="adctr__error">{paymentFormError}</div>}
+          {paymentTask && <p className="adctr__contract-meta">{t('adminContractors.forTask', 'For task')}: {paymentTask.task_description}</p>}
+          <div className="adctr__form-row">
+            <Input label="Amount *" type="number" min="0" step="0.01" value={paymentForm.amount} onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })} required />
+            <Select label="Currency" value={paymentForm.currency} onChange={(e) => setPaymentForm({ ...paymentForm, currency: e.target.value })}>
+              <option value="USD">US$</option>
+              <option value="INR">INR</option>
+            </Select>
+          </div>
+          <Textarea label="Description *" rows={2} value={paymentForm.description} onChange={(e) => setPaymentForm({ ...paymentForm, description: e.target.value })} required />
+          <div className="adctr__form-actions">
+            <Button type="submit" loading={paymentSaving} fullWidth>
+              <DollarSign size={16} /> {t('adminContractors.submitForFinance', 'Send to Finance for Approval')}
             </Button>
           </div>
         </form>

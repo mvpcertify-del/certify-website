@@ -29,6 +29,7 @@ import {
 } from './_emailTemplates.js';
 import { APP_URL } from './_appUrl.js';
 import { draftWeeklyInvestorCampaign } from './_investorCampaigns.js';
+import { applyContractorTaskDecision } from './_contractorTaskScoring.js';
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -77,6 +78,11 @@ export default async function handler(req, res) {
     if (job === 'investor-campaign-draft') {
       return await handleInvestorCampaignDraftCron(req, res);
     }
+    // No ?job=contractor-task-deadlines entry: Vercel's Hobby plan caps the
+    // number of cron SCHEDULES too (separately from the 12-function limit
+    // CLAUDE.md already warns about), and this project is already at 2. The
+    // sweep rides the existing unmarked daily cron below instead of adding a
+    // 3rd vercel.json entry.
     return await handleRenewalCron(req, res);
   }
   if (req.method !== 'POST') {
@@ -283,7 +289,44 @@ async function handleRenewalCron(req, res) {
     }
   }
 
-  return res.status(200).json({ success: true, reminded });
+  // Rides this same daily cron rather than its own vercel.json entry — see
+  // the comment on the GET dispatch above. Independent of the renewal sweep
+  // above; a failure in one must never block the other.
+  const missed = await sweepOverdueContractorTasks();
+
+  return res.status(200).json({ success: true, reminded, contractorTasksMissed: missed });
+}
+
+// Marks every contractor_tasks row whose deadline has passed with no
+// completed review as 'missed' at 0%, and fires the email/in-app
+// notifications — see api/_contractorTaskScoring.js. Returns the count
+// swept. Errors on an individual task are logged and skipped, not thrown,
+// so one bad row can't stop the rest of the sweep (or the renewal cron that
+// calls this).
+async function sweepOverdueContractorTasks() {
+  const today = new Date().toISOString().slice(0, 10);
+
+  const { data: overdue, error } = await supabaseAdmin
+    .from('contractor_tasks')
+    .select('*')
+    .in('status', ['pending', 'submitted'])
+    .lt('deadline_date', today);
+
+  if (error) {
+    console.error('contractor task deadline sweep: query failed', error.message);
+    return 0;
+  }
+
+  let missed = 0;
+  for (const task of overdue || []) {
+    try {
+      await applyContractorTaskDecision(supabaseAdmin, task, 'missed');
+      missed++;
+    } catch (e) {
+      console.error('contractor task deadline sweep: task failed', task.id, e?.message);
+    }
+  }
+  return missed;
 }
 
 // Weekly cron (Monday 01:00 Gulf Standard Time = Sunday 21:00 UTC — see

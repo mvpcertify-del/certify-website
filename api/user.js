@@ -28,6 +28,13 @@ import {
   uploadContractorContractPdf,
 } from './_contractorContract.js';
 import { signedUrlFor } from './_billing.js';
+import { applyContractorTaskDecision } from './_contractorTaskScoring.js';
+import {
+  ContractorPaymentError,
+  validatePaymentInput,
+  notifyFinance,
+  notifyContractorPaymentDecision,
+} from './_contractorPayments.js';
 import { ROLES, getRegionFromCountry } from '../src/utils/roles.js';
 import { sanitizeAuditorTags } from '../src/utils/auditorOptions.js';
 
@@ -95,6 +102,11 @@ export default async function handler(req, res) {
     if (action === 'submit-contractor-task') return await submitContractorTask(req, res);
     if (action === 'review-contractor-task') return await reviewContractorTask(req, res);
     if (action === 'get-contractor-task-evidence-url') return await getContractorTaskEvidenceUrl(req, res);
+    // Contractor payments (phase44, 28 Oct) — Finance approval queue.
+    if (action === 'create-contractor-payment') return await createContractorPayment(req, res);
+    if (action === 'list-contractor-payments') return await listContractorPayments(req, res);
+    if (action === 'approve-contractor-payment') return await decideContractorPayment(req, res, 'approved');
+    if (action === 'reject-contractor-payment') return await decideContractorPayment(req, res, 'rejected');
     return res.status(400).json({ error: 'Unknown action' });
   } catch (error) {
     console.error('User route error:', error);
@@ -1457,21 +1469,11 @@ async function reviewContractorTask(req, res) {
     const access = await assertContractorContractAdmin(req, task.contractor_id);
     if (access.error) return res.status(access.status).json({ error: access.error });
 
-    const achievedPercent = decision === 'completed' ? 100 : 0;
-    const { data: updated, error } = await supabaseAdmin
-      .from('contractor_tasks')
-      .update({ status: decision, achieved_percent: achievedPercent, updated_at: new Date().toISOString() })
-      .eq('id', taskId)
-      .select()
-      .single();
-    if (error) throw error;
+    if (task.status === 'completed' || task.status === 'missed') {
+      return res.status(409).json({ error: `This task was already decided (${task.status}).` });
+    }
 
-    await supabaseAdmin.from('notifications').insert({
-      user_id: task.contractor_id,
-      type: 'system',
-      title: decision === 'completed' ? 'Task marked completed' : 'Task marked missed',
-      message: `"${task.task_description.slice(0, 100)}" — ${achievedPercent}% achieved.`,
-    });
+    const updated = await applyContractorTaskDecision(supabaseAdmin, task, decision);
 
     return res.status(200).json({ success: true, task: updated });
   } catch (err) {
@@ -1506,6 +1508,174 @@ async function getContractorTaskEvidenceUrl(req, res) {
     return res.status(200).json({ success: true, url });
   } catch (err) {
     return contractorContractFailure(res, err, 'getContractorTaskEvidenceUrl');
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Contractor payments (phase44, 28 Oct) — two-step approval. An admin raises
+// a request (the admin-approval step the client asked for — an admin
+// wouldn't raise one for unapproved work); a separate Finance-role user then
+// approves or rejects the money. The contractor can see the request itself
+// while it's pending ("Awaiting Finance"), but it only counts as credit, and
+// only emails them, once Finance decides. See api/_contractorPayments.js.
+// ---------------------------------------------------------------------------
+function contractorPaymentFailure(res, err, context) {
+  if (err instanceof ContractorPaymentError) {
+    return res.status(err.status).json({ error: err.message });
+  }
+  console.error(`${context} failed:`, err);
+  return res.status(500).json({ error: 'Something went wrong. Please try again.' });
+}
+
+async function createContractorPayment(req, res) {
+  try {
+    const { contractorId, contractId, taskId, amount, currency, description } = req.body;
+    const access = await assertContractorContractAdmin(req, contractorId);
+    if (access.error) return res.status(access.status).json({ error: access.error });
+
+    const fields = validatePaymentInput({ amount, currency, description });
+
+    // Optional links must actually belong to this contractor — same
+    // defensive check createContractorTask does for contractId.
+    if (contractId) {
+      const { data: c } = await supabaseAdmin
+        .from('contractor_contracts').select('contractor_id').eq('id', contractId).maybeSingle();
+      if (!c || c.contractor_id !== contractorId) {
+        return res.status(400).json({ error: 'That contract does not belong to this contractor.' });
+      }
+    }
+    if (taskId) {
+      const { data: t } = await supabaseAdmin
+        .from('contractor_tasks').select('contractor_id').eq('id', taskId).maybeSingle();
+      if (!t || t.contractor_id !== contractorId) {
+        return res.status(400).json({ error: 'That task does not belong to this contractor.' });
+      }
+    }
+
+    const { data: row, error } = await supabaseAdmin
+      .from('contractor_payments')
+      .insert({
+        contractor_id: contractorId,
+        contract_id: contractId || null,
+        task_id: taskId || null,
+        created_by: access.caller.id,
+        status: 'pending_finance',
+        ...fields,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+
+    await notifyFinance(supabaseAdmin, {
+      title: 'New payment request awaiting approval',
+      message: `${fields.currency} ${fields.amount.toLocaleString()} for "${fields.description}".`,
+      details: [['Amount', `${fields.currency} ${fields.amount.toLocaleString()}`], ['For', fields.description]],
+    });
+
+    return res.status(200).json({ success: true, payment: row });
+  } catch (err) {
+    return contractorPaymentFailure(res, err, 'createContractorPayment');
+  }
+}
+
+// Contractor: their own payments (any status, so they can see a rejection
+// reason too). Admin: one contractor's, region-scoped. Finance: every
+// request — not region-scoped, matching notifyFinance's reasoning.
+async function listContractorPayments(req, res) {
+  try {
+    const session = await verifySession(req);
+    if (session.error) return res.status(session.status).json({ error: session.error });
+    const { caller } = session;
+
+    let contractorId = caller.id;
+    if (req.body?.contractorId && req.body.contractorId !== caller.id) {
+      const allowed = caller.role === ROLES.FINANCE
+        || (await regionAllowsContractorRead(caller, req.body.contractorId));
+      if (!allowed) return res.status(403).json({ error: 'Forbidden' });
+      contractorId = req.body.contractorId;
+    } else if (caller.role === ROLES.FINANCE && !req.body?.contractorId) {
+      // Finance's approval queue: every pending request, across contractors.
+      const { data: payments, error } = await supabaseAdmin
+        .from('contractor_payments').select('*').eq('status', 'pending_finance')
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return res.status(200).json({ success: true, payments: payments || [] });
+    } else if (caller.role !== ROLES.CONTRACTOR && !req.body?.contractorId) {
+      return res.status(400).json({ error: 'Missing contractorId' });
+    }
+
+    const { data: payments, error } = await supabaseAdmin
+      .from('contractor_payments')
+      .select('*')
+      .eq('contractor_id', contractorId)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+
+    return res.status(200).json({ success: true, payments: payments || [] });
+  } catch (err) {
+    return contractorPaymentFailure(res, err, 'listContractorPayments');
+  }
+}
+
+async function decideContractorPayment(req, res, decision) {
+  try {
+    const { paymentId, rejectionReason } = req.body;
+    if (!paymentId) return res.status(400).json({ error: 'Missing paymentId' });
+
+    const session = await verifySession(req);
+    if (session.error) return res.status(session.status).json({ error: session.error });
+    const { caller } = session;
+    if (caller.role !== ROLES.FINANCE && caller.role !== ROLES.SUPER_ADMIN) {
+      return res.status(403).json({ error: 'Only Finance may decide a payment request.' });
+    }
+
+    const { data: payment } = await supabaseAdmin
+      .from('contractor_payments').select('*').eq('id', paymentId).maybeSingle();
+    if (!payment) return res.status(404).json({ error: 'Payment request not found' });
+
+    const patch = {
+      status: decision,
+      decided_by: caller.id,
+      decided_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    if (decision === 'rejected') {
+      patch.rejection_reason = String(rejectionReason || '').trim().slice(0, 1000) || null;
+    }
+
+    // The status check has to be IN the update's WHERE clause, not a separate
+    // read-then-write — two concurrent decide calls (a double-click, or two
+    // Finance accounts racing) could otherwise both pass a prior read of
+    // status='pending_finance' and both write, the second silently
+    // overwriting the first's decision (security review, 28 Oct). Zero rows
+    // back means someone else already decided it between the read above and
+    // here.
+    const { data: updated, error } = await supabaseAdmin
+      .from('contractor_payments')
+      .update(patch)
+      .eq('id', paymentId)
+      .eq('status', 'pending_finance')
+      .select()
+      .maybeSingle();
+    if (error) throw error;
+    if (!updated) {
+      return res.status(409).json({ error: 'This request was already decided by someone else.' });
+    }
+
+    const { data: contractor } = await supabaseAdmin
+      .from('profiles').select('email, full_name, notifications_enabled').eq('id', payment.contractor_id).maybeSingle();
+
+    await supabaseAdmin.from('notifications').insert({
+      user_id: payment.contractor_id,
+      type: 'system',
+      title: decision === 'approved' ? 'Payment approved' : 'Payment request not approved',
+      message: `${payment.currency} ${Number(payment.amount).toLocaleString()} — ${payment.description}`,
+    });
+    await notifyContractorPaymentDecision(supabaseAdmin, updated, contractor);
+
+    return res.status(200).json({ success: true, payment: updated });
+  } catch (err) {
+    return contractorPaymentFailure(res, err, 'decideContractorPayment');
   }
 }
 

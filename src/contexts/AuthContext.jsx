@@ -393,6 +393,7 @@ export function AuthProvider({ children }) {
       // approved contractor needs to do is review and sign it. Full KPI/task
       // dashboard is a later phase.
       [ROLES.CONTRACTOR]: '/contractor/contract',
+      [ROLES.FINANCE]: '/finance/payments',
     };
     return map[role] || '/dashboard';
   };

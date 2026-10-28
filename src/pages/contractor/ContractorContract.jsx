@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FileText, CheckCircle2, Clock, Download, ListChecks, XCircle, UploadCloud } from 'lucide-react';
+import { FileText, CheckCircle2, Clock, Download, ListChecks, XCircle, UploadCloud, Wallet } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { apiPost } from '../../lib/apiClient';
 import { Button, Input, Textarea } from '../../components/ui/FormElements';
@@ -59,7 +59,21 @@ export default function ContractorContract() {
     setTasksLoading(false);
   }, []);
 
-  useEffect(() => { fetchContracts(); fetchTasks(); }, [fetchContracts, fetchTasks]);
+  const [payments, setPayments] = useState([]);
+  const [paymentsLoading, setPaymentsLoading] = useState(true);
+
+  const fetchPayments = useCallback(async () => {
+    setPaymentsLoading(true);
+    try {
+      const res = await apiPost('/api/user', { action: 'list-contractor-payments' });
+      setPayments(res?.payments || []);
+    } catch (e) {
+      setError(e?.message || 'Could not load your payments.');
+    }
+    setPaymentsLoading(false);
+  }, []);
+
+  useEffect(() => { fetchContracts(); fetchTasks(); fetchPayments(); }, [fetchContracts, fetchTasks, fetchPayments]);
 
   const updateDraft = (taskId, patch) => setTaskDrafts((d) => ({ ...d, [taskId]: { ...d[taskId], ...patch } }));
 
@@ -262,6 +276,48 @@ export default function ContractorContract() {
           </div>
         );
       })}
+
+      <h1 style={{ marginTop: 32 }}><Wallet size={20} style={{ verticalAlign: '-3px', marginRight: 8 }} />{t('contractorContract.paymentsTitle', 'Payments')}</h1>
+
+      {paymentsLoading ? <p>{t('common.loading')}</p> : payments.length === 0 ? (
+        <p className="ctrc__empty">{t('contractorContract.noPayments', 'No payment requests yet.')}</p>
+      ) : (
+        <>
+          {(() => {
+            const credit = payments.filter((p) => p.status === 'approved');
+            const totals = credit.reduce((acc, p) => {
+              acc[p.currency] = (acc[p.currency] || 0) + Number(p.amount);
+              return acc;
+            }, {});
+            const totalStrings = Object.entries(totals).map(([cur, amt]) => `${cur} ${amt.toLocaleString()}`);
+            return totalStrings.length > 0 ? (
+              <div className="ctrc__card" style={{ background: '#ecfdf5', borderColor: '#86efac' }}>
+                <p className="ctrc__section-label">{t('contractorContract.totalCredit', 'Total Credit (Finance-approved)')}</p>
+                <p className="ctrc__job" style={{ color: '#059669' }}>{totalStrings.join(' + ')}</p>
+              </div>
+            ) : null;
+          })()}
+
+          {payments.map((p) => (
+            <div key={p.id} className="ctrc__card">
+              <div className="ctrc__top">
+                <span className="ctrc__ref">{p.currency} {Number(p.amount).toLocaleString()}</span>
+                {p.status === 'approved' ? (
+                  <span className="ctrc__pill ctrc__pill--active"><CheckCircle2 size={13} /> {t('contractorContract.credited', 'Credited')}</span>
+                ) : p.status === 'rejected' ? (
+                  <span className="ctrc__pill" style={{ background: '#fef2f2', color: '#dc2626' }}><XCircle size={13} /> {t('contractorContract.notApproved', 'Not approved')}</span>
+                ) : (
+                  <span className="ctrc__pill ctrc__pill--pending"><Clock size={13} /> {t('contractorContract.awaitingFinance', 'Awaiting Finance')}</span>
+                )}
+              </div>
+              <p className="ctrc__text">{p.description}</p>
+              {p.status === 'rejected' && p.rejection_reason && (
+                <p className="ctrc__section-label" style={{ color: '#dc2626' }}>{t('contractorContract.reason', 'Reason')}: {p.rejection_reason}</p>
+              )}
+            </div>
+          ))}
+        </>
+      )}
     </div>
   );
 }

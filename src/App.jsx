@@ -64,6 +64,7 @@ const AdminCommissionTiers = lazy(() => import('./pages/admin/AdminCommissionTie
 const AdminConsultancies = lazy(() => import('./pages/admin/AdminConsultancies'));
 const AdminContractors = lazy(() => import('./pages/admin/AdminContractors'));
 const ContractorContract = lazy(() => import('./pages/contractor/ContractorContract'));
+const FinancePayments = lazy(() => import('./pages/finance/FinancePayments'));
 const AdminReferralPartners = lazy(() => import('./pages/admin/AdminReferralPartners'));
 const AdminBilling = lazy(() => import('./pages/admin/AdminBilling'));
 const CertificationBodiesRegistry = lazy(() => import('./pages/bodies/CertificationBodies'));
@@ -359,6 +360,13 @@ function AppRoutes() {
             <Route path="/contractor/contract" element={
               <ProtectedRoute allowedRoles={[ROLES.CONTRACTOR]}>
                 <ContractorContract />
+              </ProtectedRoute>
+            } />
+
+            {/* Finance — approve/reject contractor payment requests (phase44) */}
+            <Route path="/finance/payments" element={
+              <ProtectedRoute allowedRoles={[ROLES.FINANCE, ROLES.SUPER_ADMIN]}>
+                <FinancePayments />
               </ProtectedRoute>
             } />
 

@@ -26,6 +26,13 @@ export const ROLES = {
   // phase41, 28 Oct. Dashboard/KPI/task features are a later phase; this role
   // only covers self-registration + admin approval for now.
   CONTRACTOR: 'contractor',
+  // Finance — approves the money on a contractor payment request once an
+  // admin has already approved the underlying completed work. Deliberately
+  // a separate step from admin approval (client, 28 Oct: "Do not treat a
+  // task's completion as automatic financial approval. Keep admin approval
+  // and Finance approval as separate steps."). Admin-created via the normal
+  // Create User flow, like auditor/regional_admin — not self-registered.
+  FINANCE: 'finance',
 };
 
 export const ROLE_LABELS = {
@@ -41,6 +48,7 @@ export const ROLE_LABELS = {
   [ROLES.REFERRAL]: 'Referral',
   [ROLES.CONSULTANCY]: 'Consultancy',
   [ROLES.CONTRACTOR]: 'Contractor',
+  [ROLES.FINANCE]: 'Finance',
 };
 
 /** Ordered by privilege level (highest first) */
@@ -53,6 +61,7 @@ export const ROLE_HIERARCHY = [
   ROLES.CONSULTANCY,
   ROLES.REFERRAL,
   ROLES.CONTRACTOR,
+  ROLES.FINANCE,
 ];
 
 // ---------------------------------------------------
@@ -358,6 +367,9 @@ export const PERMISSIONS = {
   // Referrals — referral partner's own dashboard (refer clients, track commission)
   VIEW_REFERRALS: 'view_referrals',
 
+  // Contractor payments — Finance's own approval queue (phase44)
+  APPROVE_CONTRACTOR_PAYMENTS: 'approve_contractor_payments',
+
   // Users & Settings
   MANAGE_USERS: 'manage_users',
   MANAGE_SETTINGS: 'manage_settings',
@@ -396,6 +408,7 @@ const ROLE_PERMISSIONS = {
     PERMISSIONS.MANAGE_ROLES,
     PERMISSIONS.CREATE_ADMINS,
     PERMISSIONS.VIEW_REFERRALS,
+    PERMISSIONS.APPROVE_CONTRACTOR_PAYMENTS,
   ],
 
   // ---- Regional Admin ----
@@ -477,11 +490,18 @@ const ROLE_PERMISSIONS = {
   ],
 
   // ---- Contractor (external service provider) ----
-  // Minimal for now — just enough to land on a dashboard and manage their own
-  // profile after approval. KPI/task tracking permissions arrive with that
-  // feature phase.
   [ROLES.CONTRACTOR]: [
     PERMISSIONS.VIEW_DASHBOARD,
+    PERMISSIONS.MANAGE_SETTINGS,
+  ],
+
+  // ---- Finance ----
+  // Approves the money on a contractor payment request an admin already
+  // approved (phase44, 28 Oct). Does not manage users, regions or settings —
+  // a narrowly scoped internal role, same shape as Auditor/Certification Body.
+  [ROLES.FINANCE]: [
+    PERMISSIONS.VIEW_DASHBOARD,
+    PERMISSIONS.APPROVE_CONTRACTOR_PAYMENTS,
     PERMISSIONS.MANAGE_SETTINGS,
   ],
 };
@@ -622,7 +642,7 @@ export function getCreatableRoles(role) {
     // approved contractor with no documents on file, silently defeating the
     // pending-approval gate (security review, 28 Oct). Contractors must go
     // through the self-registration wizard at /register/contractor.
-    [ROLES.SUPER_ADMIN]: [ROLES.REGIONAL_ADMIN, ROLES.AUDITOR, ROLES.CERTIFICATION_BODY, ROLES.CLIENT, ROLES.CONSULTANCY, ROLES.REFERRAL],
+    [ROLES.SUPER_ADMIN]: [ROLES.REGIONAL_ADMIN, ROLES.AUDITOR, ROLES.CERTIFICATION_BODY, ROLES.CLIENT, ROLES.CONSULTANCY, ROLES.REFERRAL, ROLES.FINANCE],
     [ROLES.REGIONAL_ADMIN]: [ROLES.AUDITOR, ROLES.CERTIFICATION_BODY],
   };
   return map[role] || [];
