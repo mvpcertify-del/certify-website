@@ -456,7 +456,11 @@
 
 .landing__footer-cols {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  /* 5 columns now (Brand, Product, Account, Legal, Join Our Network) — this
+     was still 4 tracks after the Join Our Network column was added, so the
+     5th column had no track to land in and wrapped onto its own row below
+     Brand instead of sitting in line with the others. */
+  grid-template-columns: 1.3fr 1fr 1fr 1fr 1fr;
   gap: var(--spacing-xl);
   padding-bottom: 48px;
 }
