@@ -1,10 +1,23 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FileText, CheckCircle2, Clock, Download } from 'lucide-react';
+import { FileText, CheckCircle2, Clock, Download, ListChecks, XCircle, UploadCloud } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { apiPost } from '../../lib/apiClient';
-import { Button, Input } from '../../components/ui/FormElements';
+import { Button, Input, Textarea } from '../../components/ui/FormElements';
 import './ContractorContract.css';
+
+// 3 MB — kept in step with MAX_DOC_BYTES in api/user.js.
+const MAX_EVIDENCE_MB = 3;
+
+const fileToBase64 = (file) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => resolve(String(reader.result).split(',')[1] || '');
+  reader.onerror = () => reject(new Error('Could not read file'));
+  reader.readAsDataURL(file);
+});
+
+const TASK_STATUS_LABEL = { pending: 'Not submitted yet', submitted: 'Submitted — under review', completed: 'Completed', missed: 'Missed' };
+const TASK_STATUS_COLOR = { pending: '#94a3b8', submitted: '#2563eb', completed: '#059669', missed: '#dc2626' };
 
 // A contractor's own view of the agreement(s) an admin has authored for them
 // (phase42, 28 Oct). Signing here is the 2nd-party signature in the
@@ -19,6 +32,11 @@ export default function ContractorContract() {
   const [signing, setSigning] = useState(null);
   const [error, setError] = useState('');
 
+  const [tasks, setTasks] = useState([]);
+  const [tasksLoading, setTasksLoading] = useState(true);
+  const [taskDrafts, setTaskDrafts] = useState({}); // taskId -> { workLink, completionDate, evidenceNote, file }
+  const [submittingTask, setSubmittingTask] = useState(null);
+
   const fetchContracts = useCallback(async () => {
     setLoading(true);
     try {
@@ -30,7 +48,58 @@ export default function ContractorContract() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { fetchContracts(); }, [fetchContracts]);
+  const fetchTasks = useCallback(async () => {
+    setTasksLoading(true);
+    try {
+      const res = await apiPost('/api/user', { action: 'list-contractor-tasks' });
+      setTasks(res?.tasks || []);
+    } catch (e) {
+      setError(e?.message || 'Could not load your tasks.');
+    }
+    setTasksLoading(false);
+  }, []);
+
+  useEffect(() => { fetchContracts(); fetchTasks(); }, [fetchContracts, fetchTasks]);
+
+  const updateDraft = (taskId, patch) => setTaskDrafts((d) => ({ ...d, [taskId]: { ...d[taskId], ...patch } }));
+
+  const submitTask = async (taskId) => {
+    const draft = taskDrafts[taskId] || {};
+    setError('');
+    setSubmittingTask(taskId);
+    try {
+      const payload = {
+        action: 'submit-contractor-task',
+        taskId,
+        workLink: draft.workLink || undefined,
+        completionDate: draft.completionDate || undefined,
+        evidenceNote: draft.evidenceNote || undefined,
+      };
+      if (draft.file) {
+        if (draft.file.size > MAX_EVIDENCE_MB * 1024 * 1024) {
+          throw new Error(`Evidence file must be ${MAX_EVIDENCE_MB} MB or smaller.`);
+        }
+        payload.fileName = draft.file.name;
+        payload.mimeType = draft.file.type || null;
+        payload.dataBase64 = await fileToBase64(draft.file);
+      }
+      await apiPost('/api/user', payload);
+      setTaskDrafts((d) => ({ ...d, [taskId]: {} }));
+      await fetchTasks();
+    } catch (e) {
+      setError(e?.message || 'Could not submit this task.');
+    }
+    setSubmittingTask(null);
+  };
+
+  const downloadEvidence = async (taskId) => {
+    try {
+      const res = await apiPost('/api/user', { action: 'get-contractor-task-evidence-url', taskId });
+      if (res?.url) window.open(res.url, '_blank', 'noopener');
+    } catch (e) {
+      setError(e?.message || 'No evidence file on this task.');
+    }
+  };
 
   const hasSigned = (c) => (c.contractor_contract_signatures || []).some((s) => s.party_role === 'contractor');
 
@@ -130,6 +199,69 @@ export default function ContractorContract() {
           )}
         </div>
       ))}
+
+      <h1 style={{ marginTop: 32 }}><ListChecks size={20} style={{ verticalAlign: '-3px', marginRight: 8 }} />{t('contractorContract.tasksTitle', 'My Tasks')}</h1>
+
+      {tasksLoading ? <p>{t('common.loading')}</p> : tasks.length === 0 ? (
+        <p className="ctrc__empty">{t('contractorContract.noTasks', 'No tasks assigned to you yet.')}</p>
+      ) : tasks.map((task) => {
+        const draft = taskDrafts[task.id] || {};
+        const editable = task.status === 'pending' || task.status === 'submitted';
+        return (
+          <div key={task.id} className="ctrc__card">
+            <div className="ctrc__top">
+              <span className="ctrc__ref">{t('contractorContract.due', 'Due')} {task.deadline_date}</span>
+              <span className="ctrc__pill" style={{ background: `${TASK_STATUS_COLOR[task.status]}18`, color: TASK_STATUS_COLOR[task.status] }}>
+                {task.status === 'completed' ? <CheckCircle2 size={13} /> : task.status === 'missed' ? <XCircle size={13} /> : <Clock size={13} />}
+                {TASK_STATUS_LABEL[task.status] || task.status}
+              </span>
+            </div>
+            <p className="ctrc__text">{task.task_description}</p>
+            {task.kpi_target && <p className="ctrc__section-label">KPI: {task.kpi_target}</p>}
+
+            {task.evidence_storage_path && (
+              <Button size="sm" variant="secondary" onClick={() => downloadEvidence(task.id)} style={{ marginTop: 8 }}>
+                <Download size={14} /> {t('contractorContract.viewEvidence', 'View submitted evidence')}
+              </Button>
+            )}
+
+            {editable && (
+              <div className="ctrc__sign-box">
+                <Input
+                  label={t('contractorContract.workLink', 'Completed work link')}
+                  placeholder="https://..."
+                  value={draft.workLink ?? task.work_link ?? ''}
+                  onChange={(e) => updateDraft(task.id, { workLink: e.target.value })}
+                />
+                <Input
+                  label={t('contractorContract.completionDate', 'Completion date')}
+                  type="date"
+                  value={draft.completionDate ?? task.completion_date ?? ''}
+                  onChange={(e) => updateDraft(task.id, { completionDate: e.target.value })}
+                />
+                <Textarea
+                  label={t('contractorContract.evidenceNote', 'Evidence note (optional)')}
+                  rows={2}
+                  value={draft.evidenceNote ?? task.evidence_note ?? ''}
+                  onChange={(e) => updateDraft(task.id, { evidenceNote: e.target.value })}
+                />
+                <div>
+                  <label className="form-label" htmlFor={`evidence-${task.id}`}>{t('contractorContract.evidenceFile', 'Evidence file (optional)')}</label>
+                  <input
+                    className="form-input"
+                    id={`evidence-${task.id}`}
+                    type="file"
+                    onChange={(e) => updateDraft(task.id, { file: e.target.files?.[0] || null })}
+                  />
+                </div>
+                <Button loading={submittingTask === task.id} onClick={() => submitTask(task.id)}>
+                  <UploadCloud size={15} /> {task.status === 'submitted' ? t('contractorContract.resubmit', 'Update Submission') : t('contractorContract.submit', 'Submit')}
+                </Button>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

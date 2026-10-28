@@ -88,6 +88,13 @@ export default async function handler(req, res) {
     if (action === 'sign-contractor-contract') return await signContractorContract(req, res);
     if (action === 'finalize-contractor-contract') return await finalizeContractorContract(req, res);
     if (action === 'get-contractor-contract-pdf-url') return await getContractorContractPdfUrl(req, res);
+    // Contractor tasks (phase43, 28 Oct) — manual assign/submit/review for
+    // now; automatic KPI scoring + email notifications are a later phase.
+    if (action === 'create-contractor-task') return await createContractorTask(req, res);
+    if (action === 'list-contractor-tasks') return await listContractorTasks(req, res);
+    if (action === 'submit-contractor-task') return await submitContractorTask(req, res);
+    if (action === 'review-contractor-task') return await reviewContractorTask(req, res);
+    if (action === 'get-contractor-task-evidence-url') return await getContractorTaskEvidenceUrl(req, res);
     return res.status(400).json({ error: 'Unknown action' });
   } catch (error) {
     console.error('User route error:', error);
@@ -1269,6 +1276,237 @@ function clientIpFor(req) {
     if (hops.length) return hops[hops.length - 1].slice(0, 100);
   }
   return req?.socket?.remoteAddress?.slice(0, 100) || 'unknown';
+}
+
+// ---------------------------------------------------------------------------
+// Contractor tasks (phase43, 28 Oct) — admin assigns, contractor submits
+// evidence, admin reviews. Deliberately manual review for now: automatic
+// 0%/100% scoring against the deadline and the contractor/admin email
+// notifications are a separate, later phase (client confirmation, 28 Oct —
+// build this in small pieces, not all at once).
+// ---------------------------------------------------------------------------
+const TASK_EVIDENCE_BUCKET = 'contractor-task-evidence';
+
+async function createContractorTask(req, res) {
+  try {
+    const { contractorId, contractId, taskDescription, kpiTarget, deadlineDate } = req.body;
+    const access = await assertContractorContractAdmin(req, contractorId);
+    if (access.error) return res.status(access.status).json({ error: access.error });
+
+    const description = String(taskDescription || '').trim().slice(0, 5000);
+    if (!description) return res.status(400).json({ error: 'Missing taskDescription' });
+    if (!deadlineDate) return res.status(400).json({ error: 'Missing deadlineDate' });
+
+    // A task may optionally be pinned to one of this contractor's own
+    // contracts — reject one that belongs to somebody else rather than
+    // silently recording a false link.
+    if (contractId) {
+      const { data: contract } = await supabaseAdmin
+        .from('contractor_contracts').select('contractor_id').eq('id', contractId).maybeSingle();
+      if (!contract || contract.contractor_id !== contractorId) {
+        return res.status(400).json({ error: 'That contract does not belong to this contractor.' });
+      }
+    }
+
+    const { data: row, error } = await supabaseAdmin
+      .from('contractor_tasks')
+      .insert({
+        contractor_id: contractorId,
+        contract_id: contractId || null,
+        assigned_by: access.caller.id,
+        task_description: description,
+        kpi_target: kpiTarget ? String(kpiTarget).trim().slice(0, 500) : null,
+        deadline_date: deadlineDate,
+        status: 'pending',
+      })
+      .select()
+      .single();
+    if (error) throw error;
+
+    await supabaseAdmin.from('notifications').insert({
+      user_id: contractorId,
+      type: 'system',
+      title: 'New task assigned',
+      message: `${description.slice(0, 140)}${description.length > 140 ? '…' : ''} — due ${deadlineDate}.`,
+    });
+
+    return res.status(200).json({ success: true, task: row });
+  } catch (err) {
+    return contractorContractFailure(res, err, 'createContractorTask');
+  }
+}
+
+// Same access shape as listContractorContracts: the contractor's own tasks,
+// or an admin's (region-scoped for regional_admin) view of one contractor's.
+async function listContractorTasks(req, res) {
+  try {
+    const session = await verifySession(req);
+    if (session.error) return res.status(session.status).json({ error: session.error });
+    const { caller } = session;
+
+    let contractorId = caller.id;
+    if (req.body?.contractorId && req.body.contractorId !== caller.id) {
+      if (!(await regionAllowsContractorRead(caller, req.body.contractorId))) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+      contractorId = req.body.contractorId;
+    } else if (caller.role !== ROLES.CONTRACTOR && !req.body?.contractorId) {
+      return res.status(400).json({ error: 'Missing contractorId' });
+    }
+
+    const { data: tasks, error } = await supabaseAdmin
+      .from('contractor_tasks')
+      .select('*')
+      .eq('contractor_id', contractorId)
+      .order('deadline_date', { ascending: true });
+    if (error) throw error;
+
+    return res.status(200).json({ success: true, tasks: tasks || [] });
+  } catch (err) {
+    return contractorContractFailure(res, err, 'listContractorTasks');
+  }
+}
+
+// The contractor submits their own evidence — always a real session, a task
+// can't exist before the contractor was approved and could log in.
+async function submitContractorTask(req, res) {
+  try {
+    const { taskId, workLink, completionDate, evidenceNote, fileName, mimeType, dataBase64 } = req.body;
+    if (!taskId) return res.status(400).json({ error: 'Missing taskId' });
+
+    const session = await verifySession(req);
+    if (session.error) return res.status(session.status).json({ error: session.error });
+    const { caller } = session;
+    if (caller.role !== ROLES.CONTRACTOR) {
+      return res.status(403).json({ error: 'Only the assigned contractor may submit this task.' });
+    }
+
+    const { data: task } = await supabaseAdmin
+      .from('contractor_tasks').select('*').eq('id', taskId).maybeSingle();
+    if (!task) return res.status(404).json({ error: 'Task not found' });
+    if (task.contractor_id !== caller.id) {
+      return res.status(403).json({ error: 'That is not your task.' });
+    }
+    if (task.status === 'completed') {
+      return res.status(409).json({ error: 'This task has already been marked completed.' });
+    }
+
+    const patch = {
+      status: 'submitted',
+      updated_at: new Date().toISOString(),
+    };
+    if (workLink) patch.work_link = String(workLink).trim().slice(0, 2000);
+    if (completionDate) patch.completion_date = completionDate;
+    if (evidenceNote) patch.evidence_note = String(evidenceNote).trim().slice(0, 2000);
+
+    if (dataBase64) {
+      let bytes;
+      try {
+        bytes = Uint8Array.from(atob(String(dataBase64)), (c) => c.charCodeAt(0));
+      } catch {
+        return res.status(400).json({ error: 'File data could not be decoded' });
+      }
+      if (bytes.length > MAX_DOC_BYTES) {
+        return res.status(413).json({
+          error: `File is too large. The limit is ${Math.floor(MAX_DOC_BYTES / (1024 * 1024))} MB.`,
+        });
+      }
+      const safeName = String(fileName || 'evidence')
+        .replace(/[^\w.\-() ]+/g, '_').slice(0, 120) || 'evidence';
+      const path = `${caller.id}/${taskId}-${Date.now()}-${safeName}`;
+      const { error: upErr } = await supabaseAdmin.storage
+        .from(TASK_EVIDENCE_BUCKET)
+        .upload(path, bytes, { contentType: mimeType || 'application/octet-stream', upsert: false });
+      if (upErr) {
+        console.error('submitContractorTask: evidence upload failed', upErr);
+        return res.status(500).json({ error: 'Could not store the evidence file. Please try again.' });
+      }
+      patch.evidence_storage_path = path;
+    }
+
+    const { data: updated, error } = await supabaseAdmin
+      .from('contractor_tasks').update(patch).eq('id', taskId).select().single();
+    if (error) throw error;
+
+    await notifyAdmins(supabaseAdmin, {
+      title: 'Contractor submitted a task',
+      message: `Task "${task.task_description.slice(0, 100)}" was submitted for review.`,
+    }).catch(() => {});
+
+    return res.status(200).json({ success: true, task: updated });
+  } catch (err) {
+    return contractorContractFailure(res, err, 'submitContractorTask');
+  }
+}
+
+// Admin-only, region-scoped. Marks a submitted task completed (100%) or
+// missed (0%) by explicit human review — not automatic yet (see module note
+// above).
+async function reviewContractorTask(req, res) {
+  try {
+    const { taskId, decision } = req.body; // decision: 'completed' | 'missed'
+    if (!taskId) return res.status(400).json({ error: 'Missing taskId' });
+    if (!['completed', 'missed'].includes(decision)) {
+      return res.status(400).json({ error: "decision must be 'completed' or 'missed'" });
+    }
+
+    const { data: task } = await supabaseAdmin
+      .from('contractor_tasks').select('*').eq('id', taskId).maybeSingle();
+    if (!task) return res.status(404).json({ error: 'Task not found' });
+
+    const access = await assertContractorContractAdmin(req, task.contractor_id);
+    if (access.error) return res.status(access.status).json({ error: access.error });
+
+    const achievedPercent = decision === 'completed' ? 100 : 0;
+    const { data: updated, error } = await supabaseAdmin
+      .from('contractor_tasks')
+      .update({ status: decision, achieved_percent: achievedPercent, updated_at: new Date().toISOString() })
+      .eq('id', taskId)
+      .select()
+      .single();
+    if (error) throw error;
+
+    await supabaseAdmin.from('notifications').insert({
+      user_id: task.contractor_id,
+      type: 'system',
+      title: decision === 'completed' ? 'Task marked completed' : 'Task marked missed',
+      message: `"${task.task_description.slice(0, 100)}" — ${achievedPercent}% achieved.`,
+    });
+
+    return res.status(200).json({ success: true, task: updated });
+  } catch (err) {
+    return contractorContractFailure(res, err, 'reviewContractorTask');
+  }
+}
+
+// Short-lived download URL for an evidence file — same access rule as the
+// contract PDF endpoint.
+async function getContractorTaskEvidenceUrl(req, res) {
+  try {
+    const { taskId } = req.body;
+    if (!taskId) return res.status(400).json({ error: 'Missing taskId' });
+
+    const session = await verifySession(req);
+    if (session.error) return res.status(session.status).json({ error: session.error });
+    const { caller } = session;
+
+    const { data: task } = await supabaseAdmin
+      .from('contractor_tasks').select('contractor_id, evidence_storage_path').eq('id', taskId).maybeSingle();
+    if (!task) return res.status(404).json({ error: 'Task not found' });
+
+    const isOwner = task.contractor_id === caller.id;
+    if (!isOwner && !(await regionAllowsContractorRead(caller, task.contractor_id))) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    if (!task.evidence_storage_path) {
+      return res.status(404).json({ error: 'No evidence file on this task.' });
+    }
+
+    const url = await signedUrlFor(supabaseAdmin, task.evidence_storage_path, 300, TASK_EVIDENCE_BUCKET);
+    return res.status(200).json({ success: true, url });
+  } catch (err) {
+    return contractorContractFailure(res, err, 'getContractorTaskEvidenceUrl');
+  }
 }
 
 // List an auditor's uploaded certificates/CV with short-lived download links.

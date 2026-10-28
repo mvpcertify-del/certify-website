@@ -99,6 +99,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     // the route then bounces — the exact trap the Referral Partners entry
     // above documents.
     { path: '/referral-dashboard', labelKey: 'nav.referralProgramDashboard', icon: LayoutGrid, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_REFERRALS], allowedRoles: [ROLES.REFERRAL, ROLES.CONSULTANCY, ROLES.SUPER_ADMIN] },
+    { path: '/contractor/contract', labelKey: 'nav.myContract', icon: FileSignature, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.CONTRACTOR] },
     // Only the client's dashboard takes input (document upload); every other
     // role's branch of this same page is a read-only list.
     { path: '/dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard, kind: (r) => (r === ROLES.CLIENT ? KIND_CREATE : KIND_VIEW), permissions: [PERMISSIONS.VIEW_DASHBOARD], excludeRoles: [ROLES.REFERRAL, ROLES.CONSULTANCY] },

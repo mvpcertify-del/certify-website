@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Trash2, FileText, Send, CheckCircle2, Download, Clock } from 'lucide-react';
+import { Plus, Trash2, FileText, Send, CheckCircle2, Download, Clock, ListChecks, XCircle, Link as LinkIcon } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { apiPost } from '../../lib/apiClient';
 import { Button, Input, Select, Textarea } from '../../components/ui/FormElements';
@@ -35,6 +35,10 @@ const STATUS_COLOR = {
   terminated: '#dc2626',
 };
 
+const EMPTY_TASK_FORM = { taskDescription: '', kpiTarget: '', deadlineDate: '', contractId: '' };
+const TASK_STATUS_LABEL = { pending: 'Pending', submitted: 'Submitted — needs review', completed: 'Completed', missed: 'Missed' };
+const TASK_STATUS_COLOR = { pending: '#94a3b8', submitted: '#2563eb', completed: '#059669', missed: '#dc2626' };
+
 export default function AdminContractors() {
   const { t } = useTranslation();
   const [contractors, setContractors] = useState([]);
@@ -50,6 +54,14 @@ export default function AdminContractors() {
   const [formError, setFormError] = useState('');
   const [saving, setSaving] = useState(false);
   const [actionLoading, setActionLoading] = useState(null);
+
+  const [tasks, setTasks] = useState([]);
+  const [tasksLoading, setTasksLoading] = useState(false);
+  const [showTaskCreate, setShowTaskCreate] = useState(false);
+  const [taskForm, setTaskForm] = useState(EMPTY_TASK_FORM);
+  const [taskFormError, setTaskFormError] = useState('');
+  const [taskSaving, setTaskSaving] = useState(false);
+  const [taskActionLoading, setTaskActionLoading] = useState(null);
 
   const fetchContractors = useCallback(async () => {
     setLoading(true);
@@ -78,9 +90,70 @@ export default function AdminContractors() {
     setContractsLoading(false);
   }, []);
 
+  const fetchTasks = useCallback(async (contractorId) => {
+    setTasksLoading(true);
+    try {
+      const res = await apiPost('/api/user', { action: 'list-contractor-tasks', contractorId });
+      setTasks(res?.tasks || []);
+    } catch (e) {
+      console.error('Could not load tasks:', e);
+      setTasks([]);
+    }
+    setTasksLoading(false);
+  }, []);
+
   const openContractor = (c) => {
     setSelected(c);
     fetchContracts(c.id);
+    fetchTasks(c.id);
+  };
+
+  const openTaskCreate = () => {
+    setTaskForm(EMPTY_TASK_FORM);
+    setTaskFormError('');
+    setShowTaskCreate(true);
+  };
+
+  const submitTaskCreate = async (e) => {
+    e.preventDefault();
+    if (!selected) return;
+    setTaskFormError('');
+    setTaskSaving(true);
+    try {
+      await apiPost('/api/user', {
+        action: 'create-contractor-task',
+        contractorId: selected.id,
+        taskDescription: taskForm.taskDescription,
+        kpiTarget: taskForm.kpiTarget || null,
+        deadlineDate: taskForm.deadlineDate,
+        contractId: taskForm.contractId || null,
+      });
+      setShowTaskCreate(false);
+      await fetchTasks(selected.id);
+    } catch (err) {
+      setTaskFormError(err?.message || 'Could not create the task.');
+    }
+    setTaskSaving(false);
+  };
+
+  const reviewTask = async (taskId, decision) => {
+    setTaskActionLoading(taskId);
+    try {
+      await apiPost('/api/user', { action: 'review-contractor-task', taskId, decision });
+      await fetchTasks(selected.id);
+    } catch (err) {
+      setError(err?.message || 'Could not review the task.');
+    }
+    setTaskActionLoading(null);
+  };
+
+  const downloadEvidence = async (taskId) => {
+    try {
+      const res = await apiPost('/api/user', { action: 'get-contractor-task-evidence-url', taskId });
+      if (res?.url) window.open(res.url, '_blank', 'noopener');
+    } catch (err) {
+      setError(err?.message || 'No evidence file on this task.');
+    }
   };
 
   const openCreate = () => {
@@ -221,10 +294,79 @@ export default function AdminContractors() {
                   ))}
                 </div>
               )}
+
+              <div className="adctr__detail-header" style={{ marginTop: 28 }}>
+                <h3 className="adctr__section-title"><ListChecks size={16} /> {t('adminContractors.tasks', 'Tasks')}</h3>
+                <Button size="sm" onClick={openTaskCreate}><Plus size={14} /> {t('adminContractors.newTask', 'New Task')}</Button>
+              </div>
+
+              {tasksLoading ? <p>{t('common.loading')}</p> : tasks.length === 0 ? (
+                <p className="adctr__empty">{t('adminContractors.noTasks', 'No tasks assigned yet.')}</p>
+              ) : (
+                <div className="adctr__contracts">
+                  {tasks.map((task) => (
+                    <div key={task.id} className="adctr__contract-card">
+                      <div className="adctr__contract-top">
+                        <span className="adctr__contract-meta" style={{ margin: 0 }}>{t('adminContractors.due', 'Due')} {task.deadline_date}</span>
+                        <span className="adctr__status-pill" style={{ background: `${TASK_STATUS_COLOR[task.status]}18`, color: TASK_STATUS_COLOR[task.status] }}>
+                          {TASK_STATUS_LABEL[task.status] || task.status}
+                        </span>
+                      </div>
+                      <p className="adctr__contract-title">{task.task_description}</p>
+                      {task.kpi_target && <p className="adctr__contract-meta">KPI: {task.kpi_target}</p>}
+                      {task.work_link && (
+                        <p className="adctr__contract-meta">
+                          <LinkIcon size={12} /> <a href={task.work_link} target="_blank" rel="noopener noreferrer">{task.work_link}</a>
+                        </p>
+                      )}
+                      <div className="adctr__contract-actions">
+                        {task.evidence_storage_path && (
+                          <Button size="sm" variant="secondary" onClick={() => downloadEvidence(task.id)}>
+                            <Download size={14} /> {t('adminContractors.evidence', 'Evidence')}
+                          </Button>
+                        )}
+                        {task.status === 'submitted' && (
+                          <>
+                            <Button size="sm" loading={taskActionLoading === task.id} onClick={() => reviewTask(task.id, 'completed')}>
+                              <CheckCircle2 size={14} /> {t('adminContractors.markCompleted', 'Mark Completed')}
+                            </Button>
+                            <Button size="sm" variant="secondary" loading={taskActionLoading === task.id} onClick={() => reviewTask(task.id, 'missed')}>
+                              <XCircle size={14} /> {t('adminContractors.markMissed', 'Mark Missed')}
+                            </Button>
+                          </>
+                        )}
+                        {task.status === 'pending' && (
+                          <span className="adctr__waiting"><Clock size={13} /> {t('adminContractors.waitingSubmission', 'Waiting for contractor')}</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </>
           )}
         </div>
       </div>
+
+      <Modal isOpen={showTaskCreate} onClose={() => setShowTaskCreate(false)} title={t('adminContractors.newTask', 'New Task')}>
+        <form onSubmit={submitTaskCreate} className="adctr__form">
+          {taskFormError && <div className="adctr__error">{taskFormError}</div>}
+          <Textarea label="Task Description *" rows={3} value={taskForm.taskDescription} onChange={(e) => setTaskForm({ ...taskForm, taskDescription: e.target.value })} required />
+          <Input label="KPI / Target" placeholder="Which KPI this counts toward" value={taskForm.kpiTarget} onChange={(e) => setTaskForm({ ...taskForm, kpiTarget: e.target.value })} />
+          <Input label="Deadline *" type="date" value={taskForm.deadlineDate} onChange={(e) => setTaskForm({ ...taskForm, deadlineDate: e.target.value })} required />
+          {contracts.length > 0 && (
+            <Select label="Linked Contract (optional)" value={taskForm.contractId} onChange={(e) => setTaskForm({ ...taskForm, contractId: e.target.value })}>
+              <option value="">—</option>
+              {contracts.map((c) => <option key={c.id} value={c.id}>{c.reference} — {c.job_title}</option>)}
+            </Select>
+          )}
+          <div className="adctr__form-actions">
+            <Button type="submit" loading={taskSaving} fullWidth>
+              <Send size={16} /> {t('adminContractors.assignTask', 'Assign Task')}
+            </Button>
+          </div>
+        </form>
+      </Modal>
 
       <Modal isOpen={showCreate} onClose={() => setShowCreate(false)} title={t('adminContractors.newContract', 'New Contract')} size="lg">
         <form onSubmit={submitCreate} className="adctr__form">
