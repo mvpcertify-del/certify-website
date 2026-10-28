@@ -399,13 +399,13 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
   const [auditorCert, setAuditorCert] = useState(null);
   const [auditorCv, setAuditorCv] = useState(null);
   const [auditorAuditLog, setAuditorAuditLog] = useState(null);
-  // Contractor onboarding (phase41): mandatory ID + CV + photo, plus the
-  // signed service agreement, same bootstrap-upload shape as the auditor
-  // documents above (see attachContractorDetails / api/user.js).
+  // Contractor onboarding (phase41): mandatory ID + CV + photo, same
+  // bootstrap-upload shape as the auditor documents above (see
+  // attachContractorDetails / api/user.js). The contract is signed later,
+  // from the contractor's own dashboard, once an admin has authored it.
   const [contractorIdDoc, setContractorIdDoc] = useState(null);
   const [contractorCv, setContractorCv] = useState(null);
   const [contractorPhoto, setContractorPhoto] = useState(null);
-  const [contractorContractAccepted, setContractorContractAccepted] = useState(false);
   // Qualification arrays, shared with the admin "Add Auditor" modal through
   // src/utils/auditorOptions.js so the two forms collect identical values.
   const [auditorStandards, setAuditorStandards] = useState([]);
@@ -508,10 +508,6 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
         setError(t('auth.validationContractorDocs'));
         return false;
       }
-      if (targetRole === 'contractor' && !contractorContractAccepted) {
-        setError(t('auth.validationContractorContract'));
-        return false;
-      }
       const customCheck = validateCustomFields(customFields, customValues);
       if (!customCheck.valid) {
         setError(t('auth.validationCustomField', { field: customCheck.errorField }));
@@ -606,25 +602,15 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
   };
 
   // Contractor equivalent of attachAuditorDetails above — same reasoning (no
-  // session yet, service-role write via /api/user, same bootstrap window),
-  // just a different document set (ID copy / CV / photo, all mandatory) plus
-  // recording that the contract shown on this page was accepted. Unlike
-  // referral/consultancy/auditor's `accept-contract` action (api/_contract.js),
-  // this can't require a signed-in session — the account stays 'pending' and
-  // is never logged in during registration — so it's its own simple action.
+  // session yet, service-role write via /api/user, same bootstrap window):
+  // ID copy / CV / photo, all mandatory. The contract itself is NOT signed
+  // here — client correction, 28 Oct: a contractor's agreement is authored by
+  // an admin per-contractor (job scope, compensation, KPIs), so it doesn't
+  // exist yet at registration time. It's created and sent after approval, and
+  // signed from the contractor's own dashboard (see AdminContractors.jsx /
+  // ContractorContract.jsx).
   const attachContractorDetails = async (contractorId) => {
     const failed = [];
-
-    try {
-      await apiPost('/api/user', {
-        action: 'accept-contractor-contract',
-        contractorId,
-        signedName: formData.contact_person_name,
-      });
-    } catch (err) {
-      console.error('Contractor contract acceptance save failed:', err);
-      failed.push(t('auth.contractorContract'));
-    }
 
     const documents = [
       ['id_copy', contractorIdDoc],
@@ -1149,31 +1135,9 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
                   />
                 </div>
 
-                <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', margin: '0 0 16px' }}>
+                <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', margin: 0 }}>
                   {t('auth.auditorDocsSizeNote', { max: MAX_AUDITOR_UPLOAD_MB })}
                 </p>
-
-                {/* Contract text is a placeholder until the real agreement is
-                    supplied (client, 28 Oct) — the version string below lets a
-                    later real-contract rollout detect who signed the
-                    placeholder and needs to re-sign. */}
-                <p style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: '4px' }}>{t('auth.contractorContract')}</p>
-                <div style={{
-                  maxHeight: '140px', overflowY: 'auto', padding: '10px 12px', marginBottom: '10px',
-                  border: '1px solid var(--color-border)', borderRadius: '6px', background: '#fff',
-                  fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', lineHeight: 1.5,
-                }}>
-                  {t('auth.contractorContractText')}
-                </div>
-                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: 'var(--font-size-sm)', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={contractorContractAccepted}
-                    onChange={(e) => setContractorContractAccepted(e.target.checked)}
-                    style={{ marginTop: '3px' }}
-                  />
-                  {t('auth.contractorContractAgree')}
-                </label>
               </div>
             )}
 

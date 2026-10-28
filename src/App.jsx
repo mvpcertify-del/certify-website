@@ -62,6 +62,8 @@ const AdminCountries = lazy(() => import('./pages/admin/AdminCountries'));
 const AdminCoupons = lazy(() => import('./pages/admin/AdminCoupons'));
 const AdminCommissionTiers = lazy(() => import('./pages/admin/AdminCommissionTiers'));
 const AdminConsultancies = lazy(() => import('./pages/admin/AdminConsultancies'));
+const AdminContractors = lazy(() => import('./pages/admin/AdminContractors'));
+const ContractorContract = lazy(() => import('./pages/contractor/ContractorContract'));
 const AdminReferralPartners = lazy(() => import('./pages/admin/AdminReferralPartners'));
 const AdminBilling = lazy(() => import('./pages/admin/AdminBilling'));
 const CertificationBodiesRegistry = lazy(() => import('./pages/bodies/CertificationBodies'));
@@ -343,6 +345,20 @@ function AppRoutes() {
             <Route path="/admin/consultancies" element={
               <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.REGIONAL_ADMIN]}>
                 <AdminConsultancies />
+              </ProtectedRoute>
+            } />
+
+            {/* Admin — author/send/finalize per-contractor agreements (phase42) */}
+            <Route path="/admin/contractors" element={
+              <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.REGIONAL_ADMIN]}>
+                <AdminContractors />
+              </ProtectedRoute>
+            } />
+
+            {/* Contractor — view and sign their own contract */}
+            <Route path="/contractor/contract" element={
+              <ProtectedRoute allowedRoles={[ROLES.CONTRACTOR]}>
+                <ContractorContract />
               </ProtectedRoute>
             } />
 

@@ -389,10 +389,10 @@ export function AuthProvider({ children }) {
       // list they used to land on is one box away.
       [ROLES.REFERRAL]: '/referral-dashboard',
       [ROLES.CONSULTANCY]: '/referral-dashboard',
-      // No dedicated contractor dashboard yet (KPI/task tracking is a later
-      // phase, 28 Oct) — the generic /dashboard route renders for any role
-      // with VIEW_DASHBOARD, which contractor has.
-      [ROLES.CONTRACTOR]: '/dashboard',
+      // Lands on their contract (phase42, 28 Oct) — the first thing a newly
+      // approved contractor needs to do is review and sign it. Full KPI/task
+      // dashboard is a later phase.
+      [ROLES.CONTRACTOR]: '/contractor/contract',
     };
     return map[role] || '/dashboard';
   };

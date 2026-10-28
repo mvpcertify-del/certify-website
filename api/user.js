@@ -20,6 +20,14 @@ import { deleteUser } from './_deleteUser.js';
 import { resendVerification } from './_resendVerification.js';
 import { sendWhatsApp } from './_notifyWhatsApp.js';
 import { sendWelcomeDirect } from './_sendWelcomeDirect.js';
+import {
+  ContractorContractError,
+  generateReference,
+  validateContractInput,
+  buildContractorContractPdf,
+  uploadContractorContractPdf,
+} from './_contractorContract.js';
+import { signedUrlFor } from './_billing.js';
 import { ROLES, getRegionFromCountry } from '../src/utils/roles.js';
 import { sanitizeAuditorTags } from '../src/utils/auditorOptions.js';
 
@@ -72,7 +80,14 @@ export default async function handler(req, res) {
     // Contractor onboarding (phase41, 28 Oct) — both bootstrap-window actions,
     // same reasoning as the auditor ones above (no session yet).
     if (action === 'add-contractor-document') return await addContractorDocument(req, res);
-    if (action === 'accept-contractor-contract') return await acceptContractorContract(req, res);
+    // Contractor contracts (phase42, 28 Oct) — admin-authored per contractor,
+    // tri-party signed. See api/_contractorContract.js.
+    if (action === 'create-contractor-contract') return await createContractorContract(req, res);
+    if (action === 'send-contractor-contract') return await sendContractorContract(req, res);
+    if (action === 'list-contractor-contracts') return await listContractorContracts(req, res);
+    if (action === 'sign-contractor-contract') return await signContractorContract(req, res);
+    if (action === 'finalize-contractor-contract') return await finalizeContractorContract(req, res);
+    if (action === 'get-contractor-contract-pdf-url') return await getContractorContractPdfUrl(req, res);
     return res.status(400).json({ error: 'Unknown action' });
   } catch (error) {
     console.error('User route error:', error);
@@ -606,11 +621,6 @@ const AUDITOR_DOC_BUCKET = 'auditor-documents';
 // bounded to a short window right after account creation.
 const CONTRACTOR_DOC_TYPES = ['id_copy', 'cv', 'photo', 'other'];
 const CONTRACTOR_DOC_BUCKET = 'contractor-documents';
-// Placeholder text until the client supplies the real signed agreement (see
-// stakeholder.contractor / auth.contractorContractText in the locale files,
-// which is what the signup page actually shows — this version string just
-// lets a future real-contract rollout tell who signed the placeholder).
-const CONTRACTOR_CONTRACT_VERSION = 'placeholder-v1';
 // Vercel caps a request body at 4.5 MB and base64 inflates the payload by a
 // third, so the raw file has to stay well under that. Kept in step with
 // MAX_UPLOAD_MB in ProfileManagementTable.jsx.
@@ -919,57 +929,346 @@ async function addContractorDocument(req, res) {
   return res.status(200).json({ success: true, id: row.id, storagePath: path });
 }
 
-// Records that a contractor accepted the agreement shown on the signup page.
-// Bootstrap-window, same reasoning as addContractorDocument above. This is
-// deliberately NOT the shared get-contract/accept-contract flow used by
-// referral/consultancy/auditor (api/_contract.js) — that flow requires a
-// signed-in caller, and a contractor has no session until a Super Admin
-// approves them. One acceptance per contractor (unique on contractor_id);
-// a retry just confirms the existing row rather than erroring.
-async function acceptContractorContract(req, res) {
-  const { contractorId, signedName } = req.body;
-
-  const access = await resolveContractorWriteAccess(req, contractorId);
-  if (access.error) return res.status(access.status).json({ error: access.error });
-
-  const name = String(signedName || '').trim().slice(0, 200);
-  if (!name) return res.status(400).json({ error: 'Missing signedName' });
-
-  const { data: existing } = await supabaseAdmin
-    .from('contractor_contract_acceptances')
-    .select('id')
-    .eq('contractor_id', contractorId)
-    .maybeSingle();
-  if (existing) return res.status(200).json({ success: true, id: existing.id, alreadySigned: true });
-
-  const { data: row, error } = await supabaseAdmin
-    .from('contractor_contract_acceptances')
-    .insert({
-      contractor_id: contractorId,
-      version: CONTRACTOR_CONTRACT_VERSION,
-      signed_name: name,
-      accepted_ip: req.headers?.['x-real-ip']
-        || String(req.headers?.['x-forwarded-for'] || '').split(',').pop()?.trim()
-        || req.socket?.remoteAddress
-        || 'unknown',
-    })
-    .select('id')
-    .single();
-
-  if (error) {
-    if (error.code === '23505') {
-      return res.status(200).json({ success: true, alreadySigned: true });
-    }
-    console.error('acceptContractorContract: insert failed', error);
-    const missingTable = /contractor_contract_acceptances/.test(error.message || '');
-    return res.status(500).json({
-      error: missingTable
-        ? 'The contractor_contract_acceptances table is missing. Run supabase/phase41_contractors.sql.'
-        : 'Could not record your acceptance. Please try again.',
-    });
+// ---------------------------------------------------------------------------
+// Contractor contracts (phase42, 28 Oct) — tri-party, per-contractor
+// agreements. See api/_contractorContract.js for the shared validation/PDF
+// logic and the full design rationale.
+// ---------------------------------------------------------------------------
+function contractorContractFailure(res, err, context) {
+  if (err instanceof ContractorContractError) {
+    return res.status(err.status).json({ error: err.message });
   }
+  console.error(`${context} failed:`, err);
+  return res.status(500).json({ error: 'Something went wrong. Please try again.' });
+}
 
-  return res.status(200).json({ success: true, id: row.id, alreadySigned: false });
+// Admin-only (super_admin, or regional_admin scoped to the contractor's own
+// region — same rule used throughout this file). Only an APPROVED contractor
+// can have a contract authored for them: the documents (ID/CV/photo) have to
+// be on file and reviewed first.
+async function assertContractorContractAdmin(req, contractorId) {
+  const auth = await verifyAdmin(req);
+  if (auth.error) return { error: auth.error, status: auth.status };
+
+  const { data: contractor } = await supabaseAdmin
+    .from('profiles')
+    .select('id, role, region, approval_status')
+    .eq('id', contractorId)
+    .maybeSingle();
+  if (!contractor || contractor.role !== ROLES.CONTRACTOR) {
+    return { error: 'Contractor not found', status: 404 };
+  }
+  if (contractor.approval_status !== 'approved') {
+    return { error: 'This contractor has not been approved yet.', status: 409 };
+  }
+  if (auth.caller.role === ROLES.REGIONAL_ADMIN
+      && (!auth.caller.region || auth.caller.region !== contractor.region)) {
+    return { error: 'Forbidden: that contractor is outside your region.', status: 403 };
+  }
+  return { caller: auth.caller, contractor };
+}
+
+async function createContractorContract(req, res) {
+  try {
+    const { contractorId } = req.body;
+    const access = await assertContractorContractAdmin(req, contractorId);
+    if (access.error) return res.status(access.status).json({ error: access.error });
+
+    const fields = validateContractInput(req.body);
+
+    const { data: row, error } = await supabaseAdmin
+      .from('contractor_contracts')
+      .insert({
+        reference: generateReference(),
+        contractor_id: contractorId,
+        status: 'draft',
+        created_by: access.caller.id,
+        ...fields,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+
+    return res.status(200).json({ success: true, contract: row });
+  } catch (err) {
+    return contractorContractFailure(res, err, 'createContractorContract');
+  }
+}
+
+// Moves a draft to pending_signatures and records WCA GLOBAL's signature.
+// WCA GLOBAL is a fixed company, not a dynamic account in this system (client
+// confirmation, 28 Oct) — the admin sending the contract IS acting on its
+// behalf, so that signature is recorded here rather than requiring a second,
+// nonexistent WCA GLOBAL login to come back and sign separately.
+async function sendContractorContract(req, res) {
+  try {
+    const { contractId } = req.body;
+    if (!contractId) return res.status(400).json({ error: 'Missing contractId' });
+
+    const { data: contract } = await supabaseAdmin
+      .from('contractor_contracts').select('*').eq('id', contractId).maybeSingle();
+    if (!contract) return res.status(404).json({ error: 'Contract not found' });
+
+    const access = await assertContractorContractAdmin(req, contract.contractor_id);
+    if (access.error) return res.status(access.status).json({ error: access.error });
+
+    if (contract.status !== 'draft') {
+      return res.status(409).json({ error: `Contract is already ${contract.status}.` });
+    }
+
+    const { error: updErr } = await supabaseAdmin
+      .from('contractor_contracts')
+      .update({ status: 'pending_signatures', updated_at: new Date().toISOString() })
+      .eq('id', contractId);
+    if (updErr) throw updErr;
+
+    const { error: sigErr } = await supabaseAdmin
+      .from('contractor_contract_signatures')
+      .insert({
+        contract_id: contractId,
+        party_role: 'wca_global',
+        signed_name: 'WCA GLOBAL',
+        signed_by: access.caller.id,
+        accepted_ip: clientIpFor(req),
+      });
+    // 23505 = already recorded (a retried send) — not an error.
+    if (sigErr && sigErr.code !== '23505') throw sigErr;
+
+    await supabaseAdmin.from('notifications').insert({
+      user_id: contract.contractor_id,
+      type: 'system',
+      title: 'Contract ready to sign',
+      message: `A contract (${contract.reference}) has been sent to you for review and signature.`,
+    });
+
+    return res.status(200).json({ success: true });
+  } catch (err) {
+    return contractorContractFailure(res, err, 'sendContractorContract');
+  }
+}
+
+// Lists contracts for the caller's own account (contractor) or, for an admin,
+// for a given contractorId in the body.
+// Same region-scoping rule assertContractorContractAdmin enforces for the
+// write paths, reused by the two read endpoints below. A super_admin may
+// read any contractor's contracts; a regional_admin only one in their own
+// region (security review, 28 Oct — the read paths had checked the caller's
+// ROLE but not their region, letting a regional_admin reach a contractor
+// outside their scope).
+async function regionAllowsContractorRead(caller, contractorId) {
+  if (caller.role === ROLES.SUPER_ADMIN) return true;
+  if (caller.role !== ROLES.REGIONAL_ADMIN) return false;
+  const { data: contractor } = await supabaseAdmin
+    .from('profiles').select('region').eq('id', contractorId).maybeSingle();
+  return !!(caller.region && contractor?.region && caller.region === contractor.region);
+}
+
+async function listContractorContracts(req, res) {
+  try {
+    const session = await verifySession(req);
+    if (session.error) return res.status(session.status).json({ error: session.error });
+    const { caller } = session;
+
+    let contractorId = caller.id;
+    if (req.body?.contractorId && req.body.contractorId !== caller.id) {
+      if (!(await regionAllowsContractorRead(caller, req.body.contractorId))) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+      contractorId = req.body.contractorId;
+    } else if (caller.role !== ROLES.CONTRACTOR && !req.body?.contractorId) {
+      return res.status(400).json({ error: 'Missing contractorId' });
+    }
+
+    const { data: contracts, error } = await supabaseAdmin
+      .from('contractor_contracts')
+      .select('*, contractor_contract_signatures(*)')
+      .eq('contractor_id', contractorId)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+
+    return res.status(200).json({ success: true, contracts: contracts || [] });
+  } catch (err) {
+    return contractorContractFailure(res, err, 'listContractorContracts');
+  }
+}
+
+// The contractor signs their own contract, from their own dashboard — always
+// a real session, never the bootstrap window (a contract can't exist until
+// after approval, by which point the contractor can log in normally).
+async function signContractorContract(req, res) {
+  try {
+    const { contractId, signedName } = req.body;
+    if (!contractId) return res.status(400).json({ error: 'Missing contractId' });
+
+    const session = await verifySession(req);
+    if (session.error) return res.status(session.status).json({ error: session.error });
+    const { caller } = session;
+    if (caller.role !== ROLES.CONTRACTOR) {
+      return res.status(403).json({ error: 'Only the contractor may sign their own contract.' });
+    }
+
+    const name = String(signedName || '').trim().slice(0, 200);
+    if (!name) return res.status(400).json({ error: 'Missing signedName' });
+
+    const { data: contract } = await supabaseAdmin
+      .from('contractor_contracts').select('*').eq('id', contractId).maybeSingle();
+    if (!contract) return res.status(404).json({ error: 'Contract not found' });
+    if (contract.contractor_id !== caller.id) {
+      return res.status(403).json({ error: 'That is not your contract.' });
+    }
+    if (contract.status !== 'pending_signatures') {
+      return res.status(409).json({ error: `Contract is not ready to sign (status: ${contract.status}).` });
+    }
+
+    // Re-checked here, not just at send/finalize time (security review, 28
+    // Oct): an admin revoking approval after a contract was sent must stop
+    // the contractor from still producing a signed artifact in the interim.
+    const { data: ownProfile } = await supabaseAdmin
+      .from('profiles').select('approval_status').eq('id', caller.id).maybeSingle();
+    if (ownProfile?.approval_status !== 'approved') {
+      return res.status(403).json({ error: 'Your account is not currently approved.' });
+    }
+
+    const { error } = await supabaseAdmin
+      .from('contractor_contract_signatures')
+      .insert({
+        contract_id: contractId,
+        party_role: 'contractor',
+        signed_name: name,
+        signed_by: caller.id,
+        accepted_ip: clientIpFor(req),
+      });
+    if (error && error.code !== '23505') throw error;
+
+    await notifyAdmins(supabaseAdmin, {
+      title: 'Contractor signed their contract',
+      message: `${name} signed contract ${contract.reference}. Review and finalize it to activate.`,
+    }).catch(() => {});
+
+    return res.status(200).json({ success: true, alreadySigned: error?.code === '23505' });
+  } catch (err) {
+    return contractorContractFailure(res, err, 'signContractorContract');
+  }
+}
+
+// Admin-only. Requires the contractor's signature already on file; records
+// the Platform's (3rd-party) signature, generates the final PDF, and marks
+// the contract signed.
+async function finalizeContractorContract(req, res) {
+  try {
+    const { contractId } = req.body;
+    if (!contractId) return res.status(400).json({ error: 'Missing contractId' });
+
+    const { data: contract } = await supabaseAdmin
+      .from('contractor_contracts').select('*').eq('id', contractId).maybeSingle();
+    if (!contract) return res.status(404).json({ error: 'Contract not found' });
+
+    const access = await assertContractorContractAdmin(req, contract.contractor_id);
+    if (access.error) return res.status(access.status).json({ error: access.error });
+
+    if (contract.status !== 'pending_signatures') {
+      return res.status(409).json({ error: `Contract is not pending signatures (status: ${contract.status}).` });
+    }
+
+    const { data: signatures } = await supabaseAdmin
+      .from('contractor_contract_signatures').select('*').eq('contract_id', contractId);
+    const hasRole = (role) => (signatures || []).some((s) => s.party_role === role);
+    if (!hasRole('contractor')) {
+      return res.status(409).json({ error: 'The contractor has not signed yet.' });
+    }
+
+    const { error: sigErr } = await supabaseAdmin
+      .from('contractor_contract_signatures')
+      .insert({
+        contract_id: contractId,
+        party_role: 'platform',
+        signed_name: 'Certify.cx',
+        signed_by: access.caller.id,
+        accepted_ip: clientIpFor(req),
+      });
+    if (sigErr && sigErr.code !== '23505') throw sigErr;
+
+    const { data: allSignatures } = await supabaseAdmin
+      .from('contractor_contract_signatures').select('*').eq('contract_id', contractId);
+
+    let pdfPath = contract.pdf_storage_path || null;
+    try {
+      const bytes = await buildContractorContractPdf(contract, access.contractor, allSignatures);
+      pdfPath = await uploadContractorContractPdf(supabaseAdmin, {
+        contractId, reference: contract.reference, bytes,
+      }) || pdfPath;
+    } catch (e) {
+      // The signature records are the legally meaningful artefact and are
+      // already committed — a PDF render failure must not undo them.
+      console.error('Contractor contract PDF generation failed (signatures stand):', e);
+    }
+
+    const { data: updated, error: updErr } = await supabaseAdmin
+      .from('contractor_contracts')
+      .update({ status: 'signed', pdf_storage_path: pdfPath, updated_at: new Date().toISOString() })
+      .eq('id', contractId)
+      .select()
+      .single();
+    if (updErr) throw updErr;
+
+    await supabaseAdmin.from('notifications').insert({
+      user_id: contract.contractor_id,
+      type: 'system',
+      title: 'Contract signed',
+      message: `Your contract (${contract.reference}) is now fully signed and active.`,
+    });
+
+    return res.status(200).json({ success: true, contract: updated });
+  } catch (err) {
+    return contractorContractFailure(res, err, 'finalizeContractorContract');
+  }
+}
+
+// Returns a short-lived download URL for a finalized contract's PDF. Same
+// access rule as listContractorContracts: the contractor themselves, or an
+// admin.
+async function getContractorContractPdfUrl(req, res) {
+  try {
+    const { contractId } = req.body;
+    if (!contractId) return res.status(400).json({ error: 'Missing contractId' });
+
+    const session = await verifySession(req);
+    if (session.error) return res.status(session.status).json({ error: session.error });
+    const { caller } = session;
+
+    const { data: contract } = await supabaseAdmin
+      .from('contractor_contracts').select('contractor_id, pdf_storage_path').eq('id', contractId).maybeSingle();
+    if (!contract) return res.status(404).json({ error: 'Contract not found' });
+
+    const isOwner = contract.contractor_id === caller.id;
+    if (!isOwner && !(await regionAllowsContractorRead(caller, contract.contractor_id))) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    if (!contract.pdf_storage_path) {
+      return res.status(404).json({ error: 'No PDF has been generated for this contract yet.' });
+    }
+
+    const url = await signedUrlFor(supabaseAdmin, contract.pdf_storage_path, 300, 'contractor-contract-pdfs');
+    return res.status(200).json({ success: true, url });
+  } catch (err) {
+    return contractorContractFailure(res, err, 'getContractorContractPdfUrl');
+  }
+}
+
+// Shared IP-capture helper — same preference order as api/_contract.js's
+// clientIp (x-real-ip, then the last hop of x-forwarded-for, then the socket)
+// since this module can't import that one without creating a dependency
+// between two independently-reviewed legal-signature code paths.
+function clientIpFor(req) {
+  const realIp = req?.headers?.['x-real-ip'];
+  if (typeof realIp === 'string' && realIp.trim()) return realIp.trim().slice(0, 100);
+  const fwd = req?.headers?.['x-forwarded-for'];
+  if (typeof fwd === 'string' && fwd.trim()) {
+    const hops = fwd.split(',').map((s) => s.trim()).filter(Boolean);
+    if (hops.length) return hops[hops.length - 1].slice(0, 100);
+  }
+  return req?.socket?.remoteAddress?.slice(0, 100) || 'unknown';
 }
 
 // List an auditor's uploaded certificates/CV with short-lived download links.

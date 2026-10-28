@@ -43,6 +43,7 @@ import {
   Megaphone,
   GraduationCap,
   Landmark,
+  HardHat,
 } from 'lucide-react';
 import BrandLogo from '../ui/BrandLogo';
 import LanguageSwitcher from '../LanguageSwitcher';
@@ -132,6 +133,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     { path: '/admin/coupons', labelKey: 'nav.coupons', icon: Ticket, kind: KIND_CREATE, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN] },
     { path: '/admin/commission-tiers', labelKey: 'nav.commissionTiers', icon: TrendingUp, kind: KIND_CREATE, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN] },
     { path: '/admin/consultancies', labelKey: 'nav.consultancies', icon: Briefcase, kind: adminCreates, permissions: [PERMISSIONS.MANAGE_USERS] },
+    { path: '/admin/contractors', labelKey: 'nav.contractors', icon: HardHat, kind: adminCreates, permissions: [PERMISSIONS.MANAGE_USERS] },
     { path: '/admin/sales', labelKey: 'nav.sales', icon: CircleDollarSign, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN] },
     { path: '/admin/billing', labelKey: 'nav.billing', icon: Receipt, kind: KIND_CREATE, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN, ROLES.REGIONAL_ADMIN] },
     { path: '/admin/users', labelKey: 'nav.users', icon: Users, kind: KIND_CREATE, permissions: [PERMISSIONS.CREATE_ADMINS, PERMISSIONS.MANAGE_AUDITORS] },
