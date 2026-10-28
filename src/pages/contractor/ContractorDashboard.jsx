@@ -126,10 +126,10 @@ export default function ContractorDashboard() {
     return 'Good evening';
   })();
 
-  if (loading) return <div className="cdash">{t('common.loading')}</div>;
+  if (loading) return <div className="cdash__page-bg cdash">{t('common.loading')}</div>;
 
   return (
-    <div className="cdash">
+    <div className="cdash__page-bg cdash">
       <div className="cdash__main">
         <div className="cdash__greeting-row">
           <div>

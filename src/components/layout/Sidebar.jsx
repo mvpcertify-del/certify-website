@@ -120,7 +120,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     { path: '/finance/payments', labelKey: 'nav.financePayments', icon: Receipt, kind: KIND_VIEW, permissions: [PERMISSIONS.APPROVE_CONTRACTOR_PAYMENTS] },
     // Only the client's dashboard takes input (document upload); every other
     // role's branch of this same page is a read-only list.
-    { path: '/dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard, kind: (r) => (r === ROLES.CLIENT ? KIND_CREATE : KIND_VIEW), permissions: [PERMISSIONS.VIEW_DASHBOARD], excludeRoles: [ROLES.REFERRAL, ROLES.CONSULTANCY] },
+    { path: '/dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard, kind: (r) => (r === ROLES.CLIENT ? KIND_CREATE : KIND_VIEW), permissions: [PERMISSIONS.VIEW_DASHBOARD], excludeRoles: [ROLES.REFERRAL, ROLES.CONSULTANCY, ROLES.CONTRACTOR] },
     { path: '/client/apply', labelKey: 'nav.newApplication', icon: PlusCircle, kind: KIND_CREATE, permissions: [PERMISSIONS.CREATE_CERTIFICATION] },
     { path: '/client/certificates', labelKey: 'nav.myCertificates', icon: Award, kind: KIND_VIEW, allowedRoles: [ROLES.CLIENT], permissions: [PERMISSIONS.VIEW_DASHBOARD] },
     // ---- Auditor / CB work queues ----
