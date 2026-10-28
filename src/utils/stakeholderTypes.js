@@ -59,6 +59,16 @@ export const STAKEHOLDER_TYPES = {
     icon: 'UserCheck',
     color: '#3B82F6',
   },
+  'contractor': {
+    id: 'contractor',
+    i18nKey: 'contractor',
+    // External service provider (agency/freelancer building/running parts of
+    // the platform) — self-registers with ID/CV/photo + signed agreement.
+    // phase41, 28 Oct.
+    role: 'contractor',
+    icon: 'HardHat',
+    color: '#0EA5E9',
+  },
   'investor': {
     id: 'investor',
     i18nKey: 'investor',

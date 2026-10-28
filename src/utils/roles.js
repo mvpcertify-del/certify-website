@@ -21,6 +21,11 @@ export const ROLES = {
   // "Do not classify as referral." Promoted from a `client` stakeholder_type
   // in phase 22 (phase 19 had briefly parked it on `referral`).
   CONSULTANCY: 'consultancy',
+  // Contractor — an external service provider (like the agency building this
+  // platform) self-registering with ID/CV/photo and a signed agreement.
+  // phase41, 28 Oct. Dashboard/KPI/task features are a later phase; this role
+  // only covers self-registration + admin approval for now.
+  CONTRACTOR: 'contractor',
 };
 
 export const ROLE_LABELS = {
@@ -35,6 +40,7 @@ export const ROLE_LABELS = {
   [ROLES.CLIENT]: 'Client',
   [ROLES.REFERRAL]: 'Referral',
   [ROLES.CONSULTANCY]: 'Consultancy',
+  [ROLES.CONTRACTOR]: 'Contractor',
 };
 
 /** Ordered by privilege level (highest first) */
@@ -46,6 +52,7 @@ export const ROLE_HIERARCHY = [
   ROLES.CLIENT,
   ROLES.CONSULTANCY,
   ROLES.REFERRAL,
+  ROLES.CONTRACTOR,
 ];
 
 // ---------------------------------------------------
@@ -468,6 +475,15 @@ const ROLE_PERMISSIONS = {
     PERMISSIONS.VIEW_REFERRALS,
     PERMISSIONS.MANAGE_SETTINGS,
   ],
+
+  // ---- Contractor (external service provider) ----
+  // Minimal for now — just enough to land on a dashboard and manage their own
+  // profile after approval. KPI/task tracking permissions arrive with that
+  // feature phase.
+  [ROLES.CONTRACTOR]: [
+    PERMISSIONS.VIEW_DASHBOARD,
+    PERMISSIONS.MANAGE_SETTINGS,
+  ],
 };
 
 // ---------------------------------------------------
@@ -600,6 +616,12 @@ export function getAccessibleRoutes(role) {
  */
 export function getCreatableRoles(role) {
   const map = {
+    // CONTRACTOR deliberately excluded: the admin "Create User" form
+    // (AdminUsers.jsx) has no contractor branch — it collects none of the
+    // required ID/CV/photo/contract fields and would create an already-
+    // approved contractor with no documents on file, silently defeating the
+    // pending-approval gate (security review, 28 Oct). Contractors must go
+    // through the self-registration wizard at /register/contractor.
     [ROLES.SUPER_ADMIN]: [ROLES.REGIONAL_ADMIN, ROLES.AUDITOR, ROLES.CERTIFICATION_BODY, ROLES.CLIENT, ROLES.CONSULTANCY, ROLES.REFERRAL],
     [ROLES.REGIONAL_ADMIN]: [ROLES.AUDITOR, ROLES.CERTIFICATION_BODY],
   };

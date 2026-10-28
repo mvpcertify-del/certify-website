@@ -351,7 +351,7 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
   // Translated heading and blurb — the wizard is public, so a visitor who
   // arrived in Arabic must not be greeted in English.
   const stakeholderCopy = getStakeholderCopy(stakeholderConfig, t);
-  const isIndividualStakeholder = targetRole === 'auditor' || registrationType === 'referral' || registrationType === 'investor';
+  const isIndividualStakeholder = targetRole === 'auditor' || targetRole === 'contractor' || registrationType === 'referral' || registrationType === 'investor';
   // Pure individuals (referral, investor) — no company context at all. Auditors
   // are individuals but still capture a "practice name" + professional fields.
   const isPureIndividual = registrationType === 'referral' || registrationType === 'investor';
@@ -399,6 +399,13 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
   const [auditorCert, setAuditorCert] = useState(null);
   const [auditorCv, setAuditorCv] = useState(null);
   const [auditorAuditLog, setAuditorAuditLog] = useState(null);
+  // Contractor onboarding (phase41): mandatory ID + CV + photo, plus the
+  // signed service agreement, same bootstrap-upload shape as the auditor
+  // documents above (see attachContractorDetails / api/user.js).
+  const [contractorIdDoc, setContractorIdDoc] = useState(null);
+  const [contractorCv, setContractorCv] = useState(null);
+  const [contractorPhoto, setContractorPhoto] = useState(null);
+  const [contractorContractAccepted, setContractorContractAccepted] = useState(false);
   // Qualification arrays, shared with the admin "Add Auditor" modal through
   // src/utils/auditorOptions.js so the two forms collect identical values.
   const [auditorStandards, setAuditorStandards] = useState([]);
@@ -497,6 +504,14 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
         setError(t('auth.validationAuditorQualifications'));
         return false;
       }
+      if (targetRole === 'contractor' && (!contractorIdDoc || !contractorCv || !contractorPhoto)) {
+        setError(t('auth.validationContractorDocs'));
+        return false;
+      }
+      if (targetRole === 'contractor' && !contractorContractAccepted) {
+        setError(t('auth.validationContractorContract'));
+        return false;
+      }
       const customCheck = validateCustomFields(customFields, customValues);
       if (!customCheck.valid) {
         setError(t('auth.validationCustomField', { field: customCheck.errorField }));
@@ -590,6 +605,56 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
     return failed.join(', ');
   };
 
+  // Contractor equivalent of attachAuditorDetails above — same reasoning (no
+  // session yet, service-role write via /api/user, same bootstrap window),
+  // just a different document set (ID copy / CV / photo, all mandatory) plus
+  // recording that the contract shown on this page was accepted. Unlike
+  // referral/consultancy/auditor's `accept-contract` action (api/_contract.js),
+  // this can't require a signed-in session — the account stays 'pending' and
+  // is never logged in during registration — so it's its own simple action.
+  const attachContractorDetails = async (contractorId) => {
+    const failed = [];
+
+    try {
+      await apiPost('/api/user', {
+        action: 'accept-contractor-contract',
+        contractorId,
+        signedName: formData.contact_person_name,
+      });
+    } catch (err) {
+      console.error('Contractor contract acceptance save failed:', err);
+      failed.push(t('auth.contractorContract'));
+    }
+
+    const documents = [
+      ['id_copy', contractorIdDoc],
+      ['cv', contractorCv],
+      ['photo', contractorPhoto],
+    ].filter(([, file]) => !!file);
+
+    for (const [docType, file] of documents) {
+      try {
+        if (file.size > MAX_AUDITOR_UPLOAD_MB * 1024 * 1024) {
+          throw new Error(`Larger than ${MAX_AUDITOR_UPLOAD_MB} MB`);
+        }
+        await apiPost('/api/user', {
+          action: 'add-contractor-document',
+          contractorId,
+          docType,
+          fileName: file.name,
+          mimeType: file.type || null,
+          sizeBytes: file.size,
+          dataBase64: await fileToBase64(file),
+        });
+      } catch (err) {
+        console.error('Contractor document upload failed:', docType, err);
+        failed.push(file.name);
+      }
+    }
+
+    return failed.join(', ');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isPureIndividual ? !validateSimple() : !validateStep()) return;
@@ -624,10 +689,22 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
         // don't block sign-in on it.
         await attachAuditorDetails(result.data.user.id);
       }
+      if (targetRole === 'contractor' && result.data?.user?.id) {
+        // Same bootstrap-window reasoning as the auditor branch above — a
+        // contractor's account is created 'pending' (see AuthContext.signup),
+        // so the login() call right below will correctly refuse to sign them
+        // in. Their documents and contract signature have to go up now, while
+        // the fresh unauthenticated window is still open.
+        await attachContractorDetails(result.data.user.id);
+      }
       // Verification was removed — sign in and go straight to the dashboard.
+      // For a pending contractor this fails by design (see AuthContext.signup)
+      // and falls through to the pending-approval notice below.
       const loginRes = await login(formData.email, formData.password);
       if (loginRes?.success) {
         navigate(getRoleDashboard(loginRes.data?.user?.role || 'client'));
+      } else if (targetRole === 'contractor') {
+        navigate('/login?pending=1');
       } else {
         navigate('/login');
       }
@@ -801,10 +878,10 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
 
             {!isPureIndividual && (
               <Input
-                label={targetRole === 'auditor' ? t('auth.professionalExpertise') : t('auth.businessActivity')}
+                label={(targetRole === 'auditor' || targetRole === 'contractor') ? t('auth.professionalExpertise') : t('auth.businessActivity')}
                 id="signup-activity"
                 name="activity"
-                placeholder={targetRole === 'auditor' ? t('auth.professionalExpertisePlaceholder') : t('auth.businessActivityPlaceholder')}
+                placeholder={(targetRole === 'auditor' || targetRole === 'contractor') ? t('auth.professionalExpertisePlaceholder') : t('auth.businessActivityPlaceholder')}
                 value={formData.activity}
                 onChange={handleChange}
                 required
@@ -1029,6 +1106,74 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
                 <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', margin: 0 }}>
                   {t('auth.auditorDocsSizeNote', { max: MAX_AUDITOR_UPLOAD_MB })}
                 </p>
+              </div>
+            )}
+
+            {targetRole === 'contractor' && (
+              <div style={{ marginTop: '8px', padding: '16px', border: '1px solid var(--color-border)', borderRadius: '8px', background: 'var(--color-bg-subtle, #f9fafb)' }}>
+                <p style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: '4px' }}>{t('auth.contractorDocsTitle')}</p>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="signup-contractor-id">{t('auth.contractorIdCopy')}</label>
+                  <input
+                    className="form-input"
+                    id="signup-contractor-id"
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={(e) => setContractorIdDoc(e.target.files?.[0] || null)}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="signup-contractor-cv">{t('auth.contractorCv')}</label>
+                  <input
+                    className="form-input"
+                    id="signup-contractor-cv"
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    onChange={(e) => setContractorCv(e.target.files?.[0] || null)}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="signup-contractor-photo">{t('auth.contractorPhoto')}</label>
+                  <input
+                    className="form-input"
+                    id="signup-contractor-photo"
+                    type="file"
+                    accept=".jpg,.jpeg,.png"
+                    onChange={(e) => setContractorPhoto(e.target.files?.[0] || null)}
+                    required
+                  />
+                </div>
+
+                <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', margin: '0 0 16px' }}>
+                  {t('auth.auditorDocsSizeNote', { max: MAX_AUDITOR_UPLOAD_MB })}
+                </p>
+
+                {/* Contract text is a placeholder until the real agreement is
+                    supplied (client, 28 Oct) — the version string below lets a
+                    later real-contract rollout detect who signed the
+                    placeholder and needs to re-sign. */}
+                <p style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: '4px' }}>{t('auth.contractorContract')}</p>
+                <div style={{
+                  maxHeight: '140px', overflowY: 'auto', padding: '10px 12px', marginBottom: '10px',
+                  border: '1px solid var(--color-border)', borderRadius: '6px', background: '#fff',
+                  fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', lineHeight: 1.5,
+                }}>
+                  {t('auth.contractorContractText')}
+                </div>
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: 'var(--font-size-sm)', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={contractorContractAccepted}
+                    onChange={(e) => setContractorContractAccepted(e.target.checked)}
+                    style={{ marginTop: '3px' }}
+                  />
+                  {t('auth.contractorContractAgree')}
+                </label>
               </div>
             )}
 

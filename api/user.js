@@ -69,6 +69,10 @@ export default async function handler(req, res) {
     if (action === 'add-auditor-document') return await addAuditorDocument(req, res);
     if (action === 'save-auditor-qualifications') return await saveAuditorQualifications(req, res);
     if (action === 'list-auditor-documents') return await listAuditorDocuments(req, res);
+    // Contractor onboarding (phase41, 28 Oct) — both bootstrap-window actions,
+    // same reasoning as the auditor ones above (no session yet).
+    if (action === 'add-contractor-document') return await addContractorDocument(req, res);
+    if (action === 'accept-contractor-contract') return await acceptContractorContract(req, res);
     return res.status(400).json({ error: 'Unknown action' });
   } catch (error) {
     console.error('User route error:', error);
@@ -595,6 +599,18 @@ async function getConsultancyKpi(req, res) {
 // ---------------------------------------------------------------------------
 const AUDITOR_DOC_TYPES = ['certificate', 'audit_log', 'cv', 'other'];
 const AUDITOR_DOC_BUCKET = 'auditor-documents';
+// Contractor onboarding documents + contract (phase41, 28 Oct). A contractor
+// account is created 'pending' (AuthContext.signup) and is never logged in
+// during registration, so — same reasoning as the auditor bootstrap window
+// above — these uploads and the contract acceptance below run unauthenticated,
+// bounded to a short window right after account creation.
+const CONTRACTOR_DOC_TYPES = ['id_copy', 'cv', 'photo', 'other'];
+const CONTRACTOR_DOC_BUCKET = 'contractor-documents';
+// Placeholder text until the client supplies the real signed agreement (see
+// stakeholder.contractor / auth.contractorContractText in the locale files,
+// which is what the signup page actually shows — this version string just
+// lets a future real-contract rollout tell who signed the placeholder).
+const CONTRACTOR_CONTRACT_VERSION = 'placeholder-v1';
 // Vercel caps a request body at 4.5 MB and base64 inflates the payload by a
 // third, so the raw file has to stay well under that. Kept in step with
 // MAX_UPLOAD_MB in ProfileManagementTable.jsx.
@@ -679,6 +695,60 @@ async function resolveAuditorWriteAccess(req, auditorId, { allowBootstrap = true
     .eq('auditor_id', auditorId);
   if ((count || 0) >= BOOTSTRAP_MAX_DOCS) {
     return { error: 'Unauthorized: sign in to update this auditor', status: 401 };
+  }
+
+  return { target, actorId: null };
+}
+
+// Same bootstrap-window reasoning as resolveAuditorWriteAccess above, applied
+// to a contractor. There is no READ caller for this one yet (no admin screen
+// exists to list contractor documents in this phase), so allowBootstrap is
+// not parameterized here the way the auditor version is.
+//
+// As with the auditor version, the unauthenticated branch's only access
+// control is contractorId being an unguessable v4 UUID handed only to the
+// browser that just created the account — see the fuller justification on
+// resolveAuditorWriteAccess above.
+async function resolveContractorWriteAccess(req, contractorId) {
+  if (!contractorId || typeof contractorId !== 'string') {
+    return { error: 'Missing contractorId', status: 400 };
+  }
+
+  const { data: target } = await supabaseAdmin
+    .from('profiles')
+    .select('id, role, region, created_at')
+    .eq('id', contractorId)
+    .maybeSingle();
+
+  if (!target) return { error: 'Contractor not found', status: 404 };
+  if (target.role !== ROLES.CONTRACTOR) {
+    return { error: 'That user is not a contractor', status: 400 };
+  }
+
+  const session = await verifySession(req);
+  if (session.caller) {
+    const { caller } = session;
+    if (caller.id === contractorId) return { target, actorId: caller.id };
+    if (caller.role === ROLES.SUPER_ADMIN) return { target, actorId: caller.id };
+    if (caller.role === ROLES.REGIONAL_ADMIN && caller.region && caller.region === target.region) {
+      return { target, actorId: caller.id };
+    }
+    return { error: 'Forbidden: you cannot manage that contractor', status: 403 };
+  }
+
+  if (req.headers?.authorization || req.headers?.Authorization) {
+    return { error: session.error || 'Unauthorized', status: session.status || 401 };
+  }
+
+  if (Date.now() - new Date(target.created_at).getTime() > BOOTSTRAP_WINDOW_MS) {
+    return { error: 'Unauthorized: sign in to update this contractor', status: 401 };
+  }
+  const { count } = await supabaseAdmin
+    .from('contractor_documents')
+    .select('id', { count: 'exact', head: true })
+    .eq('contractor_id', contractorId);
+  if ((count || 0) >= BOOTSTRAP_MAX_DOCS) {
+    return { error: 'Unauthorized: sign in to update this contractor', status: 401 };
   }
 
   return { target, actorId: null };
@@ -778,6 +848,128 @@ async function addAuditorDocument(req, res) {
   }
 
   return res.status(200).json({ success: true, id: row.id, storagePath: path });
+}
+
+// Attach an ID copy / CV / photo to a contractor — bootstrap-window upload,
+// same shape as addAuditorDocument above (no session exists yet for a
+// self-registering, still-'pending' contractor).
+async function addContractorDocument(req, res) {
+  const { contractorId, docType, fileName, mimeType, sizeBytes, dataBase64 } = req.body;
+
+  const access = await resolveContractorWriteAccess(req, contractorId);
+  if (access.error) return res.status(access.status).json({ error: access.error });
+
+  const type = CONTRACTOR_DOC_TYPES.includes(docType) ? docType : 'other';
+  const safeName = String(fileName || 'document')
+    .replace(/[^\w.\-() ]+/g, '_')
+    .slice(0, 120) || 'document';
+
+  if (!dataBase64) return res.status(400).json({ error: 'Missing dataBase64' });
+  let bytes;
+  try {
+    bytes = Uint8Array.from(atob(String(dataBase64)), c => c.charCodeAt(0));
+  } catch {
+    return res.status(400).json({ error: 'File data could not be decoded' });
+  }
+  if (!bytes.length) return res.status(400).json({ error: 'File is empty' });
+  if (bytes.length > MAX_DOC_BYTES) {
+    return res.status(413).json({
+      error: `File is too large. The limit is ${Math.floor(MAX_DOC_BYTES / (1024 * 1024))} MB.`,
+    });
+  }
+
+  const path = `${contractorId}/${type}-${Date.now()}-${safeName}`;
+  const { error: upErr } = await supabaseAdmin.storage
+    .from(CONTRACTOR_DOC_BUCKET)
+    .upload(path, bytes, { contentType: mimeType || 'application/octet-stream', upsert: false });
+  if (upErr) {
+    console.error('addContractorDocument: storage upload failed', upErr);
+    const missingBucket = /bucket/i.test(upErr.message || '');
+    return res.status(500).json({
+      error: missingBucket
+        ? `Storage bucket "${CONTRACTOR_DOC_BUCKET}" does not exist. Run supabase/phase41_contractors.sql.`
+        : 'Could not store the document. Please try again.',
+    });
+  }
+
+  const { data: row, error } = await supabaseAdmin
+    .from('contractor_documents')
+    .insert({
+      contractor_id: contractorId,
+      doc_type: type,
+      file_name: safeName,
+      storage_path: path,
+      mime_type: mimeType || null,
+      size_bytes: Number.isFinite(Number(sizeBytes)) ? Number(sizeBytes) : null,
+      uploaded_by: access.actorId,
+    })
+    .select('id')
+    .single();
+
+  if (error) {
+    console.error('addContractorDocument: insert failed', error);
+    const missingTable = /contractor_documents/.test(error.message || '');
+    return res.status(500).json({
+      error: missingTable
+        ? 'The contractor_documents table is missing. Run supabase/phase41_contractors.sql.'
+        : 'Could not record the document. Please try again.',
+    });
+  }
+
+  return res.status(200).json({ success: true, id: row.id, storagePath: path });
+}
+
+// Records that a contractor accepted the agreement shown on the signup page.
+// Bootstrap-window, same reasoning as addContractorDocument above. This is
+// deliberately NOT the shared get-contract/accept-contract flow used by
+// referral/consultancy/auditor (api/_contract.js) — that flow requires a
+// signed-in caller, and a contractor has no session until a Super Admin
+// approves them. One acceptance per contractor (unique on contractor_id);
+// a retry just confirms the existing row rather than erroring.
+async function acceptContractorContract(req, res) {
+  const { contractorId, signedName } = req.body;
+
+  const access = await resolveContractorWriteAccess(req, contractorId);
+  if (access.error) return res.status(access.status).json({ error: access.error });
+
+  const name = String(signedName || '').trim().slice(0, 200);
+  if (!name) return res.status(400).json({ error: 'Missing signedName' });
+
+  const { data: existing } = await supabaseAdmin
+    .from('contractor_contract_acceptances')
+    .select('id')
+    .eq('contractor_id', contractorId)
+    .maybeSingle();
+  if (existing) return res.status(200).json({ success: true, id: existing.id, alreadySigned: true });
+
+  const { data: row, error } = await supabaseAdmin
+    .from('contractor_contract_acceptances')
+    .insert({
+      contractor_id: contractorId,
+      version: CONTRACTOR_CONTRACT_VERSION,
+      signed_name: name,
+      accepted_ip: req.headers?.['x-real-ip']
+        || String(req.headers?.['x-forwarded-for'] || '').split(',').pop()?.trim()
+        || req.socket?.remoteAddress
+        || 'unknown',
+    })
+    .select('id')
+    .single();
+
+  if (error) {
+    if (error.code === '23505') {
+      return res.status(200).json({ success: true, alreadySigned: true });
+    }
+    console.error('acceptContractorContract: insert failed', error);
+    const missingTable = /contractor_contract_acceptances/.test(error.message || '');
+    return res.status(500).json({
+      error: missingTable
+        ? 'The contractor_contract_acceptances table is missing. Run supabase/phase41_contractors.sql.'
+        : 'Could not record your acceptance. Please try again.',
+    });
+  }
+
+  return res.status(200).json({ success: true, id: row.id, alreadySigned: false });
 }
 
 // List an auditor's uploaded certificates/CV with short-lived download links.

@@ -228,6 +228,15 @@
     "leadAuditorCertificate": "Certificado de Auditor Líder *",
     "auditorCv": "CV / Currículum *",
     "validationAuditorDocs": "Sube tu Certificado de Auditor Líder y CV (en inglés) para continuar.",
+    "contractorDocsTitle": "Sube tus documentos",
+    "contractorIdCopy": "Copia de ID *",
+    "contractorCv": "CV / Currículum *",
+    "contractorPhoto": "Foto personal *",
+    "validationContractorDocs": "Sube tu copia de ID, CV y una foto personal para continuar.",
+    "contractorContract": "Acuerdo de Contratista",
+    "contractorContractText": "[BORRADOR — texto provisional, pendiente del acuerdo final] Al registrarte como Contratista con Certify.cx, aceptas prestar los servicios descritos en las tareas asignadas con el estándar requerido y en el plazo acordado, mantener confidencial la información de clientes y de la empresa, y enviar evidencia del trabajo completado cuando se solicite. El pago por el trabajo aprobado se realizará en la moneda y monto acordados con Certify.cx. Este es un aviso provisional — el acuerdo firmado final se proporcionará por separado.",
+    "contractorContractAgree": "He leído y acepto el Acuerdo de Contratista anterior *",
+    "validationContractorContract": "Acepta el Acuerdo de Contratista para continuar.",
     "numberOfEmployees": "Número de empleados",
     "selectRange": "Seleccionar rango",
     "numberOfLocations": "Número de ubicaciones",
@@ -1116,7 +1125,8 @@
     "certificationBody": "Entidad certificadora",
     "client": "Cliente",
     "referral": "Afiliado",
-    "consultancy": "Consultoría"
+    "consultancy": "Consultoría",
+    "contractor": "Contratista"
   },
   "regions": {
     "asia": "Asia",
@@ -1858,6 +1868,24 @@
         "Entregar los informes de auditoría en los plazos acordados",
         "Seguir los protocolos de auditoría y estándares de informes de CertifyCX",
         "Mantener confidenciales todos los hallazgos e información de clientes"
+      ]
+    },
+    "contractor": {
+      "title": "Contratistas",
+      "singular": "Contratista",
+      "desc": "Únete a CertifyCX como contratista — completa las tareas asignadas, sube evidencia de tu trabajo y controla tus pagos desde tu propio panel.",
+      "benefits": [
+        "Recibe tareas con KPIs claros y plazos definidos",
+        "Sube evidencia del trabajo completado directamente a tu panel",
+        "Controla los pagos aprobados que se te deben, en INR o US$",
+        "Recibe actualizaciones automáticas por correo de cada tarea asignada"
+      ],
+      "rules": [
+        "Envía una copia de ID válida, CV y una foto personal para registrarte",
+        "Lee y firma el Acuerdo de Contratista antes de empezar a trabajar",
+        "Completa las tareas asignadas antes del plazo y sube evidencia",
+        "Mantén confidencial toda la información de clientes y de la empresa",
+        "Tu cuenta debe ser aprobada por un administrador antes de acceder a tu panel"
       ]
     },
     "investor": {

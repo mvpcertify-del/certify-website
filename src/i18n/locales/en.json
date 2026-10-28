@@ -228,6 +228,15 @@
     "leadAuditorCertificate": "Lead Auditor Certificate *",
     "auditorCv": "CV / Resume *",
     "validationAuditorDocs": "Please upload your Lead Auditor Certificate and CV (in English) to continue.",
+    "contractorDocsTitle": "Upload your documents",
+    "contractorIdCopy": "ID Copy *",
+    "contractorCv": "CV / Resume *",
+    "contractorPhoto": "Personal Photo *",
+    "validationContractorDocs": "Please upload your ID copy, CV and a personal photo to continue.",
+    "contractorContract": "Contractor Agreement",
+    "contractorContractText": "[DRAFT — placeholder, pending the final agreement] By signing up as a Contractor with Certify.cx, you agree to provide the services described in tasks assigned to you to the required standard and by the agreed deadline, to keep all client and company information confidential, and to submit evidence of completed work as requested. Payment for approved work will be made in the currency and amount agreed with Certify.cx. This is a placeholder notice — the final signed agreement will be provided separately.",
+    "contractorContractAgree": "I have read and agree to the Contractor Agreement above *",
+    "validationContractorContract": "Please agree to the Contractor Agreement to continue.",
     "numberOfEmployees": "Number of Employees",
     "selectRange": "Select range",
     "numberOfLocations": "Number of Locations",
@@ -1116,7 +1125,8 @@
     "certificationBody": "Certification Body",
     "client": "Client",
     "referral": "Affiliate",
-    "consultancy": "Consultancy"
+    "consultancy": "Consultancy",
+    "contractor": "Contractor"
   },
   "regions": {
     "asia": "Asia",
@@ -1858,6 +1868,24 @@
         "Submit audit reports within the agreed timelines",
         "Follow CertifyCX audit protocols and reporting standards",
         "Keep all audit findings and client information confidential"
+      ]
+    },
+    "contractor": {
+      "title": "Contractors",
+      "singular": "Contractor",
+      "desc": "Join CertifyCX as a contractor — complete assigned tasks, upload evidence of your work, and track your payments from your own dashboard.",
+      "benefits": [
+        "Receive tasks with clear KPIs and deadlines",
+        "Upload evidence of completed work directly to your dashboard",
+        "Track approved payments owed to you, in INR or US$",
+        "Get automatic email updates on each task you're assigned"
+      ],
+      "rules": [
+        "Submit a valid ID copy, CV and a personal photo to register",
+        "Read and sign the Contractor Agreement before starting work",
+        "Complete assigned tasks by their deadline and upload evidence",
+        "Keep all client and company information confidential",
+        "Your account must be approved by an admin before you can access your dashboard"
       ]
     },
     "investor": {

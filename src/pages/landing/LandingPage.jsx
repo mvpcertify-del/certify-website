@@ -256,6 +256,7 @@ export default function LandingPage() {
               <Link to="/register/certification-body" className="landing__footer-link">{t('stakeholder.certificationBody.singular')}</Link>
               <Link to="/register/consultancy" className="landing__footer-link">{t('stakeholder.consultancy.singular')}</Link>
               <Link to="/register/referral" className="landing__footer-link">{t('stakeholder.referral.singular')}</Link>
+              <Link to="/register/contractor" className="landing__footer-link">{t('stakeholder.contractor.singular')}</Link>
             </div>
           </div>
           <div className="landing__footer-bottom">

@@ -290,8 +290,13 @@ export function AuthProvider({ children }) {
     // in as soon as they finish registering and confirm their email — there is
     // no separate admin-approval gate. Email verification (email_confirm:false
     // on the created user) is the only barrier to first login.
-    const needsApproval = false;
-    const approvalStatus = 'approved';
+    //
+    // Contractor is the one exception (client, 28 Oct — "Each approved
+    // contractor will have access to the dashboard"): self-registration
+    // uploads documents and signs the agreement, but login() itself refuses
+    // a 'pending' profile until a Super Admin approves it.
+    const needsApproval = assignedRole === ROLES.CONTRACTOR;
+    const approvalStatus = needsApproval ? 'pending' : 'approved';
 
     // Route signup through the service-role API. The user is created already
     // confirmed — email verification was removed (client, 25 Jul), so there is
@@ -384,6 +389,10 @@ export function AuthProvider({ children }) {
       // list they used to land on is one box away.
       [ROLES.REFERRAL]: '/referral-dashboard',
       [ROLES.CONSULTANCY]: '/referral-dashboard',
+      // No dedicated contractor dashboard yet (KPI/task tracking is a later
+      // phase, 28 Oct) — the generic /dashboard route renders for any role
+      // with VIEW_DASHBOARD, which contractor has.
+      [ROLES.CONTRACTOR]: '/dashboard',
     };
     return map[role] || '/dashboard';
   };

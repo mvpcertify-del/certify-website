@@ -98,7 +98,7 @@ export default async function handler(req, res) {
     // can mint any role; a regional admin only auditors and CBs — not another
     // Country Admin, and not a referral with commission entitlements).
     const allowedRoles = isSelfSignup
-      ? ['client', 'auditor', 'certification_body', 'referral', 'consultancy']
+      ? ['client', 'auditor', 'certification_body', 'referral', 'consultancy', 'contractor']
       : getCreatableRoles(caller.role);
 
     if (!allowedRoles.includes(assignedRole)) {
@@ -111,9 +111,12 @@ export default async function handler(req, res) {
     // taken from the request body on the public self-signup path — that made it
     // forgeable with a single curl. Current product rule (client, 15 Jul):
     // everyone is approved on registration and email verification is the only
-    // gate. Change this line — not the client — if the rule ever changes.
+    // gate. Contractor is the one deliberate exception (client, 28 Oct): a
+    // self-registered contractor stays 'pending' until a Super Admin approves
+    // them, same gate the pay-first client path uses. The role, not the
+    // request body, decides this — still unforgeable.
     const resolvedApprovalStatus = isSelfSignup
-      ? 'approved'
+      ? (assignedRole === 'contractor' ? 'pending' : 'approved')
       : (approval_status || 'approved');
 
     // stakeholder_type is the stable identifier the platform counts, filters and
