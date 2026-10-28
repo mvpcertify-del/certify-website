@@ -142,11 +142,14 @@ export default function ContractorContract() {
     }
   };
 
-  if (loading) return <div className="ctrc">{t('common.loading')}</div>;
+  if (loading) return <div className="ctrc__page-bg ctrc">{t('common.loading')}</div>;
 
   return (
-    <div className="ctrc">
-      <h1>{t('contractorContract.title', 'My Contract')}</h1>
+    <div className="ctrc__page-bg ctrc">
+      <h2 className="ctrc__section-title">
+        <span className="ctrc__section-icon" style={{ background: '#dbeafe', color: '#2563eb' }}><FileText size={17} /></span>
+        {t('contractorContract.title', 'My Contract')}
+      </h2>
       {error && <div className="ctrc__error">{error}</div>}
 
       {contracts.length === 0 && (
@@ -214,7 +217,10 @@ export default function ContractorContract() {
         </div>
       ))}
 
-      <h1 style={{ marginTop: 32 }}><ListChecks size={20} style={{ verticalAlign: '-3px', marginRight: 8 }} />{t('contractorContract.tasksTitle', 'My Tasks')}</h1>
+      <h2 className="ctrc__section-title">
+        <span className="ctrc__section-icon" style={{ background: '#fef3c7', color: '#d97706' }}><ListChecks size={17} /></span>
+        {t('contractorContract.tasksTitle', 'My Tasks')}
+      </h2>
 
       {tasksLoading ? <p>{t('common.loading')}</p> : tasks.length === 0 ? (
         <p className="ctrc__empty">{t('contractorContract.noTasks', 'No tasks assigned to you yet.')}</p>
@@ -277,7 +283,10 @@ export default function ContractorContract() {
         );
       })}
 
-      <h1 style={{ marginTop: 32 }}><Wallet size={20} style={{ verticalAlign: '-3px', marginRight: 8 }} />{t('contractorContract.paymentsTitle', 'Payments')}</h1>
+      <h2 className="ctrc__section-title">
+        <span className="ctrc__section-icon" style={{ background: '#fce7f3', color: '#db2777' }}><Wallet size={17} /></span>
+        {t('contractorContract.paymentsTitle', 'Payments')}
+      </h2>
 
       {paymentsLoading ? <p>{t('common.loading')}</p> : payments.length === 0 ? (
         <p className="ctrc__empty">{t('contractorContract.noPayments', 'No payment requests yet.')}</p>

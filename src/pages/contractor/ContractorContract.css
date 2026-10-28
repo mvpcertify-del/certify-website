@@ -1,22 +1,55 @@
-.ctrc { padding: 24px; max-width: 760px; }
-.ctrc h1 { margin: 0 0 18px; font-size: 1.4rem; }
-.ctrc__error { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 0.88rem; }
-.ctrc__empty { color: var(--color-text-secondary, #94a3b8); font-size: 0.9rem; }
+/* Fixed light appearance, same reasoning as ContractorDashboard.css — this
+   page sits next to the dashboard in the sidebar and has to look like part
+   of the same product, not flip dark when the global theme toggle is dark.
+   Every color below is a literal hex value, not a var(--color-*) fallback. */
 
-.ctrc__card { border: 1px solid var(--color-border, #e2e8f0); border-radius: 14px; padding: 22px; margin-bottom: 20px; }
-.ctrc__top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.ctrc__ref { display: inline-flex; align-items: center; gap: 6px; font-family: monospace; font-size: 0.82rem; color: var(--color-text-secondary, #64748b); }
-.ctrc__pill { display: inline-flex; align-items: center; gap: 5px; font-size: 0.78rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+.ctrc__page-bg {
+  background: #ffffff;
+  padding: 24px;
+  min-height: calc(100vh - var(--topbar-height, 64px));
+}
+
+.ctrc { max-width: 820px; }
+
+.ctrc__section-title {
+  display: flex; align-items: center; gap: 10px;
+  margin: 36px 0 16px; font-size: 1.15rem; font-weight: 700; color: #0f172a;
+}
+.ctrc__section-title:first-child { margin-top: 0; }
+.ctrc__section-icon {
+  width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.ctrc__error { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 0.88rem; }
+.ctrc__empty {
+  color: #94a3b8; font-size: 0.9rem; border: 1px dashed #e2e8f0; border-radius: 12px;
+  padding: 24px; text-align: center; background: #fafbfd;
+}
+
+.ctrc__card {
+  border: 1px solid #e2e8f0; border-radius: 14px; padding: 22px; margin-bottom: 16px;
+  background: #ffffff; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+.ctrc__top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.ctrc__ref { display: inline-flex; align-items: center; gap: 6px; font-family: monospace; font-size: 0.82rem; color: #64748b; }
+.ctrc__pill { display: inline-flex; align-items: center; gap: 5px; font-size: 0.78rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
 .ctrc__pill--active { background: #ecfdf5; color: #059669; }
 .ctrc__pill--pending { background: #fffbeb; color: #d97706; }
 
-.ctrc__job { margin: 0 0 10px; font-size: 1.15rem; }
-.ctrc__section-label { margin: 14px 0 2px; font-size: 0.74rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-secondary, #94a3b8); }
-.ctrc__text { margin: 0; font-size: 0.92rem; line-height: 1.55; white-space: pre-wrap; }
+.ctrc__job { margin: 0 0 10px; font-size: 1.1rem; color: #0f172a; font-weight: 700; }
+.ctrc__section-label { margin: 14px 0 2px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #94a3b8; }
+.ctrc__text { margin: 0; font-size: 0.92rem; line-height: 1.55; white-space: pre-wrap; color: #1e293b; }
 
 .ctrc__kpi-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.82rem; }
-.ctrc__kpi-table th, .ctrc__kpi-table td { border: 1px solid var(--color-border, #e2e8f0); padding: 7px 9px; text-align: left; vertical-align: top; }
-.ctrc__kpi-table th { background: var(--color-bg-subtle, #f8fafc); font-weight: 700; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.ctrc__kpi-table th, .ctrc__kpi-table td { border: 1px solid #e2e8f0; padding: 7px 9px; text-align: left; vertical-align: top; color: #1e293b; }
+.ctrc__kpi-table th { background: #f8fafc; font-weight: 700; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b; }
 
 .ctrc__waiting { margin-top: 16px; font-size: 0.88rem; color: #d97706; font-weight: 600; }
-.ctrc__sign-box { margin-top: 18px; padding-top: 16px; border-top: 1px dashed var(--color-border, #e2e8f0); display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.ctrc__sign-box { margin-top: 18px; padding-top: 16px; border-top: 1px dashed #e2e8f0; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; width: 100%; }
+.ctrc__sign-box > div:first-child { width: 100%; }
+
+@media (max-width: 480px) {
+  .ctrc__page-bg { padding: 16px; }
+  .ctrc__card { padding: 16px; }
+}
