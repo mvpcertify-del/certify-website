@@ -25,22 +25,28 @@
 .cdash__greeting-sub { margin: 0; color: #64748b; font-size: 0.92rem; }
 
 /* ---- Stat cards ---- */
-.cdash__stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 28px; }
+/* auto-fit + minmax, not a fixed repeat(4, ...): on the narrow effective
+   width this page actually gets (viewport minus the sidebar — the same class
+   of bug fixed on /checkout earlier), four fixed columns left each card too
+   narrow for its own label, and a flex child's default min-width:auto then
+   refused to wrap the text normally and broke it mid-word instead. */
+.cdash__stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 28px; }
 .cdash__stat {
   display: flex; gap: 12px; align-items: flex-start;
   border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px;
   background: #ffffff;
 }
 .cdash__stat-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.cdash__stat-label { margin: 0 0 4px; font-size: 0.78rem; color: #64748b; font-weight: 600; }
+.cdash__stat-text { min-width: 0; flex: 1; }
+.cdash__stat-label { margin: 0 0 4px; font-size: 0.78rem; color: #64748b; font-weight: 600; overflow-wrap: break-word; }
 .cdash__stat-value { margin: 0 0 2px; font-size: 1.5rem; font-weight: 800; line-height: 1.1; color: #0f172a; }
-.cdash__stat-note { margin: 0; font-size: 0.72rem; color: #94a3b8; }
+.cdash__stat-note { margin: 0; font-size: 0.72rem; color: #94a3b8; overflow-wrap: break-word; }
 
 /* ---- Sections / tables ---- */
 .cdash__section { margin-bottom: 28px; }
-.cdash__section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.cdash__section-header h2 { margin: 0; font-size: 1.05rem; color: #0f172a; }
-.cdash__view-all { font-size: 0.82rem; font-weight: 600; color: #2563eb; text-decoration: none; }
+.cdash__section-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.cdash__section-header h2 { margin: 0; font-size: 1.05rem; color: #0f172a; min-width: 0; }
+.cdash__view-all { font-size: 0.82rem; font-weight: 600; color: #2563eb; text-decoration: none; flex-shrink: 0; white-space: nowrap; }
 .cdash__view-all:hover { text-decoration: underline; }
 
 .cdash__table-wrap { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 12px; }
@@ -92,10 +98,16 @@
 }
 .cdash__ai-cta:hover { background: #e2e8f0; }
 
-@media (max-width: 1024px) {
+/* This page sits inside the sidebar'd dashboard shell, so its real available
+   width is the viewport MINUS the sidebar (~230px) — a 1300px breakpoint
+   here behaves like ~1070px would on a full-width page. Stacks the AI panel
+   below the main column well before the content gets cramped, rather than
+   waiting for the raw viewport to hit a number that never accounts for the
+   sidebar eating into it. */
+@media (max-width: 1300px) {
   .cdash { grid-template-columns: 1fr; }
   .cdash__ai-panel { position: static; }
 }
-@media (max-width: 760px) {
+@media (max-width: 560px) {
   .cdash__stats { grid-template-columns: repeat(2, 1fr); }
 }

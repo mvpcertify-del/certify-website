@@ -143,7 +143,7 @@ export default function ContractorDashboard() {
         <div className="cdash__stats">
           <div className="cdash__stat">
             <div className="cdash__stat-icon" style={{ background: '#dbeafe', color: '#2563eb' }}><ListChecks size={20} /></div>
-            <div>
+            <div className="cdash__stat-text">
               <p className="cdash__stat-label">{t('contractorDashboard.activeTasks', 'Active Tasks')}</p>
               <p className="cdash__stat-value">{stats.activeTasks}</p>
               <p className="cdash__stat-note">{t('contractorDashboard.activeTasksNote', 'active design/content projects')}</p>
@@ -151,7 +151,7 @@ export default function ContractorDashboard() {
           </div>
           <div className="cdash__stat">
             <div className="cdash__stat-icon" style={{ background: '#fef3c7', color: '#d97706' }}><Gauge size={20} /></div>
-            <div>
+            <div className="cdash__stat-text">
               <p className="cdash__stat-label">{t('contractorDashboard.monthlyKpi', 'My Monthly KPI')}</p>
               <p className="cdash__stat-value">{stats.monthlyKpiPct != null ? `${stats.monthlyKpiPct}%` : '—'}</p>
               <p className="cdash__stat-note">{t('contractorDashboard.monthlyKpiNote', 'of monthly KPI target achieved')}</p>
@@ -159,7 +159,7 @@ export default function ContractorDashboard() {
           </div>
           <div className="cdash__stat">
             <div className="cdash__stat-icon" style={{ background: '#dcfce7', color: '#059669' }}><CheckCircle2 size={20} /></div>
-            <div>
+            <div className="cdash__stat-text">
               <p className="cdash__stat-label">{t('contractorDashboard.milestonesMet', 'Milestones Met')}</p>
               <p className="cdash__stat-value">{stats.milestonesMet}</p>
               <p className="cdash__stat-note">{t('contractorDashboard.milestonesMetNote', 'monthly compensation milestones completed')}</p>
@@ -167,7 +167,7 @@ export default function ContractorDashboard() {
           </div>
           <div className="cdash__stat">
             <div className="cdash__stat-icon" style={{ background: '#fce7f3', color: '#db2777' }}><Wallet size={20} /></div>
-            <div>
+            <div className="cdash__stat-text">
               <p className="cdash__stat-label">{t('contractorDashboard.payoutsReady', 'Payouts Ready')}</p>
               <p className="cdash__stat-value" style={{ fontSize: stats.payoutsReady ? '1.1rem' : undefined }}>{stats.payoutsReady || '—'}</p>
               <p className="cdash__stat-note">{t('contractorDashboard.payoutsReadyNote', 'Current payable amount')}</p>
