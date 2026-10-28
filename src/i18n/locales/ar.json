@@ -1,6 +1,7 @@
 {
   "common": {
     "loading": "جاري التحميل...",
+    "comingSoon": "هذه الصفحة قادمة قريبًا.",
     "cancel": "إلغاء",
     "save": "حفظ التغييرات",
     "delete": "حذف",
@@ -124,6 +125,13 @@
     "consultancies": "الشركات الاستشارية",
     "contractors": "المقاولون",
     "financePayments": "اعتماد المدفوعات",
+    "openProjects": "المشاريع المفتوحة",
+    "deliverableQueue": "قائمة التسليمات",
+    "mySchedule": "جدولي",
+    "hoursMilestones": "الساعات والمعالم",
+    "performanceScorecard": "بطاقة الأداء",
+    "kpiTracking": "تتبع مؤشرات الأداء",
+    "financialLedger": "السجل المالي",
     "billing": "الفوترة",
     "myAudits": "عمليات التدقيق الخاصة بي",
     "myReviews": "مراجعاتي",

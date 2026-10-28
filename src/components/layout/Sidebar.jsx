@@ -44,6 +44,12 @@ import {
   GraduationCap,
   Landmark,
   HardHat,
+  FolderKanban,
+  CalendarDays,
+  Timer,
+  BarChart3,
+  Gauge,
+  Wallet,
 } from 'lucide-react';
 import BrandLogo from '../ui/BrandLogo';
 import LanguageSwitcher from '../LanguageSwitcher';
@@ -99,6 +105,17 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     // the route then bounces — the exact trap the Referral Partners entry
     // above documents.
     { path: '/referral-dashboard', labelKey: 'nav.referralProgramDashboard', icon: LayoutGrid, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_REFERRALS], allowedRoles: [ROLES.REFERRAL, ROLES.CONSULTANCY, ROLES.SUPER_ADMIN] },
+    // Contractor — matches the client's dashboard mockup (phase45, 28 Oct).
+    // Dashboard/My Contract are real; the rest are visual-only stubs
+    // (ComingSoon) by explicit agreement — see src/App.jsx.
+    { path: '/contractor/dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.CONTRACTOR] },
+    { path: '/contractor/projects', labelKey: 'nav.openProjects', icon: FolderKanban, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.CONTRACTOR] },
+    { path: '/contractor/deliverables', labelKey: 'nav.deliverableQueue', icon: ClipboardList, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.CONTRACTOR] },
+    { path: '/contractor/schedule', labelKey: 'nav.mySchedule', icon: CalendarDays, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.CONTRACTOR] },
+    { path: '/contractor/hours', labelKey: 'nav.hoursMilestones', icon: Timer, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.CONTRACTOR] },
+    { path: '/contractor/scorecard', labelKey: 'nav.performanceScorecard', icon: BarChart3, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.CONTRACTOR] },
+    { path: '/contractor/kpi', labelKey: 'nav.kpiTracking', icon: Gauge, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.CONTRACTOR] },
+    { path: '/contractor/ledger', labelKey: 'nav.financialLedger', icon: Wallet, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.CONTRACTOR] },
     { path: '/contractor/contract', labelKey: 'nav.myContract', icon: FileSignature, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.CONTRACTOR] },
     { path: '/finance/payments', labelKey: 'nav.financePayments', icon: Receipt, kind: KIND_VIEW, permissions: [PERMISSIONS.APPROVE_CONTRACTOR_PAYMENTS] },
     // Only the client's dashboard takes input (document upload); every other

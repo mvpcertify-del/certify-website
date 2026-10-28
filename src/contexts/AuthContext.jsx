@@ -389,10 +389,10 @@ export function AuthProvider({ children }) {
       // list they used to land on is one box away.
       [ROLES.REFERRAL]: '/referral-dashboard',
       [ROLES.CONSULTANCY]: '/referral-dashboard',
-      // Lands on their contract (phase42, 28 Oct) — the first thing a newly
-      // approved contractor needs to do is review and sign it. Full KPI/task
-      // dashboard is a later phase.
-      [ROLES.CONTRACTOR]: '/contractor/contract',
+      // Lands on the main dashboard (phase45, 28 Oct — matches the client's
+      // mockup). Signing the contract, if one is pending, is still just one
+      // click away via the sidebar.
+      [ROLES.CONTRACTOR]: '/contractor/dashboard',
       [ROLES.FINANCE]: '/finance/payments',
     };
     return map[role] || '/dashboard';

@@ -15,7 +15,7 @@ import './DashboardLayout.css';
 // A landing screen has nothing above it, so it gets no Back link.
 // '/referral-dashboard' joined the set on 8 Sep: it is the partner's home,
 // exactly as '/main-dashboard' is the Super Admin's.
-const ROOT_PATHS = new Set(['/dashboard', '/main-dashboard', '/referral-dashboard']);
+const ROOT_PATHS = new Set(['/dashboard', '/main-dashboard', '/referral-dashboard', '/contractor/dashboard']);
 
 // The four partner roles that must sign their agreement before using anything
 // else (client, 2 Aug — "checking the box during registration"). Since email

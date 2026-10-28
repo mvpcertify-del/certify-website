@@ -64,6 +64,8 @@ const AdminCommissionTiers = lazy(() => import('./pages/admin/AdminCommissionTie
 const AdminConsultancies = lazy(() => import('./pages/admin/AdminConsultancies'));
 const AdminContractors = lazy(() => import('./pages/admin/AdminContractors'));
 const ContractorContract = lazy(() => import('./pages/contractor/ContractorContract'));
+const ContractorDashboard = lazy(() => import('./pages/contractor/ContractorDashboard'));
+const ComingSoon = lazy(() => import('./components/ui/ComingSoon'));
 const FinancePayments = lazy(() => import('./pages/finance/FinancePayments'));
 const AdminReferralPartners = lazy(() => import('./pages/admin/AdminReferralPartners'));
 const AdminBilling = lazy(() => import('./pages/admin/AdminBilling'));
@@ -356,12 +358,38 @@ function AppRoutes() {
               </ProtectedRoute>
             } />
 
+            {/* Contractor — main dashboard (phase45), matching the client's mockup */}
+            <Route path="/contractor/dashboard" element={
+              <ProtectedRoute allowedRoles={[ROLES.CONTRACTOR]}>
+                <ContractorDashboard />
+              </ProtectedRoute>
+            } />
+
             {/* Contractor — view and sign their own contract */}
             <Route path="/contractor/contract" element={
               <ProtectedRoute allowedRoles={[ROLES.CONTRACTOR]}>
                 <ContractorContract />
               </ProtectedRoute>
             } />
+
+            {/* Contractor — sidebar items from the client's mockup with no real
+                page behind them yet (client agreement, 28 Oct: visual-only for
+                now, not faked data). */}
+            {[
+              ['/contractor/projects', 'Open Projects'],
+              ['/contractor/deliverables', 'Deliverable Queue'],
+              ['/contractor/schedule', 'My Schedule'],
+              ['/contractor/hours', 'Hours & Milestones'],
+              ['/contractor/scorecard', 'Performance Scorecard'],
+              ['/contractor/kpi', 'KPI Tracking'],
+              ['/contractor/ledger', 'Financial Ledger'],
+            ].map(([path, title]) => (
+              <Route key={path} path={path} element={
+                <ProtectedRoute allowedRoles={[ROLES.CONTRACTOR]}>
+                  <ComingSoon title={title} />
+                </ProtectedRoute>
+              } />
+            ))}
 
             {/* Finance — approve/reject contractor payment requests (phase44) */}
             <Route path="/finance/payments" element={

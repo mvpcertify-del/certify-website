@@ -1,6 +1,7 @@
 {
   "common": {
     "loading": "Loading...",
+    "comingSoon": "This page is coming soon.",
     "cancel": "Cancel",
     "save": "Save Changes",
     "delete": "Delete",
@@ -124,6 +125,13 @@
     "consultancies": "Consultancies",
     "contractors": "Contractors",
     "financePayments": "Payment Approvals",
+    "openProjects": "Open Projects",
+    "deliverableQueue": "Deliverable Queue",
+    "mySchedule": "My Schedule",
+    "hoursMilestones": "Hours & Milestones",
+    "performanceScorecard": "Performance Scorecard",
+    "kpiTracking": "KPI Tracking",
+    "financialLedger": "Financial Ledger",
     "billing": "Billing",
     "myAudits": "My Audits",
     "myReviews": "My Reviews",

@@ -1,6 +1,7 @@
 {
   "common": {
     "loading": "Cargando...",
+    "comingSoon": "Esta página estará disponible pronto.",
     "cancel": "Cancelar",
     "save": "Guardar cambios",
     "delete": "Eliminar",
@@ -124,6 +125,13 @@
     "consultancies": "Consultorías",
     "contractors": "Contratistas",
     "financePayments": "Aprobaciones de Pago",
+    "openProjects": "Proyectos Abiertos",
+    "deliverableQueue": "Cola de Entregables",
+    "mySchedule": "Mi Calendario",
+    "hoursMilestones": "Horas e Hitos",
+    "performanceScorecard": "Cuadro de Rendimiento",
+    "kpiTracking": "Seguimiento de KPI",
+    "financialLedger": "Libro Financiero",
     "billing": "Facturación",
     "myAudits": "Mis Auditorías",
     "myReviews": "Mis Revisiones",
