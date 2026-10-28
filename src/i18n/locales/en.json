@@ -1432,8 +1432,6 @@
   "checkout": {
     "chooseStandardTitle": "Choose your certification",
     "isoGroupTitle": "ISO Standards",
-    "testGroupTitle": "Internal Test",
-    "testPaymentTitle": "Test Payment (internal use only)",
     "chooseStandardDesc": "Pick the standard you want to be certified against. You can change it before you pay.",
     "selectStandard": "Select",
     "changeStandard": "Change",
@@ -1498,10 +1496,7 @@
     "tag": "Certifications",
     "title": "Choose your certification",
     "subtitle": "Select a standard to see details, pricing, and get started. You can certify to more than one.",
-    "select": "Select",
-    "testSectionTitle": "Internal Test",
-    "testSectionDesc": "A $1 card for verifying the live checkout end-to-end. Not a real certification.",
-    "testCardDesc": "Verifies the live payment flow end-to-end."
+    "select": "Select"
   },
   "billing": {
     "title": "Billing",

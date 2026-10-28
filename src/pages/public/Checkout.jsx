@@ -15,7 +15,6 @@ import { getIsoBySlug, ISO_CATALOG_LIST } from '../../utils/isoCatalog';
 import {
   getComplianceBySlug, COMPLIANCE_SERVICE_LIST,
 } from '../../utils/complianceServices';
-import { getTestCheckoutItem, TEST_CHECKOUT_ITEM_LIST } from '../../utils/testCheckoutItem';
 import {
   PAYMENT_METHODS, isOfflineMethod, BANK_TRANSFER_DETAILS, CASH_DETAILS,
 } from '../../config/paymentMethods';
@@ -108,7 +107,7 @@ function CheckoutForm() {
   // still resolves; what it names is now "the thing being bought", not
   // necessarily an ISO standard.
   const isoParam = searchParams.get('iso');
-  const paramSlug = (getIsoBySlug(isoParam || '') || getComplianceBySlug(isoParam || '') || getTestCheckoutItem(isoParam || ''))
+  const paramSlug = (getIsoBySlug(isoParam || '') || getComplianceBySlug(isoParam || ''))
     ? isoParam
     : null;
   const [chosenSlug, setChosenSlug] = useState(paramSlug);
@@ -125,11 +124,9 @@ function CheckoutForm() {
   const referralCode = (searchParams.get('ref') || searchParams.get('coupon') || '').trim();
 
   const isoSlug = chosenSlug || 'iso-9001';
-  // Either catalog, or the hidden $1 test item (checked last — it only ever
-  // matches its own slug, never a real standard). The compliance lookup has
-  // to come second only because the ISO one is the far more common case —
-  // the three slug spaces do not overlap.
-  const isoConfig = getIsoBySlug(isoSlug) || getComplianceBySlug(isoSlug) || getTestCheckoutItem(isoSlug);
+  // Either catalog. The compliance lookup has to come second only because the
+  // ISO one is the far more common case — the two slug spaces do not overlap.
+  const isoConfig = getIsoBySlug(isoSlug) || getComplianceBySlug(isoSlug);
   const isoCode = isoConfig?.fullCode || isoConfig?.code || 'ISO 9001:2015';
   const packageLabel = PACKAGE_LABEL;
 
@@ -470,14 +467,6 @@ function CheckoutForm() {
           <h2 className="checkout__picker-group">{t('compliance.title')}</h2>
           <div className="checkout__iso-grid">
             {COMPLIANCE_SERVICE_LIST.map(renderStandardCard)}
-          </div>
-
-          {/* Internal-only $1 card for verifying the live Whop checkout with a
-              real card charge — see src/utils/testCheckoutItem.js. Remove this
-              block once Whop is verified in production. */}
-          <h2 className="checkout__picker-group">{t('checkout.testGroupTitle')}</h2>
-          <div className="checkout__iso-grid">
-            {TEST_CHECKOUT_ITEM_LIST.map(renderStandardCard)}
           </div>
 
           <p className="checkout__summary-note checkout__picker-note">{t('pricing.disclaimer')}</p>

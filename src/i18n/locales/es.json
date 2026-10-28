@@ -1432,8 +1432,6 @@
   "checkout": {
     "chooseStandardTitle": "Elige tu certificación",
     "isoGroupTitle": "Normas ISO",
-    "testGroupTitle": "Prueba interna",
-    "testPaymentTitle": "Pago de prueba (uso interno)",
     "chooseStandardDesc": "Selecciona la norma con la que quieres certificarte. Puedes cambiarla antes de pagar.",
     "selectStandard": "Seleccionar",
     "changeStandard": "Cambiar",
@@ -1498,10 +1496,7 @@
     "tag": "Certificaciones",
     "title": "Elige tu certificación",
     "subtitle": "Selecciona una norma para ver detalles, precios y comenzar. Puedes certificar más de una.",
-    "select": "Seleccionar",
-    "testSectionTitle": "Prueba interna",
-    "testSectionDesc": "Una tarjeta de $1 para verificar el flujo de pago en vivo de principio a fin. No es una certificación real.",
-    "testCardDesc": "Verifica el flujo de pago en vivo de principio a fin."
+    "select": "Seleccionar"
   },
   "billing": {
     "title": "Facturación",
