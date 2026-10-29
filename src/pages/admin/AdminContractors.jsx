@@ -74,7 +74,7 @@ export default function AdminContractors() {
     setLoading(true);
     const { data, error: fetchErr } = await supabase
       .from('profiles')
-      .select('id, full_name, email, approval_status, activity')
+      .select('id, full_name, email, approval_status')
       .eq('role', 'contractor')
       .eq('approval_status', 'approved')
       .order('full_name', { ascending: true });
@@ -276,7 +276,7 @@ export default function AdminContractors() {
               onClick={() => openContractor(c)}
             >
               <span className="adctr__row-name">{c.full_name || c.email}</span>
-              <span className="adctr__row-sub">{c.activity || c.email}</span>
+              <span className="adctr__row-sub">{c.email}</span>
             </button>
           ))}
         </div>
