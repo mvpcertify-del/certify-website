@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { ROLES } from '../../utils/roles';
-import { Users, Building, UserCheck, Briefcase, Gift, CircleDollarSign, MessagesSquare, Bell } from 'lucide-react';
+import { Users, Building, UserCheck, Briefcase, Gift, CircleDollarSign, MessagesSquare, Bell, HardHat } from 'lucide-react';
 import DashboardBoxes from '../../components/ui/DashboardBoxes';
 import './MainDashboard.css';
 
@@ -17,6 +17,9 @@ const BOXES = [
   { key: 'certBodies',    icon: Building,         path: '/admin/cb-registry',                color: '#6366f1' },
   { key: 'auditors',      icon: UserCheck,        path: '/admin/auditors',                   color: '#f59e0b' },
   { key: 'consultancies', icon: Briefcase,        path: '/admin/consultancies',               color: '#0ea5e9' },
+  // Client's own instruction, 29 Oct: "Contractors should also appear on the
+  // main dashboard, the same way Affiliates/Clients/CBs/Auditors do."
+  { key: 'contractors',   icon: HardHat,          path: '/admin/contractors',                 color: '#0d9488' },
   // Points at the admin board, not /referrals. /referrals is the signed-in
   // partner's OWN dashboard, so an admin clicking a box that counts 20 referral
   // partners landed on their own empty referral page.
@@ -81,7 +84,7 @@ export default function MainDashboard() {
     const load = async () => {
       setLoading(true);
       try {
-        const [clients, certBodies, auditors, consultancies, referrals, revenue, messages, notifications] = await Promise.all([
+        const [clients, certBodies, auditors, consultancies, referrals, contractors, revenue, messages, notifications] = await Promise.all([
           countRows('profiles', (q) => q.eq('role', 'client').or('stakeholder_type.is.null,stakeholder_type.eq.client')),
           countRows('certification_bodies'),
           countRows('profiles', (q) => q.eq('role', 'auditor')),
@@ -105,6 +108,12 @@ export default function MainDashboard() {
           // because NULL <> 'consultancy' is NULL, not true.
           countRows('profiles', (q) => q.eq('role', 'referral')
             .or('stakeholder_type.is.null,stakeholder_type.neq.consultancy')),
+          // Every contractor regardless of approval_status — same as the
+          // auditors/certBodies boxes above, which don't filter by approval
+          // either. /admin/contractors itself only lists approved ones (a
+          // contract can't be authored for an unreviewed account), so this
+          // count and that list's count can legitimately differ.
+          countRows('profiles', (q) => q.eq('role', 'contractor')),
           loadRevenue(),
           // Every thread, not `has_unread` ones. That flag belongs to the
           // PARTNER — phase33 clears it when the partner opens the thread, and
@@ -122,7 +131,7 @@ export default function MainDashboard() {
         ]);
 
         if (mounted) {
-          setCounts({ clients, certBodies, auditors, consultancies, referrals, sales: revenue, messages, notifications });
+          setCounts({ clients, certBodies, auditors, consultancies, referrals, contractors, sales: revenue, messages, notifications });
         }
       } catch (err) {
         console.error('Main dashboard counts failed:', err);

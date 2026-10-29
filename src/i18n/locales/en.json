@@ -1415,6 +1415,8 @@
     "auditorsDesc": "Manage auditors",
     "consultancies": "Consultancies",
     "consultanciesDesc": "View consultancy partners",
+    "contractors": "Contractors",
+    "contractorsDesc": "Manage contractor agreements and tasks",
     "referrals": "Affiliates",
     "referralsDesc": "Affiliates and commissions",
     "sales": "Sales",
