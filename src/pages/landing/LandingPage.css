@@ -54,6 +54,10 @@
   line-height: 1.1;
   margin-bottom: var(--spacing-lg);
   letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--color-text-primary) 35%, var(--color-accent) 75%, #00C2FF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .landing__hero-accent {
