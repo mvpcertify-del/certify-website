@@ -63,6 +63,14 @@
   background-clip: text;
 }
 
+.landing__hero-tagline {
+  font-size: clamp(1.3rem, 2.6vw, 1.8rem);
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0 auto var(--spacing-base);
+  max-width: 640px;
+}
+
 .landing__hero-subtitle {
   font-size: var(--font-size-lg);
   color: var(--color-text-secondary);
@@ -549,6 +557,9 @@
   }
   .landing__hero-title {
     font-size: 2.2rem;
+  }
+  .landing__hero-tagline {
+    font-size: 1.15rem;
   }
   .landing__hero-subtitle {
     font-size: var(--font-size-base);

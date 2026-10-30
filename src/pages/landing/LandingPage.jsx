@@ -71,9 +71,11 @@ export default function LandingPage() {
         <div className="landing__hero-bg" />
         <div className="landing__hero-content">
           <h1 className="landing__hero-title">
-            {t('landing.heroTitle')}<br />
-            <span className="landing__hero-accent">{t('landing.heroAccent')}</span>
+            {t('landing.heroTitle')}
           </h1>
+          <p className="landing__hero-tagline">
+            {t('landing.heroTagline')}
+          </p>
           <p className="landing__hero-subtitle">
             {t('landing.heroSubtitle')}
           </p>
