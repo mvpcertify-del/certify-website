@@ -703,7 +703,7 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
 
 
   return (
-    <div className="auth-form auth-form--wide">
+    <div className={`auth-form auth-form--wide ${registrationType === 'contractor' ? 'auth-form--contractor' : ''}`}>
       <h2 className="auth-form__title">
         {t('auth.registerAs', { type: stakeholderCopy.singularTitle })}
       </h2>
