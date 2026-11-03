@@ -30,6 +30,7 @@ export default function PublicNav() {
   const closeMobile = () => setMobileOpen(false);
 
   const onLanding = location.pathname === '/';
+  const onMicro = location.pathname === '/micro';
   const anchor = (id) => (onLanding ? `#${id}` : `/#${id}`);
 
   // Once a visitor has verified their email / logged in, the header shows a
@@ -65,6 +66,7 @@ export default function PublicNav() {
           <a href={anchor('how-it-works')} className="pubnav__link">{t('nav.howItWorks')}</a>
           <a href={anchor('standards')} className="pubnav__link">{t('nav.standards')}</a>
           <a href={anchor('benefits')} className="pubnav__link">{t('nav.benefits')}</a>
+          <Link to="/micro" className={`pubnav__link${onMicro ? ' pubnav__link--active' : ''}`}>{t('nav.micro')}</Link>
           <LanguageSwitcher variant="landing" />
           <button
             type="button"
@@ -155,6 +157,7 @@ export default function PublicNav() {
           <a href={anchor('how-it-works')} className="pubnav__mobile-link" onClick={closeMobile}>{t('nav.howItWorks')}</a>
           <a href={anchor('standards')} className="pubnav__mobile-link" onClick={closeMobile}>{t('nav.standards')}</a>
           <a href={anchor('benefits')} className="pubnav__mobile-link" onClick={closeMobile}>{t('nav.benefits')}</a>
+          <Link to="/micro" className={`pubnav__mobile-link${onMicro ? ' pubnav__link--active' : ''}`} onClick={closeMobile}>{t('nav.micro')}</Link>
           {isLoggedIn ? (
             <>
               <div className="pubnav__mobile-profile">

@@ -35,6 +35,7 @@ const AuthLayout = lazy(() => import('./components/layout/AuthLayout'));
 // Public Pages
 const LandingPage = lazy(() => import('./pages/landing/LandingPage'));
 const PublicGapAnalysis = lazy(() => import('./pages/public/PublicGapAnalysis'));
+const MicroLanding = lazy(() => import('./pages/micro/MicroLanding'));
 // Public pay-first checkout (no signup gate). Replaces the old /start-checkout
 // auth gate — buyers create their account AT payment. /start-checkout is kept
 // as an alias so older shared links keep working.
@@ -150,6 +151,9 @@ function AppRoutes() {
           <Route path="/compliance/:slug" element={<ComplianceLanding />} />
 
           {/* ---- Public anonymous Gap Analysis quiz ---- */}
+          {/* ---- MICRO companies (1-9 employees) landing page ---- */}
+          <Route path="/micro" element={<MicroLanding />} />
+
           <Route path="/gap-analysis" element={<PublicGapAnalysis />} />
 
           {/* ---- Public "all certifications" listing (gap-analysis → proceed) ---- */}

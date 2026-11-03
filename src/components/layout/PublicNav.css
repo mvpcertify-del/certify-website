@@ -355,3 +355,12 @@
     display: flex;
   }
 }
+
+/* Current page marker (MICRO): brand green with an underline, as in the design. */
+.pubnav__link--active {
+  color: var(--color-accent);
+  box-shadow: 0 2px 0 var(--color-accent);
+}
+.pubnav__link--active:hover {
+  color: var(--color-accent);
+}
