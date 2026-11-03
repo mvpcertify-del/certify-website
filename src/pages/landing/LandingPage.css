@@ -417,20 +417,18 @@
 }
 :root[data-theme="light"] .home__social a { color: #fff; background: #0b1a16; }
 .home__social a:hover { background: var(--h-green-bright); color: var(--h-on-green); }
-.home__footer-links {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px 28px;
-  padding: 14px 0 6px;
-  border-top: 1px solid var(--h-border-soft);
-  font-size: 12.5px;
+.home__footer-cols {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 28px;
+  padding: 38px 0 28px;
 }
-.home__footer-links-group { display: flex; flex-wrap: wrap; gap: 8px 22px; }
-.home__footer-links a { color: var(--h-text-2); transition: color .15s; }
-.home__footer-links a:hover { color: var(--h-green); }
-.home__footer-copy { color: var(--h-muted); }
+.home__footer-col { display: flex; flex-direction: column; gap: 11px; }
+.home__footer-col h4 { margin: 0 0 4px; font-size: 14px; font-weight: 700; color: var(--h-text); }
+.home__footer-col a { font-size: 13px; color: var(--h-text-2); transition: color .15s; }
+.home__footer-col a:hover { color: var(--h-green); }
+.home__footer-bar { border-top: 1px solid var(--h-border-soft); }
+.home__footer-copy { margin: 0; padding: 12px 0 6px; border-top: 1px solid var(--h-border-soft); font-size: 12.5px; color: var(--h-muted); }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 1050px) {
@@ -459,6 +457,7 @@
   .home__tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .home__global-grid { grid-template-columns: 1fr; }
   .home__global-copy { order: -1; }
+  .home__footer-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .home__footer-bar { flex-wrap: wrap; }
   .home__footer-divider { display: none; }
   .home__footer-tag { flex-basis: 100%; order: 3; }
@@ -476,5 +475,5 @@
   .home__trust-item { flex-direction: column; text-align: center; gap: 8px; padding: 16px 8px; }
   .home__btn { width: 100%; white-space: normal; }
   .home__bubble { max-width: none; align-self: stretch; }
-  .home__footer-links { flex-direction: column; align-items: flex-start; }
+  .home__footer-cols { grid-template-columns: minmax(0, 1fr); }
 }

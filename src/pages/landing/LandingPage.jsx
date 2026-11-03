@@ -340,6 +340,38 @@ export default function LandingPage() {
       {/* ---- Footer ---- */}
       <footer className="home__footer">
         <div className="home__container">
+          {/* Full link columns (restored from the previous footer). */}
+          <div className="home__footer-cols">
+            <div className="home__footer-col">
+              <h4>{t('landing.footerProduct')}</h4>
+              <a href="#how-it-works">{t('nav.howItWorks')}</a>
+              <a href="#standards">{t('landing.footerISOStandards')}</a>
+              <a href="#compliance-audits">{t('compliance.title')}</a>
+              <a href="#benefits">{t('nav.benefits')}</a>
+              <Link to="/micro">{t('nav.micro')}</Link>
+              <Link to="/certifications">{t('landing.footerGetCertified')}</Link>
+            </div>
+            <div className="home__footer-col">
+              <h4>{t('landing.footerAccount')}</h4>
+              <Link to="/login">{t('nav.login')}</Link>
+              <Link to="/signup">{t('landing.footerSignUp')}</Link>
+              <Link to="/forgot-password">{t('landing.footerResetPassword')}</Link>
+            </div>
+            <div className="home__footer-col">
+              <h4>{t('landing.footerLegal')}</h4>
+              <Link to="/privacy">{t('auth.privacyLink')}</Link>
+              <Link to="/terms">{t('auth.termsLink')}</Link>
+            </div>
+            <div className="home__footer-col">
+              <h4>{t('landing.footerJoinNetwork')}</h4>
+              <Link to="/register/auditor">{t('stakeholder.auditor.singular')}</Link>
+              <Link to="/register/certification-body">{t('stakeholder.certificationBody.singular')}</Link>
+              <Link to="/register/consultancy">{t('stakeholder.consultancy.singular')}</Link>
+              <Link to="/register/referral">{t('stakeholder.referral.singular')}</Link>
+              <Link to="/register/contractor">{t('stakeholder.contractor.singular')}</Link>
+            </div>
+          </div>
+
           <div className="home__footer-bar">
             <BrandLogo size={40} className="home__footer-logo" />
             <span className="home__footer-divider" aria-hidden="true" />
@@ -352,23 +384,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Kept from the previous footer: legal links and the Join Our Network
-              registration links, which are not part of the design but must stay
-              reachable. */}
-          <div className="home__footer-links">
-            <span className="home__footer-links-group">
-              <Link to="/privacy">{t('auth.privacyLink')}</Link>
-              <Link to="/terms">{t('auth.termsLink')}</Link>
-            </span>
-            <span className="home__footer-links-group">
-              <Link to="/register/auditor">{t('stakeholder.auditor.singular')}</Link>
-              <Link to="/register/certification-body">{t('stakeholder.certificationBody.singular')}</Link>
-              <Link to="/register/consultancy">{t('stakeholder.consultancy.singular')}</Link>
-              <Link to="/register/referral">{t('stakeholder.referral.singular')}</Link>
-              <Link to="/register/contractor">{t('stakeholder.contractor.singular')}</Link>
-            </span>
-            <span className="home__footer-copy">{t('common.allRightsReserved')}</span>
-          </div>
+          <p className="home__footer-copy">{t('common.allRightsReserved')}</p>
         </div>
       </footer>
 
