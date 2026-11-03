@@ -5,6 +5,8 @@ import {
   FilePen, Search, ClipboardCheck, ChartNoAxesCombined, BadgeCheck,
   ShieldCheck, Award, Linkedin, Twitter, Youtube, Mail,
 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import { ROLES } from '../../utils/roles';
 import PublicNav from '../../components/layout/PublicNav';
 import BrandLogo from '../../components/ui/BrandLogo';
 import './MicroLanding.css';
@@ -89,6 +91,15 @@ function HeroArt() {
 
 export default function MicroLanding() {
   const { t } = useTranslation();
+  const { user, loading, getRoleDashboard } = useAuth();
+
+  // Signed-in visitors must never be sent to /signup (it is the account-creation
+  // wizard and has no "you are already signed in" state). Clients get the
+  // authenticated gap analysis; every signed-in role lands on its own dashboard
+  // for "Get Started". Signed-out visitors keep the public paths.
+  const isIn = !loading && !!user;
+  const gapPath = isIn && user.role === ROLES.CLIENT ? '/client/gap-analysis' : '/gap-analysis';
+  const joinPath = isIn ? getRoleDashboard(user.role) : '/signup';
 
   const highlights = [
     { Icon: Users, top: t('micro.hl1Top'), bottom: t('micro.hl1Bottom') },
@@ -155,7 +166,7 @@ export default function MicroLanding() {
             </ul>
 
             <div className="micro-hero__actions">
-              <Link to="/gap-analysis" className="micro-btn micro-btn--primary">
+              <Link to={gapPath} className="micro-btn micro-btn--primary">
                 {t('micro.ctaPrimary')} <ArrowRight size={16} />
               </Link>
               <a href="#micro-journey" className="micro-btn micro-btn--ghost">
@@ -225,7 +236,7 @@ export default function MicroLanding() {
                   ))}
                 </ul>
                 <Link
-                  to={p.n === 1 ? '/gap-analysis' : '/signup'}
+                  to={p.n === 1 ? gapPath : joinPath}
                   className={`micro-btn micro-btn--block ${p.ghost ? 'micro-btn--outline' : 'micro-btn--primary'}`}
                 >
                   {p.cta}
@@ -251,7 +262,7 @@ export default function MicroLanding() {
               <strong>{t('micro.bannerMain')}</strong>
               <span className="micro-accent">{t('micro.bannerAccent')}</span>
             </div>
-            <Link to="/signup" className="micro-btn micro-btn--primary">
+            <Link to={joinPath} className="micro-btn micro-btn--primary">
               {t('micro.bannerCta')} <ArrowRight size={16} />
             </Link>
           </div>
