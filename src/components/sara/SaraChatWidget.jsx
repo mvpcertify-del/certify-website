@@ -49,6 +49,14 @@ export default function SaraChatWidget({ user }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, showLeadForm]);
 
+  // Lets other parts of the page (the home hero's "Hello! I'm Sara" bubble, the
+  // footer's "Chat with Sara" button) open the chat without prop plumbing.
+  useEffect(() => {
+    const open = () => setIsOpen(true);
+    window.addEventListener('certify:open-sara', open);
+    return () => window.removeEventListener('certify:open-sara', open);
+  }, []);
+
   // Focus input when chat opens
   useEffect(() => {
     if (isOpen) {
@@ -215,7 +223,7 @@ export default function SaraChatWidget({ user }) {
         <div className="sara-fab__icon">
           <Sparkles size={24} />
         </div>
-        <span className="sara-fab__label">{t('sara.askSara')}</span>
+        <span className="sara-fab__label">{t('sara.chatWithSara')}</span>
         <div className="sara-fab__pulse" />
       </button>
 
