@@ -401,28 +401,59 @@ export function verifyEmail({ name, verifyUrl }) {
   return { subject, html, text };
 }
 
-export function welcomeEmail({ name, role, dashboardUrl }) {
-  const greetingHeading = name ? `Welcome to ${BRAND_TEXT}, ${name}!` : `Welcome to ${BRAND_TEXT}!`;
+export function welcomeEmail({ name, role, stakeholderType, dashboardUrl }) {
+  const greetingHeading = name
+    ? `Welcome to ${BRAND_TEXT}, ${name}!`
+    : `Welcome to ${BRAND_TEXT}!`;
+
+  const accountType = stakeholderType || role || 'client';
+
+  const messages = {
+    client: {
+      label: 'Client',
+      line: 'Your account is ready. You can access your dashboard to begin your certification journey.',
+      next: 'Complete your organisation profile, explore the supported ISO standards, and get started with your certification application.',
+    },
+    consultancy: {
+      label: 'Consultant',
+      line: 'Your Consultancy Partner account is ready. You can access your dashboard to manage your consultancy activities.',
+      next: 'Complete your profile, explore the partner resources, and get familiar with the platform.',
+    },
+    referral: {
+      label: 'Affiliate',
+      line: 'Your Affiliate account is ready. You can access your dashboard to manage your referral activities.',
+      next: 'Complete your profile, explore your referral resources, and learn how to introduce clients to Certify.cx.',
+    },
+    'certification-body': {
+      label: 'Certification Body',
+      line: 'Your Certification Body account is ready. You can access your dashboard to continue with your platform activities.',
+      next: 'Complete your organisation profile and explore the available certification platform features.',
+    },
+    certification_body: {
+      label: 'Certification Body',
+      line: 'Your Certification Body account is ready. You can access your dashboard to continue with your platform activities.',
+      next: 'Complete your organisation profile and explore the available certification platform features.',
+    },
+  };
+
+  const content = messages[accountType] || messages[role] || messages.client;
   const subject = `Welcome to ${BRAND_TEXT}`;
-  const roleLine = role === 'client'
-    ? 'Your account is active. Head to your dashboard to start a certification application whenever you\'re ready.'
-    : 'Your account is active. Sign in to access your dashboard.';
+
   const html = layout({
     title: subject,
     bodyHtml: `
       ${heading(greetingHeading)}
-      ${body(`Your email is confirmed and you're all set. ${roleLine}`)}
+      ${body(`${content.line}`)}
       <p style="margin:0 0 32px;">${button(dashboardUrl, 'Open dashboard')}</p>
       <div style="border-top:1px solid ${BORDER};padding-top:24px;margin-bottom:8px;">
         <p style="margin:0 0 12px;font-size:14px;font-weight:600;line-height:1.5;color:${TEXT_PRIMARY};">A few things you can do next</p>
-        <ul style="margin:0 0 0;padding-left:20px;font-size:14px;line-height:1.8;color:${TEXT_SECONDARY};">
-          <li>Complete your profile and company details.</li>
-          <li>Explore the ISO standards we support.</li>
-          <li>Reach out any time at <a href="mailto:${SUPPORT_EMAIL}" style="color:${ACCENT_ON_WHITE};text-decoration:none;">${SUPPORT_EMAIL}</a>.</li>
-        </ul>
+        <p style="margin:0 0 12px;font-size:14px;line-height:1.8;color:${TEXT_SECONDARY};">${content.next}</p>
+        <p style="margin:0;font-size:14px;line-height:1.8;color:${TEXT_SECONDARY};">Reach out any time at <a href="mailto:${SUPPORT_EMAIL}" style="color:${ACCENT_ON_WHITE};text-decoration:none;">${SUPPORT_EMAIL}</a>.</p>
       </div>`,
   });
-  const text = `${greetingHeading}\n\nYour email is confirmed and you're all set. ${roleLine}\n\nOpen your dashboard: ${dashboardUrl}\n\nQuestions? ${SUPPORT_EMAIL}\n\n— ${BRAND_TEXT}`;
+
+  const text = `${greetingHeading}\n\n${content.line}\n\n${content.next}\n\nOpen your dashboard: ${dashboardUrl}\n\nQuestions? ${SUPPORT_EMAIL}\n\n— ${BRAND_TEXT}`;
+
   return { subject, html, text };
 }
 
