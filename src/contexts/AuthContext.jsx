@@ -93,7 +93,6 @@ export function AuthProvider({ children }) {
             profile.full_name === sessionUser.email);
         const needsRoleBootstrap = profile && !profile.role && isGoogleOAuth;
         const needsNameBackfill = profile && isGoogleOAuth && profileNameLooksBroken && !!googleName;
-
         if (needsRoleBootstrap || needsNameBackfill) {
           // Read pending stakeholder context set before the OAuth redirect (e.g. /register/referral)
           let pendingType = null;
@@ -101,25 +100,18 @@ export function AuthProvider({ children }) {
             pendingType = sessionStorage.getItem('pendingStakeholderType');
           } catch { /* sessionStorage may be unavailable */ }
           const stakeholderType = pendingType || profile.stakeholder_type || 'client';
-          // All self-registered users (clients and stakeholders alike) are
-          // approved on sign-up — email confirmation is the only login gate.
-          const approvalStatus = needsRoleBootstrap
-            ? 'approved'
-            : profile.approval_status;
           const payload = {
             action: 'update-profile',
             userId: sessionUser.id,
             full_name: googleName || profile.full_name || '',
           };
           if (needsRoleBootstrap) {
-            payload.role = 'client';
-            payload.company_name = null;
-            payload.region = null;
+            // The API derives the allowed role and approval status from this
+            // stakeholder slug; the browser never assigns its own role.
             payload.stakeholder_type = stakeholderType;
-            payload.approval_status = approvalStatus;
           }
           // Must carry the access token: /api/user verifies the caller and only
-          // allows this one self-bootstrap (a profile with no role yet, moving
+          // allows this one self-bootstrap (a profile with no role yet, receiving
           // to 'client'). The Google session already exists by this point.
           await apiPost('/api/user', payload);
           try { sessionStorage.removeItem('pendingStakeholderType'); } catch { /* ignore */ }

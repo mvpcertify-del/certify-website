@@ -253,17 +253,18 @@ export default async function handler(req, res) {
     // Instead, welcome the new user directly. Skipped for a user held at
     // approval_status 'pending' (a pay-first client awaiting admin approval),
     // mirroring the old send-welcome rule so they aren't welcomed before access.
+    let emailSendFailed = false;
     if (resolvedApprovalStatus !== 'pending') {
-      await sendWelcomeDirect({ email, name: displayName, role: assignedRole });
-      // Stamp welcome_sent_at so the legacy email_confirmed_at trigger, if it
-      // ever fires for this user, does not send a second welcome.
-      await supabaseAdmin
-        .from('profiles')
-        .update({ welcome_sent_at: new Date().toISOString() })
-        .eq('id', authData.user.id)
-        .then(() => {}, () => {});
+      const welcomeSent = await sendWelcomeDirect({
+        supabaseAdmin,
+        userId: authData.user.id,
+        email,
+        name: displayName,
+        role: assignedRole,
+        stakeholderType: resolvedStakeholderType,
+      });
+      emailSendFailed = !welcomeSent;
     }
-    const emailSendFailed = false;
 
     // Alert admins to the new registration / lead (best-effort).
     // In the current funnel a registered email IS the lead, so this covers
