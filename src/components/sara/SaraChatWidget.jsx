@@ -16,7 +16,9 @@ const INTEREST_KEYS = [
 // Number of user messages before showing lead capture (for anonymous users)
 const LEAD_CAPTURE_AFTER = 2;
 
-export default function SaraChatWidget({ user }) {
+// `fabHidden` lets a page tuck the floating button away while it shows its own
+// "Chat with Sara" entry point (the home hero); the button returns afterwards.
+export default function SaraChatWidget({ user, fabHidden = false }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language?.split('-')[0] || 'en';
   const initialMessage = { role: 'assistant', content: t('sara.greeting') };
@@ -216,7 +218,7 @@ export default function SaraChatWidget({ user }) {
     <>
       {/* Floating Action Button */}
       <button
-        className={`sara-fab ${isOpen ? 'sara-fab--hidden' : ''}`}
+        className={`sara-fab ${isOpen || fabHidden ? 'sara-fab--hidden' : ''}`}
         onClick={() => setIsOpen(true)}
         aria-label={t('sara.chatWithSara')}
       >

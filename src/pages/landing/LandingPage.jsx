@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -5,7 +6,7 @@ import {
   Activity, Stethoscope, ShieldCheck, BrainCircuit, FileCheck2, Building2, Building,
   ChevronRight, CreditCard, Store, Search, ChartNoAxesCombined, CircleCheckBig,
   BadgeCheck, Clock, Rocket, Cpu, Handshake, Presentation, Users, Landmark, Laptop,
-  Linkedin, Youtube, Facebook,
+  Sparkles, Linkedin, Youtube, Facebook,
 } from 'lucide-react';
 import { ISO_CATALOG_LIST } from '../../utils/isoCatalog';
 import { COMPLIANCE_AUDIT_LIST } from '../../utils/complianceAudits';
@@ -54,6 +55,19 @@ function XMark({ size = 16 }) {
 export default function LandingPage() {
   const { t } = useTranslation();
   const { user, loading, getRoleDashboard } = useAuth();
+
+  // "Chat with Sara" sits under her picture while the hero is on screen; the
+  // floating bottom-right button is hidden meanwhile and returns once the hero
+  // has scrolled out of view.
+  const saraRef = useRef(null);
+  const [saraInView, setSaraInView] = useState(true);
+  useEffect(() => {
+    const el = saraRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') { setSaraInView(false); return undefined; }
+    const io = new IntersectionObserver(([entry]) => setSaraInView(entry.isIntersecting), { threshold: 0.35 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   // Signed-in visitors skip the sign-up/login hops (same rule as /micro).
   const isIn = !loading && !!user;
@@ -158,8 +172,11 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            <div className="home__hero-sara">
+            <div className="home__hero-sara" ref={saraRef}>
               <img src={saraHero} alt="Sara, your AI compliance assistant" className="home__sara-img" />
+              <button type="button" className="home__chat" onClick={openSara}>
+                <Sparkles size={20} /> {t('sara.chatWithSara')}
+              </button>
             </div>
 
             <div className="home__hero-side">
@@ -388,7 +405,7 @@ export default function LandingPage() {
         </div>
       </footer>
 
-      <SaraChatWidget />
+      <SaraChatWidget fabHidden={saraInView} />
     </div>
   );
 }
