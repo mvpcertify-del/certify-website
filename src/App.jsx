@@ -1,5 +1,5 @@
-import { lazy as _reactLazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { lazy as _reactLazy, Suspense, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -36,6 +36,7 @@ const AuthLayout = lazy(() => import('./components/layout/AuthLayout'));
 const LandingPage = lazy(() => import('./pages/landing/LandingPage'));
 const PublicGapAnalysis = lazy(() => import('./pages/public/PublicGapAnalysis'));
 const MicroLanding = lazy(() => import('./pages/micro/MicroLanding'));
+const SmeLanding = lazy(() => import('./pages/sme/SmeLanding'));
 // Public pay-first checkout (no signup gate). Replaces the old /start-checkout
 // auth gate — buyers create their account AT payment. /start-checkout is kept
 // as an alias so older shared links keep working.
@@ -151,6 +152,10 @@ function AppRoutes() {
           <Route path="/compliance/:slug" element={<ComplianceLanding />} />
 
           {/* ---- Public anonymous Gap Analysis quiz ---- */}
+          {/* ---- SMEs: the original home page with every certification. The new
+              home page (/) links here from its SMEs segment. ---- */}
+          <Route path="/sme" element={<SmeLanding />} />
+
           {/* ---- MICRO companies (1-9 employees) landing page ---- */}
           <Route path="/micro" element={<MicroLanding />} />
 
@@ -606,12 +611,37 @@ function AppRoutes() {
   );
 }
 
+// Scrolls to the element named by the URL hash. The browser only does this on a
+// full page load, and the routes here are lazy-loaded, so a link such as
+// /sme#standards followed from another page would otherwise land at the top.
+// Retries briefly because the target mounts after its chunk arrives.
+function HashScroll() {
+  const { pathname, hash } = useLocation();
+  useEffect(() => {
+    if (!hash) return undefined;
+    const id = decodeURIComponent(hash.slice(1));
+    let tries = 0;
+    const timer = setInterval(() => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ block: 'start' });
+        clearInterval(timer);
+      } else if (++tries > 25) {
+        clearInterval(timer);
+      }
+    }, 100);
+    return () => clearInterval(timer);
+  }, [pathname, hash]);
+  return null;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
           <ErrorBoundary>
+            <HashScroll />
             <AppRoutes />
             <LanguageSuggestionPopup />
           </ErrorBoundary>

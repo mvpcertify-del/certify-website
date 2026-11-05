@@ -2,17 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  ArrowRight, Award, Globe2, Globe, Shield, Lock, Apple, GraduationCap, Zap, Scale,
-  Activity, Stethoscope, ShieldCheck, BrainCircuit, FileCheck2, Building2, Building,
-  ChevronRight, CreditCard, Store, Search, ChartNoAxesCombined, CircleCheckBig,
-  BadgeCheck, Clock, Rocket, Cpu, Handshake, Presentation, Users, Landmark, Laptop,
-  Sparkles, Linkedin, Youtube, Facebook,
+  ArrowRight, Globe, Scale, ShieldCheck, Building2, Building, Store, Search,
+  ChartNoAxesCombined, CircleCheckBig, BadgeCheck, Clock, Rocket, Cpu, Handshake,
+  Presentation, Users, Landmark, Laptop, Sparkles, Linkedin, Youtube, Facebook,
 } from 'lucide-react';
-import { ISO_CATALOG_LIST } from '../../utils/isoCatalog';
-import { COMPLIANCE_AUDIT_LIST } from '../../utils/complianceAudits';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROLES } from '../../utils/roles';
-import ComplianceLogo from '../../components/ui/ComplianceLogo';
 import SaraChatWidget from '../../components/sara/SaraChatWidget';
 import PublicNav from '../../components/layout/PublicNav';
 import BrandLogo from '../../components/ui/BrandLogo';
@@ -25,21 +20,10 @@ import './LandingPage.css';
 // ============================================
 // Redesigned 4 Nov 2026 from the client's "One Global Compliance Marketplace"
 // design: segment bar (MICRO / SMEs / ENTERPRISE), hero with Sara, trust strip,
-// "Why Choose", the marketplace banner, a global-platform block and the slim
-// footer. The ISO standard cards, Compliance Audit cards and How It Works steps
-// are kept (restyled) below the marketplace banner, because the header's
-// How It Works / Standards / Benefits anchors point at them.
-
-// Phase 1 (retired): we originally featured ISO 9001 only and hid the rest of
-// the funnel. All standards are now published publicly, so this flag is off.
-// Per-standard visibility is still controlled by `iso_link_settings.is_active`
-// (managed from the Super Admin "Shareable Links" page).
-const PHASE_1_ISO_9001_ONLY = false;
-
-const ICON_MAP = {
-  Award, Globe2, Shield, Lock, Apple, GraduationCap, Zap, Scale, Activity, Stethoscope,
-  ShieldCheck, BrainCircuit,
-};
+// "Why Choose", the marketplace banner, a global-platform block and the footer.
+// Only the new design lives here. The original home page (ISO standard cards,
+// Compliance Audits, How It Works, Benefits) is kept untouched at /sme and is
+// reached from the SMEs segment (5 Nov, client request: do not mix old and new).
 
 const openSara = () => window.dispatchEvent(new Event('certify:open-sara'));
 
@@ -60,10 +44,10 @@ export default function LandingPage() {
   // floating bottom-right button is hidden meanwhile and returns once the hero
   // has scrolled out of view.
   const saraRef = useRef(null);
-  const [saraInView, setSaraInView] = useState(true);
+  const [saraInView, setSaraInView] = useState(() => typeof IntersectionObserver !== 'undefined');
   useEffect(() => {
     const el = saraRef.current;
-    if (!el || typeof IntersectionObserver === 'undefined') { setSaraInView(false); return undefined; }
+    if (!el || typeof IntersectionObserver === 'undefined') return undefined;
     const io = new IntersectionObserver(([entry]) => setSaraInView(entry.isIntersecting), { threshold: 0.35 });
     io.observe(el);
     return () => io.disconnect();
@@ -75,37 +59,16 @@ export default function LandingPage() {
   const trackPath = isIn ? getRoleDashboard(user.role) : '/login';
   const joinPath = isIn ? getRoleDashboard(user.role) : '/signup';
 
-  const visibleIsos = PHASE_1_ISO_9001_ONLY
-    ? ISO_CATALOG_LIST.filter(iso => iso.slug === 'iso-9001')
-    : ISO_CATALOG_LIST;
-
-  const ISO_STANDARDS = visibleIsos.map(iso => ({
-    slug: iso.slug,
-    code: iso.code,
-    fullCode: iso.fullCode,
-    title: t(iso.titleKey),
-    desc: t(iso.descKey),
-    icon: ICON_MAP[iso.icon] || Award,
-    color: iso.color,
-  }));
-
-  const STEPS = [
-    { step: '01', title: t('landing.step1Title'), desc: t('landing.step1Desc'), icon: Building2 },
-    { step: '02', title: t('landing.step2Title'), desc: t('landing.step2Desc'), icon: FileCheck2 },
-    { step: '03', title: t('landing.step3Title'), desc: t('landing.step3Desc'), icon: CreditCard },
-    { step: '04', title: t('landing.step4Title'), desc: t('landing.step4Desc'), icon: Award },
-  ];
-
   const SEGMENTS = [
     { Icon: Store, name: t('home.segMicro'), sub: t('home.segMicroSub'), to: '/micro' },
-    { Icon: Building2, name: t('home.segSme'), sub: t('home.segSmeSub'), to: '/certifications', active: true },
+    { Icon: Building2, name: t('home.segSme'), sub: t('home.segSmeSub'), to: '/sme', active: true },
     { Icon: Building, name: t('home.segEnt'), sub: t('home.segEntSub'), to: gapPath },
   ];
 
   const ACTIONS = [
-    { Icon: Search, label: t('home.actFind'), to: '/certifications' },
+    { Icon: Search, label: t('home.actFind'), to: '/sme' },
     { Icon: ChartNoAxesCombined, label: t('home.actGap'), to: gapPath },
-    { Icon: Scale, label: t('home.actCompare'), to: '/#standards' },
+    { Icon: Scale, label: t('home.actCompare'), to: '/sme#standards' },
     { Icon: CircleCheckBig, label: t('home.actTrack'), to: trackPath },
   ];
 
@@ -125,11 +88,11 @@ export default function LandingPage() {
   ];
 
   const TILES = [
-    { iso: true, label: t('home.tileIso'), to: '/#standards', tone: 'blue' },
-    { Icon: Presentation, label: t('home.tileTrain'), to: '/certifications', tone: 'green' },
+    { iso: true, label: t('home.tileIso'), to: '/sme#standards', tone: 'blue' },
+    { Icon: Presentation, label: t('home.tileTrain'), to: '/sme', tone: 'green' },
     { Icon: Users, label: t('home.tileAud'), to: '/register/auditor', tone: 'purple' },
     { Icon: Landmark, label: t('home.tileCb'), to: '/register/certification-body', tone: 'gold' },
-    { Icon: Laptop, label: t('home.tileSol'), to: '/#compliance-audits', tone: 'sky' },
+    { Icon: Laptop, label: t('home.tileSol'), to: '/sme#compliance-audits', tone: 'sky' },
   ];
 
   return (
@@ -167,7 +130,7 @@ export default function LandingPage() {
                 {t('home.heroTaglineA')}<br />{t('home.heroTaglineB')}
               </p>
               <p className="home__hero-sub">{t('home.heroSub')}</p>
-              <Link to="/certifications" className="home__btn home__btn--primary">
+              <Link to="/sme" className="home__btn home__btn--primary">
                 {t('home.heroCta')} <ArrowRight size={18} />
               </Link>
             </div>
@@ -236,7 +199,7 @@ export default function LandingPage() {
             <div className="home__market-copy">
               <h2>{t('home.mktTitle')}</h2>
               <p>{t('home.mktDesc')}</p>
-              <Link to="/certifications" className="home__btn home__btn--primary home__btn--sm">
+              <Link to="/sme" className="home__btn home__btn--primary home__btn--sm">
                 {t('home.mktCta')} <ArrowRight size={16} />
               </Link>
             </div>
@@ -253,87 +216,6 @@ export default function LandingPage() {
           </section>
         </div>
       </main>
-
-      {/* ---- Supported ISO Standards ---- */}
-      <section className="home__section" id="standards">
-        <div className="home__container">
-          <div className="home__section-header">
-            <span className="home__section-tag">{t('landing.standardsTag')}</span>
-            <h2 className="home__section-title">{t('landing.supportedStandards')}</h2>
-            <p className="home__section-desc">{t('landing.supportedStandardsDesc')}</p>
-          </div>
-          <div className={`home__cards ${ISO_STANDARDS.length === 1 ? 'home__cards--single' : ''}`}>
-            {ISO_STANDARDS.map((std) => (
-              <Link
-                key={std.code}
-                to={`/iso/${std.slug}`}
-                className="home__card"
-                style={{ '--card-accent': std.color }}
-              >
-                <div className="home__card-icon"><std.icon size={28} /></div>
-                <div className="home__card-code">{std.fullCode || std.code}</div>
-                <h3 className="home__card-title">{std.title}</h3>
-                <p className="home__card-desc">{std.desc}</p>
-                <span className="home__card-cta">
-                  {t('iso.applyNow')} <ArrowRight size={14} />
-                </span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ---- Compliance Audits (each card opens /compliance/:slug) ---- */}
-      <section className="home__section home__section--alt" id="compliance-audits">
-        <div className="home__container">
-          <div className="home__section-header">
-            <span className="home__section-tag">{t('compliance.tag')}</span>
-            <h2 className="home__section-title">{t('compliance.title')}</h2>
-            <p className="home__section-desc">{t('compliance.desc')}</p>
-          </div>
-          <div className="home__cards">
-            {COMPLIANCE_AUDIT_LIST.map((audit) => (
-              <Link
-                key={audit.id}
-                to={`/compliance/${audit.slug}`}
-                className="home__card"
-                style={{ '--card-accent': audit.accent }}
-              >
-                <div className="home__card-logo">
-                  <ComplianceLogo src={audit.logo} title={t(audit.titleKey)} size={56} />
-                </div>
-                <h3 className="home__card-title">{t(audit.titleKey)}</h3>
-                <p className="home__card-desc">{t(audit.descKey)}</p>
-                <span className="home__card-cta">
-                  {t('compliance.viewDetails')} <ArrowRight size={14} />
-                </span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ---- How It Works (header anchor) ---- */}
-      <section className="home__section" id="how-it-works">
-        <div className="home__container">
-          <div className="home__section-header">
-            <span className="home__section-tag">{t('landing.processTag')}</span>
-            <h2 className="home__section-title">{t('landing.howCertWorks')}</h2>
-            <p className="home__section-desc">{t('landing.howCertDesc')}</p>
-          </div>
-          <ol className="home__steps">
-            {STEPS.map((s, i) => (
-              <li key={s.step} className="home__step">
-                <span className="home__step-number">{s.step}</span>
-                <span className="home__step-icon"><s.icon size={24} /></span>
-                <h3>{s.title}</h3>
-                <p>{s.desc}</p>
-                {i < STEPS.length - 1 && <ChevronRight size={18} className="home__step-arrow" aria-hidden="true" />}
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
 
       {/* ---- Global platform ---- */}
       <section className="home__global">
@@ -361,10 +243,10 @@ export default function LandingPage() {
           <div className="home__footer-cols">
             <div className="home__footer-col">
               <h4>{t('landing.footerProduct')}</h4>
-              <a href="#how-it-works">{t('nav.howItWorks')}</a>
-              <a href="#standards">{t('landing.footerISOStandards')}</a>
-              <a href="#compliance-audits">{t('compliance.title')}</a>
-              <a href="#benefits">{t('nav.benefits')}</a>
+              <Link to="/sme#how-it-works">{t('nav.howItWorks')}</Link>
+              <Link to="/sme#standards">{t('landing.footerISOStandards')}</Link>
+              <Link to="/sme#compliance-audits">{t('compliance.title')}</Link>
+              <Link to="/sme#benefits">{t('nav.benefits')}</Link>
               <Link to="/micro">{t('nav.micro')}</Link>
               <Link to="/certifications">{t('landing.footerGetCertified')}</Link>
             </div>
