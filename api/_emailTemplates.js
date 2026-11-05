@@ -8,6 +8,7 @@
 // Design follows the in-app brand: light surface, the client's official mark.
 
 import { BRAND_MARK_URL, BRAND_MARK_ASPECT, BRAND_ACCENT_HEX } from './_brandAsset.js';
+import { APP_URL } from './_appUrl.js';
 import {
   SENDER,
   SENDER_MARK_URL,
@@ -401,6 +402,31 @@ export function verifyEmail({ name, verifyUrl }) {
   return { subject, html, text };
 }
 
+
+const founderSignature = () => `
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+    style="border-top:1px solid ${BORDER};margin-top:28px;padding-top:20px;">
+    <tr>
+      <td width="76" valign="middle" style="padding-right:14px;">
+        <img src="${APP_URL}/email-assets/midhat-abu-ghazaleh.jpg"
+          width="64" height="64" alt="Midhat Abu-Ghazaleh"
+          style="display:block;width:64px;height:64px;border-radius:50%;object-fit:cover;border:0;outline:none;" />
+      </td>
+      <td valign="middle" style="font-family:Arial,sans-serif;">
+        <p style="margin:0 0 4px;font-size:14px;font-weight:700;line-height:1.4;color:${TEXT_PRIMARY};">
+          Midhat Abu-Ghazaleh
+        </p>
+        <p style="margin:0 0 5px;font-size:13px;line-height:1.4;color:${TEXT_SECONDARY};">
+          Founder &amp; CEO
+        </p>
+        <a href="mailto:midhat@certify.cx"
+          style="font-size:13px;line-height:1.4;color:${ACCENT_ON_WHITE};text-decoration:none;">
+          midhat@certify.cx
+        </a>
+      </td>
+    </tr>
+  </table>`;
+
 export function welcomeEmail({ name, role, stakeholderType, dashboardUrl }) {
   const greetingHeading = name
     ? `Welcome to ${BRAND_TEXT}, ${name}!`
@@ -449,10 +475,11 @@ export function welcomeEmail({ name, role, stakeholderType, dashboardUrl }) {
         <p style="margin:0 0 12px;font-size:14px;font-weight:600;line-height:1.5;color:${TEXT_PRIMARY};">A few things you can do next</p>
         <p style="margin:0 0 12px;font-size:14px;line-height:1.8;color:${TEXT_SECONDARY};">${content.next}</p>
         <p style="margin:0;font-size:14px;line-height:1.8;color:${TEXT_SECONDARY};">Reach out any time at <a href="mailto:${SUPPORT_EMAIL}" style="color:${ACCENT_ON_WHITE};text-decoration:none;">${SUPPORT_EMAIL}</a>.</p>
-      </div>`,
+      </div>
+      ${founderSignature()}`,
   });
 
-  const text = `${greetingHeading}\n\n${content.line}\n\n${content.next}\n\nOpen your dashboard: ${dashboardUrl}\n\nQuestions? ${SUPPORT_EMAIL}\n\n— ${BRAND_TEXT}`;
+  const text = `${greetingHeading}\n\n${content.line}\n\n${content.next}\n\nOpen your dashboard: ${dashboardUrl}\n\nQuestions? ${SUPPORT_EMAIL}\n\nMidhat Abu-Ghazaleh\nFounder & CEO\nmidhat@certify.cx\n\n— ${BRAND_TEXT}`;
 
   return { subject, html, text };
 }
