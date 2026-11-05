@@ -18,7 +18,7 @@ import { isOfflineMethod, PAYMENT_METHOD_IDS } from '../src/config/paymentMethod
 import { getRegionFromCountry } from '../src/utils/roles.js';
 import { sendVerificationEmail } from './_sendVerificationEmail.js';
 import { notifyAdmins } from './_notifyAdmins.js';
-import { verifyAdmin } from './_verifyAdmin.js';
+import { verifyAdmin, verifySession } from './_verifyAdmin.js';
 import { issueInvoice, issueReceipt, signedUrlFor } from './_billing.js';
 
 // Whop is the card processor (client decision, 22 Oct 2026 — fully replaced
@@ -56,6 +56,74 @@ async function createWhopCheckout({ amount, title, description, metadata }) {
     metadata,
   });
   return variant; // { id: 'plan_...', purchase_url, ... }
+}
+
+// MICRO plans (/micro): the two paid stages are monthly subscriptions, so they
+// are created as a recurring Whop variant (`plan_type: 'renewal'`, billed every
+// 30 days) rather than the one-time variant used for certification orders.
+// `metadata.type = 'micro_plan'` is what routes the resulting payment event to
+// fulfillMicroPlanPayment below.
+const MICRO_PLANS = {
+  2: { price: 9, title: 'Micro - Quality System', description: 'Quality System Creation & Implementation - monthly' },
+  3: { price: 49, title: 'Micro - Certification Prep', description: 'Certification Preparation - monthly' },
+};
+
+async function createWhopRecurringCheckout({ price, title, description, metadata }) {
+  const amount = Math.round(Number(price) * 100) / 100;
+  return whop.variants.create({
+    account_id: WHOP_ACCOUNT_ID,
+    product_id: WHOP_PRODUCT_ID,
+    plan_type: 'renewal',
+    initial_price: amount,
+    renewal_price: amount,
+    billing_period: 30,
+    title: String(title).slice(0, 30),
+    description,
+    visibility: 'hidden',
+    metadata,
+  });
+}
+
+// POST /api/checkout { action: 'micro-checkout', stage: 2 | 3 }
+// Signed-in users only: the buyer is taken from the verified Bearer token, never
+// from the request body, so a payment cannot be attributed to somebody else.
+async function microCheckoutHandler(req, res) {
+  try {
+    const session = await verifySession(req);
+    if (session.error) return res.status(session.status || 401).json({ error: session.error });
+    const { caller } = session;
+
+    const stage = Number(req.body?.stage);
+    const plan = MICRO_PLANS[stage];
+    if (!plan) return res.status(400).json({ error: 'Unknown plan' });
+
+    const { data: prof } = await supabaseAdmin
+      .from('profiles')
+      .select('email')
+      .eq('id', caller.id)
+      .maybeSingle();
+
+    const variant = await createWhopRecurringCheckout({
+      price: plan.price,
+      title: plan.title,
+      description: plan.description,
+      metadata: {
+        type: 'micro_plan',
+        stage: String(stage),
+        clientId: caller.id,
+        email: prof?.email || '',
+      },
+    });
+
+    if (!variant?.purchase_url) {
+      console.error('micro-checkout: Whop returned no purchase_url', variant?.id);
+      return res.status(502).json({ error: 'Payment provider did not return a checkout link' });
+    }
+    return res.status(200).json({ url: variant.purchase_url });
+  } catch (e) {
+    console.error('micro-checkout failed:', e);
+    return res.status(500).json({ error: 'Could not start checkout. Please try again.' });
+  }
 }
 
 // Reads the exact wire bytes of the request body. In local dev, vite.config.js
@@ -856,10 +924,58 @@ async function whopWebhookHandler(req, res, rawBody) {
 // guestCheckoutHandler's or the logged-in default handler's createWhopCheckout
 // call, above) and Whop echoes it back verbatim — `guest` tells them apart.
 async function handleWhopPaymentSucceeded(payment) {
+  if (payment?.metadata?.type === 'micro_plan') {
+    return fulfillMicroPlanPayment(payment);
+  }
   if (payment?.metadata?.guest === 'true') {
     return fulfillGuestWebhookPayment(payment);
   }
   return fulfillLoggedInWebhookPayment(payment);
+}
+
+// MICRO plan payment confirmed (first charge or a monthly renewal). Records the
+// subscription for that client + stage (supabase/phase45_micro_subscriptions.sql)
+// and alerts the admins. Idempotent per Whop payment id: a retried delivery is a
+// no-op. The upsert is best-effort so a missing table never hides the payment
+// from the admins; the raw event is also kept in whop_webhook_events.
+async function fulfillMicroPlanPayment(payment) {
+  const meta = payment?.metadata || {};
+  const stage = Number(meta.stage);
+  const plan = MICRO_PLANS[stage];
+  if (!meta.clientId || !plan) {
+    console.error('Whop payment.succeeded (micro_plan) with bad metadata:', payment?.id);
+    return;
+  }
+
+  const { data: existing } = await supabaseAdmin
+    .from('micro_subscriptions')
+    .select('id, last_payment_id')
+    .eq('client_id', meta.clientId)
+    .eq('stage', stage)
+    .maybeSingle();
+  if (existing?.last_payment_id && existing.last_payment_id === payment?.id) return;
+
+  const { error } = await supabaseAdmin
+    .from('micro_subscriptions')
+    .upsert({
+      client_id: meta.clientId,
+      stage,
+      price: plan.price,
+      status: 'active',
+      last_payment_id: payment?.id || null,
+      last_payment_at: new Date().toISOString(),
+    }, { onConflict: 'client_id,stage' });
+  if (error) console.error('micro_subscriptions upsert failed (run phase45):', error);
+
+  await notifyAdmins(supabaseAdmin, {
+    title: 'New MICRO plan payment',
+    message: `${meta.email || meta.clientId} paid for MICRO stage ${stage} ($${plan.price}/month).`,
+    details: [
+      ['Plan', plan.title],
+      ['Amount', `$${plan.price} per month`],
+      ['Client', meta.email || meta.clientId],
+    ],
+  });
 }
 
 // Guest (pay-first) checkout confirmation. The application row is re-fetched
@@ -1508,6 +1624,10 @@ export default async function handler(req, res) {
   // limit.
   if (req.body?.action === 'validate-coupon') {
     return validateCouponHandler(req, res);
+  }
+  // MICRO page: start a recurring Whop checkout for the $9 / $49 plans.
+  if (req.body?.action === 'micro-checkout') {
+    return microCheckoutHandler(req, res);
   }
   // Pay-first flow: an anonymous buyer creates their account AT the payment
   // step (no signup gate, no pre-purchase email verification).

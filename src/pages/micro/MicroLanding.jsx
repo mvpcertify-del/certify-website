@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   ArrowRight, Check, Users, Globe, CircleDollarSign, Play, Lock,
@@ -7,8 +8,10 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROLES } from '../../utils/roles';
+import { apiPost } from '../../lib/apiClient';
 import PublicNav from '../../components/layout/PublicNav';
 import BrandLogo from '../../components/ui/BrandLogo';
+import SegmentBar from '../../components/layout/SegmentBar';
 import './MicroLanding.css';
 
 // ============================================
@@ -92,6 +95,9 @@ function HeroArt() {
 export default function MicroLanding() {
   const { t } = useTranslation();
   const { user, loading, getRoleDashboard } = useAuth();
+  const navigate = useNavigate();
+  const [busyStage, setBusyStage] = useState(null);
+  const [payError, setPayError] = useState('');
 
   // Signed-in visitors must never be sent to /signup (it is the account-creation
   // wizard and has no "you are already signed in" state). Clients get the
@@ -100,6 +106,22 @@ export default function MicroLanding() {
   const isIn = !loading && !!user;
   const gapPath = isIn && user.role === ROLES.CLIENT ? '/client/gap-analysis' : '/gap-analysis';
   const joinPath = isIn ? getRoleDashboard(user.role) : '/signup';
+
+  // The two paid stages are monthly plans paid through Whop. Signed-out visitors
+  // are sent to create an account first; signed-in ones go straight to checkout.
+  const startPlan = async (stage) => {
+    setPayError('');
+    if (!isIn) { navigate('/signup'); return; }
+    setBusyStage(stage);
+    try {
+      const res = await apiPost('/api/checkout', { action: 'micro-checkout', stage });
+      if (!res?.url) throw new Error('No checkout link returned');
+      window.location.assign(res.url);
+    } catch (e) {
+      setPayError(e?.message || t('micro.payError'));
+      setBusyStage(null);
+    }
+  };
 
   const highlights = [
     { Icon: Users, top: t('micro.hl1Top'), bottom: t('micro.hl1Bottom') },
@@ -139,6 +161,7 @@ export default function MicroLanding() {
   return (
     <div className="micro">
       <PublicNav />
+      <SegmentBar active="micro" />
 
       {/* ---------------- Hero ---------------- */}
       <section className="micro-hero">
@@ -235,12 +258,20 @@ export default function MicroLanding() {
                     <li key={f}><Check size={15} /> {t(`micro.${f}`)}</li>
                   ))}
                 </ul>
-                <Link
-                  to={p.n === 1 ? gapPath : joinPath}
-                  className={`micro-btn micro-btn--block ${p.ghost ? 'micro-btn--outline' : 'micro-btn--primary'}`}
-                >
-                  {p.cta}
-                </Link>
+                {p.n === 1 ? (
+                  <Link to={gapPath} className="micro-btn micro-btn--block micro-btn--outline">
+                    {p.cta}
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    className="micro-btn micro-btn--block micro-btn--primary"
+                    onClick={() => startPlan(p.n)}
+                    disabled={busyStage !== null}
+                  >
+                    {busyStage === p.n ? t('micro.redirecting') : p.cta}
+                  </button>
+                )}
                 {p.n < 3 && <span className="micro-plan__chev" aria-hidden="true">›</span>}
               </article>
             ))}
@@ -255,6 +286,8 @@ export default function MicroLanding() {
               <Lock size={22} className="micro-cert__lock" />
             </aside>
           </div>
+
+          {payError && <p className="micro-pay-error" role="alert">{payError}</p>}
 
           <div className="micro-banner">
             <Users size={36} strokeWidth={1.6} className="micro-banner__icon" />

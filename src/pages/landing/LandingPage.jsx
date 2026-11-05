@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  ArrowRight, Globe, Scale, ShieldCheck, Building2, Building, Store, Search,
+  ArrowRight, Globe, Scale, ShieldCheck, Search,
   ChartNoAxesCombined, CircleCheckBig, BadgeCheck, Clock, Rocket, Cpu, Handshake,
   Presentation, Users, Landmark, Laptop, Sparkles, Linkedin, Youtube, Facebook,
 } from 'lucide-react';
@@ -11,6 +11,7 @@ import { ROLES } from '../../utils/roles';
 import SaraChatWidget from '../../components/sara/SaraChatWidget';
 import PublicNav from '../../components/layout/PublicNav';
 import BrandLogo from '../../components/ui/BrandLogo';
+import SegmentBar from '../../components/layout/SegmentBar';
 import saraHero from '../../assets/home-sara.jpg';
 import worldMap from '../../assets/home-world.jpg';
 import './LandingPage.css';
@@ -59,12 +60,6 @@ export default function LandingPage() {
   const trackPath = isIn ? getRoleDashboard(user.role) : '/login';
   const joinPath = isIn ? getRoleDashboard(user.role) : '/signup';
 
-  const SEGMENTS = [
-    { Icon: Store, name: t('home.segMicro'), sub: t('home.segMicroSub'), to: '/micro' },
-    { Icon: Building2, name: t('home.segSme'), sub: t('home.segSmeSub'), to: '/sme', active: true },
-    { Icon: Building, name: t('home.segEnt'), sub: t('home.segEntSub'), to: gapPath },
-  ];
-
   const ACTIONS = [
     { Icon: Search, label: t('home.actFind'), to: '/sme' },
     { Icon: ChartNoAxesCombined, label: t('home.actGap'), to: gapPath },
@@ -101,21 +96,8 @@ export default function LandingPage() {
       <PublicNav />
 
       <main className="home__top">
-        {/* ---- Segment bar ---- */}
-        <div className="home__container">
-          <nav className="home__segments" aria-label="Company size">
-            {SEGMENTS.map(({ Icon, name, sub, to, active }) => (
-              <Link key={name} to={to} className={`home__seg${active ? ' home__seg--active' : ''}`}>
-                <Icon size={34} strokeWidth={1.5} className="home__seg-icon" />
-                <span className="home__seg-text">
-                  <strong>{name}</strong>
-                  <span>{sub}</span>
-                </span>
-                <ArrowRight size={16} className="home__seg-arrow" />
-              </Link>
-            ))}
-          </nav>
-        </div>
+        {/* ---- Segment bar (shared with /sme and /micro) ---- */}
+        <SegmentBar active="sme" />
 
         {/* ---- Hero ---- */}
         <section className="home__hero">

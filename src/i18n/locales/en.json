@@ -2212,7 +2212,9 @@
     "copyright": "© 2024 Certify.cx™. All rights reserved.",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service",
-    "cookies": "Cookie Policy"
+    "cookies": "Cookie Policy",
+    "redirecting": "Redirecting to checkout...",
+    "payError": "We could not start checkout. Please try again."
   },
   "home": {
     "segMicro": "MICRO",

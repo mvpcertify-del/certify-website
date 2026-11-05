@@ -12,6 +12,7 @@ import ComplianceLogo from '../../components/ui/ComplianceLogo';
 import SaraChatWidget from '../../components/sara/SaraChatWidget';
 import PublicNav from '../../components/layout/PublicNav';
 import BrandLogo from '../../components/ui/BrandLogo';
+import SegmentBar from '../../components/layout/SegmentBar';
 import './SmeLanding.css';
 
 // Phase 1 (retired): we originally featured ISO 9001 only and hid the rest of
@@ -65,6 +66,9 @@ export default function SmeLanding() {
     <div className="landing">
       {/* ---- Navbar ---- */}
       <PublicNav />
+
+      {/* MICRO / SMEs / ENTERPRISE switcher, so this page links to the others. */}
+      <SegmentBar active="sme" />
 
       {/* ---- Hero Section ---- */}
       <section className="landing__hero">

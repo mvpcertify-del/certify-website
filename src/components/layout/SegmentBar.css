@@ -1,0 +1,90 @@
+/* MICRO / SMEs / ENTERPRISE switcher. Carries its own colour tokens so it looks
+   the same on every page that renders it (home, /sme, /micro). */
+.segbar {
+  --sb-green: #3ecf8e;
+  --sb-green-bright: #22e5a0;
+  --sb-text: #f5f7f8;
+  --sb-text-2: #b3c2bf;
+  --sb-border: rgba(62, 207, 142, 0.38);
+  --sb-border-soft: rgba(62, 207, 142, 0.18);
+  --sb-glow: rgba(34, 229, 160, 0.22);
+  --sb-bg: rgba(8, 26, 24, 0.7);
+
+  /* Clears the fixed 64px header. */
+  padding-top: 64px;
+  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+}
+:root[data-theme="light"] .segbar {
+  --sb-green: #0e9f6e;
+  --sb-green-bright: #0a8a5f;
+  --sb-text: #0b1a16;
+  --sb-text-2: #3f524b;
+  --sb-border: rgba(14, 159, 110, 0.45);
+  --sb-border-soft: rgba(14, 159, 110, 0.22);
+  --sb-glow: rgba(14, 159, 110, 0.12);
+  --sb-bg: #ffffff;
+}
+.segbar *, .segbar *::before, .segbar *::after { box-sizing: border-box; }
+.segbar a { text-decoration: none; }
+
+.segbar__container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.segbar__bar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 16px;
+  background: var(--sb-bg);
+  border: 1px solid var(--sb-border);
+  border-radius: 22px;
+  box-shadow: 0 0 34px var(--sb-glow), inset 0 0 30px rgba(34, 229, 160, 0.05);
+  overflow: hidden;
+}
+.segbar__seg {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 24px;
+  color: var(--sb-text);
+  transition: background .15s;
+}
+.segbar__seg + .segbar__seg { border-inline-start: 1px solid var(--sb-border-soft); }
+.segbar__seg:hover { background: rgba(34, 229, 160, 0.07); }
+.segbar__icon { color: var(--sb-green-bright); flex: 0 0 auto; }
+.segbar__text { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+.segbar__text strong { font-size: 19px; font-weight: 700; letter-spacing: .01em; color: var(--sb-green-bright); }
+.segbar__text span { font-size: 12.5px; color: var(--sb-text-2); }
+.segbar__arrow { color: var(--sb-green); flex: 0 0 auto; }
+[dir="rtl"] .segbar__arrow { transform: scaleX(-1); }
+.segbar__seg--active::after {
+  content: '';
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: 0;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(90deg, transparent, var(--sb-green-bright), transparent);
+  box-shadow: 0 0 14px var(--sb-green-bright);
+}
+
+/* Tablet and phone: keep the three options side by side as compact tiles
+   (icon over name) instead of stacking three tall rows. */
+@media (max-width: 800px) {
+  .segbar { padding-top: 64px; }
+  .segbar__bar { border-radius: 16px; margin-top: 12px; }
+  .segbar__seg {
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    padding: 14px 6px 16px;
+    text-align: center;
+  }
+  .segbar__icon { width: 26px; height: 26px; }
+  .segbar__text { flex: 0 0 auto; align-items: center; }
+  .segbar__text strong { font-size: 14px; letter-spacing: 0; }
+  .segbar__text span, .segbar__arrow { display: none; }
+}
+@media (max-width: 560px) {
+  .segbar__container { padding: 0 16px; }
+  .segbar__text strong { font-size: 12.5px; }
+}

@@ -8,6 +8,13 @@
   min-height: 100vh;
 }
 
+/* The segment switcher now sits above the hero and carries the 64px header
+   offset itself, so the hero no longer needs to be a full screen tall. */
+.segbar + .landing__hero {
+  min-height: calc(100vh - 170px);
+  padding-top: 56px;
+}
+
 /* ---- Hero ---- */
 .landing__hero {
   position: relative;
