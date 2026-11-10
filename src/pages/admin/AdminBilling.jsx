@@ -17,6 +17,7 @@ import { ROLES } from '../../utils/roles';
 import { Button, Input, Select, Textarea } from '../../components/ui/FormElements';
 import Modal from '../../components/ui/Modal';
 import StatusBadge from '../../components/ui/StatusBadge';
+import OdooSyncPanel from '../../components/admin/OdooSyncPanel';
 import './AdminBilling.css';
 
 // Standalone billing desk for Super Admin / Country Admin.
@@ -47,6 +48,8 @@ const INVOICE_STATUSES = ['draft', 'issued', 'paid', 'cancelled'];
 
 const TAB_INVOICES = 'invoices';
 const TAB_RECEIPTS = 'receipts';
+// Accounting mirror in Odoo (Super Admin only).
+const TAB_ODOO = 'odoo';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -462,7 +465,20 @@ export default function AdminBilling() {
         >
           <Receipt size={16} /> {t('adminBilling.tabReceipts')} ({summary.receiptCount})
         </button>
+        {user?.role === ROLES.SUPER_ADMIN && (
+          <button
+            className={`adbill__tab ${tab === TAB_ODOO ? 'adbill__tab--active' : ''}`}
+            onClick={() => setTab(TAB_ODOO)}
+          >
+            <Wallet size={16} /> {t('adminBilling.tabOdoo', 'Odoo accounting')}
+          </button>
+        )}
       </div>
+
+      {tab === TAB_ODOO && user?.role === ROLES.SUPER_ADMIN ? (
+        <OdooSyncPanel />
+      ) : (
+      <>
 
       {/* Filters */}
       <div className="adbill__filters">
@@ -590,6 +606,9 @@ export default function AdminBilling() {
             </table>
           </div>
         )
+      )}
+
+      </>
       )}
 
       {/* ---- New Invoice ---- */}
