@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Integration check against a REAL Odoo SANDBOX database.
+// Integration check against a REAL Odoo database.
 //
 //   node --env-file=.env.odoo-sandbox scripts/odoo-sandbox-check.mjs           # read-only
 //   node --env-file=.env.odoo-sandbox scripts/odoo-sandbox-check.mjs --write   # full round trip
@@ -13,7 +13,11 @@
 // ("CERTIFY-TEST-<time>"), one posted invoice and one payment. Posted invoices
 // cannot be deleted in Odoo, so use a throw-away sandbox database.
 //
-// Refuses to run unless ODOO_ENV=sandbox. The API key is never printed.
+// ODOO_ENV may be "sandbox" or "production". The read-only check is safe on
+// either. --write is REFUSED on "production": it would post a test invoice and
+// payment into the real books, and posted invoices cannot be deleted. On
+// production the first real payment is the test (see docs/ODOO_ACCOUNTING.md).
+// The API key is never printed.
 
 import { createOdooClient, describeConfig, loadOdooConfig, redact } from '../api/_odoo.js';
 import { runWorker } from '../api/_odooSync.js';
@@ -27,12 +31,20 @@ const ok = (name, detail = '') => console.log(`  PASS  ${name}${detail ? ` - ${d
 const bad = (name, detail = '') => { failed = true; console.log(`  FAIL  ${name}${detail ? ` - ${detail}` : ''}`); };
 
 console.log('Configuration:', JSON.stringify(describeConfig(cfg)));
-if (cfg.env !== 'sandbox') {
-  console.error('Refusing to run: ODOO_ENV must be "sandbox" for this script.');
+if (!['sandbox', 'production'].includes(cfg.env)) {
+  console.error('Refusing to run: set ODOO_ENV to "sandbox" or "production".');
   process.exit(2);
 }
-if (!cfg.configured) {
-  console.error(`Not configured: ${[...cfg.missing, ...cfg.problems, cfg.blocked].filter(Boolean).join('; ')}`);
+if (write && cfg.env === 'production') {
+  console.error('Refusing --write on ODOO_ENV=production: it would post a test invoice and payment into the real books. Run the read-only check instead.');
+  process.exit(2);
+}
+if (!cfg.connectable) {
+  console.error(`Cannot connect yet, missing: ${[...cfg.connectMissing, ...cfg.problems, cfg.blocked].filter(Boolean).join('; ')}`);
+  process.exit(2);
+}
+if (write && !cfg.configured) {
+  console.error(`--write also needs: ${cfg.missing.join('; ')}`);
   process.exit(2);
 }
 
@@ -43,16 +55,20 @@ async function readOnly() {
   try { const v = await odoo.version(); ok('reach Odoo', v.server_version); } catch (e) { bad('reach Odoo', redact(e.message, secrets)); return; }
   try { await odoo.whoami(); ok('credentials'); } catch (e) { bad('credentials', redact(e.message, secrets)); return; }
   try {
-    const j = await odoo.searchRead('account.journal', [['id', 'in', [cfg.salesJournalId, cfg.paymentJournalId]]], ['id', 'type'], { limit: 5 });
-    j.some((x) => x.id === cfg.salesJournalId) ? ok('sales journal') : bad('sales journal', `id ${cfg.salesJournalId} not found`);
-    j.some((x) => x.id === cfg.paymentJournalId) ? ok('payment journal') : bad('payment journal', `id ${cfg.paymentJournalId} not found`);
+    const ids = [cfg.salesJournalId, cfg.paymentJournalId].filter(Boolean);
+    const j = ids.length ? await odoo.searchRead('account.journal', [['id', 'in', ids]], ['id', 'type'], { limit: 5 }) : [];
+    if (cfg.salesJournalId) j.some((x) => x.id === cfg.salesJournalId) ? ok('sales journal') : bad('sales journal', `id ${cfg.salesJournalId} not found`);
+    else console.log('  TODO  sales journal - ODOO_SALES_JOURNAL_ID not set yet (needed before invoices can be created)');
+    if (cfg.paymentJournalId) j.some((x) => x.id === cfg.paymentJournalId) ? ok('payment journal') : bad('payment journal', `id ${cfg.paymentJournalId} not found`);
+    else console.log('  TODO  payment journal - ODOO_PAYMENT_JOURNAL_ID not set yet (needed before invoices can be created)');
     if (cfg.incomeAccountId) {
       (await odoo.searchRead('account.account', [['id', '=', cfg.incomeAccountId]], ['id'], { limit: 1 })).length
         ? ok('income account') : bad('income account', `id ${cfg.incomeAccountId} not found`);
-    }
-    if (cfg.productId) {
+    } else if (cfg.productId) {
       (await odoo.searchRead('product.product', [['id', '=', cfg.productId]], ['id'], { limit: 1 })).length
         ? ok('product') : bad('product', `id ${cfg.productId} not found`);
+    } else {
+      console.log('  TODO  income account - ODOO_INCOME_ACCOUNT_ID or ODOO_PRODUCT_ID not set yet (needed before invoices can be created)');
     }
     const usd = await odoo.searchRead('res.currency', [['name', '=', 'USD']], ['id', 'active'], { limit: 1 });
     usd.length && usd[0].active !== false ? ok('USD enabled') : bad('USD enabled', 'enable USD in Odoo');
@@ -78,7 +94,7 @@ async function roundTrip() {
   });
   const job = store.addJob({ idempotency_key: `whop_payment:${paymentId}`, whop_payment_id: paymentId, source_event_id: 'ev-1' });
   store.settings.enabled = true;
-  const ctx = { store, cfg: { ...cfg, enabled: true }, getOdoo: () => odoo, now: () => new Date(), log: () => {} };
+  const ctx = { store, cfg: { ...cfg, enabled: true, dryRun: false, ready: true }, getOdoo: () => odoo, now: () => new Date(), log: () => {} };
 
   const countMoves = async () => (await odoo.searchRead('account.move', [['ref', '=', `CERTIFY-${paymentId}`]], ['id', 'state', 'payment_state', 'amount_total'], { limit: 5 }));
 

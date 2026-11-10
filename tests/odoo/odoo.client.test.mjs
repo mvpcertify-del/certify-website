@@ -87,6 +87,22 @@ test('an unconfigured client cannot be built', () => {
   assert.throws(() => createOdooClient(loadOdooConfig({})), (e) => e instanceof OdooError && e.kind === 'config');
 });
 
+test('connecting needs only the address, database, key and environment label', () => {
+  const only = { ODOO_URL: 'https://certify.odoo.com', ODOO_DB: 'certify', ODOO_API_KEY: 'sekret-key-123', ODOO_ENV: 'production' };
+  const cfg = loadOdooConfig(only);
+  assert.equal(cfg.connectable, true);
+  assert.equal(cfg.configured, false); // journals and income account still missing
+  assert.doesNotThrow(() => createOdooClient(cfg, { fetchImpl: async () => ({ ok: true, status: 200, text: async () => '[]' }) }));
+  assert.equal(loadOdooConfig({ ...only, ODOO_DB: '' }).connectable, false);
+  assert.equal(loadOdooConfig({ ...only, ODOO_API_KEY: '' }).connectable, false);
+  assert.deepEqual(loadOdooConfig({}).connectMissing, ['ODOO_URL', 'ODOO_DB', 'ODOO_API_KEY', 'ODOO_ENV']);
+});
+
+test('a production label on a preview deployment is still refused for connecting', () => {
+  const cfg = loadOdooConfig({ ODOO_URL: 'https://certify.odoo.com', ODOO_DB: 'certify', ODOO_API_KEY: 'sekret-key-123', ODOO_ENV: 'production', VERCEL_ENV: 'preview' });
+  assert.equal(cfg.connectable, false);
+});
+
 // ---------------------------------------------------------------------------
 // json2 transport
 // ---------------------------------------------------------------------------
@@ -196,4 +212,24 @@ test('only an explicit ODOO_DRY_RUN=false goes live', () => {
 test('live mode is only ready with a complete configuration', () => {
   assert.equal(loadOdooConfig({ ODOO_DRY_RUN: 'false' }).ready, false);
   assert.equal(loadOdooConfig({ ...GOOD_ENV, ODOO_DRY_RUN: 'false' }).ready, true);
+});
+
+// ---------------------------------------------------------------------------
+// Version probe (GET, as Odoo answers it)
+// ---------------------------------------------------------------------------
+test('version() reads /web/version with a GET and no credentials', async () => {
+  const f = fakeFetch({ body: { version_info: [20, 0, 0, 'final', 0, 'e'], version: '20.0+e' } });
+  const client = createOdooClient(loadOdooConfig(GOOD_ENV), { fetchImpl: f.impl });
+  const v = await client.version();
+  assert.equal(v.server_version, '20.0+e');
+  assert.equal(v.serie, '20.0');
+  assert.equal(f.calls[0].url, 'https://acme.odoo.com/web/version');
+  assert.equal(f.calls[0].init.method, 'GET');
+  assert.equal(f.calls[0].init.body, undefined);
+  assert.equal(f.calls[0].init.headers.Authorization, undefined);
+});
+
+test('version() reports an unreachable or non-Odoo address', async () => {
+  const client = createOdooClient(loadOdooConfig(GOOD_ENV), { fetchImpl: fakeFetch({ status: 404, body: 'nope' }).impl });
+  await assert.rejects(() => client.version(), (e) => e.kind === 'network');
 });

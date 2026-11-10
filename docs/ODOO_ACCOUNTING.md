@@ -1,7 +1,12 @@
 # Odoo Accounting mirror (MVP)
 
-Status: **built and tested in dry-run. Not connected to Odoo. Not deployed. Not applied to any database.**
-Branch: `feat/odoo-accounting` (from `main`). Odoo: Odoo 19 at `https://certify.odoo.com`, Accounting installed, 14-day trial.
+Status: **built and tested. Connection to Odoo verified read-only on 10 Nov 2026. Runs in dry-run by default. Migration phase46 not applied to any database.**
+Odoo: `https://certify.odoo.com`, database `certify`, **Odoo 20.0+e (Enterprise)**, 14-day trial. JSON-2 API works with the API key.
+
+### Observed in the Odoo database (read-only, 10 Nov 2026)
+- Company **CERTIFY**, country India, **company currency INR**. **USD exists but is inactive**: it must be activated before USD invoices can be created.
+- Journals: `Sales` (id 9, sale), `Bank` (id 14, bank), plus purchase/general journals. No Whop-specific bank journal yet.
+- Income accounts present (ids): Local Sales 89, Retail Sales 90, Export Sales 91, Local Services 92, Export Services 93, and others. Which one certification fees belong in, the tax treatment (Indian GST on a foreign customer), the USD to INR rate and which bank journal receives Whop money are **accounting decisions for the owner or accountant**; nothing is defaulted.
 
 ## What it does
 
@@ -91,7 +96,7 @@ Nothing is needed for dry-run except the switch:
 - **Not yet done: any test against a real Odoo** (no credentials by design). `scripts/odoo-sandbox-check.mjs` does that once credentials exist:
   - `node --env-file=<your sandbox env file> scripts/odoo-sandbox-check.mjs` (read-only: reach, credentials, journals, account, USD).
   - add `--write` for a round trip of one synthetic USD 1.00 payment run twice to prove no duplicate. Refuses unless `ODOO_ENV=sandbox`. Use a throw-away database: posted invoices cannot be deleted in Odoo.
-- The JSON-2 request shapes (`/json/2/<model>/<method>`, `vals_list` on create, `ids` on record methods, the payment-register wizard with `active_ids` in the context) follow Odoo 19's documentation as understood; the sandbox check is what confirms them against the real server.
+- **Verified against the real server (read-only):** `GET /web/version` returns `20.0+e`; `POST /json/2/res.users/search_read` with the bearer key succeeds; company, currency, journal and account reads work. The write calls (create partner, create and post invoice, payment-register wizard) are **not yet exercised against a real Odoo**; they follow the Odoo JSON-2 conventions and are covered only by the mock tests. On the production database they are first exercised by the first real payment, in dry-run first. Posted invoices cannot be deleted in Odoo, so no synthetic test invoice is created there.
 
 ## Remaining manual tasks
 

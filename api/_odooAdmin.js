@@ -44,8 +44,8 @@ async function testConnection(ctx) {
     };
   }
 
-  if (!cfg.configured) {
-    return { ok: false, config: describeConfig(cfg), checks: [{ name: 'configuration', ok: false, detail: [...cfg.missing, ...cfg.problems, cfg.blocked].filter(Boolean).join('; ') }] };
+  if (!cfg.connectable) {
+    return { ok: false, config: describeConfig(cfg), checks: [{ name: 'connection settings', ok: false, detail: [...cfg.connectMissing, ...cfg.problems, cfg.blocked].filter(Boolean).join('; ') }] };
   }
   const odoo = ctx.getOdoo();
   try {
@@ -54,17 +54,25 @@ async function testConnection(ctx) {
     await odoo.whoami();
     record('credentials', true);
 
-    const journals = await odoo.searchRead('account.journal', [['id', 'in', [cfg.salesJournalId, cfg.paymentJournalId]]], ['id', 'name', 'type'], { limit: 5 });
-    record('sales journal', journals.some((j) => j.id === cfg.salesJournalId), journals.find((j) => j.id === cfg.salesJournalId)?.type);
-    record('payment journal', journals.some((j) => j.id === cfg.paymentJournalId), journals.find((j) => j.id === cfg.paymentJournalId)?.type);
+    // Needed to create invoices, not to connect: check them when set, say so when not.
+    const ids = [cfg.salesJournalId, cfg.paymentJournalId].filter(Boolean);
+    const journals = ids.length
+      ? await odoo.searchRead('account.journal', [['id', 'in', ids]], ['id', 'name', 'type'], { limit: 5 })
+      : [];
+    const pending = (name, setting) => checks.push({ name, ok: true, pending: true, detail: `${setting} not set yet (needed before invoices can be created)` });
+    if (cfg.salesJournalId) record('sales journal', journals.some((j) => j.id === cfg.salesJournalId), journals.find((j) => j.id === cfg.salesJournalId)?.type);
+    else pending('sales journal', 'ODOO_SALES_JOURNAL_ID');
+    if (cfg.paymentJournalId) record('payment journal', journals.some((j) => j.id === cfg.paymentJournalId), journals.find((j) => j.id === cfg.paymentJournalId)?.type);
+    else pending('payment journal', 'ODOO_PAYMENT_JOURNAL_ID');
 
     if (cfg.incomeAccountId) {
       const acc = await odoo.searchRead('account.account', [['id', '=', cfg.incomeAccountId]], ['id'], { limit: 1 });
       record('income account', acc.length === 1);
-    }
-    if (cfg.productId) {
+    } else if (cfg.productId) {
       const prod = await odoo.searchRead('product.product', [['id', '=', cfg.productId]], ['id'], { limit: 1 });
       record('product', prod.length === 1);
+    } else {
+      pending('income account', 'ODOO_INCOME_ACCOUNT_ID or ODOO_PRODUCT_ID');
     }
     const usd = await odoo.searchRead('res.currency', [['name', '=', 'USD']], ['id', 'active'], { limit: 1 });
     record('USD enabled', usd.length === 1 && usd[0].active !== false);

@@ -101,6 +101,14 @@ export function loadOdooConfig(env = process.env) {
     blocked = 'ODOO_ENV=sandbox is not allowed on the production deployment';
   }
 
+  // CONNECTING needs only the address, the database, the key and the environment
+  // label. The journals and income account are needed to CREATE invoices, not to
+  // reach Odoo, so a connection test must not wait for them.
+  const connectMissing = ['ODOO_URL', 'ODOO_DB', 'ODOO_API_KEY', 'ODOO_ENV']
+    .filter((k) => !env[k] || !String(env[k]).trim());
+  if (style === 'jsonrpc' && !env.ODOO_LOGIN) connectMissing.push('ODOO_LOGIN');
+  const connectable = connectMissing.length === 0 && problems.length === 0 && !blocked;
+
   const sales = Number(env.ODOO_SALES_JOURNAL_ID);
   const pay = Number(env.ODOO_PAYMENT_JOURNAL_ID);
   const configured = missing.length === 0 && problems.length === 0 && !blocked;
@@ -109,6 +117,8 @@ export function loadOdooConfig(env = process.env) {
     enabled,
     dryRun,
     configured,
+    connectable,
+    connectMissing,
     // Usable by the worker: live needs a complete, unblocked configuration;
     // dry-run needs nothing because it never contacts Odoo.
     ready: dryRun || configured,
@@ -137,6 +147,7 @@ export function describeConfig(cfg) {
     dryRun: cfg.dryRun,
     ready: cfg.ready,
     configured: cfg.configured,
+    connectable: cfg.connectable,
     env: cfg.env,
     style: cfg.style,
     host: cfg.baseUrl ? new URL(cfg.baseUrl).host : null,
@@ -171,21 +182,21 @@ function classifyRpcError(err) {
  * Methods take plain JS values and return plain JS values.
  */
 export function createOdooClient(cfg, { fetchImpl = globalThis.fetch, timeoutMs = 15000 } = {}) {
-  if (!cfg.configured) {
-    throw new OdooError('config', `Odoo is not configured: ${[...cfg.missing, ...cfg.problems, cfg.blocked].filter(Boolean).join('; ')}`);
+  if (!cfg.connectable) {
+    throw new OdooError('config', `Odoo is not configured: ${[...cfg.connectMissing, ...cfg.problems, cfg.blocked].filter(Boolean).join('; ')}`);
   }
   const secrets = [cfg.apiKey];
   let uid = null; // jsonrpc only
 
-  async function post(path, body, headers = {}) {
+  async function request(method, path, body, headers = {}) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     let res;
     try {
       res = await fetchImpl(`${cfg.baseUrl}${path}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json; charset=utf-8', ...headers },
-        body: JSON.stringify(body),
+        method,
+        headers: { ...(method === 'POST' ? { 'Content-Type': 'application/json; charset=utf-8' } : {}), ...headers },
+        ...(method === 'POST' ? { body: JSON.stringify(body) } : {}),
         signal: controller.signal,
       });
     } catch (e) {
@@ -199,6 +210,7 @@ export function createOdooClient(cfg, { fetchImpl = globalThis.fetch, timeoutMs 
     try { json = text ? JSON.parse(text) : null; } catch { /* not JSON */ }
     return { status: res.status, ok: res.ok, json, text };
   }
+  const post = (path, body, headers) => request('POST', path, body, headers);
 
   // ---- json2 (Odoo 19+) ---------------------------------------------------
   async function json2(model, method, payload = {}) {
@@ -243,13 +255,15 @@ export function createOdooClient(cfg, { fetchImpl = globalThis.fetch, timeoutMs 
   return {
     style: cfg.style,
 
-    /** Server version, without authentication. Proves the URL is an Odoo. */
+    /**
+     * Server version, without authentication. Proves the URL is an Odoo.
+     * `/web/version` answers a plain GET (a POST is refused with a CSRF error).
+     */
     async version() {
-      const res = await post('/web/version', {});
+      const res = await request('GET', '/web/version');
       const j = res.json;
-      const result = j?.result || j;
-      if (!res.ok || !result) throw new OdooError('network', `Could not read the Odoo version (HTTP ${res.status})`, { retryable: res.status >= 500 });
-      return { server_version: result.server_version || null, serie: result.server_serie || null };
+      if (!res.ok || !j) throw new OdooError('network', `Could not read the Odoo version (HTTP ${res.status})`, { retryable: res.status >= 500 });
+      return { server_version: j.version || null, serie: Array.isArray(j.version_info) ? `${j.version_info[0]}.${j.version_info[1]}` : null };
     },
 
     /** Proves the credentials work by reading the integration user's own record. */
