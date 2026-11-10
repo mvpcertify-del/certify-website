@@ -36,18 +36,14 @@ async function testConnection(ctx) {
   const checks = [];
   const record = (name, ok, detail) => checks.push({ name, ok, detail: detail || null });
 
-  if (cfg.dryRun) {
-    // Never contact Odoo in dry-run, even if credentials happen to be present.
-    return {
-      ok: true, dryRun: true, config: describeConfig(cfg),
-      checks: [{ name: 'dry-run mode', ok: true, detail: 'No connection is made and nothing is sent to Odoo. Set ODOO_DRY_RUN=false to test the live connection.' }],
-    };
-  }
 
   if (!cfg.connectable) {
     return { ok: false, config: describeConfig(cfg), checks: [{ name: 'connection settings', ok: false, detail: [...cfg.connectMissing, ...cfg.problems, cfg.blocked].filter(Boolean).join('; ') }] };
   }
   const odoo = ctx.getOdoo();
+  // The connection test only READS from Odoo, so it runs in dry-run too. Dry-run
+  // governs whether the SYNC writes; it should never stop you checking the link.
+  record('mode', true, cfg.dryRun ? 'dry-run: the sync writes nothing to Odoo' : 'live');
   try {
     const v = await odoo.version();
     record('reach Odoo', true, v.server_version);
