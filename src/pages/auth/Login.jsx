@@ -61,6 +61,22 @@ export default function Login() {
   const [cooldown, setCooldown] = useState(0);
   const autoSent = useRef(false);
 
+  // The "Sign in with this code" button in the email opens /login#email=..&code=..
+  // Fill both boxes and drop the fragment from the address bar. Nothing is
+  // submitted here: the person still taps "Verify and sign in".
+  useEffect(() => {
+    if (!LOGIN_OTP_ENABLED || !window.location.hash) return;
+    const params = new URLSearchParams(window.location.hash.slice(1));
+    const hashEmail = (params.get('email') || '').trim();
+    const hashCode = normalizeOtp(params.get('code'));
+    if (!hashEmail || !isValidOtp(hashCode)) return;
+    setEmail(hashEmail);
+    setCode(hashCode);
+    setStep('code');
+    autoSent.current = true; // the code is already in the email, do not send another
+    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+  }, []);
+
   useEffect(() => {
     if (!authLoading && user) {
       // If the user came from /start-checkout, route them to /client/apply with

@@ -97,3 +97,15 @@ test('the throw-away signup password is random, long and never repeats', () => {
     assert.match(p, /\d/);
   }
 });
+
+test('the code email button fills in the address and code through the URL fragment', () => {
+  const m = loginOtpEmail({ name: 'Bea', code: '482913', email: 'bea@example.com', loginUrl: 'https://certify.cx/login' });
+  assert.match(m.html, /href="https:\/\/certify\.cx\/login#email=bea%40example\.com&amp;code=482913"/);
+  assert.match(m.html, /Sign in with this code/);
+  assert.ok(!/\?[^"]*code=/.test(m.html), 'the code must never be in the query string');
+});
+
+test('without an address the button just opens the sign-in page', () => {
+  const m = loginOtpEmail({ name: 'Bea', code: '482913', loginUrl: 'https://certify.cx/login' });
+  assert.ok(m.html.includes('href="https://certify.cx/login"'));
+});
