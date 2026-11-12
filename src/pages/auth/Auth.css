@@ -493,3 +493,26 @@
   cursor: pointer;
 }
 .auth-otp-paste:hover { border-color: var(--color-accent); }
+
+.auth-form__hint {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+.auth-form__check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.auth-form__check input {
+  flex: none;
+  margin-top: 3px;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-accent);
+}

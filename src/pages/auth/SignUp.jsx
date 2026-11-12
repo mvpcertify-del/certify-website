@@ -128,6 +128,8 @@ function SimpleClientSignUp() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  // Marketing mail is opt-in: unticked until the person ticks it.
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
 
   const customFields = useCustomFieldsForRole('client');
   const [customValues, setCustomValues] = useState({});
@@ -175,6 +177,8 @@ function SimpleClientSignUp() {
       role: 'client',
       stakeholder_type: 'client',
       custom_fields: customValues,
+      marketing_opt_in: marketingOptIn,
+      neutral_existing: LOGIN_OTP_ENABLED,
     });
 
     if (result.success) {
@@ -302,6 +306,10 @@ function SimpleClientSignUp() {
           </>
           )}
 
+          {LOGIN_OTP_ENABLED && (
+            <p className="auth-form__hint">{t('auth.signupNoPassword')}</p>
+          )}
+
           {customFields.map(field => (
             <CustomFieldRenderer
               key={field.id}
@@ -311,9 +319,25 @@ function SimpleClientSignUp() {
             />
           ))}
 
+          <label className="auth-form__check">
+            <input
+              type="checkbox"
+              checked={marketingOptIn}
+              onChange={(e) => setMarketingOptIn(e.target.checked)}
+            />
+            <span>{t('auth.marketingOptIn')}</span>
+          </label>
+
           <Button type="submit" variant="primary" size="lg" fullWidth loading={loading}>
             {t('auth.createAccount')}
           </Button>
+
+          <p className="auth-form__legal">
+            {t('auth.legalPrefix')}{' '}
+            <Link to="/terms" className="auth-form__link">{t('auth.termsLink')}</Link>
+            {' '}{t('auth.legalAnd')}{' '}
+            <Link to="/privacy" className="auth-form__link">{t('auth.privacyLink')}</Link>.
+          </p>
         </form>
       )}
 

@@ -225,7 +225,7 @@ export function AuthProvider({ children }) {
     number_of_locations, website, city, country,
     contact_number, contact_role, certification_types,
     referral_code, role, stakeholder_type,
-    custom_fields,
+    custom_fields, marketing_opt_in, neutral_existing,
   }) => {
     const region = await getRegionFromCountryAsync(country, supabase);
     const assignedRole = role || ROLES.CLIENT;
@@ -256,6 +256,8 @@ export function AuthProvider({ children }) {
         stakeholder_type: stakeholder_type || 'client',
         approval_status: approvalStatus,
         custom_fields: custom_fields || null,
+        marketing_opt_in: marketing_opt_in === true,
+        neutralExisting: neutral_existing === true,
       }),
     });
     const signupJson = await signupRes.json().catch(() => ({}));
@@ -263,6 +265,10 @@ export function AuthProvider({ children }) {
     if (!signupRes.ok || !signupJson.success) {
       return { success: false, error: signupJson.error || 'Signup failed' };
     }
+
+    // Address already registered (code sign-up only): say nothing, the page
+    // goes on to email a sign-in code exactly as for a new account.
+    if (signupJson.existing) return { success: true, existing: true };
 
     const createdUser = signupJson.user;
 
