@@ -123,7 +123,6 @@ export default function PublicNav() {
               <Link to="/login" className="pubnav__link pubnav__link--login">{t('nav.login')}</Link>
             </>
           )}
-          <Link to="/gap-analysis" className="pubnav__btn pubnav__btn--gap">{t('nav.startGapAnalysis')}</Link>
         </div>
 
         {/* Mobile bar: language switcher stays visible at the top so anyone
@@ -177,7 +176,6 @@ export default function PublicNav() {
               <Link to="/login" className="pubnav__mobile-link pubnav__link--login" onClick={closeMobile}>{t('nav.login')}</Link>
             </>
           )}
-          <Link to="/gap-analysis" className="pubnav__btn pubnav__btn--gap pubnav__mobile-btn" onClick={closeMobile}>{t('nav.startGapAnalysis')}</Link>
         </div>
       )}
     </nav>
