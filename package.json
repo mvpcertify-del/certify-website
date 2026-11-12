@@ -8,6 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "test:odoo": "node --test \"tests/odoo/*.test.mjs\"",
+    "test:auth": "node --test \"tests/auth/*.test.mjs\"",
+    "test": "npm run test:odoo && npm run test:auth",
     "preview": "vite preview"
   },
   "dependencies": {

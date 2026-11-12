@@ -516,6 +516,32 @@ export function magicLinkEmail({ name, link }) {
   return { subject, html, text };
 }
 
+/**
+ * The sign-in code email: a six-digit one-time code the user types into the
+ * login page. Supabase generates and checks the code; this only presents it.
+ * `minutes` must match the OTP expiry set in Supabase (Auth > Email).
+ */
+export function loginOtpEmail({ name, code, minutes = 10 }) {
+  if (!/^\d{4,10}$/.test(String(code || ''))) {
+    throw new Error('loginOtpEmail: the code must be 4 to 10 digits');
+  }
+  const greeting = name ? `Hi ${escapeHtml(name)},` : 'Hello,';
+  const subject = `${code} is your ${BRAND_TEXT} sign-in code`;
+  const html = layout({
+    title: subject,
+    preheader: `Your sign-in code is ${code}. It expires in ${minutes} minutes.`,
+    bodyHtml: `
+      ${heading('Your sign-in code')}
+      ${body(`${greeting} enter this code to sign in to <strong style="color:${TEXT_PRIMARY};">${BRAND_TEXT}</strong>. It expires in ${minutes} minutes and can be used once.`)}
+      <div style="margin:0 0 28px;padding:18px 24px;background:${SURFACE_BG};border:1px solid ${BORDER};border-radius:12px;text-align:center;">
+        <span style="font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:34px;font-weight:700;letter-spacing:0.32em;color:${TEXT_PRIMARY};padding-left:0.32em;">${code}</span>
+      </div>
+      ${muted("Never share this code with anyone. ${BRAND_TEXT} will never ask you for it. If you didn't try to sign in, you can safely ignore this email.")}`,
+  });
+  const text = `${greeting.replace(/<[^>]+>/g, '')}\n\nYour ${BRAND_TEXT} sign-in code is: ${code}\n\nIt expires in ${minutes} minutes and can be used once. Never share it with anyone.\n\nIf you didn't try to sign in, ignore this email.\n\n— ${BRAND_TEXT}`;
+  return { subject, html, text };
+}
+
 export function inviteEmail({ name, link }) {
   const greeting = name ? `Hi ${name},` : 'Hello,';
   const subject = `You're invited to ${BRAND_TEXT}`;
