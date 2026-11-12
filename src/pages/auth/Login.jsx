@@ -202,7 +202,7 @@ export default function Login() {
               inputMode="numeric"
               autoComplete="one-time-code"
               maxLength={OTP_MAX_LENGTH + 2}
-              placeholder="••••••••"
+              placeholder="••••••"
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/[^\d\s]/g, ''))}
               autoFocus
@@ -267,7 +267,7 @@ export default function Login() {
           label={t('auth.password')}
           type={showPassword ? 'text' : 'password'}
           id="login-password"
-          placeholder="••••••••"
+          placeholder="••••••"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required

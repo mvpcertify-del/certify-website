@@ -1,6 +1,6 @@
 # Odoo Accounting mirror (MVP)
 
-Status: **built and tested. Connection to Odoo verified read-only on 10 Nov 2026. Runs in dry-run by default. Migration phase46 not applied to any database.**
+Status: **built and tested. Connection to Odoo verified read-only from the live site on 11 Nov 2026. Runs in dry-run by default. Migration `phase46` applied to the production Supabase project by the owner on 11 Nov 2026 and checked against the live database (every table and column the sync uses exists). Odoo variables are set in Vercel Production; nothing is written to Odoo yet.**
 Odoo: `https://certify.odoo.com`, database `certify`, **Odoo 20.0+e (Enterprise)**, 14-day trial. JSON-2 API works with the API key.
 
 ### Observed in the Odoo database (read-only, 10 Nov 2026)
