@@ -45,7 +45,7 @@ function buildVerifyUrl({ site_url, token_hash, email_action_type, redirect_to }
   return `${base}/auth/v1/verify?${params.toString()}`;
 }
 
-export function pickTemplate(action, { name, url, code, email }) {
+export function pickTemplate(action, { name, url, code }) {
   switch (action) {
     case 'signup':
       return verifyEmail({ name, verifyUrl: url });
@@ -55,7 +55,7 @@ export function pickTemplate(action, { name, url, code, email }) {
       // signInWithOtp() on an existing user arrives here with the six-digit
       // code in email_data.token. The login page asks for that code, so send
       // the code (not a link) whenever Supabase provides one.
-      return code ? loginOtpEmail({ name, code, email }) : magicLinkEmail({ name, link: url });
+      return code ? loginOtpEmail({ name, code }) : magicLinkEmail({ name, link: url });
     case 'invite':
       return inviteEmail({ name, link: url });
     case 'email_change':
@@ -127,7 +127,7 @@ export default async function handler(req, res) {
 
     const url = buildVerifyUrl(email_data);
     const name = user.user_metadata?.name || user.user_metadata?.full_name || null;
-    const { subject, html, text } = pickTemplate(email_data.email_action_type, { name, url, code: email_data.token, email: user.email });
+    const { subject, html, text } = pickTemplate(email_data.email_action_type, { name, url, code: email_data.token });
 
     await sendViaResend({ to: user.email, subject, html, text });
     return res.status(200).json({});
