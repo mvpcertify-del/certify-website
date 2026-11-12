@@ -545,12 +545,11 @@ export function loginOtpEmail({ name, code, minutes = 10, loginUrl, email }) {
         <span style="display:inline-block;font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:36px;line-height:1.1;font-weight:700;letter-spacing:0.3em;color:${TEXT_PRIMARY};padding-left:0.3em;-webkit-user-select:all;user-select:all;">${code}</span>
       </div>
       <p style="margin:0 0 24px;text-align:center;font-size:13px;line-height:1.5;color:${TEXT_TERTIARY};">Tap or double-click the code to select it, then copy.</p>
-      <!-- Note for developers: an email cannot run JavaScript, so this "Copy code" button
-           cannot write to the clipboard. It is a link that opens the sign-in page with the
-           code already filled in (same target as the green button). A real copy action only
-           exists on the login page ("Paste code" reads the clipboard). Added at the client's
-           request to see how it looks. -->
-      <p style="margin:0 0 24px;text-align:center;"><a href="${signInUrl}" style="display:inline-block;box-sizing:border-box;background:#ffffff;color:${TEXT_PRIMARY};text-decoration:none;padding:10px 22px;border-radius:10px;font-weight:600;font-size:14px;border:1px solid #cfd5e3;">Copy code</a></p>
+      <!-- Note for developers: an email cannot run JavaScript, so this "Copy code" button is
+           only a styled label with NO link and NO action (client's request: a button, nothing
+           attached). It cannot write to the clipboard. The working actions are the green
+           button below and the "Paste code" button on the login page. -->
+      <p style="margin:0 0 24px;text-align:center;"><span style="display:inline-block;box-sizing:border-box;background:#ffffff;color:${TEXT_PRIMARY};padding:10px 22px;border-radius:10px;font-weight:600;font-size:14px;border:1px solid #cfd5e3;">Copy code</span></p>
       <p style="margin:0 0 8px;text-align:center;">${button(signInUrl, 'Sign in with this code')}</p>
       <p style="margin:0 0 24px;text-align:center;font-size:13px;line-height:1.5;color:${TEXT_TERTIARY};">The button opens the sign-in page with your code already filled in.</p>
       <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:${TEXT_SECONDARY};">The code expires in <strong style="color:${TEXT_PRIMARY};">${minutes} minutes</strong> and can be used once.</p>
