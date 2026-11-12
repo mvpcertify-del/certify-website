@@ -112,8 +112,8 @@ export default function LandingPage() {
                 {t('home.heroTaglineA')}<br />{t('home.heroTaglineB')}
               </p>
               <p className="home__hero-sub">{t('home.heroSub')}</p>
-              <Link to="/sme" className="home__btn home__btn--primary">
-                {t('home.heroCta')} <ArrowRight size={18} />
+              <Link to={gapPath} className="home__btn home__btn--primary">
+                {t('nav.startGapAnalysis')} <ArrowRight size={18} />
               </Link>
             </div>
 
@@ -181,7 +181,7 @@ export default function LandingPage() {
             <div className="home__market-copy">
               <h2>{t('home.mktTitle')}</h2>
               <p>{t('home.mktDesc')}</p>
-              <Link to="/sme" className="home__btn home__btn--primary home__btn--sm">
+              <Link to="/sme" className="home__btn home__btn--ghost home__btn--sm">
                 {t('home.mktCta')} <ArrowRight size={16} />
               </Link>
             </div>
@@ -211,8 +211,8 @@ export default function LandingPage() {
               {t('home.globalTitleB')} <span className="home__accent">{t('home.globalTitleAccent')}</span>
             </h2>
             <p>{t('home.globalDesc')}</p>
-            <Link to={joinPath} className="home__btn home__btn--ghost">
-              {t('home.globalCta')} <ArrowRight size={16} />
+            <Link to={isIn ? joinPath : gapPath} className="home__btn home__btn--ghost">
+              {isIn ? t('home.globalCta') : t('nav.startGapAnalysis')} <ArrowRight size={16} />
             </Link>
           </div>
         </div>
