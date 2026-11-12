@@ -154,7 +154,7 @@ export default function Login() {
   // ---------------------------------------------------------------- code mode
   if (LOGIN_OTP_ENABLED) {
     return (
-      <div className="auth-form">
+      <div className="auth-form auth-form--login">
         <h2 className="auth-form__title">
           {step === 'email' ? t('auth.welcomeBack') : t('auth.otpTitle')}
         </h2>
@@ -241,7 +241,7 @@ export default function Login() {
 
   // ------------------------------------------------------------ password mode
   return (
-    <div className="auth-form">
+    <div className="auth-form auth-form--login">
       <h2 className="auth-form__title">{t('auth.welcomeBack')}</h2>
       <p className="auth-form__subtitle">{t('auth.signInSubtitle')}</p>
 

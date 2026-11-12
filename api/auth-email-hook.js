@@ -111,7 +111,7 @@ export default async function handler(req, res) {
     };
     // standardwebhooks expects the secret without the "v1,whsec_" framing
     // that Supabase shows in the dashboard. Strip it if present.
-    const secret = HOOK_SECRET.replace(/^v1,whsec_/, '');
+    const secret = HOOK_SECRET.trim().replace(/^v1,whsec_/, '');
     const wh = new Webhook(secret);
     payload = wh.verify(raw, headers);
   } catch (err) {
