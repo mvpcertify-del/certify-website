@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-do
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { Input, Button } from '../../components/ui/FormElements';
-import { AlertCircle, ArrowLeft, Eye, EyeOff, MailCheck } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Eye, EyeOff, MailCheck, ClipboardPaste } from 'lucide-react';
 import { ROLES } from '../../utils/roles';
 import { PENDING_CHECKOUT_KEY } from '../public/StartCheckout';
 import {
@@ -47,6 +47,17 @@ export default function Login() {
   // Code-login state: 'email' (ask for the address) then 'code' (ask for the code).
   const [step, setStep] = useState('email');
   const [code, setCode] = useState('');
+
+  // One tap: fill the box from the clipboard (the code copied from the email).
+  const pasteCode = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      const digits = String(text || '').replace(/\D/g, '').slice(0, OTP_MAX_LENGTH);
+      if (digits) setCode(digits);
+    } catch {
+      /* clipboard blocked: the person can still paste into the box by hand */
+    }
+  };
   const [cooldown, setCooldown] = useState(0);
   const autoSent = useRef(false);
 
@@ -208,6 +219,9 @@ export default function Login() {
               autoFocus
               required
             />
+            <button type="button" className="auth-otp-paste" onClick={pasteCode}>
+              <ClipboardPaste size={16} /> {t('auth.otpPaste', 'Paste code')}
+            </button>
             <Button type="submit" variant="primary" size="lg" fullWidth loading={loading}>
               {t('auth.otpVerify')}
             </Button>

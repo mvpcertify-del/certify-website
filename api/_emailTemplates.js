@@ -521,24 +521,29 @@ export function magicLinkEmail({ name, link }) {
  * login page. Supabase generates and checks the code; this only presents it.
  * `minutes` must match the OTP expiry set in Supabase (Auth > Email).
  */
-export function loginOtpEmail({ name, code, minutes = 10 }) {
+export function loginOtpEmail({ name, code, minutes = 10, loginUrl }) {
   if (!/^\d{4,10}$/.test(String(code || ''))) {
     throw new Error('loginOtpEmail: the code must be 4 to 10 digits');
   }
   const greeting = name ? `Hi ${escapeHtml(name)},` : 'Hello,';
   const subject = `${code} is your ${BRAND_TEXT} sign-in code`;
+  const signInUrl = escapeHtml(loginUrl || `${process.env.APP_PUBLIC_URL || 'https://certify.cx'}/login`);
   const html = layout({
     title: subject,
     preheader: `Your sign-in code is ${code}. It expires in ${minutes} minutes.`,
     bodyHtml: `
       ${heading('Your sign-in code')}
-      ${body(`${greeting} enter this code to sign in to <strong style="color:${TEXT_PRIMARY};">${BRAND_TEXT}</strong>. It expires in ${minutes} minutes and can be used once.`)}
-      <div style="margin:0 0 28px;padding:18px 24px;background:${SURFACE_BG};border:1px solid ${BORDER};border-radius:12px;text-align:center;">
-        <span style="font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:34px;font-weight:700;letter-spacing:0.32em;color:${TEXT_PRIMARY};padding-left:0.32em;">${code}</span>
+      ${body(`${greeting} use the code below to sign in to <strong style="color:${TEXT_PRIMARY};">${BRAND_TEXT}</strong>. Enter it on the sign-in page.`)}
+      <div style="margin:0 0 8px;padding:22px 24px;background:${SURFACE_BG};border:1px solid ${BORDER};border-radius:12px;text-align:center;">
+        <div style="font-size:12px;line-height:1;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:${TEXT_TERTIARY};margin:0 0 12px;">Verification code</div>
+        <span style="display:inline-block;font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:36px;line-height:1.1;font-weight:700;letter-spacing:0.3em;color:${TEXT_PRIMARY};padding-left:0.3em;-webkit-user-select:all;user-select:all;">${code}</span>
       </div>
-      ${muted("Never share this code with anyone. ${BRAND_TEXT} will never ask you for it. If you didn't try to sign in, you can safely ignore this email.")}`,
+      <p style="margin:0 0 24px;text-align:center;font-size:13px;line-height:1.5;color:${TEXT_TERTIARY};">Tap or double-click the code to select it, then copy.</p>
+      <p style="margin:0 0 24px;text-align:center;">${button(signInUrl, 'Open the sign-in page')}</p>
+      <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:${TEXT_SECONDARY};">The code expires in <strong style="color:${TEXT_PRIMARY};">${minutes} minutes</strong> and can be used once.</p>
+      ${muted(`For your security, never share this code with anyone. ${BRAND_TEXT} will never ask you for it. If you didn't try to sign in, you can safely ignore this email. Nobody can sign in without the code.`)}`,
   });
-  const text = `${greeting.replace(/<[^>]+>/g, '')}\n\nYour ${BRAND_TEXT} sign-in code is: ${code}\n\nIt expires in ${minutes} minutes and can be used once. Never share it with anyone.\n\nIf you didn't try to sign in, ignore this email.\n\n— ${BRAND_TEXT}`;
+  const text = `${greeting.replace(/<[^>]+>/g, '')}\n\nYour ${BRAND_TEXT} sign-in code is: ${code}\n\nEnter it on the sign-in page: ${loginUrl || `${process.env.APP_PUBLIC_URL || 'https://certify.cx'}/login`}\n\nThe code expires in ${minutes} minutes and can be used once. Never share it with anyone, ${BRAND_TEXT} will never ask you for it.\n\nIf you didn't try to sign in, ignore this email.\n\n— ${BRAND_TEXT}`;
   return { subject, html, text };
 }
 

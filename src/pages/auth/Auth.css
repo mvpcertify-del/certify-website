@@ -476,3 +476,20 @@
 .auth-form--login #login-otp {
   font-size: 2rem;
 }
+
+.auth-otp-paste {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: calc(var(--spacing-sm) * -1);
+  padding: 8px 14px;
+  background: transparent;
+  color: var(--color-accent);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+.auth-otp-paste:hover { border-color: var(--color-accent); }
