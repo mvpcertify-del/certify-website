@@ -68,7 +68,8 @@ test('a code is exactly six digits; copy-pasted spaces are ignored', () => {
   assert.equal(normalizeOtp(' 123 456 '), '123456');
   assert.equal(isValidOtp('123456'), true);
   assert.equal(isValidOtp('123 456'), true);
-  for (const bad of ['12345', '1234567', 'abcdef', '12345a', '', null, undefined]) {
+  assert.equal(isValidOtp('83352474'), true);
+  for (const bad of ['12345', '123456789', 'abcdef', '12345a', '', null, undefined]) {
     assert.equal(isValidOtp(bad), false, `value ${bad}`);
   }
 });

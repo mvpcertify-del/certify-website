@@ -15,6 +15,9 @@ export const LOGIN_OTP_ENABLED = (import.meta.env || {}).VITE_LOGIN_OTP_ENABLED 
 /** Length of the code Supabase sends (Auth > Providers > Email > OTP length). */
 export const OTP_LENGTH = 6;
 
+/** Supabase can be set to send longer codes (up to 8 digits); accept those too. */
+export const OTP_MAX_LENGTH = 8;
+
 /** Seconds a person must wait before asking for another code. */
 export const OTP_RESEND_SECONDS = 60;
 
@@ -33,13 +36,13 @@ export function classifyOtpRequestError(error) {
   return 'failed';
 }
 
-/** Digits only, exactly OTP_LENGTH of them (spaces from copy-paste are ignored). */
+/** Digits only, OTP_LENGTH to OTP_MAX_LENGTH of them (spaces from copy-paste are ignored). */
 export function normalizeOtp(input) {
   return String(input || '').replace(/\s+/g, '');
 }
 
 export function isValidOtp(input) {
-  return new RegExp(`^\\d{${OTP_LENGTH}}$`).test(normalizeOtp(input));
+  return new RegExp(`^\\d{${OTP_LENGTH},${OTP_MAX_LENGTH}}$`).test(normalizeOtp(input));
 }
 
 /**

@@ -7,7 +7,7 @@ import { AlertCircle, ArrowLeft, Eye, EyeOff, MailCheck } from 'lucide-react';
 import { ROLES } from '../../utils/roles';
 import { PENDING_CHECKOUT_KEY } from '../public/StartCheckout';
 import {
-  LOGIN_OTP_ENABLED, OTP_LENGTH, OTP_RESEND_SECONDS, isValidOtp, normalizeOtp,
+  LOGIN_OTP_ENABLED, OTP_RESEND_SECONDS, OTP_MAX_LENGTH, isValidOtp, normalizeOtp,
 } from '../../config/loginMode';
 import './Auth.css';
 
@@ -161,7 +161,7 @@ export default function Login() {
         <p className="auth-form__subtitle">
           {step === 'email'
             ? t('auth.signInOtpSubtitle')
-            : t('auth.otpSubtitle', { email: email.trim(), length: OTP_LENGTH })}
+            : t('auth.otpSubtitle', { email: email.trim() })}
         </p>
 
         {error && (
@@ -196,13 +196,13 @@ export default function Login() {
         ) : (
           <form onSubmit={handleCodeSubmit} className="auth-form__body">
             <Input
-              label={t('auth.otpLabel', { length: OTP_LENGTH })}
+              label={t('auth.otpLabel')}
               id="login-otp"
               name="otp"
               inputMode="numeric"
               autoComplete="one-time-code"
-              maxLength={OTP_LENGTH + 2}
-              placeholder="••••••"
+              maxLength={OTP_MAX_LENGTH + 2}
+              placeholder="••••••••"
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/[^\d\s]/g, ''))}
               autoFocus

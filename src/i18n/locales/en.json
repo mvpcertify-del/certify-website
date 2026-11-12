@@ -351,15 +351,15 @@
     "signInOtpSubtitle": "Enter your email and we will send you a one-time sign-in code.",
     "otpSendCode": "Send me a code",
     "otpTitle": "Enter your code",
-    "otpSubtitle": "We sent a {{length}}-digit code to {{email}}. It expires in 10 minutes.",
-    "otpLabel": "{{length}}-digit code",
+    "otpSubtitle": "We sent a sign-in code to {{email}}. It expires in 10 minutes.",
+    "otpLabel": "Code from your email",
     "otpVerify": "Verify and sign in",
     "otpResend": "Resend code",
     "otpResendIn": "Resend in {{s}}s",
     "otpUseDifferentEmail": "Use a different email",
     "otpSent": "If this email is registered, a code is on its way.",
     "otpTooSoon": "A code was sent a moment ago. Please wait before asking for another.",
-    "otpInvalid": "Enter the 6-digit code from your email."
+    "otpInvalid": "Enter the code from your email."
   },
   "unauthorized": {
     "accessDenied": "Access Denied",
