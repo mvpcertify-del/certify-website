@@ -16,7 +16,7 @@ There is no test runner configured in this repo.
 Copy `.env.example` to `.env`. Required vars:
 - `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` — client-side Supabase.
 - `SUPABASE_SERVICE_ROLE_KEY` — server-only, used by `seed.js` and every file in `api/`. Never import from `src/`.
-- `VITE_STRIPE_PUBLISHABLE_KEY` + `STRIPE_SECRET_KEY` — Stripe checkout.
+- `WHOP_API_KEY`, `WHOP_COMPANY_ID`, `WHOP_PRODUCT_ID`, `WHOP_WEBHOOK_SECRET` — Whop checkout (replaced Stripe entirely, 22 Oct 2026). See `api/checkout.js`.
 - `VITE_GEOAPIFY_API_KEY` — country/address autocomplete.
 - `RESEND_API_KEY`, `RESEND_FROM_EMAIL` — transactional email via Resend.
 - `SUPABASE_AUTH_HOOK_SECRET` — signing secret for the Supabase Send Email Hook.
@@ -25,7 +25,7 @@ Copy `.env.example` to `.env`. Required vars:
 
 ## Architecture
 
-**Stack:** React 19 + Vite 8, React Router 7, Supabase (auth + Postgres + storage), Stripe, i18next (en/es/ar with RTL), Google Generative AI for the Sara assistant. No Tailwind — plain CSS colocated with components.
+**Stack:** React 19 + Vite 8, React Router 7, Supabase (auth + Postgres + storage), Whop (checkout), i18next (en/es/ar with RTL), Google Generative AI for the Sara assistant. No Tailwind — plain CSS colocated with components.
 
 **Two-tier runtime.** The app is a SPA plus Vercel-style serverless functions in [api/](api/). In local dev, [vite.config.js](vite.config.js) installs a custom middleware plugin (`vercelApiPlugin`) that intercepts `/api/*` requests, dynamically imports the matching `.js` file, and adapts Node `req`/`res` to the Vercel handler shape (`res.status().json()`). In production, Vercel serves these directly; [vercel.json](vercel.json) rewrites everything else to `index.html` for SPA routing. When adding a new API route, just drop a file in `api/` exporting `default async function handler(req, res)` — no registration needed.
 
@@ -44,7 +44,7 @@ callers and must keep their URLs: `send-welcome` (Postgres trigger),
 `auth-email-hook` (Supabase), `inbound-email` (Resend webhook) and `notify-event`
 (the cron in `vercel.json`).
 
-**Why the API layer exists.** The frontend uses the Supabase anon key; any operation needing the service role (creating users, deleting users, reading referral data across accounts, Stripe checkout) must go through `api/`. Do not attempt to do these from `src/`.
+**Why the API layer exists.** The frontend uses the Supabase anon key; any operation needing the service role (creating users, deleting users, reading referral data across accounts, Whop checkout) must go through `api/`. Do not attempt to do these from `src/`.
 
 **Auth & profile shape.** [src/contexts/AuthContext.jsx](src/contexts/AuthContext.jsx) is the single source of truth for the current user. On session init it fetches the `profiles` row and merges it into the Supabase user object, so `user.role`, `user.region`, `user.approval_status`, etc. are read directly off `user`. Google OAuth users without a profile get auto-created as `client` via `/api/update-profile`. When reading user data in components, use `useAuth()` — don't re-query Supabase for the current user.
 

@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { isDisposableEmail } from './_disposableEmail.js';
 import { notifyAdmins } from './_notifyAdmins.js';
 import { verifyAdmin } from './_verifyAdmin.js';
 import { getRegionFromCountry, getCreatableRoles, ROLE_LABELS } from '../src/utils/roles.js';
@@ -41,6 +42,8 @@ export default async function handler(req, res) {
       website, city, country, contact_number, contact_role,
       stakeholder_type, approval_status,
       custom_fields,
+      // sign-up consent + the neutral "already registered" answer (OTP sign-up)
+      marketing_opt_in, neutralExisting,
       // phase24 — auditor professional profile. `phone` is what the admin
       // modal sends; `contact_number` is the self-signup name for the same
       // thing, and both land in the single profiles.phone column.
@@ -72,6 +75,14 @@ export default async function handler(req, res) {
 
     const assignedRole = role || (isSelfSignup ? 'client' : null);
 
+    // Provider roles are vetted before they go live, so a throw-away mailbox is
+    // refused. Clients are not restricted (a buyer may use any address).
+    if (isSelfSignup && assignedRole !== 'client' && isDisposableEmail(email)) {
+      return res.status(400).json({
+        error: 'Please use your work email address. Temporary email addresses are not accepted for this role.',
+      });
+    }
+
     // Country is the geo field captured across the admin UI now; derive the
     // region from it for RBAC scoping when the caller didn't pass a region.
     // A non-super admin only ever creates inside their OWN region — the admin UI
@@ -99,7 +110,7 @@ export default async function handler(req, res) {
     // can mint any role; a regional admin only auditors and CBs — not another
     // Country Admin, and not a referral with commission entitlements).
     const allowedRoles = isSelfSignup
-      ? ['client', 'auditor', 'certification_body', 'referral', 'consultancy']
+      ? ['client', 'auditor', 'certification_body', 'referral', 'consultancy', 'contractor']
       : getCreatableRoles(caller.role);
 
     if (!allowedRoles.includes(assignedRole)) {
@@ -112,9 +123,12 @@ export default async function handler(req, res) {
     // taken from the request body on the public self-signup path — that made it
     // forgeable with a single curl. Current product rule (client, 15 Jul):
     // everyone is approved on registration and email verification is the only
-    // gate. Change this line — not the client — if the rule ever changes.
+    // gate. Contractor is the one deliberate exception (client, 28 Oct): a
+    // self-registered contractor stays 'pending' until a Super Admin approves
+    // them, same gate the pay-first client path uses. The role, not the
+    // request body, decides this — still unforgeable.
     const resolvedApprovalStatus = isSelfSignup
-      ? 'approved'
+      ? (assignedRole === 'contractor' ? 'pending' : 'approved')
       : (approval_status || 'approved');
 
     // stakeholder_type is the stable identifier the platform counts, filters and
@@ -159,6 +173,10 @@ export default async function handler(req, res) {
           contact_role: contact_role || null,
           stakeholder_type: stakeholder_type || 'client',
           approval_status: resolvedApprovalStatus,
+          // Consent record. Marketing mail is opt-in only: true only when the
+          // person ticked the (unticked-by-default) box.
+          marketing_opt_in: marketing_opt_in === true,
+          terms_accepted_at: new Date().toISOString(),
         }
       : {
           name: displayName,
@@ -180,6 +198,13 @@ export default async function handler(req, res) {
     });
 
     if (authError) {
+      // Code sign-up answers the same way whether or not the address already has
+      // an account, so the form cannot be used to find out who is registered.
+      // The page then emails a sign-in code, which only the mailbox owner gets.
+      if (isSelfSignup && neutralExisting === true
+        && (authError.code === 'email_exists' || /already (been )?registered|already exists/i.test(authError.message || ''))) {
+        return res.status(200).json({ success: true, existing: true });
+      }
       return res.status(400).json({ error: authError.message });
     }
 
@@ -247,21 +272,30 @@ export default async function handler(req, res) {
       });
     }
 
-    // No verification email — verification was removed (client, 25 Jul).
-    // Instead, welcome the new user directly. Skipped for a user held at
-    // approval_status 'pending' (a pay-first client awaiting admin approval),
-    // mirroring the old send-welcome rule so they aren't welcomed before access.
-    if (resolvedApprovalStatus !== 'pending') {
-      await sendWelcomeDirect({ email, name: displayName, role: assignedRole });
-      // Stamp welcome_sent_at so the legacy email_confirmed_at trigger, if it
-      // ever fires for this user, does not send a second welcome.
-      await supabaseAdmin
-        .from('profiles')
-        .update({ welcome_sent_at: new Date().toISOString() })
-        .eq('id', authData.user.id)
-        .then(() => {}, () => {});
+    // Self-signup: send verification email (user is unconfirmed).
+    // Admin-created users stay confirmed and receive welcome email directly.
+    let emailSendFailed = false;
+    if (isSelfSignup) {
+      const verifyResult = await sendVerificationEmail({
+        supabaseAdmin,
+        email,
+        password,
+        name: displayName,
+        linkType: 'signup',
+        redirectPath: '/login',
+      });
+      emailSendFailed = !verifyResult.ok;
+    } else if (resolvedApprovalStatus !== 'pending') {
+      const welcomeSent = await sendWelcomeDirect({
+        supabaseAdmin,
+        userId: authData.user.id,
+        email,
+        name: displayName,
+        role: assignedRole,
+        stakeholderType: resolvedStakeholderType,
+      });
+      emailSendFailed = !welcomeSent;
     }
-    const emailSendFailed = false;
 
     // Alert admins to the new registration / lead (best-effort).
     // In the current funnel a registered email IS the lead, so this covers

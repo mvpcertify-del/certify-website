@@ -59,6 +59,7 @@ export async function verifySession(req) {
         region: profile?.region || null,
         stakeholder_type: profile?.stakeholder_type || null,
         approval_status: profile?.approval_status || null,
+        provider: userData.user.app_metadata?.provider || null,
       },
     };
   } catch (err) {

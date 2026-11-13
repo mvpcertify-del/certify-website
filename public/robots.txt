@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+
+# Authenticated/admin areas — no public content to index, and a crawler
+# cannot get past the login gate anyway.
+Disallow: /dashboard
+Disallow: /main-dashboard
+Disallow: /admin/
+Disallow: /client/
+Disallow: /auditor/
+Disallow: /cert-body/
+Disallow: /referral-dashboard
+Disallow: /profile
+Disallow: /notifications
+Disallow: /messages
+Disallow: /checkout
+Disallow: /start-checkout
+Disallow: /auth/callback
+Disallow: /reset-password
+
+Sitemap: https://certify.cx/sitemap.xml

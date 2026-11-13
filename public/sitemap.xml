@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <url>
+    <loc>https://certify.cx/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://certify.cx/certifications</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://certify.cx/gap-analysis</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- ISO standard landing pages -->
+  <url><loc>https://certify.cx/iso/iso-9001</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://certify.cx/iso/iso-14001</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://certify.cx/iso/iso-45001</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://certify.cx/iso/iso-22000</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://certify.cx/iso/iso-21001</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://certify.cx/iso/iso-iec-27001</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://certify.cx/iso/iso-iec-27701</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://certify.cx/iso/iso-iec-42001</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://certify.cx/iso/iso-50001</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://certify.cx/iso/iso-37001</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://certify.cx/iso/iso-22301</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://certify.cx/iso/iso-13485</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+
+  <!-- Compliance audit landing pages -->
+  <url><loc>https://certify.cx/compliance/soc</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://certify.cx/compliance/gdpr</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://certify.cx/compliance/pci-dss</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://certify.cx/compliance/ccpa-cpra</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://certify.cx/compliance/hitrust</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://certify.cx/compliance/hipaa</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://certify.cx/compliance/gmp</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://certify.cx/compliance/ce</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+
+  <!-- Stakeholder registration pages -->
+  <url><loc>https://certify.cx/register/auditor</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://certify.cx/register/certification-body</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://certify.cx/register/consultancy</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://certify.cx/register/referral</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+
+  <url>
+    <loc>https://certify.cx/login</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://certify.cx/signup</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://certify.cx/privacy</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  <url>
+    <loc>https://certify.cx/terms</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.2</priority>
+  </url>
+
+</urlset>

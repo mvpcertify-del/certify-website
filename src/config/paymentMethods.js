@@ -2,13 +2,13 @@
 // Certify.cx — Payment Methods
 //
 // The payment methods offered at checkout. One is processed online through
-// Stripe (card); the other is offline/manual (bank transfer) where the buyer
+// Whop (card); the other is offline/manual (bank transfer) where the buyer
 // pays out-of-band and an admin verifies receipt before the certification
 // proceeds and the buyer is granted dashboard access.
 //
-//   online  → api/checkout.js creates a Stripe Checkout session whose
-//             payment_method_types is set from `stripeMethod`.
-//   offline → no Stripe session; the order is persisted with
+//   online  → api/checkout.js creates a priced Whop variant and redirects to
+//             its hosted purchase_url.
+//   offline → no online checkout; the order is persisted with
 //             payment_status='awaiting_verification' and the buyer is shown
 //             the instructions below. Dashboard access (the magic-link email)
 //             is issued only once an admin confirms the payment.
@@ -31,7 +31,6 @@ export const PAYMENT_METHODS = [
   {
     id: 'card',
     type: 'online',
-    stripeMethod: 'card',
     icon: 'CreditCard',
     labelKey: 'payment.methodCard',
     descKey: 'payment.methodCardDesc',
@@ -46,7 +45,7 @@ export const PAYMENT_METHODS = [
 ];
 
 // Canonical list of accepted method ids — used by api/checkout.js to reject
-// anything unrecognized before it reaches the DB or Stripe.
+// anything unrecognized before it reaches the DB or Whop.
 export const PAYMENT_METHOD_IDS = PAYMENT_METHODS.map(m => m.id);
 
 export const ONLINE_METHOD_IDS = PAYMENT_METHODS.filter(m => m.type === 'online').map(m => m.id);
@@ -58,13 +57,6 @@ export function getPaymentMethod(id) {
 
 export function isOfflineMethod(id) {
   return OFFLINE_METHOD_IDS.includes(id);
-}
-
-// Map a chosen method id to the Stripe payment_method_types array. Used by
-// api/checkout.js. Falls back to ['card'] for anything unrecognized.
-export function stripeMethodTypesFor(id) {
-  const m = getPaymentMethod(id);
-  return m?.stripeMethod ? [m.stripeMethod] : ['card'];
 }
 
 // -------------------------------------------------------

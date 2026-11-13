@@ -1,0 +1,16 @@
+.finpay { padding: 24px; max-width: 800px; }
+.finpay h1 { margin: 0 0 4px; font-size: 1.4rem; }
+.finpay__subtitle { margin: 0 0 20px; color: var(--color-text-secondary, #64748b); font-size: 0.9rem; }
+.finpay__error { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 0.88rem; }
+.finpay__empty { color: var(--color-text-secondary, #94a3b8); font-size: 0.9rem; }
+
+.finpay__list { display: flex; flex-direction: column; gap: 14px; }
+.finpay__card { border: 1px solid var(--color-border, #e2e8f0); border-radius: 12px; padding: 18px; }
+.finpay__top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.finpay__amount { font-size: 1.15rem; font-weight: 700; }
+.finpay__pill { display: inline-flex; align-items: center; gap: 5px; font-size: 0.78rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: #fffbeb; color: #d97706; }
+.finpay__desc { margin: 0 0 4px; font-size: 0.92rem; }
+.finpay__meta { margin: 0 0 12px; font-size: 0.78rem; color: var(--color-text-secondary, #94a3b8); }
+.finpay__actions { display: flex; gap: 10px; }
+
+.finpay__form { display: flex; flex-direction: column; gap: 14px; }

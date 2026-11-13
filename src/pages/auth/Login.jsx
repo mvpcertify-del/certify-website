@@ -1,15 +1,18 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { Input, Button } from '../../components/ui/FormElements';
-import { AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Eye, EyeOff, MailCheck, ClipboardPaste } from 'lucide-react';
 import { ROLES } from '../../utils/roles';
 import { PENDING_CHECKOUT_KEY } from '../public/StartCheckout';
+import {
+  LOGIN_OTP_ENABLED, OTP_RESEND_SECONDS, OTP_MAX_LENGTH, isValidOtp, normalizeOtp,
+} from '../../config/loginMode';
 import './Auth.css';
 
 // Post-payment-first flow: forward to /client/start-payment which creates the
-// stub application row and hands off to Stripe checkout.
+// stub application row and hands off to the payment checkout.
 function consumePendingCheckout() {
   try {
     const raw = sessionStorage.getItem(PENDING_CHECKOUT_KEY);
@@ -29,16 +32,50 @@ function consumePendingCheckout() {
 }
 
 export default function Login() {
-  const { login, signInWithGoogle, getRoleDashboard, user, loading: authLoading } = useAuth();
+  const { login, requestLoginOtp, verifyLoginOtp, getRoleDashboard, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const { t } = useTranslation();
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(location.state?.email || '');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
+
+  // Code-login state: 'email' (ask for the address) then 'code' (ask for the code).
+  const [step, setStep] = useState('email');
+  const [code, setCode] = useState('');
+
+  // One tap: fill the box from the clipboard (the code copied from the email).
+  const pasteCode = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      const digits = String(text || '').replace(/\D/g, '').slice(0, OTP_MAX_LENGTH);
+      if (digits) setCode(digits);
+    } catch {
+      /* clipboard blocked: the person can still paste into the box by hand */
+    }
+  };
+  const [cooldown, setCooldown] = useState(0);
+  const autoSent = useRef(false);
+
+  // The "Sign in with this code" button in the email opens /login#email=..&code=..
+  // Fill both boxes and drop the fragment from the address bar. Nothing is
+  // submitted here: the person still taps "Verify and sign in".
+  useEffect(() => {
+    if (!LOGIN_OTP_ENABLED || !window.location.hash) return;
+    const params = new URLSearchParams(window.location.hash.slice(1));
+    const hashEmail = (params.get('email') || '').trim();
+    const hashCode = normalizeOtp(params.get('code'));
+    if (!hashEmail || !isValidOtp(hashCode)) return;
+    setEmail(hashEmail);
+    setCode(hashCode);
+    setStep('code');
+    autoSent.current = true; // the code is already in the email, do not send another
+    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+  }, []);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -60,10 +97,49 @@ export default function Login() {
       setError('Your registration is pending approval. A CertifyCX administrator will review and verify your account shortly.');
     } else if (searchParams.get('rejected') === '1') {
       setError('Your registration has been declined. Please contact support at support@certify.cx for more information.');
+    } else if (searchParams.get('verify') === '1') {
+      setError('Please check your email and click the confirmation link before signing in.');
     }
   }, [searchParams]);
 
-  const handleSubmit = async (e) => {
+  // Count the resend timer down once a second.
+  useEffect(() => {
+    if (cooldown <= 0) return undefined;
+    const timer = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [cooldown]);
+
+  const sendCode = async (address) => {
+    setError('');
+    setNotice('');
+    setLoading(true);
+    const result = await requestLoginOtp(address);
+    setLoading(false);
+    if (!result.success) {
+      setError(result.rateLimited ? t('auth.otpTooSoon') : result.error);
+      // A rate-limit means a code was sent very recently: still show the box.
+      if (result.rateLimited) setStep('code');
+      return false;
+    }
+    setStep('code');
+    setCode('');
+    setCooldown(OTP_RESEND_SECONDS);
+    // Same message whether or not the address is registered, so the page does
+    // not reveal who has an account.
+    setNotice(t('auth.otpSent'));
+    return true;
+  };
+
+  // Arriving from sign-up: the account was just created, so send the first code.
+  useEffect(() => {
+    if (LOGIN_OTP_ENABLED && location.state?.sendCode && location.state?.email && !autoSent.current) {
+      autoSent.current = true;
+      sendCode(location.state.email);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -75,8 +151,129 @@ export default function Login() {
     }
   };
 
+  const handleEmailSubmit = async (e) => {
+    e.preventDefault();
+    await sendCode(email.trim());
+  };
+
+  const handleCodeSubmit = async (e) => {
+    e.preventDefault();
+    if (!isValidOtp(code)) {
+      setError(t('auth.otpInvalid'));
+      return;
+    }
+    setError('');
+    setNotice('');
+    setLoading(true);
+    const result = await verifyLoginOtp(email.trim(), normalizeOtp(code));
+    if (!result.success) {
+      setError(result.error);
+      setLoading(false);
+    }
+    // On success the session appears and the effect above redirects.
+  };
+
+  const backToEmail = () => {
+    setStep('email');
+    setCode('');
+    setError('');
+    setNotice('');
+  };
+
+  // ---------------------------------------------------------------- code mode
+  if (LOGIN_OTP_ENABLED) {
+    return (
+      <div className="auth-form auth-form--login">
+        <h2 className="auth-form__title">
+          {step === 'email' ? t('auth.welcomeBack') : t('auth.otpTitle')}
+        </h2>
+        <p className="auth-form__subtitle">
+          {step === 'email'
+            ? t('auth.signInOtpSubtitle')
+            : t('auth.otpSubtitle', { email: email.trim() })}
+        </p>
+
+        {error && (
+          <div className="auth-form__error">
+            <AlertCircle size={16} />
+            <span>{error}</span>
+          </div>
+        )}
+        {notice && step === 'code' && (
+          <div className="auth-form__notice">
+            <MailCheck size={16} />
+            <span>{notice}</span>
+          </div>
+        )}
+
+        {step === 'email' ? (
+          <form onSubmit={handleEmailSubmit} className="auth-form__body">
+            <Input
+              label={t('auth.email')}
+              type="email"
+              id="login-email"
+              autoComplete="email"
+              placeholder="you@company.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <Button type="submit" variant="primary" size="lg" fullWidth loading={loading}>
+              {t('auth.otpSendCode')}
+            </Button>
+          </form>
+        ) : (
+          <form onSubmit={handleCodeSubmit} className="auth-form__body">
+            <Input
+              label={t('auth.otpLabel')}
+              id="login-otp"
+              name="otp"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={OTP_MAX_LENGTH + 2}
+              placeholder="••••••"
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/[^\d\s]/g, ''))}
+              autoFocus
+              required
+            />
+            <button type="button" className="auth-otp-paste" onClick={pasteCode}>
+              <ClipboardPaste size={16} /> {t('auth.otpPaste', 'Paste code')}
+            </button>
+            <Button type="submit" variant="primary" size="lg" fullWidth loading={loading}>
+              {t('auth.otpVerify')}
+            </Button>
+
+            <div className="auth-otp-actions">
+              <button
+                type="button"
+                className="auth-back-link"
+                onClick={backToEmail}
+              >
+                <ArrowLeft size={16} /> {t('auth.otpUseDifferentEmail')}
+              </button>
+              <button
+                type="button"
+                className="auth-form__link auth-otp-resend"
+                disabled={cooldown > 0 || loading}
+                onClick={() => sendCode(email.trim())}
+              >
+                {cooldown > 0 ? t('auth.otpResendIn', { s: cooldown }) : t('auth.otpResend')}
+              </button>
+            </div>
+          </form>
+        )}
+
+        <p className="auth-form__footer-text">
+          {t('auth.noAccount')} <Link to="/signup" className="auth-form__link">{t('auth.applyForCert')}</Link>
+        </p>
+      </div>
+    );
+  }
+
+  // ------------------------------------------------------------ password mode
   return (
-    <div className="auth-form">
+    <div className="auth-form auth-form--login">
       <h2 className="auth-form__title">{t('auth.welcomeBack')}</h2>
       <p className="auth-form__subtitle">{t('auth.signInSubtitle')}</p>
 
@@ -87,34 +284,7 @@ export default function Login() {
         </div>
       )}
 
-      <button
-        type="button"
-        className="auth-google-btn"
-        disabled={googleLoading}
-        onClick={async () => {
-          setGoogleLoading(true);
-          setError('');
-          const result = await signInWithGoogle();
-          if (!result.success) {
-            setError(result.error);
-            setGoogleLoading(false);
-          }
-        }}
-      >
-        <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
-          <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
-          <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
-          <path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
-          <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 2.58 9 3.58z" fill="#EA4335"/>
-        </svg>
-        {googleLoading ? t('common.redirecting') : t('auth.continueWithGoogle')}
-      </button>
-
-      <div className="auth-divider">
-        <span>{t('common.or')}</span>
-      </div>
-
-      <form onSubmit={handleSubmit} className="auth-form__body">
+      <form onSubmit={handlePasswordSubmit} className="auth-form__body">
         <Input
           label={t('auth.email')}
           type="email"
@@ -129,7 +299,7 @@ export default function Login() {
           label={t('auth.password')}
           type={showPassword ? 'text' : 'password'}
           id="login-password"
-          placeholder="••••••••"
+          placeholder="••••••"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required

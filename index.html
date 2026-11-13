@@ -4,6 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+    <!-- ==== Google Analytics (GA4) ===========================================
+         Client, 20 Oct: property G-TXJ62L5PZ4. Placed as early in <head> as
+         possible per Google's own install instructions, so pageview timing
+         isn't skewed by everything else below it. This is the ONLY analytics
+         script on the site — no other tracker is installed anywhere.
+    ==================================================================== -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TXJ62L5PZ4"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-TXJ62L5PZ4');
+    </script>
+
     <!-- ==== Favicon ==========================================================
          The tab icon is the client's official mark (teal outlined "C" enclosing
          a checkmark) — the same artwork used in the app lockup, the invoice and
@@ -26,7 +40,7 @@
          reintroducing a second, competing icon link here.
     ==================================================================== -->
     <link rel="icon" type="image/png" href="/brand-mark.png" />
-    <link rel="apple-touch-icon" href="/brand-mark.png" />
+    <link rel="apple-touch-icon" href="/logo-square.png" />
 
     <!-- Browser UI chrome (Android address bar, iOS PWA, Safari tab strip).
          Matches --color-bg-primary in src/index.css for each theme. -->
@@ -62,8 +76,8 @@
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
     </noscript>
 
-    <title>Certify.cx™ - ISO Certification Platform</title>
-    <meta name="description" content="Certify.cx™ — ISO Certification Marketplace. Apply for ISO certifications, manage audits, and streamline your compliance workflow." />
+    <title>Certify.cx™ - Global Compliance Marketplace</title>
+    <meta name="description" content="Certify.cx™ is the Global Compliance Marketplace. Connect with trusted providers, access compliance solutions and get certified — anytime, anywhere." />
     <meta name="google" content="notranslate" />
 
     <!-- ==== Link previews (WhatsApp, LinkedIn, Slack, iMessage, X) ==========
@@ -75,23 +89,67 @@
          is worse than one pointing at production. Update both if the domain
          ever changes.
 
-         twitter:card is "summary" (small square thumbnail), not
-         "summary_large_image": the mark is a 352x339 near-square logo, and a
-         large-image card would letterbox it into a mostly-empty banner. Switch
-         to summary_large_image only once the client supplies a proper ~1200x630
-         social banner.
+         Preview banner (11 Nov 2026): /og-image.png, 1200x630, the white mark
+         and wordmark with "Global Compliance Marketplace" on the site's dark
+         green, so twitter:card is summary_large_image. Link previews are cached
+         by WhatsApp, LinkedIn and Facebook; after a change, re-scrape the URL
+         (LinkedIn Post Inspector, Facebook Sharing Debugger) to refresh them.
     ==================================================================== -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Certify.cx™" />
-    <meta property="og:title" content="Certify.cx™ - ISO Certification Platform" />
-    <meta property="og:description" content="Certify.cx™ — ISO Certification Marketplace. Apply for ISO certifications, manage audits, and streamline your compliance workflow." />
-    <meta property="og:image" content="https://certify.cx/brand-mark.png" />
-    <meta property="og:image:alt" content="Certify.cx™" />
+    <meta property="og:title" content="Certify.cx™ - Global Compliance Marketplace" />
+    <meta property="og:description" content="Certify.cx™ is the Global Compliance Marketplace. Connect with trusted providers, access compliance solutions and get certified — anytime, anywhere." />
+    <meta property="og:image" content="https://certify.cx/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Certify.cx™ - Global Compliance Marketplace" />
     <meta property="og:url" content="https://certify.cx/" />
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="Certify.cx™ - ISO Certification Platform" />
-    <meta name="twitter:description" content="Certify.cx™ — ISO Certification Marketplace. Apply for ISO certifications, manage audits, and streamline your compliance workflow." />
-    <meta name="twitter:image" content="https://certify.cx/brand-mark.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Certify.cx™ - Global Compliance Marketplace" />
+    <meta name="twitter:description" content="Certify.cx™ is the Global Compliance Marketplace. Connect with trusted providers, access compliance solutions and get certified — anytime, anywhere." />
+    <meta name="twitter:image" content="https://certify.cx/og-image.png" />
+    <meta name="twitter:image:alt" content="Certify.cx™ - Global Compliance Marketplace" />
+
+    <!-- ==== Structured data (schema.org) ====================================
+         Organisation and website for search engines. Only facts the site already
+         states: name, address of the site, logo, slogan and description. No
+         social profiles or contact points are listed because none are official
+         yet; add `sameAs` / `contactPoint` when the client confirms them.
+    ==================================================================== -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://certify.cx/#organization",
+          "name": "Certify.cx",
+          "alternateName": "Certify.cx™",
+          "url": "https://certify.cx/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://certify.cx/logo-square.png",
+            "width": 512,
+            "height": 512
+          },
+          "image": "https://certify.cx/og-image.png",
+          "slogan": "Global Compliance Marketplace",
+          "description": "Certify.cx™ is the Global Compliance Marketplace. Connect with trusted providers, access compliance solutions and get certified — anytime, anywhere."
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://certify.cx/#website",
+          "url": "https://certify.cx/",
+          "name": "Certify.cx™ - Global Compliance Marketplace",
+          "alternateName": "Certify.cx",
+          "description": "Certify.cx™ is the Global Compliance Marketplace. Connect with trusted providers, access compliance solutions and get certified — anytime, anywhere.",
+          "inLanguage": "en",
+          "publisher": { "@id": "https://certify.cx/#organization" }
+        }
+      ]
+    }
+    </script>
 
     <!-- ==== First-paint splash ============================================
          Everything above is a few kilobytes of HTML that arrives in the first

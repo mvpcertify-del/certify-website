@@ -150,8 +150,24 @@ async function updateProfile(req, res) {
 
   // The one legitimate case where a user sets their own role: a Google OAuth
   // account whose profile row has no role yet. Narrow it to exactly that — an
-  // existing role can never be self-rewritten, and only 'client' is reachable.
-  const isOAuthRoleBootstrap = isSelf && !target?.role && role === 'client';
+  // an existing role can never be self-rewritten; the role is derived from the selected stakeholder type.
+  const OAUTH_STAKEHOLDER_ROLES = {
+    client: 'client',
+    consultancy: 'consultancy',
+    referral: 'referral',
+    'certification-body': 'certification_body',
+  };
+  const bootstrapRole = OAUTH_STAKEHOLDER_ROLES[stakeholder_type];
+  const isOAuthRoleBootstrap =
+    isSelf &&
+    caller.provider === 'google' &&
+    !target?.role &&
+    !!bootstrapRole;
+
+  if (isOAuthRoleBootstrap) {
+    role = bootstrapRole;
+    approval_status = 'approved';
+  }
 
   // ONLY a super admin may change these. Being a regional admin is not enough:
   // a country admin passing their OWN userId satisfies `isRegional` trivially
@@ -169,9 +185,11 @@ async function updateProfile(req, res) {
     const attempted = Object.entries(PRIVILEGED).filter(
       ([field, value]) => value !== undefined && value !== target?.[field],
     );
-    // The bootstrap is allowed to set exactly `role`, and nothing else.
+    // Bootstrap may set only the server-derived role, stakeholder type,
+    // and server-controlled approval status.
+    const bootstrapFields = ['role', 'stakeholder_type', 'approval_status'];
     const disallowed = isOAuthRoleBootstrap
-      ? attempted.filter(([field]) => field !== 'role')
+      ? attempted.filter(([field]) => !bootstrapFields.includes(field))
       : attempted;
     if (disallowed.length) {
       // Refuse loudly. Silently dropping the field would show the admin a
@@ -180,11 +198,13 @@ async function updateProfile(req, res) {
         error: `Forbidden: only a super admin can change ${disallowed.map(([f]) => f).join(', ')}`,
       });
     }
-    if (!isOAuthRoleBootstrap) role = undefined;
+    if (!isOAuthRoleBootstrap) {
+      role = undefined;
+      stakeholder_type = undefined;
+      approval_status = undefined;
+    }
     region = undefined;
     email = undefined;
-    stakeholder_type = undefined;
-    approval_status = undefined;
     commission_percent_override = undefined;
   }
 
@@ -271,14 +291,17 @@ async function updateProfile(req, res) {
     return res.status(500).json({ error: error.message });
   }
 
-  // A Google OAuth signup never touches api/create-user.js — it lands here to
-  // get its first role instead (see isOAuthRoleBootstrap above), so it never
-  // got the welcome email every email+password signup receives. Fire it on
-  // exactly that transition (no role -> 'client'): naturally once-only, since
-  // target.role is 'client' on every later call and isOAuthRoleBootstrap goes
-  // false. Best-effort — sendWelcomeDirect swallows its own failures.
+  // Send a welcome email only after first-time Google OAuth role bootstrap.
   if (isOAuthRoleBootstrap && target?.email) {
-    await sendWelcomeDirect({ email: target.email, name: full_name, role: 'client' });
+    await sendWelcomeDirect({
+      supabaseAdmin,
+      userId,
+      email: target.email,
+      name: full_name,
+      role: bootstrapRole,
+      stakeholderType: stakeholder_type,
+    });
+
   }
 
   if (email) {

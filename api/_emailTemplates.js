@@ -8,6 +8,7 @@
 // Design follows the in-app brand: light surface, the client's official mark.
 
 import { BRAND_MARK_URL, BRAND_MARK_ASPECT, BRAND_ACCENT_HEX } from './_brandAsset.js';
+import { APP_URL } from './_appUrl.js';
 import {
   SENDER,
   SENDER_MARK_URL,
@@ -248,6 +249,65 @@ export function auditCompletedEmail({ name, companyName, isoStandard, dashboardU
   return { subject, html, text };
 }
 
+// Contractor task outcome — phase43/44 (28 Oct). Sent either by a cron job
+// (deadline passed, nobody completed it → 'missed', 0%) or immediately when
+// an admin reviews a submission as 'completed' (100%). Binary by design (see
+// api/_contractorTaskScoring.js) — there is no partial-credit copy here.
+export function contractorTaskStatusEmail({ name, taskDescription, status, achievedPercent, dashboardUrl }) {
+  const greeting = name ? `Hi ${name},` : 'Hello,';
+  const isCompleted = status === 'completed';
+  const subject = isCompleted
+    ? `Task completed — ${achievedPercent}% achieved`
+    : `Task missed — deadline passed`;
+  const statusColor = isCompleted ? ACCENT_ON_WHITE : '#dc2626';
+  const html = layout({
+    title: subject,
+    bodyHtml: `
+      ${heading(isCompleted ? 'Task marked completed' : 'Task marked missed')}
+      ${body(`${greeting} your task has been reviewed${isCompleted ? '' : ' — its deadline passed without a completed submission'}.`)}
+      ${detailsBox([
+        ['Task', escapeHtml(taskDescription || '')],
+        ['Status', `<span style="color:${statusColor};font-weight:700;">${isCompleted ? 'Completed' : 'Missed'}</span>`],
+        ['Achieved', `${achievedPercent}%`],
+      ])}
+      <p style="margin:0 0 28px;">${button(dashboardUrl, 'View your tasks')}</p>
+      ${muted('Questions about this task? Reply to this email.')}`,
+  });
+  const text = `${greeting}\n\nYour task "${taskDescription || ''}" was marked ${isCompleted ? 'Completed' : 'Missed'} (${achievedPercent}% achieved).\n\nView your tasks: ${dashboardUrl}\n\nQuestions? ${SUPPORT_EMAIL}\n\n— ${BRAND_TEXT}`;
+  return { subject, html, text };
+}
+
+// Contractor payment decision — phase44 (28 Oct). Sent only after Finance
+// decides; an admin raising the request does not notify the contractor at
+// all (there is nothing for them to see yet — see
+// client's instruction: "Do not treat a task's completion as automatic
+// financial approval").
+export function contractorPaymentDecisionEmail({ name, amount, currency, description, status, rejectionReason, dashboardUrl }) {
+  const greeting = name ? `Hi ${name},` : 'Hello,';
+  const isApproved = status === 'approved';
+  const formattedAmount = `${currency} ${Number(amount).toLocaleString()}`;
+  const subject = isApproved
+    ? `Payment approved — ${formattedAmount}`
+    : `Payment request not approved`;
+  const html = layout({
+    title: subject,
+    bodyHtml: `
+      ${heading(isApproved ? 'Payment approved' : 'Payment request not approved')}
+      ${body(`${greeting} ${isApproved
+        ? `Finance has approved a payment and it now shows as credit on your dashboard.`
+        : `Finance reviewed a payment request for you and it was not approved.`}`)}
+      ${detailsBox([
+        ['Amount', formattedAmount],
+        ['For', escapeHtml(description || '')],
+        ...(isApproved ? [] : [['Reason', escapeHtml(rejectionReason || 'Not specified')]]),
+      ])}
+      <p style="margin:0 0 28px;">${button(dashboardUrl, 'View your dashboard')}</p>
+      ${muted('Questions? Reply to this email.')}`,
+  });
+  const text = `${greeting}\n\n${isApproved ? 'Payment approved' : 'Payment request not approved'}: ${formattedAmount} — ${description || ''}${!isApproved && rejectionReason ? `\nReason: ${rejectionReason}` : ''}\n\nView your dashboard: ${dashboardUrl}\n\nQuestions? ${SUPPORT_EMAIL}\n\n— ${BRAND_TEXT}`;
+  return { subject, html, text };
+}
+
 export function renewalReminderEmail({ name, companyName, isoStandard, certificateNumber, expiresOn, dashboardUrl }) {
   const greeting = name ? `Hi ${name},` : 'Hello,';
   const subject = `Your ${BRAND_TEXT} certificate is due for renewal`;
@@ -342,28 +402,85 @@ export function verifyEmail({ name, verifyUrl }) {
   return { subject, html, text };
 }
 
-export function welcomeEmail({ name, role, dashboardUrl }) {
-  const greetingHeading = name ? `Welcome to ${BRAND_TEXT}, ${name}!` : `Welcome to ${BRAND_TEXT}!`;
+
+const founderSignature = () => `
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+    style="border-top:1px solid ${BORDER};margin-top:28px;padding-top:20px;">
+    <tr>
+      <td width="76" valign="middle" style="padding-right:14px;">
+        <img src="${APP_URL}/email-assets/midhat-abu-ghazaleh.jpg"
+          width="64" height="64" alt="Midhat Abu-Ghazaleh"
+          style="display:block;width:64px;height:64px;border-radius:50%;object-fit:cover;border:0;outline:none;" />
+      </td>
+      <td valign="middle" style="font-family:Arial,sans-serif;">
+        <p style="margin:0 0 4px;font-size:14px;font-weight:700;line-height:1.4;color:${TEXT_PRIMARY};">
+          Midhat Abu-Ghazaleh
+        </p>
+        <p style="margin:0 0 5px;font-size:13px;line-height:1.4;color:${TEXT_SECONDARY};">
+          Founder &amp; CEO
+        </p>
+        <a href="mailto:midhat@certify.cx"
+          style="font-size:13px;line-height:1.4;color:${ACCENT_ON_WHITE};text-decoration:none;">
+          midhat@certify.cx
+        </a>
+      </td>
+    </tr>
+  </table>`;
+
+export function welcomeEmail({ name, role, stakeholderType, dashboardUrl }) {
+  const greetingHeading = name
+    ? `Welcome to ${BRAND_TEXT}, ${name}!`
+    : `Welcome to ${BRAND_TEXT}!`;
+
+  const accountType = stakeholderType || role || 'client';
+
+  const messages = {
+    client: {
+      label: 'Client',
+      line: 'Your account is ready. You can access your dashboard to begin your certification journey.',
+      next: 'Complete your organisation profile, explore the supported ISO standards, and get started with your certification application.',
+    },
+    consultancy: {
+      label: 'Consultant',
+      line: 'Your Consultancy Partner account is ready. You can access your dashboard to manage your consultancy activities.',
+      next: 'Complete your profile, explore the partner resources, and get familiar with the platform.',
+    },
+    referral: {
+      label: 'Affiliate',
+      line: 'Your Affiliate account is ready. You can access your dashboard to manage your referral activities.',
+      next: 'Complete your profile, explore your referral resources, and learn how to introduce clients to Certify.cx.',
+    },
+    'certification-body': {
+      label: 'Certification Body',
+      line: 'Your Certification Body account is ready. You can access your dashboard to continue with your platform activities.',
+      next: 'Complete your organisation profile and explore the available certification platform features.',
+    },
+    certification_body: {
+      label: 'Certification Body',
+      line: 'Your Certification Body account is ready. You can access your dashboard to continue with your platform activities.',
+      next: 'Complete your organisation profile and explore the available certification platform features.',
+    },
+  };
+
+  const content = messages[accountType] || messages[role] || messages.client;
   const subject = `Welcome to ${BRAND_TEXT}`;
-  const roleLine = role === 'client'
-    ? 'Your account is active. Head to your dashboard to start a certification application whenever you\'re ready.'
-    : 'Your account is active. Sign in to access your dashboard.';
+
   const html = layout({
     title: subject,
     bodyHtml: `
       ${heading(greetingHeading)}
-      ${body(`Your email is confirmed and you're all set. ${roleLine}`)}
+      ${body(`${content.line}`)}
       <p style="margin:0 0 32px;">${button(dashboardUrl, 'Open dashboard')}</p>
       <div style="border-top:1px solid ${BORDER};padding-top:24px;margin-bottom:8px;">
         <p style="margin:0 0 12px;font-size:14px;font-weight:600;line-height:1.5;color:${TEXT_PRIMARY};">A few things you can do next</p>
-        <ul style="margin:0 0 0;padding-left:20px;font-size:14px;line-height:1.8;color:${TEXT_SECONDARY};">
-          <li>Complete your profile and company details.</li>
-          <li>Explore the ISO standards we support.</li>
-          <li>Reach out any time at <a href="mailto:${SUPPORT_EMAIL}" style="color:${ACCENT_ON_WHITE};text-decoration:none;">${SUPPORT_EMAIL}</a>.</li>
-        </ul>
-      </div>`,
+        <p style="margin:0 0 12px;font-size:14px;line-height:1.8;color:${TEXT_SECONDARY};">${content.next}</p>
+        <p style="margin:0;font-size:14px;line-height:1.8;color:${TEXT_SECONDARY};">Reach out any time at <a href="mailto:${SUPPORT_EMAIL}" style="color:${ACCENT_ON_WHITE};text-decoration:none;">${SUPPORT_EMAIL}</a>.</p>
+      </div>
+      ${founderSignature()}`,
   });
-  const text = `${greetingHeading}\n\nYour email is confirmed and you're all set. ${roleLine}\n\nOpen your dashboard: ${dashboardUrl}\n\nQuestions? ${SUPPORT_EMAIL}\n\n— ${BRAND_TEXT}`;
+
+  const text = `${greetingHeading}\n\n${content.line}\n\n${content.next}\n\nOpen your dashboard: ${dashboardUrl}\n\nQuestions? ${SUPPORT_EMAIL}\n\nMidhat Abu-Ghazaleh\nFounder & CEO\nmidhat@certify.cx\n\n— ${BRAND_TEXT}`;
+
   return { subject, html, text };
 }
 
@@ -396,6 +513,36 @@ export function magicLinkEmail({ name, link }) {
       ${muted("If you didn't request this link, you can safely ignore this email.")}`,
   });
   const text = `${greeting}\n\nSign in to ${BRAND_TEXT}: ${link}\n\nIf you didn't request this, ignore this email.\n\n— ${BRAND_TEXT}`;
+  return { subject, html, text };
+}
+
+/**
+ * The sign-in code email: a six-digit one-time code the user types into the
+ * login page. Supabase generates and checks the code; this only presents it.
+ * `minutes` must match the OTP expiry set in Supabase (Auth > Email).
+ */
+export function loginOtpEmail({ name, code, minutes = 10, loginUrl }) {
+  if (!/^\d{4,10}$/.test(String(code || ''))) {
+    throw new Error('loginOtpEmail: the code must be 4 to 10 digits');
+  }
+  const greeting = name ? `Hi ${escapeHtml(name)},` : 'Hello,';
+  const subject = `${code} is your ${BRAND_TEXT} sign-in code`;
+  const base = loginUrl || `${process.env.APP_PUBLIC_URL || 'https://certify.cx'}/login`;
+  const html = layout({
+    title: subject,
+    preheader: `Your sign-in code is ${code}. It expires in ${minutes} minutes.`,
+    bodyHtml: `
+      ${heading('Your sign-in code')}
+      ${body(`${greeting} use the code below to sign in to <strong style="color:${TEXT_PRIMARY};">${BRAND_TEXT}</strong>. Enter it on the sign-in page.`)}
+      <div style="margin:0 0 8px;padding:22px 24px;background:${SURFACE_BG};border:1px solid ${BORDER};border-radius:12px;text-align:center;">
+        <div style="font-size:12px;line-height:1;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:${TEXT_TERTIARY};margin:0 0 12px;">Verification code</div>
+        <span style="display:inline-block;font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:36px;line-height:1.1;font-weight:700;letter-spacing:0.3em;color:${TEXT_PRIMARY};padding-left:0.3em;-webkit-user-select:all;user-select:all;">${code}</span>
+      </div>
+      <p style="margin:0 0 24px;text-align:center;font-size:13px;line-height:1.5;color:${TEXT_TERTIARY};">Tap or double-click the code to select it, then copy.</p>
+      <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:${TEXT_SECONDARY};">The code expires in <strong style="color:${TEXT_PRIMARY};">${minutes} minutes</strong> and can be used once.</p>
+      ${muted(`For your security, never share this code with anyone. ${BRAND_TEXT} will never ask you for it. If you didn't try to sign in, you can safely ignore this email. Nobody can sign in without the code.`)}`,
+  });
+  const text = `${greeting.replace(/<[^>]+>/g, '')}\n\nYour ${BRAND_TEXT} sign-in code is: ${code}\n\nEnter it on the sign-in page: ${base}\n\nThe code expires in ${minutes} minutes and can be used once. Never share it with anyone, ${BRAND_TEXT} will never ask you for it.\n\nIf you didn't try to sign in, ignore this email.\n\n— ${BRAND_TEXT}`;
   return { subject, html, text };
 }
 
