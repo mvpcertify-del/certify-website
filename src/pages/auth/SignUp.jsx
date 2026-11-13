@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
-import { LOGIN_OTP_ENABLED, randomPassword } from '../../config/loginMode';
 import { Input, Select, Button, Autocomplete } from '../../components/ui/FormElements';
 import NameFields from '../../components/ui/NameFields';
 import CustomFieldRenderer, { validateCustomFields } from '../../components/CustomFieldRenderer';
@@ -113,7 +112,7 @@ export default function SignUp() {
 }
 
 function SimpleClientSignUp() {
-  const { signup, login, getRoleDashboard } = useAuth();
+  const { signup, signInWithGoogle, login, getRoleDashboard } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
@@ -128,8 +127,8 @@ function SimpleClientSignUp() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  // Marketing mail is opt-in: unticked until the person ticks it.
-  const [marketingOptIn, setMarketingOptIn] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   const customFields = useCustomFieldsForRole('client');
   const [customValues, setCustomValues] = useState({});
@@ -153,11 +152,11 @@ function SimpleClientSignUp() {
       setError(t('auth.validationName'));
       return;
     }
-    if (!LOGIN_OTP_ENABLED && password.length < 6) {
+    if (password.length < 6) {
       setError(t('auth.validationPasswordLength'));
       return;
     }
-    if (!LOGIN_OTP_ENABLED && password !== confirmPassword) {
+    if (password !== confirmPassword) {
       setError(t('auth.validationPasswordMatch'));
       return;
     }
@@ -171,35 +170,49 @@ function SimpleClientSignUp() {
     const result = await signup({
       name,
       email,
-      // Code-login mode collects no password; a random, never-shown one satisfies the account API.
-      password: LOGIN_OTP_ENABLED ? randomPassword() : password,
+      password,
       referral_code: referralCode,
       role: 'client',
       stakeholder_type: 'client',
       custom_fields: customValues,
-      marketing_opt_in: marketingOptIn,
-      neutral_existing: LOGIN_OTP_ENABLED,
     });
 
     if (result.success) {
-      // Verification was removed — sign the new user straight in and take them
-      // to their dashboard instead of a "check your email" screen.
-      if (LOGIN_OTP_ENABLED) {
-        navigate('/login', { state: { email, sendCode: true } });
-        return;
-      }
-      const loginRes = await login(email, password);
-      if (loginRes?.success) {
-        navigate(getRoleDashboard(loginRes.data?.user?.role || 'client'));
-      } else {
-        navigate('/login');
-      }
+      // Email verification is required. Show check-email screen instead of auto-login.
+      setEmailSent(true);
+      setLoading(false);
       return;
     }
     setError(result.error);
     setLoading(false);
   };
 
+
+  if (emailSent) {
+    return (
+      <div className="auth-form auth-form--simple">
+        <div style={{ textAlign: 'center', padding: '24px 0' }}>
+          <CheckCircle size={48} color="#3ecf8e" style={{ marginBottom: 16 }} />
+          <h2 className="auth-form__hero-title" style={{ marginBottom: 12 }}>
+            Check your email
+          </h2>
+          <p style={{ color: 'var(--color-text-secondary)', marginBottom: 8, lineHeight: 1.5 }}>
+            We sent a confirmation link to <strong>{email}</strong>.
+          </p>
+          <p style={{ color: 'var(--color-text-secondary)', marginBottom: 24, lineHeight: 1.5 }}>
+            Click the link in the email to activate your account, then sign in.
+          </p>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => navigate('/login')}
+          >
+            Go to Sign In
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="auth-form auth-form--simple">
@@ -214,6 +227,32 @@ function SimpleClientSignUp() {
 
       {step === 1 && (
         <>
+          <button
+            type="button"
+            className="auth-google-btn auth-google-btn--pill"
+            disabled={googleLoading}
+            onClick={async () => {
+              setGoogleLoading(true);
+              setError('');
+              const result = await signInWithGoogle();
+              if (!result.success) {
+                setError(result.error);
+                setGoogleLoading(false);
+              }
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+              <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+              <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
+              <path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+              <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 2.58 9 3.58z" fill="#EA4335"/>
+            </svg>
+            {googleLoading ? t('common.redirecting') : t('auth.continueWithGoogle')}
+          </button>
+
+          <div className="auth-divider">
+            <span>{t('common.or')}</span>
+          </div>
 
           <form onSubmit={handleEmailContinue} className="auth-form__body">
             <Input
@@ -260,8 +299,6 @@ function SimpleClientSignUp() {
             required
           />
 
-          {!LOGIN_OTP_ENABLED && (
-          <>
           <Input
             label={t('auth.passwordRequired')}
             type={showPassword ? 'text' : 'password'}
@@ -303,12 +340,6 @@ function SimpleClientSignUp() {
               </button>
             }
           />
-          </>
-          )}
-
-          {LOGIN_OTP_ENABLED && (
-            <p className="auth-form__hint">{t('auth.signupNoPassword')}</p>
-          )}
 
           {customFields.map(field => (
             <CustomFieldRenderer
@@ -319,25 +350,9 @@ function SimpleClientSignUp() {
             />
           ))}
 
-          <label className="auth-form__check">
-            <input
-              type="checkbox"
-              checked={marketingOptIn}
-              onChange={(e) => setMarketingOptIn(e.target.checked)}
-            />
-            <span>{t('auth.marketingOptIn')}</span>
-          </label>
-
           <Button type="submit" variant="primary" size="lg" fullWidth loading={loading}>
             {t('auth.createAccount')}
           </Button>
-
-          <p className="auth-form__legal">
-            {t('auth.legalPrefix')}{' '}
-            <Link to="/terms" className="auth-form__link">{t('auth.termsLink')}</Link>
-            {' '}{t('auth.legalAnd')}{' '}
-            <Link to="/privacy" className="auth-form__link">{t('auth.privacyLink')}</Link>.
-          </p>
         </form>
       )}
 
@@ -349,7 +364,7 @@ function SimpleClientSignUp() {
 }
 
 function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
-  const { signup, login, getRoleDashboard } = useAuth();
+  const { signup, signInWithGoogle, login, getRoleDashboard } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
@@ -358,7 +373,7 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
   // Translated heading and blurb — the wizard is public, so a visitor who
   // arrived in Arabic must not be greeted in English.
   const stakeholderCopy = getStakeholderCopy(stakeholderConfig, t);
-  const isIndividualStakeholder = targetRole === 'auditor' || targetRole === 'contractor' || registrationType === 'referral' || registrationType === 'investor';
+  const isIndividualStakeholder = targetRole === 'auditor' || registrationType === 'referral' || registrationType === 'investor';
   // Pure individuals (referral, investor) — no company context at all. Auditors
   // are individuals but still capture a "practice name" + professional fields.
   const isPureIndividual = registrationType === 'referral' || registrationType === 'investor';
@@ -406,13 +421,6 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
   const [auditorCert, setAuditorCert] = useState(null);
   const [auditorCv, setAuditorCv] = useState(null);
   const [auditorAuditLog, setAuditorAuditLog] = useState(null);
-  // Contractor onboarding (phase41): mandatory ID + CV + photo, same
-  // bootstrap-upload shape as the auditor documents above (see
-  // attachContractorDetails / api/user.js). The contract is signed later,
-  // from the contractor's own dashboard, once an admin has authored it.
-  const [contractorIdDoc, setContractorIdDoc] = useState(null);
-  const [contractorCv, setContractorCv] = useState(null);
-  const [contractorPhoto, setContractorPhoto] = useState(null);
   // Qualification arrays, shared with the admin "Add Auditor" modal through
   // src/utils/auditorOptions.js so the two forms collect identical values.
   const [auditorStandards, setAuditorStandards] = useState([]);
@@ -424,6 +432,7 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const customFields = useCustomFieldsForRole(targetRole);
   const [customValues, setCustomValues] = useState({});
@@ -491,11 +500,11 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
       }
     }
     if (step === 3) {
-      if (!LOGIN_OTP_ENABLED && formData.password.length < 6) {
+      if (formData.password.length < 6) {
         setError(t('auth.validationPasswordLength'));
         return false;
       }
-      if (!LOGIN_OTP_ENABLED && formData.password !== formData.confirmPassword) {
+      if (formData.password !== formData.confirmPassword) {
         setError(t('auth.validationPasswordMatch'));
         return false;
       }
@@ -508,10 +517,6 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
       // optional — not every auditor has one to hand at registration.
       if (targetRole === 'auditor' && (auditorStandards.length === 0 || auditorLevels.length === 0)) {
         setError(t('auth.validationAuditorQualifications'));
-        return false;
-      }
-      if (targetRole === 'contractor' && (!contractorIdDoc || !contractorCv || !contractorPhoto)) {
-        setError(t('auth.validationContractorDocs'));
         return false;
       }
       const customCheck = validateCustomFields(customFields, customValues);
@@ -541,11 +546,11 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
       setError(t('auth.validationContactFields'));
       return false;
     }
-    if (!LOGIN_OTP_ENABLED && formData.password.length < 6) {
+    if (formData.password.length < 6) {
       setError(t('auth.validationPasswordLength'));
       return false;
     }
-    if (!LOGIN_OTP_ENABLED && formData.password !== formData.confirmPassword) {
+    if (formData.password !== formData.confirmPassword) {
       setError(t('auth.validationPasswordMatch'));
       return false;
     }
@@ -607,46 +612,6 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
     return failed.join(', ');
   };
 
-  // Contractor equivalent of attachAuditorDetails above — same reasoning (no
-  // session yet, service-role write via /api/user, same bootstrap window):
-  // ID copy / CV / photo, all mandatory. The contract itself is NOT signed
-  // here — client correction, 28 Oct: a contractor's agreement is authored by
-  // an admin per-contractor (job scope, compensation, KPIs), so it doesn't
-  // exist yet at registration time. It's created and sent after approval, and
-  // signed from the contractor's own dashboard (see AdminContractors.jsx /
-  // ContractorContract.jsx).
-  const attachContractorDetails = async (contractorId) => {
-    const failed = [];
-
-    const documents = [
-      ['id_copy', contractorIdDoc],
-      ['cv', contractorCv],
-      ['photo', contractorPhoto],
-    ].filter(([, file]) => !!file);
-
-    for (const [docType, file] of documents) {
-      try {
-        if (file.size > MAX_AUDITOR_UPLOAD_MB * 1024 * 1024) {
-          throw new Error(`Larger than ${MAX_AUDITOR_UPLOAD_MB} MB`);
-        }
-        await apiPost('/api/user', {
-          action: 'add-contractor-document',
-          contractorId,
-          docType,
-          fileName: file.name,
-          mimeType: file.type || null,
-          sizeBytes: file.size,
-          dataBase64: await fileToBase64(file),
-        });
-      } catch (err) {
-        console.error('Contractor document upload failed:', docType, err);
-        failed.push(file.name);
-      }
-    }
-
-    return failed.join(', ');
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isPureIndividual ? !validateSimple() : !validateStep()) return;
@@ -655,7 +620,7 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
     const result = await signup({
       name: formData.contact_person_name,
       email: formData.email,
-      password: LOGIN_OTP_ENABLED ? randomPassword() : formData.password,
+      password: formData.password,
       // Pure individuals (referral / investor) have no company context — omit
       // all company-specific fields so admins don't see misleading data.
       company_name: isPureIndividual ? null : formData.company_name,
@@ -681,32 +646,10 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
         // don't block sign-in on it.
         await attachAuditorDetails(result.data.user.id);
       }
-      if (targetRole === 'contractor' && result.data?.user?.id) {
-        // Same bootstrap-window reasoning as the auditor branch above — a
-        // contractor's account is created 'pending' (see AuthContext.signup),
-        // so the login() call right below will correctly refuse to sign them
-        // in. Their documents and contract signature have to go up now, while
-        // the fresh unauthenticated window is still open.
-        await attachContractorDetails(result.data.user.id);
-      }
-      // Verification was removed — sign in and go straight to the dashboard.
-      // For a pending contractor this fails by design (see AuthContext.signup)
-      // and falls through to the pending-approval notice below.
-      if (LOGIN_OTP_ENABLED) {
-        // A pending contractor cannot sign in yet, so no code is sent.
-        navigate(targetRole === 'contractor' ? '/login?pending=1' : '/login', {
-          state: { email: formData.email, sendCode: targetRole !== 'contractor' },
-        });
-        return;
-      }
-      const loginRes = await login(formData.email, formData.password);
-      if (loginRes?.success) {
-        navigate(getRoleDashboard(loginRes.data?.user?.role || 'client'));
-      } else if (targetRole === 'contractor') {
-        navigate('/login?pending=1');
-      } else {
-        navigate('/login');
-      }
+      // Email verification is required. Redirect to login with a message.
+      // (Stakeholder wizard keeps the simpler redirect for now.)
+      setLoading(false);
+      navigate('/login?verify=1');
       return;
     } else {
       setError(result.error);
@@ -716,13 +659,40 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
 
 
   return (
-    <div className={`auth-form auth-form--wide ${registrationType === 'contractor' ? 'auth-form--contractor' : ''}`}>
+    <div className="auth-form auth-form--wide">
       <h2 className="auth-form__title">
         {t('auth.registerAs', { type: stakeholderCopy.singularTitle })}
       </h2>
       <p className="auth-form__subtitle">
         {stakeholderCopy.description}
       </p>
+
+      <button
+        type="button"
+        className="auth-google-btn"
+        disabled={googleLoading}
+        onClick={async () => {
+          setGoogleLoading(true);
+          setError('');
+          const result = await signInWithGoogle('/auth/callback', registrationType || 'client');
+          if (!result.success) {
+            setError(result.error);
+            setGoogleLoading(false);
+          }
+        }}
+      >
+        <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+          <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+          <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
+          <path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+          <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 2.58 9 3.58z" fill="#EA4335"/>
+        </svg>
+        {googleLoading ? t('common.redirecting') : t('auth.signUpWithGoogle')}
+      </button>
+
+      <div className="auth-divider">
+        <span>{t('auth.orFillDetails')}</span>
+      </div>
 
       {!isPureIndividual && (
         <div className="signup-steps">
@@ -798,8 +768,6 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
               fetchOptions={(text) => fetchGeoapifyOptions(text, 'city')}
               value={formData.location} onChange={handleChange} onSelect={handleLocationSelect} required />
 
-            {!LOGIN_OTP_ENABLED && (
-            <>
             <Input label={t('auth.passwordRequired')} type={showPassword ? 'text' : 'password'} id="signup-password" name="password"
               autoComplete="new-password"
               placeholder={t('auth.passwordPlaceholder')} value={formData.password}
@@ -829,8 +797,6 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
                 </button>
               }
             />
-            </>
-            )}
 
             <Button type="submit" variant="primary" size="lg" fullWidth loading={loading}>
               {t('auth.createAccount')}
@@ -854,10 +820,10 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
 
             {!isPureIndividual && (
               <Input
-                label={(targetRole === 'auditor' || targetRole === 'contractor') ? t('auth.professionalExpertise') : t('auth.businessActivity')}
+                label={targetRole === 'auditor' ? t('auth.professionalExpertise') : t('auth.businessActivity')}
                 id="signup-activity"
                 name="activity"
-                placeholder={(targetRole === 'auditor' || targetRole === 'contractor') ? t('auth.professionalExpertisePlaceholder') : t('auth.businessActivityPlaceholder')}
+                placeholder={targetRole === 'auditor' ? t('auth.professionalExpertisePlaceholder') : t('auth.businessActivityPlaceholder')}
                 value={formData.activity}
                 onChange={handleChange}
                 required
@@ -969,8 +935,6 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
               <p><strong>Contact:</strong> {formData.contact_person_name} ({formData.email})</p>
             </div>
 
-            {!LOGIN_OTP_ENABLED && (
-            <>
             <Input label={t('auth.passwordRequired')} type={showPassword ? "text" : "password"} id="signup-password" name="password"
               autoComplete="new-password"
               placeholder={t('auth.passwordPlaceholder')} value={formData.password}
@@ -1000,8 +964,6 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
                 </button>
               }
             />
-            </>
-            )}
 
             {targetRole === 'auditor' && (
               <>
@@ -1080,52 +1042,6 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
                     type="file"
                     accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
                     onChange={(e) => setAuditorAuditLog(e.target.files?.[0] || null)}
-                  />
-                </div>
-
-                <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', margin: 0 }}>
-                  {t('auth.auditorDocsSizeNote', { max: MAX_AUDITOR_UPLOAD_MB })}
-                </p>
-              </div>
-            )}
-
-            {targetRole === 'contractor' && (
-              <div style={{ marginTop: '8px', padding: '16px', border: '1px solid var(--color-border)', borderRadius: '8px', background: 'var(--color-bg-subtle, #f9fafb)' }}>
-                <p style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: '4px' }}>{t('auth.contractorDocsTitle')}</p>
-
-                <div className="form-group">
-                  <label className="form-label" htmlFor="signup-contractor-id">{t('auth.contractorIdCopy')}</label>
-                  <input
-                    className="form-input"
-                    id="signup-contractor-id"
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={(e) => setContractorIdDoc(e.target.files?.[0] || null)}
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label" htmlFor="signup-contractor-cv">{t('auth.contractorCv')}</label>
-                  <input
-                    className="form-input"
-                    id="signup-contractor-cv"
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    onChange={(e) => setContractorCv(e.target.files?.[0] || null)}
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label" htmlFor="signup-contractor-photo">{t('auth.contractorPhoto')}</label>
-                  <input
-                    className="form-input"
-                    id="signup-contractor-photo"
-                    type="file"
-                    accept=".jpg,.jpeg,.png"
-                    onChange={(e) => setContractorPhoto(e.target.files?.[0] || null)}
-                    required
                   />
                 </div>
 
