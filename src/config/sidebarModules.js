@@ -66,6 +66,18 @@ export const ZONES = [
         icon: LayoutDashboard,
         path: '/main-dashboard',
       },
+      // Client (13 Nov): "Modules & Subscriptions" sits at the TOP of the Super Admin
+      // menu, right under the Executive Dashboard, so it is visible without scrolling.
+      // Everything else in the menu is unchanged. (It used to be the first entry of
+      // SYSTEM & GOVERNANCE, far down the list.)
+      {
+        id: 'subscriptions',
+        label: 'Modules & Subscriptions',
+        icon: Puzzle,
+        path: '/billing/modules',
+        soon: true,
+        blurb: 'Switch modules on or off and manage monthly or yearly plans for each client workspace.',
+      },
       {
         id: 'system_users',
         label: 'System & Users',
@@ -233,14 +245,6 @@ export const ZONES = [
     id: 'system',
     label: 'SYSTEM & GOVERNANCE',
     modules: [
-      {
-        id: 'subscriptions',
-        label: 'Modules & Subscriptions',
-        icon: Puzzle,
-        path: '/billing/modules',
-        soon: true,
-        blurb: 'Switch modules on or off and manage monthly or yearly plans for each client workspace.',
-      },
       {
         id: 'admin_settings',
         label: 'Admin & Settings',
