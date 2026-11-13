@@ -1,56 +1,109 @@
 <!--
   Certify.cx marketing email: Email 2 of 3, follow-up. Send on day 4 (same thread). Has the unsubscribe link.
   Subject: Re: Elevating Academic & Operational Excellence at {{institution_name}}
-  Placeholders to fill per recipient: {{recipient_name}} {{institution_name}} {{calendly_url}} {{website_url}} {{sender_email}} {{phone}} {{unsubscribe_url}}
+  Placeholders to fill per recipient: {{recipient_name}} {{institution_name}} {{calendly_url}} {{website_url}} {{sender_email}} {{phone}} {{postal_address}} {{unsubscribe_url}}
+  Images are hosted at https://certify.cx/email/ (built by marketing-emails/build-assets.mjs).
 -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="color-scheme" content="light only">
 <meta name="supported-color-schemes" content="light only">
 <title>Re: Elevating Academic &amp; Operational Excellence at {{institution_name}}</title>
 <style>
-  /* Embedded CSS: phone layout. Every rule that matters is also written inline below,
-     because Gmail, Outlook and Apple Mail drop or ignore parts of <style> blocks. */
-  body { margin: 0; padding: 0; background: #f4f6fb; }
+  /* Embedded CSS: phone layout. Every rule that matters is also written inline below, because
+     Gmail, Outlook and Apple Mail drop or ignore parts of a <style> block. */
+  body { margin: 0; padding: 0; background: #eef1f6; }
+  img { border: 0; line-height: 100%; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; }
   a { color: #0e9f6e; }
-  @media only screen and (max-width: 600px) {
-    .wrap { padding: 12px 0 !important; }
-    .card { width: 100% !important; border-radius: 0 !important; border-left: 0 !important; border-right: 0 !important; }
-    .pad { padding: 26px 22px !important; }
-    .btn { display: block !important; text-align: center !important; }
+  @media only screen and (max-width: 620px) {
+    .wrap { padding: 0 !important; }
+    .card { width: 100% !important; border-radius: 0 !important; }
+    .pad { padding-left: 22px !important; padding-right: 22px !important; }
+    .col { display: block !important; width: 100% !important; padding: 0 0 18px 0 !important; }
+    .btn a { display: block !important; }
+    .hero { width: 100% !important; height: auto !important; }
   }
 </style>
 </head>
-<body style="margin:0;padding:0;background:#f4f6fb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1a1f36;-webkit-font-smoothing:antialiased;">
-  <!-- Inbox preview line (hidden in the body) -->
-  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#f4f6fb;opacity:0;">A quick follow-up on ISO 21001 and ISO 9001 for {{institution_name}}.</div>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f6fb;">
-    <tr><td align="center" class="wrap" style="padding:36px 16px;">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="card" style="max-width:600px;background:#ffffff;border-radius:14px;border:1px solid #e6e9f0;">
-        <tr><td class="pad" style="padding:24px 36px;border-bottom:1px solid #e6e9f0;">
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-            <td style="padding-right:10px;vertical-align:middle;"><img src="https://certify.cx/brand-mark.png" width="32" height="31" alt="Certify.cx" style="display:block;border:0;"></td>
-            <td style="vertical-align:middle;font-size:20px;font-weight:700;color:#1a1f36;letter-spacing:-0.01em;">Certify.cx<span style="font-size:11px;vertical-align:super;font-weight:600;">&trade;</span></td>
-          </tr></table>
+<body style="margin:0;padding:0;background:#eef1f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1a1f36;-webkit-font-smoothing:antialiased;">
+  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#eef1f6;opacity:0;">A quick follow-up on ISO 21001 and ISO 9001 for {{institution_name}}.&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#eef1f6;">
+    <tr><td align="center" class="wrap" style="padding:28px 12px;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" class="card" style="width:600px;max-width:600px;background:#ffffff;border-radius:14px;overflow:hidden;">
+
+        <!-- Banner image -->
+        <tr><td bgcolor="#06231a" style="background:#06231a;">
+          <img src="https://certify.cx/email/banner-followup.png" width="600" height="210" alt="Certify.cx: certification without the friction" class="hero" style="display:block;width:100%;max-width:600px;height:auto;color:#ffffff;font-size:22px;font-weight:700;">
         </td></tr>
-        <tr><td class="pad" style="padding:34px 36px 30px;font-size:16px;line-height:1.65;color:#1a1f36;">
+
+        <!-- Body -->
+        <tr><td class="pad" style="padding:34px 40px 8px;font-size:16px;line-height:1.7;color:#1a1f36;">
           <p style="margin:0 0 16px;">Dear {{recipient_name}},</p>
           <p style="margin:0 0 16px;">I wanted to briefly follow up on my note from earlier this week regarding ISO 21001 and ISO 9001 certification for {{institution_name}}.</p>
           <p style="margin:0 0 16px;">Many academic leaders tell us that while they value international quality benchmarks, finding the right accredited certification partner, and navigating audit timelines, can feel overwhelming.</p>
           <p style="margin:0 0 16px;">Because Certify.cx&trade; operates as a Global Compliance Marketplace with thousands of registered providers, we remove that friction. We match your institution with experienced education-sector auditors and IAF-accredited Certification Bodies tailored to your campus size, budget, and schedule, helping thousands of global clients achieve certification faster and more cost-effectively.</p>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 26px;padding:22px 8px;background:#f6f9fb;border:1px solid #e6e9f0;border-radius:12px;">
+            <tr>
+              <td class="col" width="33%" valign="top" style="padding:0 8px;text-align:center;">
+                <img src="https://certify.cx/email/icon-shield.png" width="48" height="48" alt="" style="display:block;margin:0 auto 10px;">
+                <div style="font-size:15px;font-weight:700;line-height:1.3;color:#1a1f36;margin:0 0 4px;">Vetted providers</div>
+                <div style="font-size:13px;line-height:1.55;color:#5b6478;">Thousands of registered providers, including certified lead auditors.</div>
+              </td>
+              <td class="col" width="33%" valign="top" style="padding:0 8px;text-align:center;">
+                <img src="https://certify.cx/email/icon-badge.png" width="48" height="48" alt="" style="display:block;margin:0 auto 10px;">
+                <div style="font-size:15px;font-weight:700;line-height:1.3;color:#1a1f36;margin:0 0 4px;">IAF-accredited bodies</div>
+                <div style="font-size:13px;line-height:1.55;color:#5b6478;">Compare proposals from pre-vetted Certification Bodies.</div>
+              </td>
+              <td class="col" width="33%" valign="top" style="padding:0 8px;text-align:center;">
+                <img src="https://certify.cx/email/icon-globe.png" width="48" height="48" alt="" style="display:block;margin:0 auto 10px;">
+                <div style="font-size:15px;font-weight:700;line-height:1.3;color:#1a1f36;margin:0 0 4px;">Global credibility</div>
+                <div style="font-size:13px;line-height:1.55;color:#5b6478;">Trusted by students, parents, regulators and partners.</div>
+              </td>
+            </tr>
+          </table>
           <p style="margin:0 0 16px;">Whether you are looking to strengthen student retention, standardise administrative workflows, or boost international enrolment appeal, ISO 21001 and ISO 9001 provide a proven roadmap.</p>
           <p style="margin:0 0 16px;">If it is easier for your schedule, you can <a href="{{calendly_url}}" style="color:#0e9f6e;font-weight:600;text-decoration:underline;">book a brief 15-minute introductory call here</a>, or simply reply to this email with a time that works best for you.</p>
-          <p style="margin:6px 0 20px;"><a href="{{calendly_url}}" class="btn" style="display:inline-block;background:#3ECF8E;color:#0a1f17;text-decoration:none;padding:13px 26px;border-radius:10px;font-weight:600;font-size:15px;border:1px solid #2EB87A;">Book a 15-minute call</a></p>
-          <p style="margin:24px 0 0;">Best regards,</p>
-          <p style="margin:6px 0 0;font-weight:700;">Midhat Abu-Ghazaleh</p>
-          <p style="margin:2px 0 0;color:#5b6478;font-size:14px;">Founder &amp; CEO, Certify.cx&trade;</p>
-          <p style="margin:6px 0 0;color:#5b6478;font-size:14px;"><a href="{{website_url}}" style="color:#0e9f6e;text-decoration:none;">{{website_url}}</a> &nbsp;|&nbsp; <a href="mailto:{{sender_email}}" style="color:#0e9f6e;text-decoration:none;">{{sender_email}}</a> &nbsp;|&nbsp; {{phone}}</p>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 22px;"><tr><td class="btn" align="center" bgcolor="#3ECF8E" style="border-radius:10px;background:#3ECF8E;">
+            <a href="{{calendly_url}}" style="display:inline-block;padding:15px 32px;font-size:16px;font-weight:700;color:#0a1f17;text-decoration:none;border-radius:10px;border:1px solid #2EB87A;">Book a 15-minute call</a>
+          </td></tr></table>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:14px 0 30px;border-top:1px solid #e6e9f0;">
+            <tr><td style="padding-top:22px;font-size:15px;line-height:1.6;color:#1a1f36;">
+              Best regards,<br>
+              <span style="display:inline-block;margin-top:6px;font-size:17px;font-weight:700;">Midhat Abu-Ghazaleh</span><br>
+              <span style="color:#5b6478;font-size:14px;">Founder &amp; CEO, Certify.cx&trade;</span><br>
+              <span style="color:#5b6478;font-size:14px;"><a href="mailto:{{sender_email}}" style="color:#0e9f6e;text-decoration:none;">{{sender_email}}</a> &nbsp;|&nbsp; {{phone}}</span>
+            </td></tr>
+          </table>
         </td></tr>
-        <tr><td class="pad" style="padding:22px 36px;border-top:1px solid #e6e9f0;background:#fafbfd;border-radius:0 0 14px 14px;font-size:12px;line-height:1.6;color:#8a93a6;">
-          Certify.cx&trade; is a Global Compliance Marketplace connecting organisations with certified auditors and IAF-accredited Certification Bodies.<br><br>You are receiving this because we believe quality management may be relevant to your institution. If you would rather not hear from us again, you can <a href="{{unsubscribe_url}}" style="color:#5b6478;text-decoration:underline;">unsubscribe</a> at any time.
+
+        <!-- Footer -->
+        <tr><td bgcolor="#06231a" style="background:#06231a;padding:34px 0 28px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr><td align="center" style="padding:0 36px 16px;">
+              <img src="https://certify.cx/email/logo-white.png" width="40" height="38" alt="Certify.cx" style="display:inline-block;vertical-align:middle;">
+              <span style="display:inline-block;vertical-align:middle;margin-left:10px;font-size:20px;font-weight:700;color:#ffffff;letter-spacing:-0.01em;">Certify.cx<span style="font-size:11px;vertical-align:super;">&trade;</span></span>
+            </td></tr>
+            <tr><td align="center" style="padding:0 36px 20px;font-size:13px;line-height:1.6;color:#b7d1c5;">The Global Compliance Marketplace.<br>Connect with trusted providers, access compliance solutions and get certified, anytime, anywhere.</td></tr>
+            <tr><td align="center" style="padding:0 36px 22px;">
+              <a href="https://www.linkedin.com/company/certifycx" style="text-decoration:none;"><img src="https://certify.cx/email/social-linkedin.png" width="36" height="36" alt="LinkedIn" style="display:inline-block;margin:0 5px;"></a>
+              <a href="https://www.youtube.com/@certifycx" style="text-decoration:none;"><img src="https://certify.cx/email/social-youtube.png" width="36" height="36" alt="YouTube" style="display:inline-block;margin:0 5px;"></a>
+              <a href="https://twitter.com/certifycx" style="text-decoration:none;"><img src="https://certify.cx/email/social-x.png" width="36" height="36" alt="X" style="display:inline-block;margin:0 5px;"></a>
+              <a href="https://www.facebook.com/certifycx" style="text-decoration:none;"><img src="https://certify.cx/email/social-facebook.png" width="36" height="36" alt="Facebook" style="display:inline-block;margin:0 5px;"></a>
+            </td></tr>
+            <tr><td align="center" style="padding:0 36px 14px;font-size:13px;line-height:1.7;">
+              <a href="{{website_url}}" style="color:#ffffff;text-decoration:none;">Website</a>
+              <span style="color:#5f8a76;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+              <a href="https://certify.cx/privacy" style="color:#ffffff;text-decoration:none;">Privacy Policy</a>
+              <span style="color:#5f8a76;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+              <a href="https://certify.cx/terms" style="color:#ffffff;text-decoration:none;">Terms</a>
+            </td></tr>
+            <tr><td align="center" style="padding:0 36px 8px;font-size:12px;line-height:1.7;color:#9fb8ad;">You are receiving this because we believe quality management may be relevant to your institution.<br>If you would rather not hear from us again, you can <a href="{{unsubscribe_url}}" style="color:#ffffff;text-decoration:underline;">unsubscribe</a> at any time.</td></tr>
+            <tr><td align="center" style="padding:6px 36px 0;font-size:11px;line-height:1.6;color:#7fa593;">&copy; Certify.cx&trade; &nbsp;|&nbsp; {{postal_address}}</td></tr>
+          </table>
         </td></tr>
       </table>
     </td></tr>
