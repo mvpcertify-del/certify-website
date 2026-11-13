@@ -31,7 +31,6 @@ allows them.
 | `{{institution_name}}` | School or university |
 | `{{calendly_url}}` | The client's Calendly link. Shown as words ("Book a 15-minute call"), never as the raw address |
 | `{{website_url}}`, `{{sender_email}}`, `{{phone}}` | Signature line |
-| `{{postal_address}}` | Footer line; commercial-email law expects a postal address (not supplied yet) |
 | `{{unsubscribe_url}}` | Emails 2 and 3 only; must be a working one-click opt-out |
 
 The Calendly link, the website, the sender address and the phone number were not given, so they are left as
@@ -50,3 +49,9 @@ placeholders. Nothing was invented.
 - The brief puts the unsubscribe link on emails 2 and 3. The client's own compliance notes (CAN-SPAM, GDPR)
   recommend an opt-out line in every automated email; adding it to Email 1 is a one-line change.
 - Send cold outreach from a separate domain with SPF, DKIM and DMARC set up, to protect certify.cx.
+
+## Footer
+
+The footer carries "Operated by Certify International OPC Private Limited" and the founder's WhatsApp number in small
+letters. Company address and other legal details are deliberately not in the emails; the client will publish
+them on the platform's Contact us page.
