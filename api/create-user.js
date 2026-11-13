@@ -4,6 +4,7 @@ import { verifyAdmin } from './_verifyAdmin.js';
 import { getRegionFromCountry, getCreatableRoles, ROLE_LABELS } from '../src/utils/roles.js';
 import { sanitizeAuditorTags } from '../src/utils/auditorOptions.js';
 import { sendWelcomeDirect } from './_sendWelcomeDirect.js';
+import { sendVerificationEmail } from './_sendVerificationEmail.js';
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -174,7 +175,7 @@ export default async function handler(req, res) {
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
-      email_confirm: true,
+      email_confirm: !isSelfSignup,
       user_metadata: userMetadata,
     });
 
