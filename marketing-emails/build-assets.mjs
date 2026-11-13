@@ -17,6 +17,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import {
   GraduationCap, ShieldCheck, Globe, BadgeCheck, Linkedin, Youtube, Facebook,
+  ClipboardCheck, Users, Award, Coins, Landmark, Target, Scale, Check, X,
 } from 'lucide-react';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
@@ -74,9 +75,54 @@ for (const b of BANNERS) {
 }
 
 // ------------------------------------------------------------------ feature icons (96 x 96, transparent)
-for (const [name, Cmp] of [['icon-shield', ShieldCheck], ['icon-globe', Globe], ['icon-badge', BadgeCheck]]) {
+for (const [name, Cmp] of [['icon-shield', ShieldCheck], ['icon-globe', Globe], ['icon-badge', BadgeCheck], ['icon-coins', Coins], ['icon-landmark', Landmark], ['icon-clipboard', ClipboardCheck], ['icon-users', Users], ['icon-award', Award]]) {
   shot(name, 96, 96, `<div style="width:96px;height:96px;border-radius:50%;background:#e6f8ef;display:flex;align-items:center;justify-content:center">${icon(Cmp, 46, '#0e9f6e', 1.9)}</div>`, true);
 }
+
+// ------------------------------------------------------------------ explainer graphics (1200 wide, shown at 600)
+const CARD = 'background:#ffffff;border:2px solid #dfe7e3;border-radius:28px;';
+// Two standards, side by side
+shot('graphic-standards', 1200, 400, `
+  <div style="width:1200px;height:400px;background:#ffffff;display:flex;gap:36px;padding:10px 0">
+    ${[['ISO 21001', 'Educational Organizations Management Systems', GraduationCap, ''], ['ISO 9001', 'Quality Management Systems', ShieldCheck, '']].map(([t, d, I, tag]) => `
+    <div style="flex:1;${CARD}padding:36px 40px;position:relative;overflow:hidden;background:linear-gradient(160deg,#f2fbf7 0%,#ffffff 60%)">
+      <div style="width:104px;height:104px;border-radius:50%;background:#e6f8ef;display:flex;align-items:center;justify-content:center;margin-bottom:24px">${icon(I, 56, '#0e9f6e', 1.8)}</div>
+      <div style="font-size:78px;font-weight:800;letter-spacing:-.02em;color:#06231a;line-height:1">${t}</div>
+      <div style="font-size:35px;line-height:1.28;color:#46526a;margin-top:16px;font-weight:600">${d}</div>
+    </div>`).join('')}
+  </div>`);
+
+// Three steps
+shot('graphic-steps', 1200, 380, `
+  <div style="width:1200px;height:380px;background:#ffffff;position:relative;padding-top:20px">
+    <div style="position:absolute;left:210px;right:210px;top:112px;border-top:4px dashed #bfe9d5"></div>
+    <div style="display:flex;justify-content:space-between;padding:0 30px;position:relative">
+      ${[['1', 'Share your goals', 'Tell us the standard', Target], ['2', 'Compare proposals', 'Pre-vetted bodies', Scale], ['3', 'Get certified', 'Recognised worldwide', BadgeCheck]].map(([n, t, d, I]) => `
+      <div style="width:340px;text-align:center">
+        <div style="position:relative;width:184px;height:184px;margin:0 auto 22px;border-radius:50%;background:#06231a;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 12px #e6f8ef">
+          ${icon(I, 80, '#3ECF8E', 1.6)}
+          <div style="position:absolute;left:-6px;top:-6px;width:56px;height:56px;border-radius:50%;background:#3ECF8E;color:#06231a;font-size:30px;font-weight:800;display:flex;align-items:center;justify-content:center;border:5px solid #fff">${n}</div>
+        </div>
+        <div style="font-size:42px;font-weight:800;color:#06231a;letter-spacing:-.01em;line-height:1.1">${t}</div>
+        <div style="font-size:30px;color:#5b6478;margin-top:10px">${d}</div>
+      </div>`).join('')}
+    </div>
+  </div>`);
+
+// Before / after
+shot('graphic-compare', 1200, 440, `
+  <div style="width:1200px;height:440px;background:#ffffff;display:flex;gap:36px;padding:8px 0">
+    <div style="flex:1;border-radius:28px;background:#f3f4f7;border:2px solid #e3e6ec;padding:34px 38px">
+      <div style="font-size:28px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8a93a6;margin-bottom:28px">Without a marketplace</div>
+      ${['Hunting for providers', 'Unclear audit timelines', 'Quotes hard to compare'].map((t) => `
+      <div style="display:flex;align-items:center;gap:20px;margin-bottom:24px"><div style="width:52px;height:52px;border-radius:50%;background:#e3e6ec;display:flex;align-items:center;justify-content:center;flex:none">${icon(X, 28, '#8a93a6', 2.4)}</div><div style="font-size:36px;line-height:1.2;font-weight:600;color:#6b7488">${t}</div></div>`).join('')}
+    </div>
+    <div style="flex:1;border-radius:28px;background:linear-gradient(150deg,#06231a 0%,#0c3d2d 100%);padding:34px 38px;position:relative">
+      <div style="font-size:28px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#3ECF8E;margin-bottom:28px">With Certify.cx&trade;</div>
+      ${['One marketplace', 'Matched, vetted auditors', 'Faster, lower-cost certification'].map((t) => `
+      <div style="display:flex;align-items:center;gap:20px;margin-bottom:24px"><div style="width:52px;height:52px;border-radius:50%;background:#3ECF8E;display:flex;align-items:center;justify-content:center;flex:none">${icon(Check, 30, '#06231a', 3)}</div><div style="font-size:36px;line-height:1.2;font-weight:700;color:#ffffff">${t}</div></div>`).join('')}
+    </div>
+  </div>`);
 
 // ------------------------------------------------------------------ footer: white logo + social icons
 shot('logo-white', 160, 154, `<img src="${MARK}" style="width:160px;height:auto;filter:brightness(0) invert(1)">`, true);
