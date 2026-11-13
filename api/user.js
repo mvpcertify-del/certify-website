@@ -19,7 +19,21 @@ import { approveRegistration } from './_approveRegistration.js';
 import { deleteUser } from './_deleteUser.js';
 import { resendVerification } from './_resendVerification.js';
 import { sendWhatsApp } from './_notifyWhatsApp.js';
-import { sendWelcomeDirect } from './_sendWelcomeDirect.js';
+import {
+  ContractorContractError,
+  generateReference,
+  validateContractInput,
+  buildContractorContractPdf,
+  uploadContractorContractPdf,
+} from './_contractorContract.js';
+import { signedUrlFor } from './_billing.js';
+import { applyContractorTaskDecision } from './_contractorTaskScoring.js';
+import {
+  ContractorPaymentError,
+  validatePaymentInput,
+  notifyFinance,
+  notifyContractorPaymentDecision,
+} from './_contractorPayments.js';
 import { ROLES, getRegionFromCountry } from '../src/utils/roles.js';
 import { sanitizeAuditorTags } from '../src/utils/auditorOptions.js';
 
@@ -69,6 +83,29 @@ export default async function handler(req, res) {
     if (action === 'add-auditor-document') return await addAuditorDocument(req, res);
     if (action === 'save-auditor-qualifications') return await saveAuditorQualifications(req, res);
     if (action === 'list-auditor-documents') return await listAuditorDocuments(req, res);
+    // Contractor onboarding (phase41, 28 Oct) — both bootstrap-window actions,
+    // same reasoning as the auditor ones above (no session yet).
+    if (action === 'add-contractor-document') return await addContractorDocument(req, res);
+    // Contractor contracts (phase42, 28 Oct) — admin-authored per contractor,
+    // tri-party signed. See api/_contractorContract.js.
+    if (action === 'create-contractor-contract') return await createContractorContract(req, res);
+    if (action === 'send-contractor-contract') return await sendContractorContract(req, res);
+    if (action === 'list-contractor-contracts') return await listContractorContracts(req, res);
+    if (action === 'sign-contractor-contract') return await signContractorContract(req, res);
+    if (action === 'finalize-contractor-contract') return await finalizeContractorContract(req, res);
+    if (action === 'get-contractor-contract-pdf-url') return await getContractorContractPdfUrl(req, res);
+    // Contractor tasks (phase43, 28 Oct) — manual assign/submit/review for
+    // now; automatic KPI scoring + email notifications are a later phase.
+    if (action === 'create-contractor-task') return await createContractorTask(req, res);
+    if (action === 'list-contractor-tasks') return await listContractorTasks(req, res);
+    if (action === 'submit-contractor-task') return await submitContractorTask(req, res);
+    if (action === 'review-contractor-task') return await reviewContractorTask(req, res);
+    if (action === 'get-contractor-task-evidence-url') return await getContractorTaskEvidenceUrl(req, res);
+    // Contractor payments (phase44, 28 Oct) — Finance approval queue.
+    if (action === 'create-contractor-payment') return await createContractorPayment(req, res);
+    if (action === 'list-contractor-payments') return await listContractorPayments(req, res);
+    if (action === 'approve-contractor-payment') return await decideContractorPayment(req, res, 'approved');
+    if (action === 'reject-contractor-payment') return await decideContractorPayment(req, res, 'rejected');
     return res.status(400).json({ error: 'Unknown action' });
   } catch (error) {
     console.error('User route error:', error);
@@ -148,27 +185,6 @@ async function updateProfile(req, res) {
     return res.status(403).json({ error: 'Forbidden: you cannot edit that profile' });
   }
 
-  // The one legitimate case where a user sets their own role: a Google OAuth
-  // account whose profile row has no role yet. Narrow it to exactly that — an
-  // an existing role can never be self-rewritten; the role is derived from the selected stakeholder type.
-  const OAUTH_STAKEHOLDER_ROLES = {
-    client: 'client',
-    consultancy: 'consultancy',
-    referral: 'referral',
-    'certification-body': 'certification_body',
-  };
-  const bootstrapRole = OAUTH_STAKEHOLDER_ROLES[stakeholder_type];
-  const isOAuthRoleBootstrap =
-    isSelf &&
-    caller.provider === 'google' &&
-    !target?.role &&
-    !!bootstrapRole;
-
-  if (isOAuthRoleBootstrap) {
-    role = bootstrapRole;
-    approval_status = 'approved';
-  }
-
   // ONLY a super admin may change these. Being a regional admin is not enough:
   // a country admin passing their OWN userId satisfies `isRegional` trivially
   // (their region always equals their region), so gating on it would have let
@@ -185,12 +201,7 @@ async function updateProfile(req, res) {
     const attempted = Object.entries(PRIVILEGED).filter(
       ([field, value]) => value !== undefined && value !== target?.[field],
     );
-    // Bootstrap may set only the server-derived role, stakeholder type,
-    // and server-controlled approval status.
-    const bootstrapFields = ['role', 'stakeholder_type', 'approval_status'];
-    const disallowed = isOAuthRoleBootstrap
-      ? attempted.filter(([field]) => !bootstrapFields.includes(field))
-      : attempted;
+    const disallowed = attempted;
     if (disallowed.length) {
       // Refuse loudly. Silently dropping the field would show the admin a
       // success toast for a change that never happened.
@@ -198,11 +209,9 @@ async function updateProfile(req, res) {
         error: `Forbidden: only a super admin can change ${disallowed.map(([f]) => f).join(', ')}`,
       });
     }
-    if (!isOAuthRoleBootstrap) {
-      role = undefined;
-      stakeholder_type = undefined;
-      approval_status = undefined;
-    }
+    role = undefined;
+    stakeholder_type = undefined;
+    approval_status = undefined;
     region = undefined;
     email = undefined;
     commission_percent_override = undefined;
@@ -289,19 +298,6 @@ async function updateProfile(req, res) {
       });
     }
     return res.status(500).json({ error: error.message });
-  }
-
-  // Send a welcome email only after first-time Google OAuth role bootstrap.
-  if (isOAuthRoleBootstrap && target?.email) {
-    await sendWelcomeDirect({
-      supabaseAdmin,
-      userId,
-      email: target.email,
-      name: full_name,
-      role: bootstrapRole,
-      stakeholderType: stakeholder_type,
-    });
-
   }
 
   if (email) {
@@ -618,6 +614,13 @@ async function getConsultancyKpi(req, res) {
 // ---------------------------------------------------------------------------
 const AUDITOR_DOC_TYPES = ['certificate', 'audit_log', 'cv', 'other'];
 const AUDITOR_DOC_BUCKET = 'auditor-documents';
+// Contractor onboarding documents + contract (phase41, 28 Oct). A contractor
+// account is created 'pending' (AuthContext.signup) and is never logged in
+// during registration, so — same reasoning as the auditor bootstrap window
+// above — these uploads and the contract acceptance below run unauthenticated,
+// bounded to a short window right after account creation.
+const CONTRACTOR_DOC_TYPES = ['id_copy', 'cv', 'photo', 'other'];
+const CONTRACTOR_DOC_BUCKET = 'contractor-documents';
 // Vercel caps a request body at 4.5 MB and base64 inflates the payload by a
 // third, so the raw file has to stay well under that. Kept in step with
 // MAX_UPLOAD_MB in ProfileManagementTable.jsx.
@@ -702,6 +705,60 @@ async function resolveAuditorWriteAccess(req, auditorId, { allowBootstrap = true
     .eq('auditor_id', auditorId);
   if ((count || 0) >= BOOTSTRAP_MAX_DOCS) {
     return { error: 'Unauthorized: sign in to update this auditor', status: 401 };
+  }
+
+  return { target, actorId: null };
+}
+
+// Same bootstrap-window reasoning as resolveAuditorWriteAccess above, applied
+// to a contractor. There is no READ caller for this one yet (no admin screen
+// exists to list contractor documents in this phase), so allowBootstrap is
+// not parameterized here the way the auditor version is.
+//
+// As with the auditor version, the unauthenticated branch's only access
+// control is contractorId being an unguessable v4 UUID handed only to the
+// browser that just created the account — see the fuller justification on
+// resolveAuditorWriteAccess above.
+async function resolveContractorWriteAccess(req, contractorId) {
+  if (!contractorId || typeof contractorId !== 'string') {
+    return { error: 'Missing contractorId', status: 400 };
+  }
+
+  const { data: target } = await supabaseAdmin
+    .from('profiles')
+    .select('id, role, region, created_at')
+    .eq('id', contractorId)
+    .maybeSingle();
+
+  if (!target) return { error: 'Contractor not found', status: 404 };
+  if (target.role !== ROLES.CONTRACTOR) {
+    return { error: 'That user is not a contractor', status: 400 };
+  }
+
+  const session = await verifySession(req);
+  if (session.caller) {
+    const { caller } = session;
+    if (caller.id === contractorId) return { target, actorId: caller.id };
+    if (caller.role === ROLES.SUPER_ADMIN) return { target, actorId: caller.id };
+    if (caller.role === ROLES.REGIONAL_ADMIN && caller.region && caller.region === target.region) {
+      return { target, actorId: caller.id };
+    }
+    return { error: 'Forbidden: you cannot manage that contractor', status: 403 };
+  }
+
+  if (req.headers?.authorization || req.headers?.Authorization) {
+    return { error: session.error || 'Unauthorized', status: session.status || 401 };
+  }
+
+  if (Date.now() - new Date(target.created_at).getTime() > BOOTSTRAP_WINDOW_MS) {
+    return { error: 'Unauthorized: sign in to update this contractor', status: 401 };
+  }
+  const { count } = await supabaseAdmin
+    .from('contractor_documents')
+    .select('id', { count: 'exact', head: true })
+    .eq('contractor_id', contractorId);
+  if ((count || 0) >= BOOTSTRAP_MAX_DOCS) {
+    return { error: 'Unauthorized: sign in to update this contractor', status: 401 };
   }
 
   return { target, actorId: null };
@@ -801,6 +858,806 @@ async function addAuditorDocument(req, res) {
   }
 
   return res.status(200).json({ success: true, id: row.id, storagePath: path });
+}
+
+// Attach an ID copy / CV / photo to a contractor — bootstrap-window upload,
+// same shape as addAuditorDocument above (no session exists yet for a
+// self-registering, still-'pending' contractor).
+async function addContractorDocument(req, res) {
+  const { contractorId, docType, fileName, mimeType, sizeBytes, dataBase64 } = req.body;
+
+  const access = await resolveContractorWriteAccess(req, contractorId);
+  if (access.error) return res.status(access.status).json({ error: access.error });
+
+  const type = CONTRACTOR_DOC_TYPES.includes(docType) ? docType : 'other';
+  const safeName = String(fileName || 'document')
+    .replace(/[^\w.\-() ]+/g, '_')
+    .slice(0, 120) || 'document';
+
+  if (!dataBase64) return res.status(400).json({ error: 'Missing dataBase64' });
+  let bytes;
+  try {
+    bytes = Uint8Array.from(atob(String(dataBase64)), c => c.charCodeAt(0));
+  } catch {
+    return res.status(400).json({ error: 'File data could not be decoded' });
+  }
+  if (!bytes.length) return res.status(400).json({ error: 'File is empty' });
+  if (bytes.length > MAX_DOC_BYTES) {
+    return res.status(413).json({
+      error: `File is too large. The limit is ${Math.floor(MAX_DOC_BYTES / (1024 * 1024))} MB.`,
+    });
+  }
+
+  const path = `${contractorId}/${type}-${Date.now()}-${safeName}`;
+  const { error: upErr } = await supabaseAdmin.storage
+    .from(CONTRACTOR_DOC_BUCKET)
+    .upload(path, bytes, { contentType: mimeType || 'application/octet-stream', upsert: false });
+  if (upErr) {
+    console.error('addContractorDocument: storage upload failed', upErr);
+    const missingBucket = /bucket/i.test(upErr.message || '');
+    return res.status(500).json({
+      error: missingBucket
+        ? `Storage bucket "${CONTRACTOR_DOC_BUCKET}" does not exist. Run supabase/phase41_contractors.sql.`
+        : 'Could not store the document. Please try again.',
+    });
+  }
+
+  const { data: row, error } = await supabaseAdmin
+    .from('contractor_documents')
+    .insert({
+      contractor_id: contractorId,
+      doc_type: type,
+      file_name: safeName,
+      storage_path: path,
+      mime_type: mimeType || null,
+      size_bytes: Number.isFinite(Number(sizeBytes)) ? Number(sizeBytes) : null,
+      uploaded_by: access.actorId,
+    })
+    .select('id')
+    .single();
+
+  if (error) {
+    console.error('addContractorDocument: insert failed', error);
+    const missingTable = /contractor_documents/.test(error.message || '');
+    return res.status(500).json({
+      error: missingTable
+        ? 'The contractor_documents table is missing. Run supabase/phase41_contractors.sql.'
+        : 'Could not record the document. Please try again.',
+    });
+  }
+
+  return res.status(200).json({ success: true, id: row.id, storagePath: path });
+}
+
+// ---------------------------------------------------------------------------
+// Contractor contracts (phase42, 28 Oct) — tri-party, per-contractor
+// agreements. See api/_contractorContract.js for the shared validation/PDF
+// logic and the full design rationale.
+// ---------------------------------------------------------------------------
+function contractorContractFailure(res, err, context) {
+  if (err instanceof ContractorContractError) {
+    return res.status(err.status).json({ error: err.message });
+  }
+  console.error(`${context} failed:`, err);
+  return res.status(500).json({ error: 'Something went wrong. Please try again.' });
+}
+
+// Admin-only (super_admin, or regional_admin scoped to the contractor's own
+// region — same rule used throughout this file). Only an APPROVED contractor
+// can have a contract authored for them: the documents (ID/CV/photo) have to
+// be on file and reviewed first.
+async function assertContractorContractAdmin(req, contractorId) {
+  const auth = await verifyAdmin(req);
+  if (auth.error) return { error: auth.error, status: auth.status };
+
+  const { data: contractor } = await supabaseAdmin
+    .from('profiles')
+    .select('id, role, region, approval_status')
+    .eq('id', contractorId)
+    .maybeSingle();
+  if (!contractor || contractor.role !== ROLES.CONTRACTOR) {
+    return { error: 'Contractor not found', status: 404 };
+  }
+  if (contractor.approval_status !== 'approved') {
+    return { error: 'This contractor has not been approved yet.', status: 409 };
+  }
+  if (auth.caller.role === ROLES.REGIONAL_ADMIN
+      && (!auth.caller.region || auth.caller.region !== contractor.region)) {
+    return { error: 'Forbidden: that contractor is outside your region.', status: 403 };
+  }
+  return { caller: auth.caller, contractor };
+}
+
+async function createContractorContract(req, res) {
+  try {
+    const { contractorId } = req.body;
+    const access = await assertContractorContractAdmin(req, contractorId);
+    if (access.error) return res.status(access.status).json({ error: access.error });
+
+    const fields = validateContractInput(req.body);
+
+    const { data: row, error } = await supabaseAdmin
+      .from('contractor_contracts')
+      .insert({
+        reference: generateReference(),
+        contractor_id: contractorId,
+        status: 'draft',
+        created_by: access.caller.id,
+        ...fields,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+
+    return res.status(200).json({ success: true, contract: row });
+  } catch (err) {
+    return contractorContractFailure(res, err, 'createContractorContract');
+  }
+}
+
+// Moves a draft to pending_signatures and records WCA GLOBAL's signature.
+// WCA GLOBAL is a fixed company, not a dynamic account in this system (client
+// confirmation, 28 Oct) — the admin sending the contract IS acting on its
+// behalf, so that signature is recorded here rather than requiring a second,
+// nonexistent WCA GLOBAL login to come back and sign separately.
+async function sendContractorContract(req, res) {
+  try {
+    const { contractId } = req.body;
+    if (!contractId) return res.status(400).json({ error: 'Missing contractId' });
+
+    const { data: contract } = await supabaseAdmin
+      .from('contractor_contracts').select('*').eq('id', contractId).maybeSingle();
+    if (!contract) return res.status(404).json({ error: 'Contract not found' });
+
+    const access = await assertContractorContractAdmin(req, contract.contractor_id);
+    if (access.error) return res.status(access.status).json({ error: access.error });
+
+    if (contract.status !== 'draft') {
+      return res.status(409).json({ error: `Contract is already ${contract.status}.` });
+    }
+
+    const { error: updErr } = await supabaseAdmin
+      .from('contractor_contracts')
+      .update({ status: 'pending_signatures', updated_at: new Date().toISOString() })
+      .eq('id', contractId);
+    if (updErr) throw updErr;
+
+    const { error: sigErr } = await supabaseAdmin
+      .from('contractor_contract_signatures')
+      .insert({
+        contract_id: contractId,
+        party_role: 'wca_global',
+        signed_name: 'WCA GLOBAL',
+        signed_by: access.caller.id,
+        accepted_ip: clientIpFor(req),
+      });
+    // 23505 = already recorded (a retried send) — not an error.
+    if (sigErr && sigErr.code !== '23505') throw sigErr;
+
+    await supabaseAdmin.from('notifications').insert({
+      user_id: contract.contractor_id,
+      type: 'system',
+      title: 'Contract ready to sign',
+      message: `A contract (${contract.reference}) has been sent to you for review and signature.`,
+    });
+
+    return res.status(200).json({ success: true });
+  } catch (err) {
+    return contractorContractFailure(res, err, 'sendContractorContract');
+  }
+}
+
+// Lists contracts for the caller's own account (contractor) or, for an admin,
+// for a given contractorId in the body.
+// Same region-scoping rule assertContractorContractAdmin enforces for the
+// write paths, reused by the two read endpoints below. A super_admin may
+// read any contractor's contracts; a regional_admin only one in their own
+// region (security review, 28 Oct — the read paths had checked the caller's
+// ROLE but not their region, letting a regional_admin reach a contractor
+// outside their scope).
+async function regionAllowsContractorRead(caller, contractorId) {
+  if (caller.role === ROLES.SUPER_ADMIN) return true;
+  if (caller.role !== ROLES.REGIONAL_ADMIN) return false;
+  const { data: contractor } = await supabaseAdmin
+    .from('profiles').select('region').eq('id', contractorId).maybeSingle();
+  return !!(caller.region && contractor?.region && caller.region === contractor.region);
+}
+
+async function listContractorContracts(req, res) {
+  try {
+    const session = await verifySession(req);
+    if (session.error) return res.status(session.status).json({ error: session.error });
+    const { caller } = session;
+
+    let contractorId = caller.id;
+    if (req.body?.contractorId && req.body.contractorId !== caller.id) {
+      if (!(await regionAllowsContractorRead(caller, req.body.contractorId))) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+      contractorId = req.body.contractorId;
+    } else if (caller.role !== ROLES.CONTRACTOR && !req.body?.contractorId) {
+      return res.status(400).json({ error: 'Missing contractorId' });
+    }
+
+    const { data: contracts, error } = await supabaseAdmin
+      .from('contractor_contracts')
+      .select('*, contractor_contract_signatures(*)')
+      .eq('contractor_id', contractorId)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+
+    return res.status(200).json({ success: true, contracts: contracts || [] });
+  } catch (err) {
+    return contractorContractFailure(res, err, 'listContractorContracts');
+  }
+}
+
+// The contractor signs their own contract, from their own dashboard — always
+// a real session, never the bootstrap window (a contract can't exist until
+// after approval, by which point the contractor can log in normally).
+async function signContractorContract(req, res) {
+  try {
+    const { contractId, signedName } = req.body;
+    if (!contractId) return res.status(400).json({ error: 'Missing contractId' });
+
+    const session = await verifySession(req);
+    if (session.error) return res.status(session.status).json({ error: session.error });
+    const { caller } = session;
+    if (caller.role !== ROLES.CONTRACTOR) {
+      return res.status(403).json({ error: 'Only the contractor may sign their own contract.' });
+    }
+
+    const name = String(signedName || '').trim().slice(0, 200);
+    if (!name) return res.status(400).json({ error: 'Missing signedName' });
+
+    const { data: contract } = await supabaseAdmin
+      .from('contractor_contracts').select('*').eq('id', contractId).maybeSingle();
+    if (!contract) return res.status(404).json({ error: 'Contract not found' });
+    if (contract.contractor_id !== caller.id) {
+      return res.status(403).json({ error: 'That is not your contract.' });
+    }
+    if (contract.status !== 'pending_signatures') {
+      return res.status(409).json({ error: `Contract is not ready to sign (status: ${contract.status}).` });
+    }
+
+    // Re-checked here, not just at send/finalize time (security review, 28
+    // Oct): an admin revoking approval after a contract was sent must stop
+    // the contractor from still producing a signed artifact in the interim.
+    const { data: ownProfile } = await supabaseAdmin
+      .from('profiles').select('approval_status').eq('id', caller.id).maybeSingle();
+    if (ownProfile?.approval_status !== 'approved') {
+      return res.status(403).json({ error: 'Your account is not currently approved.' });
+    }
+
+    const { error } = await supabaseAdmin
+      .from('contractor_contract_signatures')
+      .insert({
+        contract_id: contractId,
+        party_role: 'contractor',
+        signed_name: name,
+        signed_by: caller.id,
+        accepted_ip: clientIpFor(req),
+      });
+    if (error && error.code !== '23505') throw error;
+
+    await notifyAdmins(supabaseAdmin, {
+      title: 'Contractor signed their contract',
+      message: `${name} signed contract ${contract.reference}. Review and finalize it to activate.`,
+    }).catch(() => {});
+
+    return res.status(200).json({ success: true, alreadySigned: error?.code === '23505' });
+  } catch (err) {
+    return contractorContractFailure(res, err, 'signContractorContract');
+  }
+}
+
+// Admin-only. Requires the contractor's signature already on file; records
+// the Platform's (3rd-party) signature, generates the final PDF, and marks
+// the contract signed.
+async function finalizeContractorContract(req, res) {
+  try {
+    const { contractId } = req.body;
+    if (!contractId) return res.status(400).json({ error: 'Missing contractId' });
+
+    const { data: contract } = await supabaseAdmin
+      .from('contractor_contracts').select('*').eq('id', contractId).maybeSingle();
+    if (!contract) return res.status(404).json({ error: 'Contract not found' });
+
+    const access = await assertContractorContractAdmin(req, contract.contractor_id);
+    if (access.error) return res.status(access.status).json({ error: access.error });
+
+    if (contract.status !== 'pending_signatures') {
+      return res.status(409).json({ error: `Contract is not pending signatures (status: ${contract.status}).` });
+    }
+
+    const { data: signatures } = await supabaseAdmin
+      .from('contractor_contract_signatures').select('*').eq('contract_id', contractId);
+    const hasRole = (role) => (signatures || []).some((s) => s.party_role === role);
+    if (!hasRole('contractor')) {
+      return res.status(409).json({ error: 'The contractor has not signed yet.' });
+    }
+
+    const { error: sigErr } = await supabaseAdmin
+      .from('contractor_contract_signatures')
+      .insert({
+        contract_id: contractId,
+        party_role: 'platform',
+        signed_name: 'Certify.cx',
+        signed_by: access.caller.id,
+        accepted_ip: clientIpFor(req),
+      });
+    if (sigErr && sigErr.code !== '23505') throw sigErr;
+
+    const { data: allSignatures } = await supabaseAdmin
+      .from('contractor_contract_signatures').select('*').eq('contract_id', contractId);
+
+    let pdfPath = contract.pdf_storage_path || null;
+    try {
+      const bytes = await buildContractorContractPdf(contract, access.contractor, allSignatures);
+      pdfPath = await uploadContractorContractPdf(supabaseAdmin, {
+        contractId, reference: contract.reference, bytes,
+      }) || pdfPath;
+    } catch (e) {
+      // The signature records are the legally meaningful artefact and are
+      // already committed — a PDF render failure must not undo them.
+      console.error('Contractor contract PDF generation failed (signatures stand):', e);
+    }
+
+    const { data: updated, error: updErr } = await supabaseAdmin
+      .from('contractor_contracts')
+      .update({ status: 'signed', pdf_storage_path: pdfPath, updated_at: new Date().toISOString() })
+      .eq('id', contractId)
+      .select()
+      .single();
+    if (updErr) throw updErr;
+
+    await supabaseAdmin.from('notifications').insert({
+      user_id: contract.contractor_id,
+      type: 'system',
+      title: 'Contract signed',
+      message: `Your contract (${contract.reference}) is now fully signed and active.`,
+    });
+
+    return res.status(200).json({ success: true, contract: updated });
+  } catch (err) {
+    return contractorContractFailure(res, err, 'finalizeContractorContract');
+  }
+}
+
+// Returns a short-lived download URL for a finalized contract's PDF. Same
+// access rule as listContractorContracts: the contractor themselves, or an
+// admin.
+async function getContractorContractPdfUrl(req, res) {
+  try {
+    const { contractId } = req.body;
+    if (!contractId) return res.status(400).json({ error: 'Missing contractId' });
+
+    const session = await verifySession(req);
+    if (session.error) return res.status(session.status).json({ error: session.error });
+    const { caller } = session;
+
+    const { data: contract } = await supabaseAdmin
+      .from('contractor_contracts').select('contractor_id, pdf_storage_path').eq('id', contractId).maybeSingle();
+    if (!contract) return res.status(404).json({ error: 'Contract not found' });
+
+    const isOwner = contract.contractor_id === caller.id;
+    if (!isOwner && !(await regionAllowsContractorRead(caller, contract.contractor_id))) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    if (!contract.pdf_storage_path) {
+      return res.status(404).json({ error: 'No PDF has been generated for this contract yet.' });
+    }
+
+    const url = await signedUrlFor(supabaseAdmin, contract.pdf_storage_path, 300, 'contractor-contract-pdfs');
+    return res.status(200).json({ success: true, url });
+  } catch (err) {
+    return contractorContractFailure(res, err, 'getContractorContractPdfUrl');
+  }
+}
+
+// Shared IP-capture helper — same preference order as api/_contract.js's
+// clientIp (x-real-ip, then the last hop of x-forwarded-for, then the socket)
+// since this module can't import that one without creating a dependency
+// between two independently-reviewed legal-signature code paths.
+function clientIpFor(req) {
+  const realIp = req?.headers?.['x-real-ip'];
+  if (typeof realIp === 'string' && realIp.trim()) return realIp.trim().slice(0, 100);
+  const fwd = req?.headers?.['x-forwarded-for'];
+  if (typeof fwd === 'string' && fwd.trim()) {
+    const hops = fwd.split(',').map((s) => s.trim()).filter(Boolean);
+    if (hops.length) return hops[hops.length - 1].slice(0, 100);
+  }
+  return req?.socket?.remoteAddress?.slice(0, 100) || 'unknown';
+}
+
+// ---------------------------------------------------------------------------
+// Contractor tasks (phase43, 28 Oct) — admin assigns, contractor submits
+// evidence, admin reviews. Deliberately manual review for now: automatic
+// 0%/100% scoring against the deadline and the contractor/admin email
+// notifications are a separate, later phase (client confirmation, 28 Oct —
+// build this in small pieces, not all at once).
+// ---------------------------------------------------------------------------
+const TASK_EVIDENCE_BUCKET = 'contractor-task-evidence';
+
+async function createContractorTask(req, res) {
+  try {
+    const { contractorId, contractId, taskDescription, kpiTarget, deadlineDate } = req.body;
+    const access = await assertContractorContractAdmin(req, contractorId);
+    if (access.error) return res.status(access.status).json({ error: access.error });
+
+    const description = String(taskDescription || '').trim().slice(0, 5000);
+    if (!description) return res.status(400).json({ error: 'Missing taskDescription' });
+    if (!deadlineDate) return res.status(400).json({ error: 'Missing deadlineDate' });
+
+    // A task may optionally be pinned to one of this contractor's own
+    // contracts — reject one that belongs to somebody else rather than
+    // silently recording a false link.
+    if (contractId) {
+      const { data: contract } = await supabaseAdmin
+        .from('contractor_contracts').select('contractor_id').eq('id', contractId).maybeSingle();
+      if (!contract || contract.contractor_id !== contractorId) {
+        return res.status(400).json({ error: 'That contract does not belong to this contractor.' });
+      }
+    }
+
+    const { data: row, error } = await supabaseAdmin
+      .from('contractor_tasks')
+      .insert({
+        contractor_id: contractorId,
+        contract_id: contractId || null,
+        assigned_by: access.caller.id,
+        task_description: description,
+        kpi_target: kpiTarget ? String(kpiTarget).trim().slice(0, 500) : null,
+        deadline_date: deadlineDate,
+        status: 'pending',
+      })
+      .select()
+      .single();
+    if (error) throw error;
+
+    await supabaseAdmin.from('notifications').insert({
+      user_id: contractorId,
+      type: 'system',
+      title: 'New task assigned',
+      message: `${description.slice(0, 140)}${description.length > 140 ? '…' : ''} — due ${deadlineDate}.`,
+    });
+
+    return res.status(200).json({ success: true, task: row });
+  } catch (err) {
+    return contractorContractFailure(res, err, 'createContractorTask');
+  }
+}
+
+// Same access shape as listContractorContracts: the contractor's own tasks,
+// or an admin's (region-scoped for regional_admin) view of one contractor's.
+async function listContractorTasks(req, res) {
+  try {
+    const session = await verifySession(req);
+    if (session.error) return res.status(session.status).json({ error: session.error });
+    const { caller } = session;
+
+    let contractorId = caller.id;
+    if (req.body?.contractorId && req.body.contractorId !== caller.id) {
+      if (!(await regionAllowsContractorRead(caller, req.body.contractorId))) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+      contractorId = req.body.contractorId;
+    } else if (caller.role !== ROLES.CONTRACTOR && !req.body?.contractorId) {
+      return res.status(400).json({ error: 'Missing contractorId' });
+    }
+
+    const { data: tasks, error } = await supabaseAdmin
+      .from('contractor_tasks')
+      .select('*')
+      .eq('contractor_id', contractorId)
+      .order('deadline_date', { ascending: true });
+    if (error) throw error;
+
+    return res.status(200).json({ success: true, tasks: tasks || [] });
+  } catch (err) {
+    return contractorContractFailure(res, err, 'listContractorTasks');
+  }
+}
+
+// The contractor submits their own evidence — always a real session, a task
+// can't exist before the contractor was approved and could log in.
+async function submitContractorTask(req, res) {
+  try {
+    const { taskId, workLink, completionDate, evidenceNote, fileName, mimeType, dataBase64 } = req.body;
+    if (!taskId) return res.status(400).json({ error: 'Missing taskId' });
+
+    const session = await verifySession(req);
+    if (session.error) return res.status(session.status).json({ error: session.error });
+    const { caller } = session;
+    if (caller.role !== ROLES.CONTRACTOR) {
+      return res.status(403).json({ error: 'Only the assigned contractor may submit this task.' });
+    }
+
+    const { data: task } = await supabaseAdmin
+      .from('contractor_tasks').select('*').eq('id', taskId).maybeSingle();
+    if (!task) return res.status(404).json({ error: 'Task not found' });
+    if (task.contractor_id !== caller.id) {
+      return res.status(403).json({ error: 'That is not your task.' });
+    }
+    if (task.status === 'completed') {
+      return res.status(409).json({ error: 'This task has already been marked completed.' });
+    }
+
+    const patch = {
+      status: 'submitted',
+      updated_at: new Date().toISOString(),
+    };
+    if (workLink) patch.work_link = String(workLink).trim().slice(0, 2000);
+    if (completionDate) patch.completion_date = completionDate;
+    if (evidenceNote) patch.evidence_note = String(evidenceNote).trim().slice(0, 2000);
+
+    if (dataBase64) {
+      let bytes;
+      try {
+        bytes = Uint8Array.from(atob(String(dataBase64)), (c) => c.charCodeAt(0));
+      } catch {
+        return res.status(400).json({ error: 'File data could not be decoded' });
+      }
+      if (bytes.length > MAX_DOC_BYTES) {
+        return res.status(413).json({
+          error: `File is too large. The limit is ${Math.floor(MAX_DOC_BYTES / (1024 * 1024))} MB.`,
+        });
+      }
+      const safeName = String(fileName || 'evidence')
+        .replace(/[^\w.\-() ]+/g, '_').slice(0, 120) || 'evidence';
+      const path = `${caller.id}/${taskId}-${Date.now()}-${safeName}`;
+      const { error: upErr } = await supabaseAdmin.storage
+        .from(TASK_EVIDENCE_BUCKET)
+        .upload(path, bytes, { contentType: mimeType || 'application/octet-stream', upsert: false });
+      if (upErr) {
+        console.error('submitContractorTask: evidence upload failed', upErr);
+        return res.status(500).json({ error: 'Could not store the evidence file. Please try again.' });
+      }
+      patch.evidence_storage_path = path;
+    }
+
+    const { data: updated, error } = await supabaseAdmin
+      .from('contractor_tasks').update(patch).eq('id', taskId).select().single();
+    if (error) throw error;
+
+    await notifyAdmins(supabaseAdmin, {
+      title: 'Contractor submitted a task',
+      message: `Task "${task.task_description.slice(0, 100)}" was submitted for review.`,
+    }).catch(() => {});
+
+    return res.status(200).json({ success: true, task: updated });
+  } catch (err) {
+    return contractorContractFailure(res, err, 'submitContractorTask');
+  }
+}
+
+// Admin-only, region-scoped. Marks a submitted task completed (100%) or
+// missed (0%) by explicit human review — not automatic yet (see module note
+// above).
+async function reviewContractorTask(req, res) {
+  try {
+    const { taskId, decision } = req.body; // decision: 'completed' | 'missed'
+    if (!taskId) return res.status(400).json({ error: 'Missing taskId' });
+    if (!['completed', 'missed'].includes(decision)) {
+      return res.status(400).json({ error: "decision must be 'completed' or 'missed'" });
+    }
+
+    const { data: task } = await supabaseAdmin
+      .from('contractor_tasks').select('*').eq('id', taskId).maybeSingle();
+    if (!task) return res.status(404).json({ error: 'Task not found' });
+
+    const access = await assertContractorContractAdmin(req, task.contractor_id);
+    if (access.error) return res.status(access.status).json({ error: access.error });
+
+    if (task.status === 'completed' || task.status === 'missed') {
+      return res.status(409).json({ error: `This task was already decided (${task.status}).` });
+    }
+
+    const updated = await applyContractorTaskDecision(supabaseAdmin, task, decision);
+
+    return res.status(200).json({ success: true, task: updated });
+  } catch (err) {
+    return contractorContractFailure(res, err, 'reviewContractorTask');
+  }
+}
+
+// Short-lived download URL for an evidence file — same access rule as the
+// contract PDF endpoint.
+async function getContractorTaskEvidenceUrl(req, res) {
+  try {
+    const { taskId } = req.body;
+    if (!taskId) return res.status(400).json({ error: 'Missing taskId' });
+
+    const session = await verifySession(req);
+    if (session.error) return res.status(session.status).json({ error: session.error });
+    const { caller } = session;
+
+    const { data: task } = await supabaseAdmin
+      .from('contractor_tasks').select('contractor_id, evidence_storage_path').eq('id', taskId).maybeSingle();
+    if (!task) return res.status(404).json({ error: 'Task not found' });
+
+    const isOwner = task.contractor_id === caller.id;
+    if (!isOwner && !(await regionAllowsContractorRead(caller, task.contractor_id))) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    if (!task.evidence_storage_path) {
+      return res.status(404).json({ error: 'No evidence file on this task.' });
+    }
+
+    const url = await signedUrlFor(supabaseAdmin, task.evidence_storage_path, 300, TASK_EVIDENCE_BUCKET);
+    return res.status(200).json({ success: true, url });
+  } catch (err) {
+    return contractorContractFailure(res, err, 'getContractorTaskEvidenceUrl');
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Contractor payments (phase44, 28 Oct) — two-step approval. An admin raises
+// a request (the admin-approval step the client asked for — an admin
+// wouldn't raise one for unapproved work); a separate Finance-role user then
+// approves or rejects the money. The contractor can see the request itself
+// while it's pending ("Awaiting Finance"), but it only counts as credit, and
+// only emails them, once Finance decides. See api/_contractorPayments.js.
+// ---------------------------------------------------------------------------
+function contractorPaymentFailure(res, err, context) {
+  if (err instanceof ContractorPaymentError) {
+    return res.status(err.status).json({ error: err.message });
+  }
+  console.error(`${context} failed:`, err);
+  return res.status(500).json({ error: 'Something went wrong. Please try again.' });
+}
+
+async function createContractorPayment(req, res) {
+  try {
+    const { contractorId, contractId, taskId, amount, currency, description } = req.body;
+    const access = await assertContractorContractAdmin(req, contractorId);
+    if (access.error) return res.status(access.status).json({ error: access.error });
+
+    const fields = validatePaymentInput({ amount, currency, description });
+
+    // Optional links must actually belong to this contractor — same
+    // defensive check createContractorTask does for contractId.
+    if (contractId) {
+      const { data: c } = await supabaseAdmin
+        .from('contractor_contracts').select('contractor_id').eq('id', contractId).maybeSingle();
+      if (!c || c.contractor_id !== contractorId) {
+        return res.status(400).json({ error: 'That contract does not belong to this contractor.' });
+      }
+    }
+    if (taskId) {
+      const { data: t } = await supabaseAdmin
+        .from('contractor_tasks').select('contractor_id').eq('id', taskId).maybeSingle();
+      if (!t || t.contractor_id !== contractorId) {
+        return res.status(400).json({ error: 'That task does not belong to this contractor.' });
+      }
+    }
+
+    const { data: row, error } = await supabaseAdmin
+      .from('contractor_payments')
+      .insert({
+        contractor_id: contractorId,
+        contract_id: contractId || null,
+        task_id: taskId || null,
+        created_by: access.caller.id,
+        status: 'pending_finance',
+        ...fields,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+
+    await notifyFinance(supabaseAdmin, {
+      title: 'New payment request awaiting approval',
+      message: `${fields.currency} ${fields.amount.toLocaleString()} for "${fields.description}".`,
+      details: [['Amount', `${fields.currency} ${fields.amount.toLocaleString()}`], ['For', fields.description]],
+    });
+
+    return res.status(200).json({ success: true, payment: row });
+  } catch (err) {
+    return contractorPaymentFailure(res, err, 'createContractorPayment');
+  }
+}
+
+// Contractor: their own payments (any status, so they can see a rejection
+// reason too). Admin: one contractor's, region-scoped. Finance: every
+// request — not region-scoped, matching notifyFinance's reasoning.
+async function listContractorPayments(req, res) {
+  try {
+    const session = await verifySession(req);
+    if (session.error) return res.status(session.status).json({ error: session.error });
+    const { caller } = session;
+
+    let contractorId = caller.id;
+    if (req.body?.contractorId && req.body.contractorId !== caller.id) {
+      const allowed = caller.role === ROLES.FINANCE
+        || (await regionAllowsContractorRead(caller, req.body.contractorId));
+      if (!allowed) return res.status(403).json({ error: 'Forbidden' });
+      contractorId = req.body.contractorId;
+    } else if (caller.role === ROLES.FINANCE && !req.body?.contractorId) {
+      // Finance's approval queue: every pending request, across contractors.
+      const { data: payments, error } = await supabaseAdmin
+        .from('contractor_payments').select('*').eq('status', 'pending_finance')
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return res.status(200).json({ success: true, payments: payments || [] });
+    } else if (caller.role !== ROLES.CONTRACTOR && !req.body?.contractorId) {
+      return res.status(400).json({ error: 'Missing contractorId' });
+    }
+
+    const { data: payments, error } = await supabaseAdmin
+      .from('contractor_payments')
+      .select('*')
+      .eq('contractor_id', contractorId)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+
+    return res.status(200).json({ success: true, payments: payments || [] });
+  } catch (err) {
+    return contractorPaymentFailure(res, err, 'listContractorPayments');
+  }
+}
+
+async function decideContractorPayment(req, res, decision) {
+  try {
+    const { paymentId, rejectionReason } = req.body;
+    if (!paymentId) return res.status(400).json({ error: 'Missing paymentId' });
+
+    const session = await verifySession(req);
+    if (session.error) return res.status(session.status).json({ error: session.error });
+    const { caller } = session;
+    if (caller.role !== ROLES.FINANCE && caller.role !== ROLES.SUPER_ADMIN) {
+      return res.status(403).json({ error: 'Only Finance may decide a payment request.' });
+    }
+
+    const { data: payment } = await supabaseAdmin
+      .from('contractor_payments').select('*').eq('id', paymentId).maybeSingle();
+    if (!payment) return res.status(404).json({ error: 'Payment request not found' });
+
+    const patch = {
+      status: decision,
+      decided_by: caller.id,
+      decided_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    if (decision === 'rejected') {
+      patch.rejection_reason = String(rejectionReason || '').trim().slice(0, 1000) || null;
+    }
+
+    // The status check has to be IN the update's WHERE clause, not a separate
+    // read-then-write — two concurrent decide calls (a double-click, or two
+    // Finance accounts racing) could otherwise both pass a prior read of
+    // status='pending_finance' and both write, the second silently
+    // overwriting the first's decision (security review, 28 Oct). Zero rows
+    // back means someone else already decided it between the read above and
+    // here.
+    const { data: updated, error } = await supabaseAdmin
+      .from('contractor_payments')
+      .update(patch)
+      .eq('id', paymentId)
+      .eq('status', 'pending_finance')
+      .select()
+      .maybeSingle();
+    if (error) throw error;
+    if (!updated) {
+      return res.status(409).json({ error: 'This request was already decided by someone else.' });
+    }
+
+    const { data: contractor } = await supabaseAdmin
+      .from('profiles').select('email, full_name, notifications_enabled').eq('id', payment.contractor_id).maybeSingle();
+
+    await supabaseAdmin.from('notifications').insert({
+      user_id: payment.contractor_id,
+      type: 'system',
+      title: decision === 'approved' ? 'Payment approved' : 'Payment request not approved',
+      message: `${payment.currency} ${Number(payment.amount).toLocaleString()} — ${payment.description}`,
+    });
+    await notifyContractorPaymentDecision(supabaseAdmin, updated, contractor);
+
+    return res.status(200).json({ success: true, payment: updated });
+  } catch (err) {
+    return contractorPaymentFailure(res, err, 'decideContractorPayment');
+  }
 }
 
 // List an auditor's uploaded certificates/CV with short-lived download links.

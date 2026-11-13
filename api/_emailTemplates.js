@@ -528,21 +528,21 @@ export function loginOtpEmail({ name, code, minutes = 10, loginUrl }) {
   const greeting = name ? `Hi ${escapeHtml(name)},` : 'Hello,';
   const subject = `${code} is your ${BRAND_TEXT} sign-in code`;
   const base = loginUrl || `${process.env.APP_PUBLIC_URL || 'https://certify.cx'}/login`;
+  // Written so Gmail and Apple Mail recognise it as a one-time code and show their
+  // own "Copy code" button (the same way Vercel's code emails get one): the phrase
+  // "Your verification code is:" comes first in the body, and the code sits alone
+  // on its own line with no dashes, brackets or other symbols around it. An email
+  // cannot run JavaScript, so there is no copy button of our own.
   const html = layout({
     title: subject,
-    preheader: `Your sign-in code is ${code}. It expires in ${minutes} minutes.`,
+    preheader: `Your verification code is: ${code}`,
     bodyHtml: `
-      ${heading('Your sign-in code')}
-      ${body(`${greeting} use the code below to sign in to <strong style="color:${TEXT_PRIMARY};">${BRAND_TEXT}</strong>. Enter it on the sign-in page.`)}
-      <div style="margin:0 0 8px;padding:22px 24px;background:${SURFACE_BG};border:1px solid ${BORDER};border-radius:12px;text-align:center;">
-        <div style="font-size:12px;line-height:1;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:${TEXT_TERTIARY};margin:0 0 12px;">Verification code</div>
-        <span style="display:inline-block;font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:36px;line-height:1.1;font-weight:700;letter-spacing:0.3em;color:${TEXT_PRIMARY};padding-left:0.3em;-webkit-user-select:all;user-select:all;">${code}</span>
-      </div>
-      <p style="margin:0 0 24px;text-align:center;font-size:13px;line-height:1.5;color:${TEXT_TERTIARY};">Tap or double-click the code to select it, then copy.</p>
-      <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:${TEXT_SECONDARY};">The code expires in <strong style="color:${TEXT_PRIMARY};">${minutes} minutes</strong> and can be used once.</p>
+      <p style="margin:0 0 12px;font-size:16px;line-height:1.5;font-weight:600;color:${TEXT_PRIMARY};">Your verification code is:</p>
+      <p style="margin:0 0 24px;font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:34px;line-height:1.2;font-weight:700;letter-spacing:0.12em;color:${TEXT_PRIMARY};-webkit-user-select:all;user-select:all;">${code}</p>
+      ${body(`${greeting} enter this code on the <strong style="color:${TEXT_PRIMARY};">${BRAND_TEXT}</strong> sign-in page. It expires in ${minutes} minutes and can be used once.`)}
       ${muted(`For your security, never share this code with anyone. ${BRAND_TEXT} will never ask you for it. If you didn't try to sign in, you can safely ignore this email. Nobody can sign in without the code.`)}`,
   });
-  const text = `${greeting.replace(/<[^>]+>/g, '')}\n\nYour ${BRAND_TEXT} sign-in code is: ${code}\n\nEnter it on the sign-in page: ${base}\n\nThe code expires in ${minutes} minutes and can be used once. Never share it with anyone, ${BRAND_TEXT} will never ask you for it.\n\nIf you didn't try to sign in, ignore this email.\n\n— ${BRAND_TEXT}`;
+  const text = `Your verification code is:\n\n${code}\n\n${greeting.replace(/<[^>]+>/g, '')} enter this code on the ${BRAND_TEXT} sign-in page: ${base}\n\nThe code expires in ${minutes} minutes and can be used once. Never share it with anyone, ${BRAND_TEXT} will never ask you for it.\n\nIf you didn't try to sign in, ignore this email.\n\n— ${BRAND_TEXT}`;
   return { subject, html, text };
 }
 
