@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { apiPost } from '../lib/apiClient';
+import { classifyOtpRequestError } from '../config/loginMode';
 import { ROLES, getRegionFromCountryAsync, setCustomPermissionOverrides } from '../utils/roles';
 
 // Fetch role×permission overrides and install them into the roles module so
@@ -79,57 +79,7 @@ export function AuthProvider({ children }) {
           .maybeSingle();
         profile = await hydrateAnonGapScore(sessionUser, profile);
 
-        // For OAuth users (e.g. Google), ensure profile has role and approval_status.
-        // Also backfill full_name for existing Google users whose profile was
-        // created with a missing or email-as-name value (the previous bug that
-        // displayed "user@example.com" in place of the Google account name).
-        const isGoogleOAuth = sessionUser.app_metadata?.provider === 'google';
-        const meta = sessionUser.user_metadata || {};
-        const googleName = meta.name || meta.full_name || '';
-        const profileNameLooksBroken =
-          !!profile &&
-          (!profile.full_name ||
-            profile.full_name.trim() === '' ||
-            profile.full_name === sessionUser.email);
-        const needsRoleBootstrap = profile && !profile.role && isGoogleOAuth;
-        const needsNameBackfill = profile && isGoogleOAuth && profileNameLooksBroken && !!googleName;
-        if (needsRoleBootstrap || needsNameBackfill) {
-          // Read pending stakeholder context set before the OAuth redirect (e.g. /register/referral)
-          let pendingType = null;
-          try {
-            pendingType = sessionStorage.getItem('pendingStakeholderType');
-          } catch { /* sessionStorage may be unavailable */ }
-          const stakeholderType = pendingType || profile.stakeholder_type || 'client';
-          const payload = {
-            action: 'update-profile',
-            userId: sessionUser.id,
-            full_name: googleName || profile.full_name || '',
-          };
-          if (needsRoleBootstrap) {
-            // The API derives the allowed role and approval status from this
-            // stakeholder slug; the browser never assigns its own role.
-            payload.stakeholder_type = stakeholderType;
-          }
-          // Must carry the access token: /api/user verifies the caller and only
-          // allows this one self-bootstrap (a profile with no role yet, receiving
-          // to 'client'). The Google session already exists by this point.
-          await apiPost('/api/user', payload);
-          try { sessionStorage.removeItem('pendingStakeholderType'); } catch { /* ignore */ }
-          // Re-fetch profile after update
-          let { data: updatedProfile } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", sessionUser.id)
-            .maybeSingle();
-          // Now that the role is set, the anon gap-analysis score (if any)
-          // can finally be hydrated into the profile.
-          updatedProfile = await hydrateAnonGapScore(sessionUser, updatedProfile);
-          if (updatedProfile && mounted) {
-            setUser({ ...sessionUser, ...updatedProfile });
-          } else if (mounted) {
-            setUser(sessionUser);
-          }
-        } else if (profile && mounted) {
+        if (profile && mounted) {
           setUser({ ...sessionUser, ...profile });
         } else if (mounted) {
           setUser(sessionUser); // Fallback if no profile yet
@@ -189,29 +139,31 @@ export function AuthProvider({ children }) {
   // Auth actions
   // ---------------------------------------------------
 
-  const signInWithGoogle = async (redirectPath = '/auth/callback', stakeholderType = null) => {
-    // Persist stakeholder context so it survives the OAuth round-trip and
-    // can be applied when the new profile is provisioned on return.
-    try {
-      if (stakeholderType) {
-        sessionStorage.setItem('pendingStakeholderType', stakeholderType);
-      } else {
-        sessionStorage.removeItem('pendingStakeholderType');
-      }
-    } catch { /* sessionStorage may be unavailable */ }
+  // Refuses a signed-in user whose account may not be used yet: deactivated, or
+  // registration still pending / declined. Signs them out again when it does.
+  // Shared by the password login and the emailed-code login so both apply the
+  // same rules.
+  const accountGate = async (authUser) => {
+    if (!authUser) return { ok: true };
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('approval_status, is_active')
+      .eq('id', authUser.id)
+      .maybeSingle();
 
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}${redirectPath}`,
-      },
-    });
-
-    if (error) {
-      return { success: false, error: error.message };
+    if (profile?.is_active === false) {
+      await supabase.auth.signOut();
+      return { ok: false, error: 'Your account has been deactivated. Please contact a CertifyCX administrator.' };
     }
-
-    return { success: true };
+    if (profile?.approval_status === 'pending') {
+      await supabase.auth.signOut();
+      return { ok: false, error: 'Your registration is pending approval. A CertifyCX administrator will review and verify your account shortly.' };
+    }
+    if (profile?.approval_status === 'rejected') {
+      await supabase.auth.signOut();
+      return { ok: false, error: 'Your registration has been declined. Please contact support at support@certify.cx for more information.' };
+    }
+    return { ok: true };
   };
 
   const login = async (email, password) => {
@@ -232,39 +184,38 @@ export function AuthProvider({ children }) {
       return { success: false, error: error.message };
     }
 
-    // Check approval_status from profile before allowing login
-    if (data?.user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('approval_status, is_active')
-        .eq('id', data.user.id)
-        .maybeSingle();
+    const gate = await accountGate(data?.user);
+    if (!gate.ok) return { success: false, error: gate.error };
 
-      if (profile?.is_active === false) {
-        await supabase.auth.signOut();
-        return {
-          success: false,
-          error: 'Your account has been deactivated. Please contact a CertifyCX administrator.',
-        };
-      }
+    return { success: true, data };
+  };
 
-      if (profile?.approval_status === 'pending') {
-        await supabase.auth.signOut();
-        return {
-          success: false,
-          error: 'Your registration is pending approval. A CertifyCX administrator will review and verify your account shortly.',
-        };
-      }
+  // ---- Emailed one-time code (code-login mode, see config/loginMode.js) ----
+  // Supabase generates, expires, rate-limits and checks the six-digit code.
+  // shouldCreateUser:false means a code is only ever sent to an address that
+  // already has an account: accounts are created by the sign-up form, never by
+  // asking for a code.
+  const requestLoginOtp = async (email) => {
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: false },
+    });
+    const kind = classifyOtpRequestError(error);
+    if (kind === 'rate_limited') return { success: false, rateLimited: true, error: String(error.message || '') };
+    // No such account: report success so the page does not reveal which
+    // addresses are registered.
+    if (kind === 'unknown_account') return { success: true };
+    if (kind === 'failed') return { success: false, error: 'We could not send a code right now. Please try again.' };
+    return { success: true };
+  };
 
-      if (profile?.approval_status === 'rejected') {
-        await supabase.auth.signOut();
-        return {
-          success: false,
-          error: 'Your registration has been declined. Please contact support at support@certify.cx for more information.',
-        };
-      }
+  const verifyLoginOtp = async (email, token) => {
+    const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
+    if (error || !data?.user) {
+      return { success: false, error: 'That code is incorrect or has expired. Request a new one and try again.' };
     }
-
+    const gate = await accountGate(data.user);
+    if (!gate.ok) return { success: false, error: gate.error };
     return { success: true, data };
   };
 
@@ -274,7 +225,7 @@ export function AuthProvider({ children }) {
     number_of_locations, website, city, country,
     contact_number, contact_role, certification_types,
     referral_code, role, stakeholder_type,
-    custom_fields,
+    custom_fields, marketing_opt_in, neutral_existing,
   }) => {
     const region = await getRegionFromCountryAsync(country, supabase);
     const assignedRole = role || ROLES.CLIENT;
@@ -282,8 +233,13 @@ export function AuthProvider({ children }) {
     // in as soon as they finish registering and confirm their email — there is
     // no separate admin-approval gate. Email verification (email_confirm:false
     // on the created user) is the only barrier to first login.
-    const needsApproval = false;
-    const approvalStatus = 'approved';
+    //
+    // Contractor is the one exception (client, 28 Oct — "Each approved
+    // contractor will have access to the dashboard"): self-registration
+    // uploads documents and signs the agreement, but login() itself refuses
+    // a 'pending' profile until a Super Admin approves it.
+    const needsApproval = assignedRole === ROLES.CONTRACTOR;
+    const approvalStatus = needsApproval ? 'pending' : 'approved';
 
     // Route signup through the service-role API. The user is created already
     // confirmed — email verification was removed (client, 25 Jul), so there is
@@ -300,6 +256,8 @@ export function AuthProvider({ children }) {
         stakeholder_type: stakeholder_type || 'client',
         approval_status: approvalStatus,
         custom_fields: custom_fields || null,
+        marketing_opt_in: marketing_opt_in === true,
+        neutralExisting: neutral_existing === true,
       }),
     });
     const signupJson = await signupRes.json().catch(() => ({}));
@@ -307,6 +265,10 @@ export function AuthProvider({ children }) {
     if (!signupRes.ok || !signupJson.success) {
       return { success: false, error: signupJson.error || 'Signup failed' };
     }
+
+    // Address already registered (code sign-up only): say nothing, the page
+    // goes on to email a sign-in code exactly as for a new account.
+    if (signupJson.existing) return { success: true, existing: true };
 
     const createdUser = signupJson.user;
 
@@ -376,6 +338,11 @@ export function AuthProvider({ children }) {
       // list they used to land on is one box away.
       [ROLES.REFERRAL]: '/referral-dashboard',
       [ROLES.CONSULTANCY]: '/referral-dashboard',
+      // Lands on the main dashboard (phase45, 28 Oct — matches the client's
+      // mockup). Signing the contract, if one is pending, is still just one
+      // click away via the sidebar.
+      [ROLES.CONTRACTOR]: '/contractor/dashboard',
+      [ROLES.FINANCE]: '/finance/payments',
     };
     return map[role] || '/dashboard';
   };
@@ -396,7 +363,8 @@ export function AuthProvider({ children }) {
     isAuthenticated: !!session,
     login,
     signup,
-    signInWithGoogle,
+    requestLoginOtp,
+    verifyLoginOtp,
     logout,
     resetPassword,
     updatePassword,

@@ -7,7 +7,6 @@ import { supabase } from '../../lib/supabase';
 import PricingTiers from '../../components/pricing/PricingTiers';
 import PublicNav from '../../components/layout/PublicNav';
 import BackButton from '../../components/ui/BackButton';
-import SEO from '../../components/seo/SEO';
 import './IsoLanding.css';
 
 export default function IsoLanding() {
@@ -75,14 +74,8 @@ export default function IsoLanding() {
   }
 
   return (
-    <>
-      <SEO
-        title={`${config.fullCode || config.code} | ${t(config.titleKey)} | Certify.cx`}
-        description={t(config.descKey)}
-        path={`/iso/${config.slug}`}
-      />
-      <div className="iso-landing">
-        <PublicNav />
+    <div className="iso-landing">
+      <PublicNav />
       <div className="iso-landing__container pubnav-offset">
         <BackButton />
 
@@ -100,6 +93,5 @@ export default function IsoLanding() {
         </div>
       </div>
     </div>
-    </>
   );
 }
