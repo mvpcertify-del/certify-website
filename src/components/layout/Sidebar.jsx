@@ -5,7 +5,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import { hasAnyPermission, PERMISSIONS, ROLES, getDisplayRoleLabel } from '../../utils/roles';
 import {
   LayoutDashboard,
-  Puzzle,
   LayoutGrid,
   Building2,
   FileCheck2,
@@ -205,8 +204,8 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     { path: '/notifications', labelKey: 'nav.notifications', icon: Bell, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_DASHBOARD] },
   ];
 
-  // The Main Admin keeps the flat menu below and also gets Modules & Subscriptions
-  // at the top and the QMS & ERP suite under it. Every other role: flat menu only.
+  // The Main Admin gets the module menu (CRM, Sales, Marketing, Operations,
+  // Finance, Legal, QMS/ERP). Every other role keeps the flat menu below.
   const useModuleMenu = MODULE_MENU_ROLES.includes(user?.role);
 
   const filteredNav = navItems.filter(item =>
@@ -243,21 +242,15 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
         </div>
 
         <nav className="sidebar__nav">
-          {(
+          {useModuleMenu ? (
+            <ModuleSidebarNav
+              role={user?.role}
+              collapsed={collapsed}
+              onExpand={onToggleCollapse}
+              onNavigate={onClose}
+            />
+          ) : (
             <>
-          {useModuleMenu && (
-            <NavLink
-              to="/billing/modules"
-              className={({ isActive }) => `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`}
-              onClick={onClose}
-              title={collapsed ? t('modules.subscriptions', 'Modules & Subscriptions') : undefined}
-            >
-              <Puzzle size={20} className="sidebar__link-icon" />
-              {!collapsed && (
-                <span className="sidebar__link-label">{t('modules.subscriptions', 'Modules & Subscriptions')}</span>
-              )}
-            </NavLink>
-          )}
           {filteredNav.map((item) => {
               const label = t(item.labelKey);
               const kind = typeof item.kind === 'function' ? item.kind(user?.role) : item.kind;
@@ -295,17 +288,6 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
               );
             })}
             </>
-          )}
-          {/* Client (13 Nov): keep the existing menu as it is and add the QMS & ERP
-              suite below it. Only the Main Admin sees it. */}
-          {useModuleMenu && (
-            <ModuleSidebarNav
-              role={user?.role}
-              collapsed={collapsed}
-              onExpand={onToggleCollapse}
-              onNavigate={onClose}
-              zoneIds={['suite']}
-            />
           )}
         </nav>
 
