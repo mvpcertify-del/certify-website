@@ -52,6 +52,7 @@ async function fetchPage(url) {
 async function main() {
   const sitemapResponse = await fetch(`${BASE_URL}/sitemap.xml`, {
     signal: AbortSignal.timeout(15000),
+    headers: { 'User-Agent': 'CertifyCX-ReadOnly-SEO-Audit/1.0' },
   });
 
   if (!sitemapResponse.ok) {

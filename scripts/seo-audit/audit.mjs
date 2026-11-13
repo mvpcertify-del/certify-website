@@ -117,7 +117,6 @@ async function main() {
   };
 
   await mkdir(REPORT_DIR, { recursive: true });
-
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const reportPath = `${REPORT_DIR}/seo-audit-${timestamp}.json`;
 

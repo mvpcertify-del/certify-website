@@ -128,6 +128,7 @@ function SimpleClientSignUp() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   const customFields = useCustomFieldsForRole('client');
   const [customValues, setCustomValues] = useState({});
@@ -177,20 +178,41 @@ function SimpleClientSignUp() {
     });
 
     if (result.success) {
-      // Verification was removed — sign the new user straight in and take them
-      // to their dashboard instead of a "check your email" screen.
-      const loginRes = await login(email, password);
-      if (loginRes?.success) {
-        navigate(getRoleDashboard(loginRes.data?.user?.role || 'client'));
-      } else {
-        navigate('/login');
-      }
+      // Email verification is required. Show check-email screen instead of auto-login.
+      setEmailSent(true);
+      setLoading(false);
       return;
     }
     setError(result.error);
     setLoading(false);
   };
 
+
+  if (emailSent) {
+    return (
+      <div className="auth-form auth-form--simple">
+        <div style={{ textAlign: 'center', padding: '24px 0' }}>
+          <CheckCircle size={48} color="#3ecf8e" style={{ marginBottom: 16 }} />
+          <h2 className="auth-form__hero-title" style={{ marginBottom: 12 }}>
+            Check your email
+          </h2>
+          <p style={{ color: 'var(--color-text-secondary)', marginBottom: 8, lineHeight: 1.5 }}>
+            We sent a confirmation link to <strong>{email}</strong>.
+          </p>
+          <p style={{ color: 'var(--color-text-secondary)', marginBottom: 24, lineHeight: 1.5 }}>
+            Click the link in the email to activate your account, then sign in.
+          </p>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => navigate('/login')}
+          >
+            Go to Sign In
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="auth-form auth-form--simple">
@@ -624,13 +646,10 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
         // don't block sign-in on it.
         await attachAuditorDetails(result.data.user.id);
       }
-      // Verification was removed — sign in and go straight to the dashboard.
-      const loginRes = await login(formData.email, formData.password);
-      if (loginRes?.success) {
-        navigate(getRoleDashboard(loginRes.data?.user?.role || 'client'));
-      } else {
-        navigate('/login');
-      }
+      // Email verification is required. Redirect to login with a message.
+      // (Stakeholder wizard keeps the simpler redirect for now.)
+      setLoading(false);
+      navigate('/login?verify=1');
       return;
     } else {
       setError(result.error);

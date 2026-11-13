@@ -11,6 +11,7 @@ import { COMPLIANCE_AUDIT_LIST } from '../../utils/complianceAudits';
 import ComplianceLogo from '../../components/ui/ComplianceLogo';
 import SaraChatWidget from '../../components/sara/SaraChatWidget';
 import PublicNav from '../../components/layout/PublicNav';
+import SEO from '../../components/seo/SEO';
 import BrandLogo from '../../components/ui/BrandLogo';
 import './LandingPage.css';
 
@@ -62,7 +63,13 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="landing">
+    <>
+      <SEO
+        title="Certify.cx™ | ISO Certification & Compliance Platform"
+        description="Explore ISO certification standards, compliance audits and gap analysis services with Certify.cx."
+        path="/"
+      />
+      <div className="landing">
       {/* ---- Navbar ---- */}
       <PublicNav />
 
@@ -266,5 +273,6 @@ export default function LandingPage() {
 
       <SaraChatWidget />
     </div>
+    </>
   );
 }

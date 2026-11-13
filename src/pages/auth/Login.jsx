@@ -60,6 +60,8 @@ export default function Login() {
       setError('Your registration is pending approval. A CertifyCX administrator will review and verify your account shortly.');
     } else if (searchParams.get('rejected') === '1') {
       setError('Your registration has been declined. Please contact support at support@certify.cx for more information.');
+    } else if (searchParams.get('verify') === '1') {
+      setError('Please check your email and click the confirmation link before signing in.');
     }
   }, [searchParams]);
 
