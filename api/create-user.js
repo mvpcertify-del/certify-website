@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { isDisposableEmail } from './_disposableEmail.js';
 import { notifyAdmins } from './_notifyAdmins.js';
 import { verifyAdmin } from './_verifyAdmin.js';
 import { getRegionFromCountry, getCreatableRoles, ROLE_LABELS } from '../src/utils/roles.js';
@@ -40,6 +41,8 @@ export default async function handler(req, res) {
       website, city, country, contact_number, contact_role,
       stakeholder_type, approval_status,
       custom_fields,
+      // sign-up consent + the neutral "already registered" answer (OTP sign-up)
+      marketing_opt_in, neutralExisting,
       // phase24 — auditor professional profile. `phone` is what the admin
       // modal sends; `contact_number` is the self-signup name for the same
       // thing, and both land in the single profiles.phone column.
@@ -70,6 +73,14 @@ export default async function handler(req, res) {
     }
 
     const assignedRole = role || (isSelfSignup ? 'client' : null);
+
+    // Provider roles are vetted before they go live, so a throw-away mailbox is
+    // refused. Clients are not restricted (a buyer may use any address).
+    if (isSelfSignup && assignedRole !== 'client' && isDisposableEmail(email)) {
+      return res.status(400).json({
+        error: 'Please use your work email address. Temporary email addresses are not accepted for this role.',
+      });
+    }
 
     // Country is the geo field captured across the admin UI now; derive the
     // region from it for RBAC scoping when the caller didn't pass a region.
@@ -161,6 +172,10 @@ export default async function handler(req, res) {
           contact_role: contact_role || null,
           stakeholder_type: stakeholder_type || 'client',
           approval_status: resolvedApprovalStatus,
+          // Consent record. Marketing mail is opt-in only: true only when the
+          // person ticked the (unticked-by-default) box.
+          marketing_opt_in: marketing_opt_in === true,
+          terms_accepted_at: new Date().toISOString(),
         }
       : {
           name: displayName,
@@ -182,6 +197,13 @@ export default async function handler(req, res) {
     });
 
     if (authError) {
+      // Code sign-up answers the same way whether or not the address already has
+      // an account, so the form cannot be used to find out who is registered.
+      // The page then emails a sign-in code, which only the mailbox owner gets.
+      if (isSelfSignup && neutralExisting === true
+        && (authError.code === 'email_exists' || /already (been )?registered|already exists/i.test(authError.message || ''))) {
+        return res.status(200).json({ success: true, existing: true });
+      }
       return res.status(400).json({ error: authError.message });
     }
 

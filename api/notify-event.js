@@ -30,6 +30,7 @@ import {
 import { APP_URL } from './_appUrl.js';
 import { draftWeeklyInvestorCampaign } from './_investorCampaigns.js';
 import { applyContractorTaskDecision } from './_contractorTaskScoring.js';
+import { handleOdooAdminAction, runOdooSyncIfEnabled } from './_odooAdmin.js';
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -78,6 +79,10 @@ export default async function handler(req, res) {
     if (job === 'investor-campaign-draft') {
       return await handleInvestorCampaignDraftCron(req, res);
     }
+    // Odoo accounting mirror (MVP). A strict no-op unless ODOO_SYNC_ENABLED is
+    // 'true' and the database switch is on; it rides the daily cron because the
+    // Hobby plan allows no further cron schedules.
+    await runOdooSyncIfEnabled();
     // No ?job=contractor-task-deadlines entry: Vercel's Hobby plan caps the
     // number of cron SCHEDULES too (separately from the 12-function limit
     // CLAUDE.md already warns about), and this project is already at 2. The
@@ -87,6 +92,12 @@ export default async function handler(req, res) {
   }
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  // Odoo admin actions (test connection, sync now, retry). Super Admin only;
+  // handled in api/_odooAdmin.js, which verifies the caller itself.
+  if (typeof req.body?.action === 'string' && req.body.action.startsWith('odoo-')) {
+    return handleOdooAdminAction(req, res);
   }
 
   try {

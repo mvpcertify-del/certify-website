@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
+import { LOGIN_OTP_ENABLED, randomPassword } from '../../config/loginMode';
 import { Input, Select, Button, Autocomplete } from '../../components/ui/FormElements';
 import NameFields from '../../components/ui/NameFields';
 import CustomFieldRenderer, { validateCustomFields } from '../../components/CustomFieldRenderer';
@@ -112,7 +113,7 @@ export default function SignUp() {
 }
 
 function SimpleClientSignUp() {
-  const { signup, signInWithGoogle, login, getRoleDashboard } = useAuth();
+  const { signup, login, getRoleDashboard } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
@@ -127,7 +128,8 @@ function SimpleClientSignUp() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
+  // Marketing mail is opt-in: unticked until the person ticks it.
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
 
   const customFields = useCustomFieldsForRole('client');
   const [customValues, setCustomValues] = useState({});
@@ -151,11 +153,11 @@ function SimpleClientSignUp() {
       setError(t('auth.validationName'));
       return;
     }
-    if (password.length < 6) {
+    if (!LOGIN_OTP_ENABLED && password.length < 6) {
       setError(t('auth.validationPasswordLength'));
       return;
     }
-    if (password !== confirmPassword) {
+    if (!LOGIN_OTP_ENABLED && password !== confirmPassword) {
       setError(t('auth.validationPasswordMatch'));
       return;
     }
@@ -169,16 +171,23 @@ function SimpleClientSignUp() {
     const result = await signup({
       name,
       email,
-      password,
+      // Code-login mode collects no password; a random, never-shown one satisfies the account API.
+      password: LOGIN_OTP_ENABLED ? randomPassword() : password,
       referral_code: referralCode,
       role: 'client',
       stakeholder_type: 'client',
       custom_fields: customValues,
+      marketing_opt_in: marketingOptIn,
+      neutral_existing: LOGIN_OTP_ENABLED,
     });
 
     if (result.success) {
       // Verification was removed — sign the new user straight in and take them
       // to their dashboard instead of a "check your email" screen.
+      if (LOGIN_OTP_ENABLED) {
+        navigate('/login', { state: { email, sendCode: true } });
+        return;
+      }
       const loginRes = await login(email, password);
       if (loginRes?.success) {
         navigate(getRoleDashboard(loginRes.data?.user?.role || 'client'));
@@ -205,32 +214,6 @@ function SimpleClientSignUp() {
 
       {step === 1 && (
         <>
-          <button
-            type="button"
-            className="auth-google-btn auth-google-btn--pill"
-            disabled={googleLoading}
-            onClick={async () => {
-              setGoogleLoading(true);
-              setError('');
-              const result = await signInWithGoogle();
-              if (!result.success) {
-                setError(result.error);
-                setGoogleLoading(false);
-              }
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
-              <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
-              <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
-              <path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
-              <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 2.58 9 3.58z" fill="#EA4335"/>
-            </svg>
-            {googleLoading ? t('common.redirecting') : t('auth.continueWithGoogle')}
-          </button>
-
-          <div className="auth-divider">
-            <span>{t('common.or')}</span>
-          </div>
 
           <form onSubmit={handleEmailContinue} className="auth-form__body">
             <Input
@@ -277,6 +260,8 @@ function SimpleClientSignUp() {
             required
           />
 
+          {!LOGIN_OTP_ENABLED && (
+          <>
           <Input
             label={t('auth.passwordRequired')}
             type={showPassword ? 'text' : 'password'}
@@ -318,6 +303,12 @@ function SimpleClientSignUp() {
               </button>
             }
           />
+          </>
+          )}
+
+          {LOGIN_OTP_ENABLED && (
+            <p className="auth-form__hint">{t('auth.signupNoPassword')}</p>
+          )}
 
           {customFields.map(field => (
             <CustomFieldRenderer
@@ -328,9 +319,25 @@ function SimpleClientSignUp() {
             />
           ))}
 
+          <label className="auth-form__check">
+            <input
+              type="checkbox"
+              checked={marketingOptIn}
+              onChange={(e) => setMarketingOptIn(e.target.checked)}
+            />
+            <span>{t('auth.marketingOptIn')}</span>
+          </label>
+
           <Button type="submit" variant="primary" size="lg" fullWidth loading={loading}>
             {t('auth.createAccount')}
           </Button>
+
+          <p className="auth-form__legal">
+            {t('auth.legalPrefix')}{' '}
+            <Link to="/terms" className="auth-form__link">{t('auth.termsLink')}</Link>
+            {' '}{t('auth.legalAnd')}{' '}
+            <Link to="/privacy" className="auth-form__link">{t('auth.privacyLink')}</Link>.
+          </p>
         </form>
       )}
 
@@ -342,7 +349,7 @@ function SimpleClientSignUp() {
 }
 
 function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
-  const { signup, signInWithGoogle, login, getRoleDashboard } = useAuth();
+  const { signup, login, getRoleDashboard } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
@@ -417,7 +424,6 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
 
   const customFields = useCustomFieldsForRole(targetRole);
   const [customValues, setCustomValues] = useState({});
@@ -485,11 +491,11 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
       }
     }
     if (step === 3) {
-      if (formData.password.length < 6) {
+      if (!LOGIN_OTP_ENABLED && formData.password.length < 6) {
         setError(t('auth.validationPasswordLength'));
         return false;
       }
-      if (formData.password !== formData.confirmPassword) {
+      if (!LOGIN_OTP_ENABLED && formData.password !== formData.confirmPassword) {
         setError(t('auth.validationPasswordMatch'));
         return false;
       }
@@ -535,11 +541,11 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
       setError(t('auth.validationContactFields'));
       return false;
     }
-    if (formData.password.length < 6) {
+    if (!LOGIN_OTP_ENABLED && formData.password.length < 6) {
       setError(t('auth.validationPasswordLength'));
       return false;
     }
-    if (formData.password !== formData.confirmPassword) {
+    if (!LOGIN_OTP_ENABLED && formData.password !== formData.confirmPassword) {
       setError(t('auth.validationPasswordMatch'));
       return false;
     }
@@ -649,7 +655,7 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
     const result = await signup({
       name: formData.contact_person_name,
       email: formData.email,
-      password: formData.password,
+      password: LOGIN_OTP_ENABLED ? randomPassword() : formData.password,
       // Pure individuals (referral / investor) have no company context — omit
       // all company-specific fields so admins don't see misleading data.
       company_name: isPureIndividual ? null : formData.company_name,
@@ -686,6 +692,13 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
       // Verification was removed — sign in and go straight to the dashboard.
       // For a pending contractor this fails by design (see AuthContext.signup)
       // and falls through to the pending-approval notice below.
+      if (LOGIN_OTP_ENABLED) {
+        // A pending contractor cannot sign in yet, so no code is sent.
+        navigate(targetRole === 'contractor' ? '/login?pending=1' : '/login', {
+          state: { email: formData.email, sendCode: targetRole !== 'contractor' },
+        });
+        return;
+      }
       const loginRes = await login(formData.email, formData.password);
       if (loginRes?.success) {
         navigate(getRoleDashboard(loginRes.data?.user?.role || 'client'));
@@ -710,37 +723,6 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
       <p className="auth-form__subtitle">
         {stakeholderCopy.description}
       </p>
-
-      {registrationType !== 'contractor' && (
-        <>
-          <button
-            type="button"
-            className="auth-google-btn"
-            disabled={googleLoading}
-            onClick={async () => {
-              setGoogleLoading(true);
-              setError('');
-              const result = await signInWithGoogle('/auth/callback', registrationType || 'client');
-              if (!result.success) {
-                setError(result.error);
-                setGoogleLoading(false);
-              }
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
-              <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
-              <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
-              <path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
-              <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 2.58 9 3.58z" fill="#EA4335"/>
-            </svg>
-            {googleLoading ? t('common.redirecting') : t('auth.signUpWithGoogle')}
-          </button>
-
-          <div className="auth-divider">
-            <span>{t('auth.orFillDetails')}</span>
-          </div>
-        </>
-      )}
 
       {!isPureIndividual && (
         <div className="signup-steps">
@@ -816,6 +798,8 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
               fetchOptions={(text) => fetchGeoapifyOptions(text, 'city')}
               value={formData.location} onChange={handleChange} onSelect={handleLocationSelect} required />
 
+            {!LOGIN_OTP_ENABLED && (
+            <>
             <Input label={t('auth.passwordRequired')} type={showPassword ? 'text' : 'password'} id="signup-password" name="password"
               autoComplete="new-password"
               placeholder={t('auth.passwordPlaceholder')} value={formData.password}
@@ -845,6 +829,8 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
                 </button>
               }
             />
+            </>
+            )}
 
             <Button type="submit" variant="primary" size="lg" fullWidth loading={loading}>
               {t('auth.createAccount')}
@@ -983,6 +969,8 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
               <p><strong>Contact:</strong> {formData.contact_person_name} ({formData.email})</p>
             </div>
 
+            {!LOGIN_OTP_ENABLED && (
+            <>
             <Input label={t('auth.passwordRequired')} type={showPassword ? "text" : "password"} id="signup-password" name="password"
               autoComplete="new-password"
               placeholder={t('auth.passwordPlaceholder')} value={formData.password}
@@ -1012,6 +1000,8 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
                 </button>
               }
             />
+            </>
+            )}
 
             {targetRole === 'auditor' && (
               <>

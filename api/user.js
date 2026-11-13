@@ -19,7 +19,6 @@ import { approveRegistration } from './_approveRegistration.js';
 import { deleteUser } from './_deleteUser.js';
 import { resendVerification } from './_resendVerification.js';
 import { sendWhatsApp } from './_notifyWhatsApp.js';
-import { sendWelcomeDirect } from './_sendWelcomeDirect.js';
 import {
   ContractorContractError,
   generateReference,
@@ -186,27 +185,6 @@ async function updateProfile(req, res) {
     return res.status(403).json({ error: 'Forbidden: you cannot edit that profile' });
   }
 
-  // The one legitimate case where a user sets their own role: a Google OAuth
-  // account whose profile row has no role yet. Narrow it to exactly that — an
-  // an existing role can never be self-rewritten; the role is derived from the selected stakeholder type.
-  const OAUTH_STAKEHOLDER_ROLES = {
-    client: 'client',
-    consultancy: 'consultancy',
-    referral: 'referral',
-    'certification-body': 'certification_body',
-  };
-  const bootstrapRole = OAUTH_STAKEHOLDER_ROLES[stakeholder_type];
-  const isOAuthRoleBootstrap =
-    isSelf &&
-    caller.provider === 'google' &&
-    !target?.role &&
-    !!bootstrapRole;
-
-  if (isOAuthRoleBootstrap) {
-    role = bootstrapRole;
-    approval_status = 'approved';
-  }
-
   // ONLY a super admin may change these. Being a regional admin is not enough:
   // a country admin passing their OWN userId satisfies `isRegional` trivially
   // (their region always equals their region), so gating on it would have let
@@ -223,12 +201,7 @@ async function updateProfile(req, res) {
     const attempted = Object.entries(PRIVILEGED).filter(
       ([field, value]) => value !== undefined && value !== target?.[field],
     );
-    // Bootstrap may set only the server-derived role, stakeholder type,
-    // and server-controlled approval status.
-    const bootstrapFields = ['role', 'stakeholder_type', 'approval_status'];
-    const disallowed = isOAuthRoleBootstrap
-      ? attempted.filter(([field]) => !bootstrapFields.includes(field))
-      : attempted;
+    const disallowed = attempted;
     if (disallowed.length) {
       // Refuse loudly. Silently dropping the field would show the admin a
       // success toast for a change that never happened.
@@ -236,11 +209,9 @@ async function updateProfile(req, res) {
         error: `Forbidden: only a super admin can change ${disallowed.map(([f]) => f).join(', ')}`,
       });
     }
-    if (!isOAuthRoleBootstrap) {
-      role = undefined;
-      stakeholder_type = undefined;
-      approval_status = undefined;
-    }
+    role = undefined;
+    stakeholder_type = undefined;
+    approval_status = undefined;
     region = undefined;
     email = undefined;
     commission_percent_override = undefined;
@@ -327,19 +298,6 @@ async function updateProfile(req, res) {
       });
     }
     return res.status(500).json({ error: error.message });
-  }
-
-  // Send a welcome email only after first-time Google OAuth role bootstrap.
-  if (isOAuthRoleBootstrap && target?.email) {
-    await sendWelcomeDirect({
-      supabaseAdmin,
-      userId,
-      email: target.email,
-      name: full_name,
-      role: bootstrapRole,
-      stakeholderType: stakeholder_type,
-    });
-
   }
 
   if (email) {

@@ -84,11 +84,8 @@ export default function SmeLanding() {
             {t('landing.heroSubtitle')}
           </p>
           <div className="landing__hero-actions">
-            <Link to="/certifications" className="landing__btn landing__btn--primary">
-              {t('landing.getCertifiedNow')} <ArrowRight size={18} />
-            </Link>
-            <Link to="/gap-analysis" className="landing__btn landing__btn--secondary">
-              {t('landing.freeGapAnalysis')}
+            <Link to="/gap-analysis" className="landing__btn landing__btn--primary">
+              {t('nav.startGapAnalysis')} <ArrowRight size={18} />
             </Link>
           </div>
           <div className="landing__hero-stats">

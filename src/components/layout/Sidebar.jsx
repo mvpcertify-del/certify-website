@@ -52,8 +52,6 @@ import {
   Wallet,
 } from 'lucide-react';
 import BrandLogo from '../ui/BrandLogo';
-import ModuleSidebarNav from './ModuleSidebarNav';
-import { MODULE_MENU_ROLES } from '../../config/sidebarModules';
 import LanguageSwitcher from '../LanguageSwitcher';
 import './Sidebar.css';
 
@@ -204,10 +202,6 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     { path: '/notifications', labelKey: 'nav.notifications', icon: Bell, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_DASHBOARD] },
   ];
 
-  // The Main Admin gets the module menu (CRM, Sales, Marketing, Operations,
-  // Finance, Legal, QMS/ERP). Every other role keeps the flat menu below.
-  const useModuleMenu = MODULE_MENU_ROLES.includes(user?.role);
-
   const filteredNav = navItems.filter(item =>
     hasAnyPermission(user?.role, item.permissions) &&
     !(item.excludeRoles && item.excludeRoles.includes(user?.role)) &&
@@ -242,53 +236,42 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
         </div>
 
         <nav className="sidebar__nav">
-          {useModuleMenu ? (
-            <ModuleSidebarNav
-              role={user?.role}
-              collapsed={collapsed}
-              onExpand={onToggleCollapse}
-              onNavigate={onClose}
-            />
-          ) : (
-            <>
           {filteredNav.map((item) => {
-              const label = t(item.labelKey);
-              const kind = typeof item.kind === 'function' ? item.kind(user?.role) : item.kind;
-              const marker = KIND_META[kind];
-              const kindLabel = marker ? t(marker.labelKey) : '';
-              return (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  className={({ isActive }) =>
-                    `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`
-                  }
-                  onClick={onClose}
-                  // Collapsed to the 68px rail there is no room for the marker,
-                  // so it moves into the tooltip rather than being lost.
-                  title={collapsed ? (kindLabel ? `${label} — ${kindLabel}` : label) : undefined}
-                >
-                  <item.icon size={20} className="sidebar__link-icon" />
-                  {!collapsed && (
-                    <span className="sidebar__link-label">
-                      {label}
-                      {/* Nested inside the label, not a sibling: the label is
-                          already dropped when collapsed and already flipped by
-                          the RTL rules, so the marker inherits both. */}
-                      {marker && (
-                        <marker.Icon
-                          size={13}
-                          className="sidebar__link-marker"
-                          aria-label={kindLabel}
-                        />
-                      )}
-                    </span>
-                  )}
-                </NavLink>
-              );
-            })}
-            </>
-          )}
+            const label = t(item.labelKey);
+            const kind = typeof item.kind === 'function' ? item.kind(user?.role) : item.kind;
+            const marker = KIND_META[kind];
+            const kindLabel = marker ? t(marker.labelKey) : '';
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={({ isActive }) =>
+                  `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`
+                }
+                onClick={onClose}
+                // Collapsed to the 68px rail there is no room for the marker,
+                // so it moves into the tooltip rather than being lost.
+                title={collapsed ? (kindLabel ? `${label} — ${kindLabel}` : label) : undefined}
+              >
+                <item.icon size={20} className="sidebar__link-icon" />
+                {!collapsed && (
+                  <span className="sidebar__link-label">
+                    {label}
+                    {/* Nested inside the label, not a sibling: the label is
+                        already dropped when collapsed and already flipped by
+                        the RTL rules, so the marker inherits both. */}
+                    {marker && (
+                      <marker.Icon
+                        size={13}
+                        className="sidebar__link-marker"
+                        aria-label={kindLabel}
+                      />
+                    )}
+                  </span>
+                )}
+              </NavLink>
+            );
+          })}
         </nav>
 
         <div className="sidebar__footer">

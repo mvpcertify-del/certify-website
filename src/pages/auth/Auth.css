@@ -150,20 +150,7 @@
   color: var(--color-text-primary);
 }
 
-.auth-google-btn--pill {
-  border-radius: 999px;
-  background: #000;
-  color: #fff;
-  border-color: #000;
-  padding: 14px 16px;
-  font-weight: 600;
-}
 
-.auth-google-btn--pill:hover:not(:disabled) {
-  background: #1a1a1a;
-  border-color: #1a1a1a;
-  color: #fff;
-}
 
 /* Make inputs in the simple signup flow match the width and height of the
    pill-style buttons above/below them. */
@@ -342,33 +329,6 @@
   margin-bottom: var(--spacing-base);
 }
 
-/* ---- Google OAuth Button ---- */
-.auth-google-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: 100%;
-  padding: 12px 16px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-bg-primary);
-  color: var(--color-text-primary);
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.auth-google-btn:hover:not(:disabled) {
-  border-color: var(--color-text-secondary);
-  background: var(--color-bg-secondary, rgba(255, 255, 255, 0.03));
-}
-
-.auth-google-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
 
 /* ---- Divider ---- */
 .auth-divider {
@@ -413,4 +373,146 @@
   .signup-steps__label {
     display: none;
   }
+}
+
+/* ---- Email one-time code ---- */
+.auth-form #login-otp {
+  text-align: center;
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: 0.5em;
+  padding-inline-start: 0.5em;
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
+}
+.auth-otp-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-base);
+  flex-wrap: wrap;
+}
+.auth-otp-resend {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+.auth-otp-resend:disabled {
+  color: var(--color-text-tertiary);
+  cursor: default;
+  text-decoration: none;
+}
+.auth-form__notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: var(--spacing-base);
+  padding: 10px 14px;
+  font-size: var(--font-size-sm);
+  color: var(--color-success);
+  background: var(--color-success-bg);
+  border-radius: var(--radius-md);
+}
+
+/* ---- Login page: centred, full-width, roomier ---- */
+.auth-form--login {
+  gap: var(--spacing-lg);
+  text-align: center;
+}
+.auth-form--login .auth-form__title {
+  font-size: 1.75rem;
+  letter-spacing: -0.01em;
+}
+.auth-form--login .auth-form__subtitle {
+  max-width: 320px;
+  margin: calc(var(--spacing-sm) * -1) auto 0;
+  font-size: var(--font-size-base);
+  line-height: 1.55;
+}
+.auth-form--login .auth-form__body {
+  gap: var(--spacing-lg);
+}
+/* The input sits in an unsized wrapper, so it used to shrink to ~20 characters
+   while the button beside it ran the full width. */
+.auth-form--login .form-group,
+.auth-form--login .form-group > div,
+.auth-form--login .form-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+.auth-form--login .form-label {
+  justify-content: center;
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.01em;
+}
+.auth-form--login .form-input {
+  min-height: 56px;
+  padding: 16px 18px;
+  font-size: 1.0625rem;
+  text-align: center;
+  border-radius: 12px;
+}
+.auth-form--login .form-input::placeholder {
+  text-align: center;
+}
+.auth-form--login button[type='submit'] {
+  min-height: 56px;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  border-radius: 12px;
+}
+.auth-form--login .auth-form__error,
+.auth-form--login .auth-form__notice {
+  text-align: start;
+}
+.auth-form--login .auth-form__footer-text {
+  font-size: var(--font-size-base);
+}
+.auth-form--login .auth-form__actions {
+  justify-content: center;
+}
+.auth-form--login #login-otp {
+  font-size: 2rem;
+}
+
+.auth-otp-paste {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: calc(var(--spacing-sm) * -1);
+  padding: 8px 14px;
+  background: transparent;
+  color: var(--color-accent);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+.auth-otp-paste:hover { border-color: var(--color-accent); }
+
+.auth-form__hint {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+.auth-form__check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.auth-form__check input {
+  flex: none;
+  margin-top: 3px;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-accent);
 }
