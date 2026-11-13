@@ -13,9 +13,9 @@ import './PublicNav.css';
 // /register/:type) showed nothing but a logo — the client flagged the missing
 // nav bar. It now renders on all of them.
 //
-// The section links are anchors into the landing page. On "/" they stay bare
-// hashes so the browser scrolls in place; anywhere else they are prefixed with
-// "/" so they navigate home first and then scroll.
+// The section links are anchors into the SMEs page (/sme). On that page they stay
+// bare hashes so the browser scrolls in place; anywhere else they are prefixed
+// with "/sme" so they navigate there first and then scroll.
 export default function PublicNav() {
   const { t } = useTranslation();
   const { user, loading, logout, getRoleDashboard } = useAuth();
@@ -29,8 +29,10 @@ export default function PublicNav() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const closeMobile = () => setMobileOpen(false);
 
-  const onLanding = location.pathname === '/';
-  const anchor = (id) => (onLanding ? `#${id}` : `/#${id}`);
+  const onSme = location.pathname === '/sme';
+  // How It Works / Standards / Benefits live on the SMEs page (the original
+  // home page); the new home page at "/" no longer carries those sections.
+  const anchor = (id) => (onSme ? `#${id}` : `/sme#${id}`);
 
   // Once a visitor has verified their email / logged in, the header shows a
   // profile menu instead of the Log In + Sign Up buttons. Gate on !loading so
@@ -119,10 +121,8 @@ export default function PublicNav() {
           ) : (
             <>
               <Link to="/login" className="pubnav__link pubnav__link--login">{t('nav.login')}</Link>
-              <Link to="/signup" className="pubnav__btn">{t('nav.signUp')}</Link>
             </>
           )}
-          <Link to="/gap-analysis" className="pubnav__btn pubnav__btn--gap">{t('landing.freeGapAnalysis')}</Link>
         </div>
 
         {/* Mobile bar: language switcher stays visible at the top so anyone
@@ -174,10 +174,8 @@ export default function PublicNav() {
           ) : (
             <>
               <Link to="/login" className="pubnav__mobile-link pubnav__link--login" onClick={closeMobile}>{t('nav.login')}</Link>
-              <Link to="/signup" className="pubnav__btn pubnav__mobile-btn" onClick={closeMobile}>{t('nav.signUp')}</Link>
             </>
           )}
-          <Link to="/gap-analysis" className="pubnav__btn pubnav__btn--gap pubnav__mobile-btn" onClick={closeMobile}>{t('landing.freeGapAnalysis')}</Link>
         </div>
       )}
     </nav>

@@ -4,15 +4,15 @@ import { Globe, ChevronDown, Check } from 'lucide-react';
 import './LanguageSwitcher.css';
 
 const LANGUAGES = [
-  { code: 'en', label: 'English', flag: '🇬🇧' },
-  { code: 'ar', label: 'العربية', flag: '🇸🇦' },
-  { code: 'es', label: 'Español', flag: '🇪🇸' },
-  { code: 'fr', label: 'Français', flag: '🇫🇷' },
-  { code: 'ru', label: 'Русский', flag: '🇷🇺' },
-  { code: 'pt', label: 'Português', flag: '🇧🇷' },
-  { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
-  { code: 'zh', label: '中文', flag: '🇨🇳' },
-  { code: 'hi', label: 'हिन्दी', flag: '🇮🇳' },
+  { code: 'en', label: 'English' },
+  { code: 'ar', label: 'العربية' },
+  { code: 'es', label: 'Español' },
+  { code: 'fr', label: 'Français' },
+  { code: 'ru', label: 'Русский' },
+  { code: 'pt', label: 'Português' },
+  { code: 'de', label: 'Deutsch' },
+  { code: 'zh', label: '中文' },
+  { code: 'hi', label: 'हिन्दी' },
 ];
 
 export default function LanguageSwitcher({ variant = 'default' }) {
@@ -55,7 +55,7 @@ export default function LanguageSwitcher({ variant = 'default' }) {
         aria-label="Select language"
       >
         <Globe size={16} />
-        <span className="lang-switcher__flag">{currentLang.flag}</span>
+        <span className="lang-switcher__code">{currentLang.code.toUpperCase()}</span>
         <span className="lang-switcher__label">{currentLang.label}</span>
         <ChevronDown size={14} className={`lang-switcher__chevron ${open ? 'lang-switcher__chevron--open' : ''}`} />
       </button>
@@ -67,7 +67,7 @@ export default function LanguageSwitcher({ variant = 'default' }) {
               className={`lang-switcher__item ${lang.code === i18n.language ? 'lang-switcher__item--active' : ''}`}
               onClick={() => switchLanguage(lang.code)}
             >
-              <span>{lang.flag}</span>
+              <span className="lang-switcher__code">{lang.code.toUpperCase()}</span>
               <span>{lang.label}</span>
               {lang.code === i18n.language && (
                 <Check size={14} className="lang-switcher__check" />

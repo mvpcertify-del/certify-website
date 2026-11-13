@@ -1,5 +1,5 @@
-import { lazy as _reactLazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { lazy as _reactLazy, Suspense, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -35,6 +35,8 @@ const AuthLayout = lazy(() => import('./components/layout/AuthLayout'));
 // Public Pages
 const LandingPage = lazy(() => import('./pages/landing/LandingPage'));
 const PublicGapAnalysis = lazy(() => import('./pages/public/PublicGapAnalysis'));
+const MicroLanding = lazy(() => import('./pages/micro/MicroLanding'));
+const SmeLanding = lazy(() => import('./pages/sme/SmeLanding'));
 // Public pay-first checkout (no signup gate). Replaces the old /start-checkout
 // auth gate — buyers create their account AT payment. /start-checkout is kept
 // as an alias so older shared links keep working.
@@ -62,6 +64,11 @@ const AdminCountries = lazy(() => import('./pages/admin/AdminCountries'));
 const AdminCoupons = lazy(() => import('./pages/admin/AdminCoupons'));
 const AdminCommissionTiers = lazy(() => import('./pages/admin/AdminCommissionTiers'));
 const AdminConsultancies = lazy(() => import('./pages/admin/AdminConsultancies'));
+const AdminContractors = lazy(() => import('./pages/admin/AdminContractors'));
+const ContractorContract = lazy(() => import('./pages/contractor/ContractorContract'));
+const ContractorDashboard = lazy(() => import('./pages/contractor/ContractorDashboard'));
+const ComingSoon = lazy(() => import('./components/ui/ComingSoon'));
+const FinancePayments = lazy(() => import('./pages/finance/FinancePayments'));
 const AdminReferralPartners = lazy(() => import('./pages/admin/AdminReferralPartners'));
 const AdminBilling = lazy(() => import('./pages/admin/AdminBilling'));
 const CertificationBodiesRegistry = lazy(() => import('./pages/bodies/CertificationBodies'));
@@ -145,6 +152,13 @@ function AppRoutes() {
           <Route path="/compliance/:slug" element={<ComplianceLanding />} />
 
           {/* ---- Public anonymous Gap Analysis quiz ---- */}
+          {/* ---- SMEs: the original home page with every certification. The new
+              home page (/) links here from its SMEs segment. ---- */}
+          <Route path="/sme" element={<SmeLanding />} />
+
+          {/* ---- MICRO companies (1-9 employees) landing page ---- */}
+          <Route path="/micro" element={<MicroLanding />} />
+
           <Route path="/gap-analysis" element={<PublicGapAnalysis />} />
 
           {/* ---- Public "all certifications" listing (gap-analysis → proceed) ---- */}
@@ -343,6 +357,53 @@ function AppRoutes() {
             <Route path="/admin/consultancies" element={
               <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.REGIONAL_ADMIN]}>
                 <AdminConsultancies />
+              </ProtectedRoute>
+            } />
+
+            {/* Admin — author/send/finalize per-contractor agreements (phase42) */}
+            <Route path="/admin/contractors" element={
+              <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.REGIONAL_ADMIN]}>
+                <AdminContractors />
+              </ProtectedRoute>
+            } />
+
+            {/* Contractor — main dashboard (phase45), matching the client's mockup */}
+            <Route path="/contractor/dashboard" element={
+              <ProtectedRoute allowedRoles={[ROLES.CONTRACTOR]}>
+                <ContractorDashboard />
+              </ProtectedRoute>
+            } />
+
+            {/* Contractor — view and sign their own contract */}
+            <Route path="/contractor/contract" element={
+              <ProtectedRoute allowedRoles={[ROLES.CONTRACTOR]}>
+                <ContractorContract />
+              </ProtectedRoute>
+            } />
+
+            {/* Contractor — sidebar items from the client's mockup with no real
+                page behind them yet (client agreement, 28 Oct: visual-only for
+                now, not faked data). */}
+            {[
+              ['/contractor/projects', 'Open Projects'],
+              ['/contractor/deliverables', 'Deliverable Queue'],
+              ['/contractor/schedule', 'My Schedule'],
+              ['/contractor/hours', 'Hours & Milestones'],
+              ['/contractor/scorecard', 'Performance Scorecard'],
+              ['/contractor/kpi', 'KPI Tracking'],
+              ['/contractor/ledger', 'Financial Ledger'],
+            ].map(([path, title]) => (
+              <Route key={path} path={path} element={
+                <ProtectedRoute allowedRoles={[ROLES.CONTRACTOR]}>
+                  <ComingSoon title={title} />
+                </ProtectedRoute>
+              } />
+            ))}
+
+            {/* Finance — approve/reject contractor payment requests (phase44) */}
+            <Route path="/finance/payments" element={
+              <ProtectedRoute allowedRoles={[ROLES.FINANCE, ROLES.SUPER_ADMIN]}>
+                <FinancePayments />
               </ProtectedRoute>
             } />
 
@@ -550,12 +611,37 @@ function AppRoutes() {
   );
 }
 
+// Scrolls to the element named by the URL hash. The browser only does this on a
+// full page load, and the routes here are lazy-loaded, so a link such as
+// /sme#standards followed from another page would otherwise land at the top.
+// Retries briefly because the target mounts after its chunk arrives.
+function HashScroll() {
+  const { pathname, hash } = useLocation();
+  useEffect(() => {
+    if (!hash) return undefined;
+    const id = decodeURIComponent(hash.slice(1));
+    let tries = 0;
+    const timer = setInterval(() => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ block: 'start' });
+        clearInterval(timer);
+      } else if (++tries > 25) {
+        clearInterval(timer);
+      }
+    }, 100);
+    return () => clearInterval(timer);
+  }, [pathname, hash]);
+  return null;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
           <ErrorBoundary>
+            <HashScroll />
             <AppRoutes />
             <LanguageSuggestionPopup />
           </ErrorBoundary>

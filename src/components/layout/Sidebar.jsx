@@ -43,6 +43,13 @@ import {
   Megaphone,
   GraduationCap,
   Landmark,
+  HardHat,
+  FolderKanban,
+  CalendarDays,
+  Timer,
+  BarChart3,
+  Gauge,
+  Wallet,
 } from 'lucide-react';
 import BrandLogo from '../ui/BrandLogo';
 import LanguageSwitcher from '../LanguageSwitcher';
@@ -98,9 +105,22 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     // the route then bounces — the exact trap the Referral Partners entry
     // above documents.
     { path: '/referral-dashboard', labelKey: 'nav.referralProgramDashboard', icon: LayoutGrid, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_REFERRALS], allowedRoles: [ROLES.REFERRAL, ROLES.CONSULTANCY, ROLES.SUPER_ADMIN] },
+    // Contractor — matches the client's dashboard mockup (phase45, 28 Oct).
+    // Dashboard/My Contract are real; the rest are visual-only stubs
+    // (ComingSoon) by explicit agreement — see src/App.jsx.
+    { path: '/contractor/dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.CONTRACTOR] },
+    { path: '/contractor/projects', labelKey: 'nav.openProjects', icon: FolderKanban, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.CONTRACTOR] },
+    { path: '/contractor/deliverables', labelKey: 'nav.deliverableQueue', icon: ClipboardList, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.CONTRACTOR] },
+    { path: '/contractor/schedule', labelKey: 'nav.mySchedule', icon: CalendarDays, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.CONTRACTOR] },
+    { path: '/contractor/hours', labelKey: 'nav.hoursMilestones', icon: Timer, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.CONTRACTOR] },
+    { path: '/contractor/scorecard', labelKey: 'nav.performanceScorecard', icon: BarChart3, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.CONTRACTOR] },
+    { path: '/contractor/kpi', labelKey: 'nav.kpiTracking', icon: Gauge, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.CONTRACTOR] },
+    { path: '/contractor/ledger', labelKey: 'nav.financialLedger', icon: Wallet, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.CONTRACTOR] },
+    { path: '/contractor/contract', labelKey: 'nav.myContract', icon: FileSignature, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.CONTRACTOR] },
+    { path: '/finance/payments', labelKey: 'nav.financePayments', icon: Receipt, kind: KIND_VIEW, permissions: [PERMISSIONS.APPROVE_CONTRACTOR_PAYMENTS] },
     // Only the client's dashboard takes input (document upload); every other
     // role's branch of this same page is a read-only list.
-    { path: '/dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard, kind: (r) => (r === ROLES.CLIENT ? KIND_CREATE : KIND_VIEW), permissions: [PERMISSIONS.VIEW_DASHBOARD], excludeRoles: [ROLES.REFERRAL, ROLES.CONSULTANCY] },
+    { path: '/dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard, kind: (r) => (r === ROLES.CLIENT ? KIND_CREATE : KIND_VIEW), permissions: [PERMISSIONS.VIEW_DASHBOARD], excludeRoles: [ROLES.REFERRAL, ROLES.CONSULTANCY, ROLES.CONTRACTOR] },
     { path: '/client/apply', labelKey: 'nav.newApplication', icon: PlusCircle, kind: KIND_CREATE, permissions: [PERMISSIONS.CREATE_CERTIFICATION] },
     { path: '/client/certificates', labelKey: 'nav.myCertificates', icon: Award, kind: KIND_VIEW, allowedRoles: [ROLES.CLIENT], permissions: [PERMISSIONS.VIEW_DASHBOARD] },
     // ---- Auditor / CB work queues ----
@@ -132,6 +152,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     { path: '/admin/coupons', labelKey: 'nav.coupons', icon: Ticket, kind: KIND_CREATE, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN] },
     { path: '/admin/commission-tiers', labelKey: 'nav.commissionTiers', icon: TrendingUp, kind: KIND_CREATE, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN] },
     { path: '/admin/consultancies', labelKey: 'nav.consultancies', icon: Briefcase, kind: adminCreates, permissions: [PERMISSIONS.MANAGE_USERS] },
+    { path: '/admin/contractors', labelKey: 'nav.contractors', icon: HardHat, kind: adminCreates, permissions: [PERMISSIONS.MANAGE_USERS] },
     { path: '/admin/sales', labelKey: 'nav.sales', icon: CircleDollarSign, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN] },
     { path: '/admin/billing', labelKey: 'nav.billing', icon: Receipt, kind: KIND_CREATE, permissions: [PERMISSIONS.VIEW_DASHBOARD], allowedRoles: [ROLES.SUPER_ADMIN, ROLES.REGIONAL_ADMIN] },
     { path: '/admin/users', labelKey: 'nav.users', icon: Users, kind: KIND_CREATE, permissions: [PERMISSIONS.CREATE_ADMINS, PERMISSIONS.MANAGE_AUDITORS] },

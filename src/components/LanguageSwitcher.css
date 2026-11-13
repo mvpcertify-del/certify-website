@@ -110,6 +110,20 @@
   display: inline;
 }
 
+.lang-switcher__code {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: var(--color-accent-light, rgba(62, 207, 142, 0.15));
+  color: var(--color-accent, #3ECF8E);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
 /* Sidebar variant: fills width inside the mobile slide-in nav.
    Hidden on desktop because the topbar copy already covers that breakpoint. */
 .lang-switcher--sidebar {

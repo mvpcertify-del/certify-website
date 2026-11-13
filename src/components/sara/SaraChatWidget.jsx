@@ -16,7 +16,9 @@ const INTEREST_KEYS = [
 // Number of user messages before showing lead capture (for anonymous users)
 const LEAD_CAPTURE_AFTER = 2;
 
-export default function SaraChatWidget({ user }) {
+// `fabHidden` lets a page tuck the floating button away while it shows its own
+// "Chat with Sara" entry point (the home hero); the button returns afterwards.
+export default function SaraChatWidget({ user, fabHidden = false }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language?.split('-')[0] || 'en';
   const initialMessage = { role: 'assistant', content: t('sara.greeting') };
@@ -48,6 +50,14 @@ export default function SaraChatWidget({ user }) {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, showLeadForm]);
+
+  // Lets other parts of the page (the home hero's "Hello! I'm Sara" bubble, the
+  // footer's "Chat with Sara" button) open the chat without prop plumbing.
+  useEffect(() => {
+    const open = () => setIsOpen(true);
+    window.addEventListener('certify:open-sara', open);
+    return () => window.removeEventListener('certify:open-sara', open);
+  }, []);
 
   // Focus input when chat opens
   useEffect(() => {
@@ -208,14 +218,14 @@ export default function SaraChatWidget({ user }) {
     <>
       {/* Floating Action Button */}
       <button
-        className={`sara-fab ${isOpen ? 'sara-fab--hidden' : ''}`}
+        className={`sara-fab ${isOpen || fabHidden ? 'sara-fab--hidden' : ''}`}
         onClick={() => setIsOpen(true)}
         aria-label={t('sara.chatWithSara')}
       >
         <div className="sara-fab__icon">
           <Sparkles size={24} />
         </div>
-        <span className="sara-fab__label">{t('sara.askSara')}</span>
+        <span className="sara-fab__label">{t('sara.chatWithSara')}</span>
         <div className="sara-fab__pulse" />
       </button>
 

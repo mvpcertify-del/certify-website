@@ -2,7 +2,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getStakeholderType, getStakeholderCopy } from '../../utils/stakeholderTypes';
 import {
-  Award, Briefcase, Gift, Building2, UserCheck, TrendingUp,
+  Award, Briefcase, Gift, Building2, UserCheck, TrendingUp, HardHat,
   CheckCircle, BookOpen, ArrowRight,
 } from 'lucide-react';
 import PublicNav from '../../components/layout/PublicNav';
@@ -10,7 +10,7 @@ import BackButton from '../../components/ui/BackButton';
 import './RegisterLanding.css';
 
 const ICON_MAP = {
-  Award, Briefcase, Gift, Building2, UserCheck, TrendingUp,
+  Award, Briefcase, Gift, Building2, UserCheck, TrendingUp, HardHat,
 };
 
 export default function RegisterLanding() {

@@ -1,6 +1,7 @@
 {
   "common": {
     "loading": "Cargando...",
+    "comingSoon": "Esta página estará disponible pronto.",
     "cancel": "Cancelar",
     "save": "Guardar cambios",
     "delete": "Eliminar",
@@ -120,7 +121,17 @@
     "menu": "Menú",
     "signUp": "Registrarse",
     "partnerContract": "Acuerdo de Socio",
+    "myContract": "Mi Contrato",
     "consultancies": "Consultorías",
+    "contractors": "Contratistas",
+    "financePayments": "Aprobaciones de Pago",
+    "openProjects": "Proyectos Abiertos",
+    "deliverableQueue": "Cola de Entregables",
+    "mySchedule": "Mi Calendario",
+    "hoursMilestones": "Horas e Hitos",
+    "performanceScorecard": "Cuadro de Rendimiento",
+    "kpiTracking": "Seguimiento de KPI",
+    "financialLedger": "Libro Financiero",
     "billing": "Facturación",
     "myAudits": "Mis Auditorías",
     "myReviews": "Mis Revisiones",
@@ -135,9 +146,10 @@
   },
   "landing": {
     "iafBadge": "Socios de Organismos de Certificación Acreditados por IAF",
-    "heroTitle": "Certificaciones ISO",
-    "heroAccent": "acreditadas por IAF",
-    "heroSubtitle": "La forma más rápida para que las empresas obtengan certificaciones ISO reconocidas internacionalmente. Solicita en línea, recibe la auditoría y obtén tu certificado — todo desde una sola plataforma.",
+    "heroTitle": "Mercado Global de Cumplimiento",
+    "heroAccent": "Organismos de Certificación Acreditados",
+    "heroTagline": "Simplifique el cumplimiento. Prepárese para la certificación",
+    "heroSubtitle": "Una plataforma global que conecta a las empresas con soluciones de cumplimiento, herramientas digitales, proveedores de servicios profesionales y organismos de certificación acreditados.",
     "statCompanies": "Finalización prevista de la auditoría",
     "statRegions": "Precios más bajos",
     "statApproval": "Clientes pueden aplicar desde",
@@ -228,6 +240,11 @@
     "leadAuditorCertificate": "Certificado de Auditor Líder *",
     "auditorCv": "CV / Currículum *",
     "validationAuditorDocs": "Sube tu Certificado de Auditor Líder y CV (en inglés) para continuar.",
+    "contractorDocsTitle": "Sube tus documentos",
+    "contractorIdCopy": "Copia de ID *",
+    "contractorCv": "CV / Currículum *",
+    "contractorPhoto": "Foto personal *",
+    "validationContractorDocs": "Sube tu copia de ID, CV y una foto personal para continuar.",
     "numberOfEmployees": "Número de empleados",
     "selectRange": "Seleccionar rango",
     "numberOfLocations": "Número de ubicaciones",
@@ -277,7 +294,7 @@
     "validationPasswordMatch": "Las contraseñas no coinciden",
     "validationEmail": "Por favor, introduce un correo electrónico válido",
     "validationName": "Por favor, introduce tu nombre",
-    "simpleHeroTitle": "Regístrate con tu Gmail o correo electrónico",
+    "simpleHeroTitle": "Crea tu cuenta",
     "chooseTypeTitle": "¿Cómo te gustaría unirte?",
     "chooseTypeSubtitle": "Selecciona tu tipo de cuenta para continuar.",
     "roleClient": "Cliente",
@@ -297,6 +314,8 @@
     "yourNamePlaceholder": "Nombre completo",
     "legalPrefix": "Al continuar, aceptas nuestros",
     "legalAnd": "y",
+    "marketingOptIn": "Envíame novedades y ofertas por correo (opcional).",
+    "signupNoPassword": "No necesitas contraseña. Te enviaremos un código por correo cada vez que inicies sesión.",
     "termsLink": "Términos de servicio",
     "privacyLink": "Política de privacidad",
     "completeProfileTitle": "Cuéntanos sobre tu organización",
@@ -504,7 +523,7 @@
     "proceedCheckout": "Proceder al pago seguro",
     "sslEncrypted": "Cifrado SSL",
     "securePayment": "Pago seguro",
-    "poweredByStripe": "Desarrollado por Stripe",
+    "poweredByWhop": "Desarrollado por Whop",
     "cancelReturn": "Cancelar y volver al panel",
     "preparingTitle": "Preparando tu pago…",
     "preparingSubtitle": "Configurando tu pedido {{package}} para {{iso}}.",
@@ -1116,7 +1135,8 @@
     "certificationBody": "Entidad certificadora",
     "client": "Cliente",
     "referral": "Afiliado",
-    "consultancy": "Consultoría"
+    "consultancy": "Consultoría",
+    "contractor": "Contratista"
   },
   "regions": {
     "asia": "Asia",
@@ -1398,6 +1418,8 @@
     "auditorsDesc": "Gestionar auditores",
     "consultancies": "Consultorías",
     "consultanciesDesc": "Ver socios de consultoría",
+    "contractors": "Contratistas",
+    "contractorsDesc": "Gestionar contratos y tareas de contratistas",
     "referrals": "Afiliados",
     "referralsDesc": "Afiliados y comisiones",
     "sales": "Ventas",
@@ -1853,6 +1875,24 @@
         "Entregar los informes de auditoría en los plazos acordados",
         "Seguir los protocolos de auditoría y estándares de informes de CertifyCX",
         "Mantener confidenciales todos los hallazgos e información de clientes"
+      ]
+    },
+    "contractor": {
+      "title": "Contratistas",
+      "singular": "Contratista",
+      "desc": "Únete a CertifyCX como contratista — completa las tareas asignadas, sube evidencia de tu trabajo y controla tus pagos desde tu propio panel.",
+      "benefits": [
+        "Recibe tareas con KPIs claros y plazos definidos",
+        "Sube evidencia del trabajo completado directamente a tu panel",
+        "Controla los pagos aprobados que se te deben, en INR o US$",
+        "Recibe actualizaciones automáticas por correo de cada tarea asignada"
+      ],
+      "rules": [
+        "Envía una copia de ID válida, CV y una foto personal para registrarte",
+        "Lee y firma el Acuerdo de Contratista antes de empezar a trabajar",
+        "Completa las tareas asignadas antes del plazo y sube evidencia",
+        "Mantén confidencial toda la información de clientes y de la empresa",
+        "Tu cuenta debe ser aprobada por un administrador antes de acceder a tu panel"
       ]
     },
     "investor": {

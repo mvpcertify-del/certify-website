@@ -13,6 +13,7 @@ import {
   verifyEmail,
   recoveryEmail,
   magicLinkEmail,
+  loginOtpEmail,
   inviteEmail,
   emailChangeEmail,
 } from './_emailTemplates.js';
@@ -44,14 +45,17 @@ function buildVerifyUrl({ site_url, token_hash, email_action_type, redirect_to }
   return `${base}/auth/v1/verify?${params.toString()}`;
 }
 
-function pickTemplate(action, { name, url }) {
+export function pickTemplate(action, { name, url, code }) {
   switch (action) {
     case 'signup':
       return verifyEmail({ name, verifyUrl: url });
     case 'recovery':
       return recoveryEmail({ name, resetUrl: url });
     case 'magiclink':
-      return magicLinkEmail({ name, link: url });
+      // signInWithOtp() on an existing user arrives here with the six-digit
+      // code in email_data.token. The login page asks for that code, so send
+      // the code (not a link) whenever Supabase provides one.
+      return code ? loginOtpEmail({ name, code }) : magicLinkEmail({ name, link: url });
     case 'invite':
       return inviteEmail({ name, link: url });
     case 'email_change':
@@ -107,7 +111,7 @@ export default async function handler(req, res) {
     };
     // standardwebhooks expects the secret without the "v1,whsec_" framing
     // that Supabase shows in the dashboard. Strip it if present.
-    const secret = HOOK_SECRET.replace(/^v1,whsec_/, '');
+    const secret = HOOK_SECRET.trim().replace(/^v1,whsec_/, '');
     const wh = new Webhook(secret);
     payload = wh.verify(raw, headers);
   } catch (err) {
@@ -123,7 +127,7 @@ export default async function handler(req, res) {
 
     const url = buildVerifyUrl(email_data);
     const name = user.user_metadata?.name || user.user_metadata?.full_name || null;
-    const { subject, html, text } = pickTemplate(email_data.email_action_type, { name, url });
+    const { subject, html, text } = pickTemplate(email_data.email_action_type, { name, url, code: email_data.token });
 
     await sendViaResend({ to: user.email, subject, html, text });
     return res.status(200).json({});
