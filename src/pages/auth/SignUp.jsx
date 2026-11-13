@@ -128,6 +128,7 @@ function SimpleClientSignUp() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   // Marketing mail is opt-in: unticked until the person ticks it.
   const [marketingOptIn, setMarketingOptIn] = useState(false);
 
@@ -200,6 +201,32 @@ function SimpleClientSignUp() {
     setLoading(false);
   };
 
+
+  if (emailSent) {
+    return (
+      <div className="auth-form auth-form--simple">
+        <div style={{ textAlign: 'center', padding: '24px 0' }}>
+          <CheckCircle size={48} color="#3ecf8e" style={{ marginBottom: 16 }} />
+          <h2 className="auth-form__hero-title" style={{ marginBottom: 12 }}>
+            Check your email
+          </h2>
+          <p style={{ color: 'var(--color-text-secondary)', marginBottom: 8, lineHeight: 1.5 }}>
+            We sent a confirmation link to <strong>{email}</strong>.
+          </p>
+          <p style={{ color: 'var(--color-text-secondary)', marginBottom: 24, lineHeight: 1.5 }}>
+            Click the link in the email to activate your account, then sign in.
+          </p>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => navigate('/login')}
+          >
+            Go to Sign In
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="auth-form auth-form--simple">

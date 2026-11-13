@@ -5,6 +5,7 @@ import { verifyAdmin } from './_verifyAdmin.js';
 import { getRegionFromCountry, getCreatableRoles, ROLE_LABELS } from '../src/utils/roles.js';
 import { sanitizeAuditorTags } from '../src/utils/auditorOptions.js';
 import { sendWelcomeDirect } from './_sendWelcomeDirect.js';
+import { sendVerificationEmail } from './_sendVerificationEmail.js';
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -192,7 +193,7 @@ export default async function handler(req, res) {
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
-      email_confirm: true,
+      email_confirm: !isSelfSignup,
       user_metadata: userMetadata,
     });
 
@@ -271,12 +272,20 @@ export default async function handler(req, res) {
       });
     }
 
-    // No verification email — verification was removed (client, 25 Jul).
-    // Instead, welcome the new user directly. Skipped for a user held at
-    // approval_status 'pending' (a pay-first client awaiting admin approval),
-    // mirroring the old send-welcome rule so they aren't welcomed before access.
+    // Self-signup: send verification email (user is unconfirmed).
+    // Admin-created users stay confirmed and receive welcome email directly.
     let emailSendFailed = false;
-    if (resolvedApprovalStatus !== 'pending') {
+    if (isSelfSignup) {
+      const verifyResult = await sendVerificationEmail({
+        supabaseAdmin,
+        email,
+        password,
+        name: displayName,
+        linkType: 'signup',
+        redirectPath: '/login',
+      });
+      emailSendFailed = !verifyResult.ok;
+    } else if (resolvedApprovalStatus !== 'pending') {
       const welcomeSent = await sendWelcomeDirect({
         supabaseAdmin,
         userId: authData.user.id,
