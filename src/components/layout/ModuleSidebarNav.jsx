@@ -22,7 +22,11 @@ function readOpen() {
 //
 // Collapsed (68px rail): only module icons show. Pressing one expands the menu
 // and opens that module, because a flyout could not show sub-pages anyway.
-export default function ModuleSidebarNav({ role, collapsed, onExpand, onNavigate }) {
+//
+// `zoneIds` (optional) shows only those zones and drops the workspace switcher and
+// Sara block: used to append just the "QMS & ERP SUITE" under the original flat menu.
+export default function ModuleSidebarNav({ role, collapsed, onExpand, onNavigate, zoneIds }) {
+  const compact = Array.isArray(zoneIds);
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
@@ -69,9 +73,10 @@ export default function ModuleSidebarNav({ role, collapsed, onExpand, onNavigate
 
   const zones = useMemo(
     () => ZONES
+      .filter((z) => !compact || zoneIds.includes(z.id))
       .map((z) => ({ ...z, modules: z.modules.filter((m) => moduleVisibleTo(m, role)) }))
       .filter((z) => z.modules.length),
-    [role],
+    [role, compact, zoneIds],
   );
 
   const openFromRail = (mod) => {
@@ -181,7 +186,8 @@ export default function ModuleSidebarNav({ role, collapsed, onExpand, onNavigate
   const saraCurrent = activeModule?.id === SARA.id;
 
   return (
-    <div className="msb">
+    <div className={`msb${compact ? ' msb--compact' : ''}`}>
+      {!compact && (<>
       {!collapsed && (
         <div className="msb__ws">
           <button
@@ -250,6 +256,8 @@ export default function ModuleSidebarNav({ role, collapsed, onExpand, onNavigate
           )}
         </div>
       )}
+
+      </>)}
 
       {zones.map((zone) => (
         <section key={zone.id} className="msb__zone" aria-label={t(`modules.zone_${zone.id}`, zone.label)}>
