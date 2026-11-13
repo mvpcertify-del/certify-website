@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import { comingSoonItems, MODULE_MENU_ROLES } from './config/sidebarModules';
 import ErrorBoundary from './components/ErrorBoundary';
 import LanguageSuggestionPopup from './components/LanguageSuggestionPopup';
 import { ROLES, PERMISSIONS } from './utils/roles';
@@ -68,6 +69,7 @@ const AdminContractors = lazy(() => import('./pages/admin/AdminContractors'));
 const ContractorContract = lazy(() => import('./pages/contractor/ContractorContract'));
 const ContractorDashboard = lazy(() => import('./pages/contractor/ContractorDashboard'));
 const ComingSoon = lazy(() => import('./components/ui/ComingSoon'));
+const ModuleComingSoon = lazy(() => import('./pages/modules/ModuleComingSoon'));
 const FinancePayments = lazy(() => import('./pages/finance/FinancePayments'));
 const AdminReferralPartners = lazy(() => import('./pages/admin/AdminReferralPartners'));
 const AdminBilling = lazy(() => import('./pages/admin/AdminBilling'));
@@ -396,6 +398,17 @@ function AppRoutes() {
               <Route key={path} path={path} element={
                 <ProtectedRoute allowedRoles={[ROLES.CONTRACTOR]}>
                   <ComingSoon title={title} />
+                </ProtectedRoute>
+              } />
+            ))}
+
+            {/* Module menu pages that are designed but not built yet (client, 8 Nov).
+                Each item flagged `soon` in config/sidebarModules.js gets a
+                "coming soon" page here, for the roles that see the menu. */}
+            {comingSoonItems().map((item) => (
+              <Route key={item.path} path={item.path} element={
+                <ProtectedRoute allowedRoles={MODULE_MENU_ROLES}>
+                  <ModuleComingSoon item={item} />
                 </ProtectedRoute>
               } />
             ))}
