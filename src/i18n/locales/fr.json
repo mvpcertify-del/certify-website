@@ -295,6 +295,8 @@
     "yourNamePlaceholder": "Nom complet",
     "legalPrefix": "En continuant, vous acceptez nos",
     "legalAnd": "et",
+    "continueWithLinkedIn": "Continuer avec LinkedIn",
+    "linkedinFailed": "Impossible de démarrer la connexion avec LinkedIn. Veuillez réessayer.",
     "marketingOptIn": "Envoyez-moi les nouveautés et offres par e-mail (facultatif).",
     "signupNoPassword": "Aucun mot de passe requis. Nous vous enverrons un code par e-mail à chaque connexion.",
     "termsLink": "Conditions d'utilisation",

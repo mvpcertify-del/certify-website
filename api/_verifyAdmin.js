@@ -60,6 +60,7 @@ export async function verifySession(req) {
         stakeholder_type: profile?.stakeholder_type || null,
         approval_status: profile?.approval_status || null,
         provider: userData.user.app_metadata?.provider || null,
+        emailConfirmed: !!userData.user.email_confirmed_at,
       },
     };
   } catch (err) {

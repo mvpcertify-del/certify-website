@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import LinkedInButton from '../../components/auth/LinkedInButton';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
@@ -214,6 +215,7 @@ function SimpleClientSignUp() {
 
       {step === 1 && (
         <>
+          <LinkedInButton stakeholderType="client" />
 
           <form onSubmit={handleEmailContinue} className="auth-form__body">
             <Input
@@ -723,6 +725,10 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
       <p className="auth-form__subtitle">
         {stakeholderCopy.description}
       </p>
+
+      {step === 1 && (
+        <LinkedInButton stakeholderType={registrationType || 'client'} dividerKey="auth.orFillDetails" />
+      )}
 
       {!isPureIndividual && (
         <div className="signup-steps">

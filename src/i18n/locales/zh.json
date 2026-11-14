@@ -295,6 +295,8 @@
     "yourNamePlaceholder": "全名",
     "legalPrefix": "继续即表示您同意我们的",
     "legalAnd": "和",
+    "continueWithLinkedIn": "通过 LinkedIn 继续",
+    "linkedinFailed": "无法启动 LinkedIn 登录，请重试。",
     "marketingOptIn": "通过电子邮件向我发送产品动态和优惠（可选）。",
     "signupNoPassword": "无需密码。每次登录时，我们都会通过电子邮件向您发送验证码。",
     "termsLink": "服务条款",

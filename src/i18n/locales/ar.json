@@ -314,6 +314,8 @@
     "yourNamePlaceholder": "الاسم الكامل",
     "legalPrefix": "بالمتابعة، فإنك توافق على",
     "legalAnd": "و",
+    "continueWithLinkedIn": "المتابعة عبر LinkedIn",
+    "linkedinFailed": "تعذّر بدء تسجيل الدخول عبر LinkedIn. حاول مرة أخرى.",
     "marketingOptIn": "أرسل لي تحديثات المنتج والعروض عبر البريد الإلكتروني (اختياري).",
     "signupNoPassword": "لا حاجة إلى كلمة مرور. سنرسل لك رمزًا عبر البريد الإلكتروني في كل مرة تسجّل فيها الدخول.",
     "termsLink": "شروط الخدمة",

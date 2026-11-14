@@ -516,3 +516,25 @@
   height: 16px;
   accent-color: var(--color-accent);
 }
+
+/* ---- LinkedIn sign-up / sign-in button ---- */
+.auth-linkedin-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 16px;
+  border: 1px solid #0a66c2;
+  border-radius: var(--radius-md);
+  background: #0a66c2;
+  color: #fff;
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+.auth-linkedin-btn:hover:not(:disabled) { background: #004182; border-color: #004182; }
+.auth-linkedin-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.auth-form--login .auth-linkedin-btn { min-height: 56px; font-size: 1.0625rem; border-radius: 12px; }

@@ -295,6 +295,8 @@
     "yourNamePlaceholder": "पूरा नाम",
     "legalPrefix": "जारी रखने पर, आप हमारी",
     "legalAnd": "और",
+    "continueWithLinkedIn": "LinkedIn के साथ जारी रखें",
+    "linkedinFailed": "LinkedIn साइन-इन शुरू नहीं हो सका। कृपया फिर से प्रयास करें।",
     "marketingOptIn": "मुझे ईमेल पर प्रोडक्ट अपडेट और ऑफ़र भेजें (वैकल्पिक)।",
     "signupNoPassword": "पासवर्ड की ज़रूरत नहीं। हर बार साइन इन करने पर हम आपको ईमेल पर कोड भेजेंगे।",
     "termsLink": "सेवा की शर्तें",

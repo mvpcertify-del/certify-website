@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { classifyOtpRequestError } from '../config/loginMode';
+import { apiPost } from '../lib/apiClient';
 import { ROLES, getRegionFromCountryAsync, setCustomPermissionOverrides } from '../utils/roles';
 
 // Fetch role×permission overrides and install them into the roles module so
@@ -78,6 +79,29 @@ export function AuthProvider({ children }) {
           .eq("id", sessionUser.id)
           .maybeSingle();
         profile = await hydrateAnonGapScore(sessionUser, profile);
+
+        // First sign-in through LinkedIn: the profile has no role yet. Ask the API to create it from the
+        // registration door the person used (kept in sessionStorage across the LinkedIn round-trip). The
+        // API decides the role; the browser only names the door. A failure must not block sign-in.
+        const isLinkedIn = sessionUser.app_metadata?.provider === 'linkedin_oidc';
+        if (isLinkedIn && (!profile || !profile.role)) {
+          try {
+            let pendingType = null;
+            try { pendingType = sessionStorage.getItem('pendingStakeholderType'); } catch { /* storage blocked */ }
+            const meta = sessionUser.user_metadata || {};
+            await apiPost('/api/user', {
+              action: 'update-profile',
+              userId: sessionUser.id,
+              full_name: meta.name || meta.full_name || profile?.full_name || '',
+              stakeholder_type: pendingType || profile?.stakeholder_type || 'client',
+            });
+            try { sessionStorage.removeItem('pendingStakeholderType'); } catch { /* ignore */ }
+            const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', sessionUser.id).maybeSingle();
+            profile = await hydrateAnonGapScore(sessionUser, refreshed);
+          } catch (bootstrapErr) {
+            console.error('LinkedIn profile setup failed', bootstrapErr);
+          }
+        }
 
         if (profile && mounted) {
           setUser({ ...sessionUser, ...profile });
@@ -164,6 +188,21 @@ export function AuthProvider({ children }) {
       return { ok: false, error: 'Your registration has been declined. Please contact support at support@certify.cx for more information.' };
     }
     return { ok: true };
+  };
+
+  // LinkedIn sign-up and sign-in (Supabase provider "linkedin_oidc"). `stakeholderType` is the
+  // registration door (/register/<type>); it survives the redirect in sessionStorage.
+  const signInWithLinkedIn = async (redirectPath = '/auth/callback', stakeholderType = null) => {
+    try {
+      if (stakeholderType) sessionStorage.setItem('pendingStakeholderType', stakeholderType);
+      else sessionStorage.removeItem('pendingStakeholderType');
+    } catch { /* sessionStorage may be unavailable */ }
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'linkedin_oidc',
+      options: { redirectTo: `${window.location.origin}${redirectPath}` },
+    });
+    if (error) return { success: false, error: error.message };
+    return { success: true };
   };
 
   const login = async (email, password) => {
@@ -364,6 +403,7 @@ export function AuthProvider({ children }) {
     login,
     signup,
     requestLoginOtp,
+    signInWithLinkedIn,
     verifyLoginOtp,
     logout,
     resetPassword,

@@ -295,6 +295,8 @@
     "yourNamePlaceholder": "Полное имя",
     "legalPrefix": "Продолжая, вы соглашаетесь с нашими",
     "legalAnd": "и",
+    "continueWithLinkedIn": "Продолжить через LinkedIn",
+    "linkedinFailed": "Не удалось начать вход через LinkedIn. Попробуйте ещё раз.",
     "marketingOptIn": "Присылайте мне новости и предложения по email (необязательно).",
     "signupNoPassword": "Пароль не нужен. Мы будем отправлять код на вашу почту при каждом входе.",
     "termsLink": "Условиями использования",

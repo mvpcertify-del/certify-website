@@ -8,6 +8,8 @@ import {
   acceptContract,
 } from './_contract.js';
 import { notifyAdmins } from './_notifyAdmins.js';
+import { sendWelcomeDirect } from './_sendWelcomeDirect.js';
+import { oauthBootstrapRole } from './_oauthSignup.js';
 // Three handlers that used to be their own /api routes. They moved in here on
 // 8 Sep because Vercel's Hobby plan allows at most 12 Serverless Functions per
 // deployment and this project had reached 15 — every deploy since 27 August
@@ -185,6 +187,22 @@ async function updateProfile(req, res) {
     return res.status(403).json({ error: 'Forbidden: you cannot edit that profile' });
   }
 
+  // The one case where a person sets their own role: first sign-in through LinkedIn, with a profile that
+  // has no role yet. The role comes from the registration door (server-side table), never from the body,
+  // and anyone with a role can never rewrite it this way.
+  const bootstrapRole = oauthBootstrapRole({
+    isSelf,
+    provider: caller.provider,
+    emailConfirmed: caller.emailConfirmed,
+    targetRole: target?.role,
+    stakeholderType: stakeholder_type,
+  });
+  const isOAuthRoleBootstrap = !!bootstrapRole;
+  if (isOAuthRoleBootstrap) {
+    role = bootstrapRole;
+    approval_status = 'approved';
+  }
+
   // ONLY a super admin may change these. Being a regional admin is not enough:
   // a country admin passing their OWN userId satisfies `isRegional` trivially
   // (their region always equals their region), so gating on it would have let
@@ -201,7 +219,11 @@ async function updateProfile(req, res) {
     const attempted = Object.entries(PRIVILEGED).filter(
       ([field, value]) => value !== undefined && value !== target?.[field],
     );
-    const disallowed = attempted;
+    // A bootstrap may set only the server-derived role, the stakeholder type and the approval status.
+    const bootstrapFields = ['role', 'stakeholder_type', 'approval_status'];
+    const disallowed = isOAuthRoleBootstrap
+      ? attempted.filter(([field]) => !bootstrapFields.includes(field))
+      : attempted;
     if (disallowed.length) {
       // Refuse loudly. Silently dropping the field would show the admin a
       // success toast for a change that never happened.
@@ -209,9 +231,11 @@ async function updateProfile(req, res) {
         error: `Forbidden: only a super admin can change ${disallowed.map(([f]) => f).join(', ')}`,
       });
     }
-    role = undefined;
-    stakeholder_type = undefined;
-    approval_status = undefined;
+    if (!isOAuthRoleBootstrap) {
+      role = undefined;
+      stakeholder_type = undefined;
+      approval_status = undefined;
+    }
     region = undefined;
     email = undefined;
     commission_percent_override = undefined;
@@ -298,6 +322,18 @@ async function updateProfile(req, res) {
       });
     }
     return res.status(500).json({ error: error.message });
+  }
+
+  // Welcome the person once, right after their first LinkedIn registration.
+  if (isOAuthRoleBootstrap && target?.email) {
+    await sendWelcomeDirect({
+      supabaseAdmin,
+      userId,
+      email: target.email,
+      name: full_name,
+      role: bootstrapRole,
+      stakeholderType: stakeholder_type,
+    });
   }
 
   if (email) {

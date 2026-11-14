@@ -314,6 +314,8 @@
     "yourNamePlaceholder": "Nombre completo",
     "legalPrefix": "Al continuar, aceptas nuestros",
     "legalAnd": "y",
+    "continueWithLinkedIn": "Continuar con LinkedIn",
+    "linkedinFailed": "No se pudo iniciar sesión con LinkedIn. Inténtalo de nuevo.",
     "marketingOptIn": "Envíame novedades y ofertas por correo (opcional).",
     "signupNoPassword": "No necesitas contraseña. Te enviaremos un código por correo cada vez que inicies sesión.",
     "termsLink": "Términos de servicio",

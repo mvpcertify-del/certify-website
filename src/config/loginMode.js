@@ -12,6 +12,13 @@
 
 export const LOGIN_OTP_ENABLED = (import.meta.env || {}).VITE_LOGIN_OTP_ENABLED === 'true';
 
+// LinkedIn sign-up / sign-in. Off until the LinkedIn app is connected in Supabase
+// (Authentication > Providers > LinkedIn (OIDC)); then set VITE_LINKEDIN_LOGIN_ENABLED=true and redeploy.
+export const LINKEDIN_ENABLED = (import.meta.env || {}).VITE_LINKEDIN_LOGIN_ENABLED === 'true';
+
+/** Registrations that can be completed with LinkedIn alone (mirrors api/_oauthSignup.js). */
+export const LINKEDIN_STAKEHOLDERS = ['client', 'consultancy', 'referral', 'certification-body'];
+
 /** Length of the code Supabase sends (Auth > Providers > Email > OTP length). */
 export const OTP_LENGTH = 6;
 
