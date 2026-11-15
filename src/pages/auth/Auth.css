@@ -594,3 +594,17 @@
   font-weight: 600;
   border-radius: 12px;
 }
+
+/* Login and plain sign-up are the same height on a desktop screen, so moving between them does not make
+   the card jump. Only a minimum: longer content (an error, a longer language) still grows the card, and
+   the switch block stays at the bottom. */
+@media (min-width: 600px) {
+  .auth-form--login,
+  .auth-form--simple {
+    min-height: 576px;
+  }
+}
+.auth-form--login .auth-switch,
+.auth-form--simple .auth-switch {
+  margin-top: auto;
+}
