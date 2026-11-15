@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import LinkedInButton from '../../components/auth/LinkedInButton';
+import AuthSwitch from '../../components/auth/AuthSwitch';
 import SignupCodeStep from '../../components/auth/SignupCodeStep';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -392,9 +393,7 @@ function SimpleClientSignUp() {
         </form>
       )}
 
-      <p className="auth-form__footer-text">
-        {t('auth.alreadyHaveAccount')} <Link to="/login" className="auth-form__link">{t('auth.signIn')}</Link>
-      </p>
+      <AuthSwitch to="/login" prompt={t('auth.alreadyMember')} label={t('auth.logInLink')} />
     </div>
   );
 }
@@ -1267,12 +1266,12 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
         )}
       </form>
 
-      <p className="auth-form__footer-text">
-        {t('auth.alreadyHaveAccount')} <Link to="/login" className="auth-form__link">{t('auth.signIn')}</Link>
-        {registrationType && (
-          <> | <Link to={`/register/${registrationType}`} className="auth-form__link">{t('auth.backToInfo')}</Link></>
-        )}
-      </p>
+      <AuthSwitch to="/login" prompt={t('auth.alreadyMember')} label={t('auth.logInLink')} />
+      {registrationType && (
+        <p className="auth-form__footer-text">
+          <Link to={`/register/${registrationType}`} className="auth-form__link">{t('auth.backToInfo')}</Link>
+        </p>
+      )}
     </div>
   );
 }

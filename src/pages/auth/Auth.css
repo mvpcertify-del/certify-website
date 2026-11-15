@@ -538,3 +538,39 @@
 .auth-linkedin-btn:hover:not(:disabled) { background: #004182; border-color: #004182; }
 .auth-linkedin-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .auth-form--login .auth-linkedin-btn { min-height: 56px; font-size: 1.0625rem; border-radius: 12px; }
+
+/* ---- Sign-up / log-in switch ---- */
+.auth-switch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--color-border);
+  text-align: center;
+}
+.auth-switch__prompt {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+}
+.auth-switch__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 16px;
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  color: var(--color-accent);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  text-decoration: none;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.auth-switch__btn:hover {
+  background: var(--color-accent);
+  color: #0a1f17;
+}
+.auth-form--login .auth-switch__btn { min-height: 56px; font-size: 1.0625rem; border-radius: 12px; }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import LinkedInButton from '../../components/auth/LinkedInButton';
+import AuthSwitch from '../../components/auth/AuthSwitch';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
@@ -266,9 +267,7 @@ export default function Login() {
           </form>
         )}
 
-        <p className="auth-form__footer-text">
-          {t('auth.noAccount')} <Link to="/signup" className="auth-form__link">{t('auth.applyForCert')}</Link>
-        </p>
+        <AuthSwitch to="/signup" prompt={t('auth.newToCertify')} label={t('auth.createAccountLink')} />
       </div>
     );
   }
@@ -329,9 +328,7 @@ export default function Login() {
         </Button>
       </form>
 
-      <p className="auth-form__footer-text">
-        {t('auth.noAccount')} <Link to="/signup" className="auth-form__link">{t('auth.applyForCert')}</Link>
-      </p>
+      <AuthSwitch to="/signup" prompt={t('auth.newToCertify')} label={t('auth.createAccountLink')} />
     </div>
   );
 }
