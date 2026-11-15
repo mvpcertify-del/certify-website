@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import LinkedInButton from '../../components/auth/LinkedInButton';
+import SocialButtons from '../../components/auth/SocialButtons';
 import AuthSwitch from '../../components/auth/AuthSwitch';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -208,7 +208,7 @@ export default function Login() {
 
         {step === 'email' ? (
           <>
-          <LinkedInButton stakeholderType="client" />
+          <SocialButtons stakeholderType="client" />
           <form onSubmit={handleEmailSubmit} className="auth-form__body">
             <Input
               label={t('auth.email')}
@@ -285,7 +285,7 @@ export default function Login() {
         </div>
       )}
 
-      <LinkedInButton stakeholderType="client" />
+      <SocialButtons stakeholderType="client" />
       <form onSubmit={handlePasswordSubmit} className="auth-form__body">
         <Input
           label={t('auth.email')}

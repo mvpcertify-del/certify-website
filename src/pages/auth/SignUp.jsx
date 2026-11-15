@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import LinkedInButton from '../../components/auth/LinkedInButton';
+import SocialButtons from '../../components/auth/SocialButtons';
 import AuthSwitch from '../../components/auth/AuthSwitch';
 import SignupCodeStep from '../../components/auth/SignupCodeStep';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
@@ -265,7 +265,7 @@ function SimpleClientSignUp() {
 
       {step === 1 && (
         <>
-          <LinkedInButton stakeholderType="client" />
+          <SocialButtons stakeholderType="client" />
 
           <form onSubmit={handleEmailContinue} className="auth-form__body">
             <Input
@@ -831,7 +831,7 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
       </p>
 
       {step === 1 && (
-        <LinkedInButton stakeholderType={registrationType || 'client'} dividerKey="auth.orFillDetails" />
+        <SocialButtons stakeholderType={registrationType || 'client'} dividerKey="auth.orFillDetails" />
       )}
 
       {!isPureIndividual && (

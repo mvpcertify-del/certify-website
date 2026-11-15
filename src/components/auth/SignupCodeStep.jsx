@@ -10,7 +10,7 @@ import { OTP_MAX_LENGTH, OTP_RESEND_SECONDS, isValidOtp, normalizeOtp } from '..
 //   onVerify(code)  checks the code, then creates the account
 //   onResend()      emails a new code (resolves { success })
 //   onBack()        back to the form (to fix the email)
-export default function SignupCodeStep({ email, onVerify, onResend, onBack, loading, error }) {
+export default function SignupCodeStep({ email, onVerify, onResend, onBack, loading, error, title, subtitle, verifyLabel }) {
   const { t } = useTranslation();
   const [code, setCode] = useState('');
   const [localError, setLocalError] = useState('');
@@ -50,8 +50,8 @@ export default function SignupCodeStep({ email, onVerify, onResend, onBack, load
 
   return (
     <div className="auth-signup-code">
-      <h2 className="auth-form__title">{t('auth.signupCodeTitle')}</h2>
-      <p className="auth-form__subtitle">{t('auth.signupCodeSubtitle', { email })}</p>
+      <h2 className="auth-form__title">{title || t('auth.signupCodeTitle')}</h2>
+      <p className="auth-form__subtitle">{subtitle || t('auth.signupCodeSubtitle', { email })}</p>
 
       {shown && (
         <div className="auth-form__error">
@@ -78,7 +78,7 @@ export default function SignupCodeStep({ email, onVerify, onResend, onBack, load
           <ClipboardPaste size={16} /> {t('auth.otpPaste', 'Paste code')}
         </button>
         <Button type="submit" variant="primary" size="lg" fullWidth loading={loading}>
-          {t('auth.signupCodeVerify')}
+          {verifyLabel || t('auth.signupCodeVerify')}
         </Button>
         <div className="auth-otp-actions">
           <button type="button" className="auth-back-link" onClick={onBack} disabled={loading}>

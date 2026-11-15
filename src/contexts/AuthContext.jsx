@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { classifyOtpRequestError } from '../config/loginMode';
+import { classifyOtpRequestError, LOGIN_OTP_ENABLED, OAUTH_PROVIDER_IDS, OAUTH_GATE_KEY, oauthGateActive } from '../config/loginMode';
 import { apiPost } from '../lib/apiClient';
 import { ROLES, getRegionFromCountryAsync, setCustomPermissionOverrides } from '../utils/roles';
 
@@ -72,6 +72,13 @@ export function AuthProvider({ children }) {
 
     // Helper to fetch profile
     const fetchProfile = async (sessionUser) => {
+      // Back from Google or LinkedIn with code login on: nobody is signed in until the emailed code is
+      // typed on /auth/callback. Do not load or create a profile from the provider session.
+      if (oauthGateActive()) {
+        if (mounted) { setUser(null); setLoading(false); }
+        initialized = true;
+        return;
+      }
       try {
         let { data: profile } = await supabase
           .from("profiles")
@@ -83,8 +90,8 @@ export function AuthProvider({ children }) {
         // First sign-in through LinkedIn: the profile has no role yet. Ask the API to create it from the
         // registration door the person used (kept in sessionStorage across the LinkedIn round-trip). The
         // API decides the role; the browser only names the door. A failure must not block sign-in.
-        const isLinkedIn = sessionUser.app_metadata?.provider === 'linkedin_oidc';
-        if (isLinkedIn && (!profile || !profile.role)) {
+        const isOAuthUser = OAUTH_PROVIDER_IDS.includes(sessionUser.app_metadata?.provider);
+        if (isOAuthUser && (!profile || !profile.role)) {
           try {
             let pendingType = null;
             try { pendingType = sessionStorage.getItem('pendingStakeholderType'); } catch { /* storage blocked */ }
@@ -99,7 +106,7 @@ export function AuthProvider({ children }) {
             const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', sessionUser.id).maybeSingle();
             profile = await hydrateAnonGapScore(sessionUser, refreshed);
           } catch (bootstrapErr) {
-            console.error('LinkedIn profile setup failed', bootstrapErr);
+            console.error('Provider profile setup failed', bootstrapErr);
           }
         }
 
@@ -192,18 +199,25 @@ export function AuthProvider({ children }) {
 
   // LinkedIn sign-up and sign-in (Supabase provider "linkedin_oidc"). `stakeholderType` is the
   // registration door (/register/<type>); it survives the redirect in sessionStorage.
-  const signInWithLinkedIn = async (redirectPath = '/auth/callback', stakeholderType = null) => {
+  const signInWithProvider = async (provider, redirectPath = '/auth/callback', stakeholderType = null) => {
     try {
       if (stakeholderType) sessionStorage.setItem('pendingStakeholderType', stakeholderType);
       else sessionStorage.removeItem('pendingStakeholderType');
+      // Code login: the callback page will ask for the emailed code before anyone is signed in.
+      if (LOGIN_OTP_ENABLED) sessionStorage.setItem(OAUTH_GATE_KEY, '1');
     } catch { /* sessionStorage may be unavailable */ }
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'linkedin_oidc',
+      provider,
       options: { redirectTo: `${window.location.origin}${redirectPath}` },
     });
-    if (error) return { success: false, error: error.message };
+    if (error) {
+      try { sessionStorage.removeItem(OAUTH_GATE_KEY); } catch { /* ignore */ }
+      return { success: false, error: error.message };
+    }
     return { success: true };
   };
+  const signInWithLinkedIn = (redirectPath, stakeholderType) => signInWithProvider('linkedin_oidc', redirectPath, stakeholderType);
+  const signInWithGoogle = (redirectPath, stakeholderType) => signInWithProvider('google', redirectPath, stakeholderType);
 
   const login = async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -432,6 +446,7 @@ export function AuthProvider({ children }) {
     requestSignupCode,
     verifySignupCode,
     signInWithLinkedIn,
+    signInWithGoogle,
     verifyLoginOtp,
     logout,
     resetPassword,

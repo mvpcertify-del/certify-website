@@ -1,4 +1,4 @@
-// Sign-up through an identity provider (LinkedIn).
+// Sign-up through an identity provider (LinkedIn, Google).
 //
 // The browser never chooses its own role. After the provider round-trip the page tells the API which
 // registration door the person came through (the stakeholder slug); this module decides, on the
@@ -7,7 +7,7 @@
 // agreement, then admin approval) must keep using their own wizard, so they are NOT in this table.
 
 /** Supabase provider ids that may create their own profile. */
-export const OAUTH_PROVIDERS = ['linkedin_oidc'];
+export const OAUTH_PROVIDERS = ['linkedin_oidc', 'google'];
 
 /** registration slug -> profiles.role */
 export const OAUTH_STAKEHOLDER_ROLES = {

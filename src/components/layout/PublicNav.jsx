@@ -121,6 +121,7 @@ export default function PublicNav() {
           ) : (
             <>
               <Link to="/login" className="pubnav__link pubnav__link--login">{t('nav.login')}</Link>
+              <Link to="/signup" className="pubnav__btn">{t('nav.signUp')}</Link>
             </>
           )}
         </div>
@@ -174,6 +175,7 @@ export default function PublicNav() {
           ) : (
             <>
               <Link to="/login" className="pubnav__mobile-link pubnav__link--login" onClick={closeMobile}>{t('nav.login')}</Link>
+              <Link to="/signup" className="pubnav__btn pubnav__mobile-btn" onClick={closeMobile}>{t('nav.signUp')}</Link>
             </>
           )}
         </div>

@@ -12,6 +12,18 @@
 
 export const LOGIN_OTP_ENABLED = (import.meta.env || {}).VITE_LOGIN_OTP_ENABLED === 'true';
 
+// Google and LinkedIn sign-up / sign-in. With code login on, a provider sign-in is NOT enough on its
+// own: the person is brought back, the provider session is dropped, and they must type the code
+// emailed to the address the provider confirmed. Only then are they signed in (or registered).
+export const OAUTH_PROVIDER_IDS = ['google', 'linkedin_oidc'];
+export const OAUTH_GATE_KEY = 'ccx_oauth_gate';
+export function oauthGateActive() {
+  try { return LOGIN_OTP_ENABLED && sessionStorage.getItem(OAUTH_GATE_KEY) === '1'; } catch { return false; }
+}
+
+// Google is on unless explicitly switched off (VITE_GOOGLE_LOGIN_ENABLED=false).
+export const GOOGLE_ENABLED = (import.meta.env || {}).VITE_GOOGLE_LOGIN_ENABLED !== 'false';
+
 // LinkedIn sign-up / sign-in. Off until the LinkedIn app is connected in Supabase
 // (Authentication > Providers > LinkedIn (OIDC)); then set VITE_LINKEDIN_LOGIN_ENABLED=true and redeploy.
 export const LINKEDIN_ENABLED = (import.meta.env || {}).VITE_LINKEDIN_LOGIN_ENABLED === 'true';

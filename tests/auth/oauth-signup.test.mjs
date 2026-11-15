@@ -23,10 +23,15 @@ test('nobody can ask for an admin role', () => {
   assert.ok(!Object.values(OAUTH_STAKEHOLDER_ROLES).some((r) => /admin/.test(r)));
 });
 
+test('Google and LinkedIn both work; nothing else does', () => {
+  assert.equal(oauthBootstrapRole({ ...ok, provider: 'google', stakeholderType: 'client' }), 'client');
+  assert.equal(oauthBootstrapRole({ ...ok, provider: 'email', stakeholderType: 'client' }), null);
+});
+
 test('only for yourself, from LinkedIn, with a confirmed email, and only while you have no role', () => {
   const base = { ...ok, stakeholderType: 'client' };
   assert.equal(oauthBootstrapRole({ ...base, isSelf: false }), null);
-  assert.equal(oauthBootstrapRole({ ...base, provider: 'google' }), null);
+  assert.equal(oauthBootstrapRole({ ...base, provider: 'github' }), null);
   assert.equal(oauthBootstrapRole({ ...base, provider: 'email' }), null);
   assert.equal(oauthBootstrapRole({ ...base, emailConfirmed: false }), null);
   assert.equal(oauthBootstrapRole({ ...base, targetRole: 'client' }), null);
