@@ -6,6 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import LanguageSuggestionPopup from './components/LanguageSuggestionPopup';
 import { ROLES, PERMISSIONS } from './utils/roles';
+import { comingSoonItems, MODULE_MENU_ROLES } from './config/sidebarModules';
 
 // Wrap React.lazy so a failed dynamic import (a stale chunk after a redeploy —
 // "Failed to fetch dynamically imported module") triggers ONE hard reload that
@@ -33,6 +34,7 @@ const DashboardLayout = lazy(() => import('./components/layout/DashboardLayout')
 const AuthLayout = lazy(() => import('./components/layout/AuthLayout'));
 
 // Public Pages
+const ModuleComingSoon = lazy(() => import('./pages/modules/ModuleComingSoon'));
 const LandingPage = lazy(() => import('./pages/landing/LandingPage'));
 const PublicGapAnalysis = lazy(() => import('./pages/public/PublicGapAnalysis'));
 const MicroLanding = lazy(() => import('./pages/micro/MicroLanding'));
@@ -240,6 +242,16 @@ function AppRoutes() {
                 <Dashboard />
               </ProtectedRoute>
             } />
+            {/* Menu pages that are designed but not built yet (client, 8 Nov). Each item flagged `soon` in
+                config/sidebarModules.js gets a "coming soon" page, for the roles that see the menu. */}
+            {comingSoonItems().map((item) => (
+              <Route key={item.path} path={item.path} element={
+                <ProtectedRoute allowedRoles={MODULE_MENU_ROLES}>
+                  <ModuleComingSoon item={item} />
+                </ProtectedRoute>
+              } />
+            ))}
+
             <Route path="/client/dashboard" element={
               <ProtectedRoute allowedRoles={[ROLES.CLIENT]}>
                 <Dashboard />

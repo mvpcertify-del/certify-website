@@ -52,6 +52,8 @@ import {
   Wallet,
 } from 'lucide-react';
 import BrandLogo from '../ui/BrandLogo';
+import ModuleSidebarNav from './ModuleSidebarNav';
+import { MODULE_MENU_ROLES } from '../../config/sidebarModules';
 import LanguageSwitcher from '../LanguageSwitcher';
 import './Sidebar.css';
 
@@ -202,6 +204,9 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     { path: '/notifications', labelKey: 'nav.notifications', icon: Bell, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_DASHBOARD] },
   ];
 
+  // Client (16 Nov): the Main Admin keeps the existing menu and gets the collapsible QMS & ERP suite under it.
+  const showSuite = MODULE_MENU_ROLES.includes(user?.role);
+
   const filteredNav = navItems.filter(item =>
     hasAnyPermission(user?.role, item.permissions) &&
     !(item.excludeRoles && item.excludeRoles.includes(user?.role)) &&
@@ -272,6 +277,15 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
               </NavLink>
             );
           })}
+          {showSuite && (
+            <ModuleSidebarNav
+              role={user?.role}
+              collapsed={collapsed}
+              onExpand={onToggleCollapse}
+              onNavigate={onClose}
+              zoneIds={['suite']}
+            />
+          )}
         </nav>
 
         <div className="sidebar__footer">
