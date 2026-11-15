@@ -521,13 +521,14 @@ export function magicLinkEmail({ name, link }) {
  * login page. Supabase generates and checks the code; this only presents it.
  * `minutes` must match the OTP expiry set in Supabase (Auth > Email).
  */
-export function loginOtpEmail({ name, code, minutes = 10, loginUrl }) {
+export function loginOtpEmail({ name, code, minutes = 10, loginUrl, purpose = 'signin' }) {
   if (!/^\d{4,10}$/.test(String(code || ''))) {
     throw new Error('loginOtpEmail: the code must be 4 to 10 digits');
   }
   const greeting = name ? `Hi ${escapeHtml(name)},` : 'Hello,';
-  const subject = `${code} is your ${BRAND_TEXT} sign-in code`;
-  const base = loginUrl || `${process.env.APP_PUBLIC_URL || 'https://certify.cx'}/login`;
+  const signup = purpose === 'signup';
+  const subject = `${code} is your ${BRAND_TEXT} ${signup ? 'verification' : 'sign-in'} code`;
+  const base = loginUrl || `${process.env.APP_PUBLIC_URL || 'https://certify.cx'}/${signup ? 'signup' : 'login'}`;
   // Written so Gmail and Apple Mail recognise it as a one-time code and show their
   // own "Copy code" button (the same way Vercel's code emails get one): the phrase
   // "Your verification code is:" comes first in the body, and the code sits alone
@@ -539,10 +540,10 @@ export function loginOtpEmail({ name, code, minutes = 10, loginUrl }) {
     bodyHtml: `
       <p style="margin:0 0 12px;font-size:16px;line-height:1.5;font-weight:600;color:${TEXT_PRIMARY};">Your verification code is:</p>
       <p style="margin:0 0 24px;font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:34px;line-height:1.2;font-weight:700;letter-spacing:0.12em;color:${TEXT_PRIMARY};-webkit-user-select:all;user-select:all;">${code}</p>
-      ${body(`${greeting} enter this code on the <strong style="color:${TEXT_PRIMARY};">${BRAND_TEXT}</strong> sign-in page. It expires in ${minutes} minutes and can be used once.`)}
+      ${body(`${greeting} enter this code on the <strong style="color:${TEXT_PRIMARY};">${BRAND_TEXT}</strong> ${signup ? 'registration' : 'sign-in'} page. It expires in ${minutes} minutes and can be used once.`)}
       ${muted(`For your security, never share this code with anyone. ${BRAND_TEXT} will never ask you for it. If you didn't try to sign in, you can safely ignore this email. Nobody can sign in without the code.`)}`,
   });
-  const text = `Your verification code is:\n\n${code}\n\n${greeting.replace(/<[^>]+>/g, '')} enter this code on the ${BRAND_TEXT} sign-in page: ${base}\n\nThe code expires in ${minutes} minutes and can be used once. Never share it with anyone, ${BRAND_TEXT} will never ask you for it.\n\nIf you didn't try to sign in, ignore this email.\n\n— ${BRAND_TEXT}`;
+  const text = `Your verification code is:\n\n${code}\n\n${greeting.replace(/<[^>]+>/g, '')} enter this code on the ${BRAND_TEXT} ${signup ? 'registration' : 'sign-in'} page: ${base}\n\nThe code expires in ${minutes} minutes and can be used once. Never share it with anyone, ${BRAND_TEXT} will never ask you for it.\n\nIf you didn't try to sign in, ignore this email.\n\n— ${BRAND_TEXT}`;
   return { subject, html, text };
 }
 

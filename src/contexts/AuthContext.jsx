@@ -258,13 +258,35 @@ export function AuthProvider({ children }) {
     return { success: true, data };
   };
 
+  // Code sign-up, step 1: email a six-digit code to an address that may not have an account yet.
+  // Supabase creates the (unconfirmed) account when the code is requested; nothing else exists
+  // until the code is typed and /api/create-user adds the profile.
+  const requestSignupCode = async (email) => {
+    const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+    const kind = classifyOtpRequestError(error);
+    // A code went out a moment ago: show the code box anyway.
+    if (kind === 'ok' || kind === 'rate_limited') return { success: true, rateLimited: kind === 'rate_limited' };
+    return { success: false, error: 'We could not send a code right now. Please try again.' };
+  };
+
+  // Code sign-up, step 2: check the code. On success the browser holds a session for the verified
+  // address; its access token is the proof that /api/create-user requires.
+  const verifySignupCode = async (email, token) => {
+    let { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
+    if (error) ({ data, error } = await supabase.auth.verifyOtp({ email, token, type: 'signup' }));
+    if (error || !data?.session) {
+      return { success: false, error: 'That code is not right or has expired. Please try again.' };
+    }
+    return { success: true, session: data.session };
+  };
+
   const signup = async ({
     name, email, password,
     company_name, activity, number_of_employees,
     number_of_locations, website, city, country,
     contact_number, contact_role, certification_types,
     referral_code, role, stakeholder_type,
-    custom_fields, marketing_opt_in, neutral_existing,
+    custom_fields, marketing_opt_in, neutral_existing, access_token,
   }) => {
     const region = await getRegionFromCountryAsync(country, supabase);
     const assignedRole = role || ROLES.CLIENT;
@@ -285,7 +307,11 @@ export function AuthProvider({ children }) {
     // no "check your email" step and the caller can sign in immediately.
     const signupRes = await fetch('/api/create-user', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        // Proof of the mailbox from the code step (code sign-up only).
+        ...(access_token ? { Authorization: `Bearer ${access_token}` } : {}),
+      },
       body: JSON.stringify({
         selfSignup: true,
         email, password, name, role: assignedRole,
@@ -403,6 +429,8 @@ export function AuthProvider({ children }) {
     login,
     signup,
     requestLoginOtp,
+    requestSignupCode,
+    verifySignupCode,
     signInWithLinkedIn,
     verifyLoginOtp,
     logout,

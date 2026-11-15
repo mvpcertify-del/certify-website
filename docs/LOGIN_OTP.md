@@ -6,7 +6,7 @@ Requested by the client (boss), 12 Nov 2026: OTP-based login with a six-digit co
 
 | Step | What happens |
 |---|---|
-| Sign up | The person fills in the sign-up form (no password asked in code-login mode). The account is created, then the login page opens and the first code is emailed. |
+| Sign up | The person fills in the sign-up form (no password asked in code-login mode), then a six-digit code is emailed and must be typed **before** the account is created. Only then does the account appear, and the person is already signed in. Applies to the client form and every partner registration. |
 | Sign in | Email address, then a six-digit code, then signed in. |
 | The code | Generated, expired (set in Supabase), rate-limited and checked **by Supabase Auth** (`signInWithOtp` and `verifyOtp`). This app only asks for the address and then the code. |
 | The email | Supabase's Send Email Hook (`api/auth-email-hook.js`) sends it through Resend using the new `loginOtpEmail` template. The email shows the code, not a link. |
@@ -44,3 +44,17 @@ This is **email-code sign-in**: possession of the mailbox is the proof. It avoid
 ## Tests
 
 `npm test` runs the Odoo tests and the new auth tests (12): the code email, the hook's template choice, the six-digit rule, how a failed code request is classified, and the throw-away signup password.
+
+## Sign-up with the code (added 15 Nov 2026)
+
+1. The form is filled in; the page asks Supabase for a code (`signInWithOtp`, `shouldCreateUser: true`).
+2. Supabase's hook emails the code, worded for registration ("verification code", "registration page").
+3. The person types it; the page checks it (`verifyOtp`) and holds the session Supabase issues for that address.
+4. `/api/create-user` requires that session in the `Authorization` header: it must belong to the same address
+   and have a confirmed email. Without it, self-registration is refused (401) while code login is on, so nobody can
+   register an address they do not control. The server reads the same `VITE_LOGIN_OTP_ENABLED` switch.
+5. The account gets its profile and the person lands on their dashboard (a pending contractor is signed out and
+   sent to the pending-approval notice). An address that already has an account just signs in.
+
+Auditor and contractor documents are uploaded after the code step with the verified session, which the upload
+actions already accept for the person's own profile.

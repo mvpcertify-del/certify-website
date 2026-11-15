@@ -48,7 +48,9 @@ function buildVerifyUrl({ site_url, token_hash, email_action_type, redirect_to }
 export function pickTemplate(action, { name, url, code }) {
   switch (action) {
     case 'signup':
-      return verifyEmail({ name, verifyUrl: url });
+      // signInWithOtp() for an address with no account yet (code sign-up) arrives here with the
+      // code in email_data.token: send the code. Without a code it is the old confirmation link.
+      return code ? loginOtpEmail({ name, code, purpose: 'signup' }) : verifyEmail({ name, verifyUrl: url });
     case 'recovery':
       return recoveryEmail({ name, resetUrl: url });
     case 'magiclink':

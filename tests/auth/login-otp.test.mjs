@@ -53,7 +53,8 @@ test('a magiclink email WITHOUT a token still sends the old link', () => {
 
 test('other email types are unchanged', () => {
   assert.match(pickTemplate('recovery', { name: 'B', url: 'https://x/r', code: '111111' }).subject, /Reset/i);
-  assert.match(pickTemplate('signup', { name: 'B', url: 'https://x/s', code: '111111' }).html, /https:\/\/x\/s/);
+  // A confirmation link still goes out when Supabase supplies no code.
+  assert.match(pickTemplate('signup', { name: 'B', url: 'https://x/s' }).html, /https:\/\/x\/s/);
 });
 
 // ---------------------------------------------------------------------------
@@ -103,4 +104,17 @@ test('the code email has no buttons: the code is typed into the sign-in page', (
   assert.ok(!/Copy code|Sign in with this code/i.test(m.html));
   assert.ok(!/class="ccx-btn"/.test(m.html));
   assert.match(m.html, /482913/);
+});
+
+test('code sign-up: a new address gets a verification code, worded for registration', () => {
+  const m = pickTemplate('signup', { name: 'Bea', url: 'https://x/s', code: '246810' });
+  assert.match(m.subject, /246810 is your .* verification code/);
+  assert.match(m.html, /registration page/);
+  assert.ok(!m.html.includes('https://x/s'));
+});
+
+test('the sign-in code email keeps its sign-in wording', () => {
+  const m = loginOtpEmail({ name: 'Bea', code: '246810' });
+  assert.match(m.subject, /sign-in code/);
+  assert.match(m.html, /sign-in page/);
 });

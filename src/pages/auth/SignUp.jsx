@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import LinkedInButton from '../../components/auth/LinkedInButton';
+import SignupCodeStep from '../../components/auth/SignupCodeStep';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
@@ -114,7 +115,9 @@ export default function SignUp() {
 }
 
 function SimpleClientSignUp() {
-  const { signup, login, getRoleDashboard } = useAuth();
+  const { signup, login, getRoleDashboard, requestSignupCode, verifySignupCode } = useAuth();
+  // 'form' while filling in the details, 'code' while the emailed code is typed (code sign-up only).
+  const [stage, setStage] = useState('form');
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
@@ -168,12 +171,43 @@ function SimpleClientSignUp() {
       return;
     }
 
+    // Code sign-up: prove the mailbox first. The account is created only after the code is typed.
+    if (LOGIN_OTP_ENABLED) {
+      setLoading(true);
+      const sent = await requestSignupCode(email.trim());
+      setLoading(false);
+      if (!sent.success) {
+        setError(sent.error);
+        return;
+      }
+      setStage('code');
+      return;
+    }
+
     setLoading(true);
+    await createAccount(null);
+  };
+
+  // Check the emailed code, then create the account with the proof it produced.
+  const handleVerifyCode = async (code) => {
+    setError('');
+    setLoading(true);
+    const verified = await verifySignupCode(email.trim(), code);
+    if (!verified.success) {
+      setError(verified.error);
+      setLoading(false);
+      return;
+    }
+    await createAccount(verified.session.access_token);
+  };
+
+  const createAccount = async (accessToken) => {
     const result = await signup({
       name,
       email,
       // Code-login mode collects no password; a random, never-shown one satisfies the account API.
       password: LOGIN_OTP_ENABLED ? randomPassword() : password,
+      access_token: accessToken || undefined,
       referral_code: referralCode,
       role: 'client',
       stakeholder_type: 'client',
@@ -183,10 +217,10 @@ function SimpleClientSignUp() {
     });
 
     if (result.success) {
-      // Verification was removed — sign the new user straight in and take them
-      // to their dashboard instead of a "check your email" screen.
-      if (LOGIN_OTP_ENABLED) {
-        navigate('/login', { state: { email, sendCode: true } });
+      // Code sign-up: the person is already signed in from the code step. A full page load picks up
+      // the new profile; an address that was already registered simply lands on its dashboard.
+      if (LOGIN_OTP_ENABLED && accessToken) {
+        window.location.assign(result.existing ? '/login' : getRoleDashboard('client'));
         return;
       }
       const loginRes = await login(email, password);
@@ -201,6 +235,21 @@ function SimpleClientSignUp() {
     setLoading(false);
   };
 
+
+  if (stage === 'code') {
+    return (
+      <div className="auth-form auth-form--simple">
+        <SignupCodeStep
+          email={email.trim()}
+          loading={loading}
+          error={error}
+          onVerify={handleVerifyCode}
+          onResend={() => requestSignupCode(email.trim())}
+          onBack={() => { setError(''); setStage('form'); }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="auth-form auth-form--simple">
@@ -351,7 +400,9 @@ function SimpleClientSignUp() {
 }
 
 function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
-  const { signup, login, getRoleDashboard } = useAuth();
+  const { signup, login, getRoleDashboard, logout, requestSignupCode, verifySignupCode } = useAuth();
+  // 'form' while filling in the details, 'code' while the emailed code is typed (code sign-up only).
+  const [stage, setStage] = useState('form');
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
@@ -653,11 +704,42 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
     e.preventDefault();
     if (isPureIndividual ? !validateSimple() : !validateStep()) return;
 
+    // Code sign-up: prove the mailbox first. The account is created only after the code is typed.
+    if (LOGIN_OTP_ENABLED) {
+      setLoading(true);
+      const sent = await requestSignupCode(formData.email.trim());
+      setLoading(false);
+      if (!sent.success) {
+        setError(sent.error);
+        return;
+      }
+      setStage('code');
+      return;
+    }
+
     setLoading(true);
+    await createAccount(null);
+  };
+
+  // Check the emailed code, then create the account with the proof it produced.
+  const handleVerifyCode = async (code) => {
+    setError('');
+    setLoading(true);
+    const verified = await verifySignupCode(formData.email.trim(), code);
+    if (!verified.success) {
+      setError(verified.error);
+      setLoading(false);
+      return;
+    }
+    await createAccount(verified.session.access_token);
+  };
+
+  const createAccount = async (accessToken) => {
     const result = await signup({
       name: formData.contact_person_name,
       email: formData.email,
       password: LOGIN_OTP_ENABLED ? randomPassword() : formData.password,
+      access_token: accessToken || undefined,
       // Pure individuals (referral / investor) have no company context — omit
       // all company-specific fields so admins don't see misleading data.
       company_name: isPureIndividual ? null : formData.company_name,
@@ -677,6 +759,11 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
 
     if (result.success) {
       try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
+      // Already registered (code sign-up): they proved the mailbox, so they are just signed in.
+      if (result.existing) {
+        window.location.assign('/login');
+        return;
+      }
       if (targetRole === 'auditor' && result.data?.user?.id) {
         // Upload the auditor's documents while there is still no session (the
         // bootstrap path). A failure is logged inside attachAuditorDetails; we
@@ -694,11 +781,14 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
       // Verification was removed — sign in and go straight to the dashboard.
       // For a pending contractor this fails by design (see AuthContext.signup)
       // and falls through to the pending-approval notice below.
-      if (LOGIN_OTP_ENABLED) {
-        // A pending contractor cannot sign in yet, so no code is sent.
-        navigate(targetRole === 'contractor' ? '/login?pending=1' : '/login', {
-          state: { email: formData.email, sendCode: targetRole !== 'contractor' },
-        });
+      if (LOGIN_OTP_ENABLED && accessToken) {
+        // Signed in from the code step. A pending contractor must not stay signed in.
+        if (targetRole === 'contractor') {
+          await logout();
+          navigate('/login?pending=1');
+          return;
+        }
+        window.location.assign(getRoleDashboard(targetRole));
         return;
       }
       const loginRes = await login(formData.email, formData.password);
@@ -716,6 +806,21 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
     setLoading(false);
   };
 
+
+  if (stage === 'code') {
+    return (
+      <div className="auth-form auth-form--simple">
+        <SignupCodeStep
+          email={formData.email.trim()}
+          loading={loading}
+          error={error}
+          onVerify={handleVerifyCode}
+          onResend={() => requestSignupCode(formData.email.trim())}
+          onBack={() => { setError(''); setStage('form'); }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={`auth-form auth-form--wide ${registrationType === 'contractor' ? 'auth-form--contractor' : ''}`}>

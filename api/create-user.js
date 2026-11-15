@@ -74,6 +74,33 @@ export default async function handler(req, res) {
 
     const assignedRole = role || (isSelfSignup ? 'client' : null);
 
+    // Code sign-up. When code login is on (the same switch the pages use), a self-registration must
+    // arrive with the session that Supabase issued after the person typed the emailed code, and that
+    // session must belong to this very address. The mailbox is therefore proven BEFORE the account
+    // exists, and nobody can register an address they do not control.
+    let verifiedUser = null;
+    if (isSelfSignup && process.env.VITE_LOGIN_OTP_ENABLED === 'true') {
+      const authHeader = req.headers?.authorization || req.headers?.Authorization || '';
+      const token = String(authHeader).replace(/^Bearer\s+/i, '').trim();
+      if (!token) {
+        return res.status(401).json({ error: 'Please verify your email with the code first.' });
+      }
+      const { data: tokenUser, error: tokenError } = await supabaseAdmin.auth.getUser(token);
+      const u = tokenUser?.user;
+      if (tokenError || !u || !u.email_confirmed_at) {
+        return res.status(401).json({ error: 'Your code could not be confirmed. Please request a new one.' });
+      }
+      if (String(u.email || '').toLowerCase() !== String(email || '').toLowerCase()) {
+        return res.status(403).json({ error: 'That code was issued for a different email address.' });
+      }
+      const { data: already } = await supabaseAdmin.from('profiles').select('id, role').eq('id', u.id).maybeSingle();
+      if (already?.role) {
+        // Already registered: they have just proved the mailbox, so they are simply signed in.
+        return res.status(200).json({ success: true, existing: true });
+      }
+      verifiedUser = u;
+    }
+
     // Provider roles are vetted before they go live, so a throw-away mailbox is
     // refused. Clients are not restricted (a buyer may use any address).
     if (isSelfSignup && assignedRole !== 'client' && isDisposableEmail(email)) {
@@ -189,12 +216,20 @@ export default async function handler(req, res) {
     // email_confirm: true creates the user already confirmed — email
     // verification was removed for all users (client, 25 Jul), so nobody is
     // ever blocked by a "verify your email" step and can log in immediately.
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: userMetadata,
-    });
+    // A verified self-registration already has its auth user (made when the code was requested):
+    // it only needs its password and details. Everything else creates the user as before.
+    const { data: authData, error: authError } = verifiedUser
+      ? await supabaseAdmin.auth.admin.updateUserById(verifiedUser.id, {
+        password,
+        email_confirm: true,
+        user_metadata: userMetadata,
+      })
+      : await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: userMetadata,
+      });
 
     if (authError) {
       // Code sign-up answers the same way whether or not the address already has
