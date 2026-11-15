@@ -31,6 +31,7 @@ import { APP_URL } from './_appUrl.js';
 import { draftWeeklyInvestorCampaign } from './_investorCampaigns.js';
 import { applyContractorTaskDecision } from './_contractorTaskScoring.js';
 import { handleOdooAdminAction, runOdooSyncIfEnabled } from './_odooAdmin.js';
+import { runNotificationEngine } from './_notifyEngine.js';
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -78,6 +79,18 @@ export default async function handler(req, res) {
     const job = new URL(req.url, 'http://localhost').searchParams.get('job');
     if (job === 'investor-campaign-draft') {
       return await handleInvestorCampaignDraftCron(req, res);
+    }
+    // Manual check of the notification engine, same CRON_SECRET as the crons. With dry=1 it only
+    // counts who would be messaged (nothing is logged or sent); `rule` limits it to one rule.
+    if (job === 'notify-engine') {
+      const secret = process.env.CRON_SECRET;
+      const auth = req.headers?.authorization || req.headers?.Authorization || '';
+      if (!secret || auth !== `Bearer ${secret}`) return res.status(401).json({ error: 'Unauthorized' });
+      const params = new URL(req.url, 'http://localhost').searchParams;
+      const summary = await runNotificationEngine({
+        supabase: supabaseAdmin, dryRun: params.get('dry') === '1', only: params.get('rule') || null,
+      });
+      return res.status(200).json(summary);
     }
     // Odoo accounting mirror (MVP). A strict no-op unless ODOO_SYNC_ENABLED is
     // 'true' and the database switch is on; it rides the daily cron because the
@@ -247,23 +260,41 @@ async function handleRenewalCron(req, res) {
   }
 
   const now = new Date();
+
+  // The notification engine (reminders for every stakeholder). A failure here must never stop the
+  // renewal sweep and the contractor sweep below. Once the engine has run, it also covers certificate
+  // expiry (90, 60 and 30 days), so the older single 30-day sweep stands down to avoid a double email.
+  let engine = null;
+  try {
+    engine = await runNotificationEngine({ supabase: supabaseAdmin, now });
+  } catch (e) {
+    console.error('notification engine failed', e?.message);
+  }
+  const engineCoversCertificates = !!(engine?.ok && engine.persisted
+    && engine.rules?.certificate_expiry && engine.rules.certificate_expiry.enabled !== false
+    && !engine.rules.certificate_expiry.error);
+
   const horizon = new Date(now);
   horizon.setDate(horizon.getDate() + 30);
 
-  const { data: certs, error } = await supabaseAdmin
-    .from('certificates')
-    .select('id, client_id, company_name, iso_standard, certificate_number, expires_at')
-    .eq('status', 'active')
-    .lte('expires_at', horizon.toISOString())
-    .is('renewal_reminded_at', null);
+  let certs = [];
+  if (!engineCoversCertificates) {
+    const { data, error } = await supabaseAdmin
+      .from('certificates')
+      .select('id, client_id, company_name, iso_standard, certificate_number, expires_at')
+      .eq('status', 'active')
+      .lte('expires_at', horizon.toISOString())
+      .is('renewal_reminded_at', null);
 
-  if (error) {
-    console.error('renewal cron: query failed', error.message);
-    return res.status(500).json({ error: error.message });
+    if (error) {
+      console.error('renewal cron: query failed', error.message);
+      return res.status(500).json({ error: error.message });
+    }
+    certs = data || [];
   }
 
   let reminded = 0;
-  for (const cert of certs || []) {
+  for (const cert of certs) {
     try {
       const { data: prof } = await supabaseAdmin
         .from('profiles')
@@ -305,7 +336,7 @@ async function handleRenewalCron(req, res) {
   // above; a failure in one must never block the other.
   const missed = await sweepOverdueContractorTasks();
 
-  return res.status(200).json({ success: true, reminded, contractorTasksMissed: missed });
+  return res.status(200).json({ success: true, reminded, contractorTasksMissed: missed, notifications: engine });
 }
 
 // Marks every contractor_tasks row whose deadline has passed with no

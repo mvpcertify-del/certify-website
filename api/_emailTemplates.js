@@ -528,7 +528,7 @@ export function loginOtpEmail({ name, code, minutes = 10, loginUrl, purpose = 's
   const greeting = name ? `Hi ${escapeHtml(name)},` : 'Hello,';
   const signup = purpose === 'signup';
   const subject = `${code} is your ${BRAND_TEXT} ${signup ? 'verification' : 'sign-in'} code`;
-  const base = loginUrl || `${process.env.APP_PUBLIC_URL || 'https://certify.cx'}/${signup ? 'signup' : 'login'}`;
+  const base = loginUrl || `${APP_URL}/${signup ? 'signup' : 'login'}`;
   // Written so Gmail and Apple Mail recognise it as a one-time code and show their
   // own "Copy code" button (the same way Vercel's code emails get one): the phrase
   // "Your verification code is:" comes first in the body, and the code sits alone
@@ -545,6 +545,26 @@ export function loginOtpEmail({ name, code, minutes = 10, loginUrl, purpose = 's
   });
   const text = `Your verification code is:\n\n${code}\n\n${greeting.replace(/<[^>]+>/g, '')} enter this code on the ${BRAND_TEXT} ${signup ? 'registration' : 'sign-in'} page: ${base}\n\nThe code expires in ${minutes} minutes and can be used once. Never share it with anyone, ${BRAND_TEXT} will never ask you for it.\n\nIf you didn't try to sign in, ignore this email.\n\n— ${BRAND_TEXT}`;
   return { subject, html, text };
+}
+
+/**
+ * A reminder from the notification engine: a short title, one paragraph, one button.
+ * The wording comes from the rule (api/_notifyEngine.js), not from here.
+ */
+export function notificationEmail({ name, title, message, ctaLabel, ctaUrl }) {
+  const greeting = name ? `Hi ${escapeHtml(name)},` : 'Hello,';
+  const html = layout({
+    title,
+    preheader: message,
+    bodyHtml: `
+      ${heading(escapeHtml(title))}
+      ${body(`${greeting} ${escapeHtml(message)}`)}
+      ${ctaUrl ? `<p style="margin:0 0 28px;">${button(ctaUrl, escapeHtml(ctaLabel || 'Open Certify.cx'))}</p>${linkFallback(ctaUrl)}` : ''}
+      ${muted('You are receiving this reminder because of activity on your Certify.cx account.')}`,
+  });
+  const cta = ctaUrl ? `\n\n${ctaLabel || 'Open Certify.cx'}: ${ctaUrl}` : '';
+  const text = `${greeting.replace(/<[^>]+>/g, '')} ${message}${cta}\n\n— ${BRAND_TEXT}`;
+  return { subject: title, html, text };
 }
 
 export function inviteEmail({ name, link }) {
