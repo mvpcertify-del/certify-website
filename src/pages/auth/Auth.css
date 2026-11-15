@@ -574,3 +574,23 @@
   color: #0a1f17;
 }
 .auth-form--login .auth-switch__btn { min-height: 56px; font-size: 1.0625rem; border-radius: 12px; }
+
+/* ---- Login and plain sign-up share one size: same card width, same field and button height ---- */
+.auth-form--simple .auth-form__hero-title {
+  font-size: 1.75rem;
+  letter-spacing: -0.01em;
+}
+.auth-form--simple .form-input {
+  min-height: 56px;
+  padding: 16px 18px;
+  font-size: 1.0625rem;
+  border-radius: 12px;
+}
+.auth-form--simple button[type='submit'],
+.auth-form--simple .auth-linkedin-btn,
+.auth-form--simple .auth-switch__btn {
+  min-height: 56px;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  border-radius: 12px;
+}

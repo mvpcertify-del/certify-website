@@ -8,9 +8,11 @@ export default function AuthLayout() {
   const location = useLocation();
   const { t } = useTranslation();
   const isSignUp = location.pathname === '/signup';
-  const isWide = isSignUp || location.pathname === '/client/apply';
   const hasType = new URLSearchParams(location.search).get('type');
-  const isExtraWide = isWide && hasType;
+  // The plain client sign-up is the same size as the login page; only the partner registration
+  // wizard (/signup?type=...) and the application form need the wider card.
+  const isWide = (isSignUp && !!hasType) || location.pathname === '/client/apply';
+  const isExtraWide = isSignUp && !!hasType;
 
   return (
     <div className="auth-layout">
