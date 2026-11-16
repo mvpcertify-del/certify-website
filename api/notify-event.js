@@ -32,6 +32,7 @@ import { draftWeeklyInvestorCampaign } from './_investorCampaigns.js';
 import { applyContractorTaskDecision } from './_contractorTaskScoring.js';
 import { handleOdooAdminAction, runOdooSyncIfEnabled } from './_odooAdmin.js';
 import { runNotificationEngine } from './_notifyEngine.js';
+import { handleNotifyAdminAction } from './_notifyAdmin.js';
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -111,6 +112,10 @@ export default async function handler(req, res) {
   // handled in api/_odooAdmin.js, which verifies the caller itself.
   if (typeof req.body?.action === 'string' && req.body.action.startsWith('odoo-')) {
     return handleOdooAdminAction(req, res);
+  }
+  // Notifications & Automation page (Super Admin): proof of what was sent, and the on/off controls.
+  if (typeof req.body?.action === 'string' && req.body.action.startsWith('notify-admin-')) {
+    return handleNotifyAdminAction(req, res);
   }
 
   try {

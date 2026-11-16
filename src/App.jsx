@@ -64,6 +64,7 @@ const AdminCertBodies = lazy(() => import('./pages/admin/AdminCertBodies'));
 const AdminAccreditationBodies = lazy(() => import('./pages/admin/AdminAccreditationBodies'));
 const AdminCountries = lazy(() => import('./pages/admin/AdminCountries'));
 const AdminCoupons = lazy(() => import('./pages/admin/AdminCoupons'));
+const AdminNotifications = lazy(() => import('./pages/admin/AdminNotifications'));
 const AdminCommissionTiers = lazy(() => import('./pages/admin/AdminCommissionTiers'));
 const AdminConsultancies = lazy(() => import('./pages/admin/AdminConsultancies'));
 const AdminContractors = lazy(() => import('./pages/admin/AdminContractors'));
@@ -348,6 +349,13 @@ function AppRoutes() {
             <Route path="/admin/countries" element={
               <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}>
                 <AdminCountries />
+              </ProtectedRoute>
+            } />
+
+            {/* Admin — Notifications & Automation: what was sent, to whom, and the controls */}
+            <Route path="/admin/notifications" element={
+              <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}>
+                <AdminNotifications />
               </ProtectedRoute>
             } />
 
