@@ -160,9 +160,10 @@ test('an ordinary single-chunk body is unchanged', async () => {
   assert.equal(await readRawBody(fakeRequest([Buffer.from(body)])), body);
 });
 
-test('the body is read from the stream without touching req.body, and keeps Go-style escapes like \u0026', async () => {
-  // What Supabase (Go) sends for a company called "A & B": the ampersand is written as \u0026.
-  const body = '{"user":{"user_metadata":{"company":"A \u0026 B <x>"}}}';
+test('the body is read from the stream without touching req.body, and keeps Go-style escapes', async () => {
+  // What Supabase (Go) sends for a company called "A & B": the ampersand is written as backslash-u0026.
+  const backslash = String.fromCharCode(92);
+  const body = '{"user":{"user_metadata":{"company":"A ' + backslash + 'u0026 B <x>"}}}';
   const req = fakeRequest([Buffer.from(body)]);
   let touched = false;
   Object.defineProperty(req, 'body', { get() { touched = true; return JSON.parse(body); } });
