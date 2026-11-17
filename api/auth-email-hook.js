@@ -23,14 +23,21 @@ const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL;
 const HOOK_SECRET = process.env.SUPABASE_AUTH_HOOK_SECRET;
 
 // Vercel serverless: read raw body for signature verification.
-async function readRawBody(req) {
+//
+// The signature covers the exact bytes Supabase sent, so the body must come back byte for byte. The chunks are
+// therefore collected as Buffers and decoded ONCE at the end. Decoding each chunk on its own (data += chunk)
+// breaks any character that is split across two chunks: a name or company with Arabic letters, an accent or a
+// symbol such as the trademark sign turns into replacement characters and the signature no longer matches
+// ("No matching signature found"). That is what rejected the password-reset email of an account whose profile
+// had such characters while ordinary-name accounts worked.
+export async function readRawBody(req) {
   if (typeof req.body === 'string') return req.body;
   if (Buffer.isBuffer(req.body)) return req.body.toString('utf8');
   if (req.body && typeof req.body === 'object') return JSON.stringify(req.body);
   return await new Promise((resolve, reject) => {
-    let data = '';
-    req.on('data', (chunk) => { data += chunk; });
-    req.on('end', () => resolve(data));
+    const chunks = [];
+    req.on('data', (chunk) => { chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)); });
+    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
     req.on('error', reject);
   });
 }

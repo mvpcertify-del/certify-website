@@ -131,3 +131,31 @@ test('the reset link points at /auth/v1/verify once, whichever way site_url arri
   assert.equal(buildVerifyUrl({ ...data, site_url: 'https://proj.supabase.co/auth/v1/' }), want);
   assert.equal(buildVerifyUrl({ ...data, site_url: 'https://proj.supabase.co' }), want);
 });
+
+// ---------------------------------------------------------------------------
+// Reading the signed request body
+// ---------------------------------------------------------------------------
+import { EventEmitter } from 'node:events';
+import { readRawBody } from '../../api/auth-email-hook.js';
+
+function fakeRequest(buffers) {
+  const req = new EventEmitter();
+  setImmediate(() => { buffers.forEach((b) => req.emit('data', b)); req.emit('end'); });
+  return req;
+}
+
+test('the signed body comes back byte for byte even when a character is split across chunks', async () => {
+  const body = JSON.stringify({ user: { user_metadata: { name: 'ميدهات أبو غزالة', company: 'Certify.cx™ — café' } } });
+  const bytes = Buffer.from(body, 'utf8');
+  // cut in the middle of a multi-byte character
+  const cut = bytes.indexOf(Buffer.from('™')) + 1;
+  assert.notEqual(cut, 0);
+  const got = await readRawBody(fakeRequest([bytes.subarray(0, cut), bytes.subarray(cut)]));
+  assert.equal(got, body);
+  assert.ok(!got.includes('\uFFFD'));
+});
+
+test('an ordinary single-chunk body is unchanged', async () => {
+  const body = '{"a":"b"}';
+  assert.equal(await readRawBody(fakeRequest([Buffer.from(body)])), body);
+});
