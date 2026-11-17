@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { Input, Button } from '../../components/ui/FormElements';
-import { AlertCircle, CheckCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react';
 import './Auth.css';
 
 export default function ResetPassword() {
@@ -18,7 +18,9 @@ export default function ResetPassword() {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [ready, setReady] = useState(false);
-  const [invalidLink, setInvalidLink] = useState(false);
+  // An expired or already used link comes back with an error in the address; say so straight away.
+  const [invalidLink, setInvalidLink] = useState(() => /error(_code)?=/.test(window.location.hash));
+  const [showPassword, setShowPassword] = useState(false);
 
   // Supabase sends the user here with a recovery token in the URL hash.
   // The SDK auto-exchanges it and fires a PASSWORD_RECOVERY event, after which
@@ -42,7 +44,7 @@ export default function ResetPassword() {
 
     const timeout = setTimeout(() => {
       if (!resolved) setInvalidLink(true);
-    }, 1500);
+    }, 5000); // the SDK reads the link on load; on a slow connection that can take a moment
 
     return () => {
       subscription.unsubscribe();
@@ -82,7 +84,7 @@ export default function ResetPassword() {
 
   if (done) {
     return (
-      <div className="auth-form">
+      <div className="auth-form auth-form--login auth-form--compact">
         <div className="auth-form__success-icon">
           <CheckCircle size={48} />
         </div>
@@ -91,7 +93,7 @@ export default function ResetPassword() {
           {t('auth.redirectingToSignIn', 'Redirecting you to sign in…')}
         </p>
         <Link to="/login">
-          <Button variant="secondary" size="md" fullWidth>
+          <Button variant="secondary" size="lg" fullWidth>
             {t('auth.backToSignIn')}
           </Button>
         </Link>
@@ -101,13 +103,13 @@ export default function ResetPassword() {
 
   if (invalidLink && !ready) {
     return (
-      <div className="auth-form">
+      <div className="auth-form auth-form--login auth-form--compact">
         <h2 className="auth-form__title">{t('auth.invalidResetLink', 'Invalid or expired link')}</h2>
         <p className="auth-form__subtitle">
           {t('auth.invalidResetLinkDesc', 'This password reset link is invalid or has expired. Please request a new one.')}
         </p>
         <Link to="/forgot-password">
-          <Button variant="primary" size="md" fullWidth>
+          <Button variant="primary" size="lg" fullWidth>
             {t('auth.sendResetLink')}
           </Button>
         </Link>
@@ -116,7 +118,7 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="auth-form">
+    <div className="auth-form auth-form--login auth-form--compact">
       <h2 className="auth-form__title">{t('settings.updatePassword')}</h2>
       <p className="auth-form__subtitle">
         {t('auth.chooseNewPassword', 'Choose a new password for your account.')}
@@ -125,17 +127,27 @@ export default function ResetPassword() {
       <form onSubmit={handleSubmit} className="auth-form__body">
         <Input
           label={t('settings.newPassword')}
-          type="password"
+          type={showPassword ? 'text' : 'password'}
           id="new-password"
           autoComplete="new-password"
           placeholder={t('settings.newPasswordPlaceholder')}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          rightElement={
+            <button
+              type="button"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              onClick={() => setShowPassword(!showPassword)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', display: 'flex', padding: '4px' }}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          }
         />
         <Input
           label={t('settings.confirmPassword')}
-          type="password"
+          type={showPassword ? 'text' : 'password'}
           id="confirm-password"
           autoComplete="new-password"
           placeholder={t('settings.confirmPasswordPlaceholder')}

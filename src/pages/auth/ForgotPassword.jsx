@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { Input, Button } from '../../components/ui/FormElements';
 import { AlertCircle, CheckCircle } from 'lucide-react';
+import AuthSwitch from '../../components/auth/AuthSwitch';
 import './Auth.css';
 
 export default function ForgotPassword() {
@@ -44,7 +45,7 @@ export default function ForgotPassword() {
 
   if (sent) {
     return (
-      <div className="auth-form">
+      <div className="auth-form auth-form--login auth-form--compact">
         <div className="auth-form__success-icon">
           <CheckCircle size={48} />
         </div>
@@ -53,7 +54,7 @@ export default function ForgotPassword() {
           {t('auth.resetLinkSent')} <strong>{email}</strong>
         </p>
         <Link to="/login">
-          <Button variant="secondary" size="md" fullWidth>
+          <Button variant="secondary" size="lg" fullWidth>
             {t('auth.backToSignIn')}
           </Button>
         </Link>
@@ -62,7 +63,7 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="auth-form">
+    <div className="auth-form auth-form--login auth-form--compact">
       <h2 className="auth-form__title">{t('auth.resetPassword')}</h2>
       <p className="auth-form__subtitle">{t('auth.resetPasswordDesc')}</p>
 
@@ -71,6 +72,7 @@ export default function ForgotPassword() {
           label={t('auth.email')}
           type="email"
           id="forgot-email"
+          autoComplete="email"
           placeholder="you@company.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -89,9 +91,7 @@ export default function ForgotPassword() {
         </Button>
       </form>
 
-      <p className="auth-form__footer-text">
-        {t('auth.rememberPassword')} <Link to="/login" className="auth-form__link">{t('auth.signIn')}</Link>
-      </p>
+      <AuthSwitch to="/login" prompt={t('auth.rememberPassword')} label={t('auth.signIn')} />
     </div>
   );
 }

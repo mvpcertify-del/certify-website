@@ -40,8 +40,10 @@ export function buildVerifyUrl({ site_url, token_hash, email_action_type, redire
   // (https://<project>.supabase.co/auth/v1). Adding /auth/v1 again made every link
   // .../auth/v1/auth/v1/verify, which answers "No API key found". Strip it first so either shape works.
   const base = (site_url || '').replace(/\/$/, '').replace(/\/auth\/v1$/, '');
+  // GET /auth/v1/verify reads the hashed token from the `token` parameter (`token_hash` is only for the
+  // client-side verifyOtp call): with `token_hash` it answers "Verify requires a token or a token hash".
   const params = new URLSearchParams({
-    token_hash,
+    token: token_hash,
     type: email_action_type,
     ...(redirect_to ? { redirect_to } : {}),
   });

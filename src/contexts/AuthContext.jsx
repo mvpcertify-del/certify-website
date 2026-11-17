@@ -141,6 +141,12 @@ export function AuthProvider({ children }) {
     // 2. Auth State Listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, currentSession) => {
+        // A password-reset link signs the person in for one purpose. Even if Supabase sent them to the
+        // home page (a redirect address that is not on its allow list), take them to the reset form.
+        if (_event === 'PASSWORD_RECOVERY' && window.location.pathname !== '/reset-password') {
+          window.location.assign('/reset-password');
+          return;
+        }
         if (mounted) setSession(currentSession);
         if (currentSession?.user) {
           // Refresh the profile in the background. We only show the full-screen

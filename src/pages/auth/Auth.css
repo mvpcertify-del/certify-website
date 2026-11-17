@@ -648,3 +648,7 @@
 .auth-otp-resend-block { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: var(--font-size-sm); color: var(--color-text-secondary); }
 .auth-otp-back { align-self: center; }
 @media (max-width: 380px) { .auth-otp-box { width: 42px; height: 52px; } .auth-otp-boxes { gap: 8px; } }
+
+/* Forgot / reset password: the login look without the tall minimum, so the card fits its content. */
+.auth-form--login.auth-form--compact { min-height: 0; }
+.auth-form--compact .auth-form__success-icon { align-self: center; }
