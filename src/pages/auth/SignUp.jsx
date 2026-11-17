@@ -5,7 +5,7 @@ import SignupCodeStep from '../../components/auth/SignupCodeStep';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
-import { LOGIN_OTP_ENABLED, randomPassword } from '../../config/loginMode';
+import { LOGIN_OTP_ENABLED, SIGNUP_CODE_ENABLED, randomPassword } from '../../config/loginMode';
 import { Input, Select, Button, Autocomplete } from '../../components/ui/FormElements';
 import NameFields from '../../components/ui/NameFields';
 import CustomFieldRenderer, { validateCustomFields } from '../../components/CustomFieldRenderer';
@@ -124,13 +124,13 @@ function SimpleClientSignUp() {
   const [searchParams] = useSearchParams();
   const referralCode = searchParams.get('ref') || '';
 
-  const [step, setStep] = useState(1);
-  const [email, setEmail] = useState('');
+  // One form (client, 17 Nov): full name, business email, company (optional), password, terms.
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [company, setCompany] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   // Marketing mail is opt-in: unticked until the person ticks it.
@@ -141,16 +141,6 @@ function SimpleClientSignUp() {
 
   const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
-  const handleEmailContinue = (e) => {
-    e.preventDefault();
-    setError('');
-    if (!isValidEmail(email)) {
-      setError(t('auth.validationEmail'));
-      return;
-    }
-    setStep(2);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -158,12 +148,17 @@ function SimpleClientSignUp() {
       setError(t('auth.validationName'));
       return;
     }
+    if (!isValidEmail(email.trim())) {
+      setError(t('auth.validationEmail'));
+      return;
+    }
     if (!LOGIN_OTP_ENABLED && password.length < 6) {
       setError(t('auth.validationPasswordLength'));
       return;
     }
-    if (!LOGIN_OTP_ENABLED && password !== confirmPassword) {
-      setError(t('auth.validationPasswordMatch'));
+    // The tick box is never pre-ticked: registering means actively accepting the terms.
+    if (!termsAccepted) {
+      setError(t('auth.validationTerms'));
       return;
     }
     const customCheck = validateCustomFields(customFields, customValues);
@@ -172,8 +167,8 @@ function SimpleClientSignUp() {
       return;
     }
 
-    // Code sign-up: prove the mailbox first. The account is created only after the code is typed.
-    if (LOGIN_OTP_ENABLED) {
+    // Prove the mailbox first. The account is created only after the code is typed.
+    if (SIGNUP_CODE_ENABLED) {
       setLoading(true);
       const sent = await requestSignupCode(email.trim());
       setLoading(false);
@@ -197,15 +192,17 @@ function SimpleClientSignUp() {
     if (!verified.success) {
       setError(verified.error);
       setLoading(false);
-      return;
+      return { success: false };
     }
     await createAccount(verified.session.access_token);
+    return { success: true };
   };
 
   const createAccount = async (accessToken) => {
     const result = await signup({
-      name,
-      email,
+      name: name.trim(),
+      email: email.trim(),
+      company_name: company.trim() || undefined,
       // Code-login mode collects no password; a random, never-shown one satisfies the account API.
       password: LOGIN_OTP_ENABLED ? randomPassword() : password,
       access_token: accessToken || undefined,
@@ -214,17 +211,17 @@ function SimpleClientSignUp() {
       stakeholder_type: 'client',
       custom_fields: customValues,
       marketing_opt_in: marketingOptIn,
-      neutral_existing: LOGIN_OTP_ENABLED,
+      neutral_existing: SIGNUP_CODE_ENABLED,
     });
 
     if (result.success) {
-      // Code sign-up: the person is already signed in from the code step. A full page load picks up
+      // Verified by code: the person is already signed in from the code step. A full page load picks up
       // the new profile; an address that was already registered simply lands on its dashboard.
-      if (LOGIN_OTP_ENABLED && accessToken) {
+      if (SIGNUP_CODE_ENABLED && accessToken) {
         window.location.assign(result.existing ? '/login' : getRoleDashboard('client'));
         return;
       }
-      const loginRes = await login(email, password);
+      const loginRes = await login(email.trim(), password);
       if (loginRes?.success) {
         navigate(getRoleDashboard(loginRes.data?.user?.role || 'client'));
       } else {
@@ -235,7 +232,6 @@ function SimpleClientSignUp() {
     setError(result.error);
     setLoading(false);
   };
-
 
   if (stage === 'code') {
     return (
@@ -263,57 +259,42 @@ function SimpleClientSignUp() {
         </div>
       )}
 
-      {step === 1 && (
-        <>
-          <SocialButtons stakeholderType="client" />
+      <SocialButtons stakeholderType="client" />
 
-          <form onSubmit={handleEmailContinue} className="auth-form__body">
-            <Input
-              type="email"
-              id="signup-email"
-              name="email"
-              autoComplete="username"
-              placeholder={t('auth.enterYourEmail')}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <Button type="submit" variant="primary" size="lg" fullWidth>
-              {t('auth.continue')}
-            </Button>
-          </form>
+      <form onSubmit={handleSubmit} className="auth-form__body" noValidate>
+        <Input
+          label={t('auth.yourName')}
+          id="signup-name"
+          name="name"
+          autoComplete="name"
+          placeholder={t('auth.yourNamePlaceholder')}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
 
-          <p className="auth-form__legal">
-            {t('auth.legalPrefix')}{' '}
-            <Link to="/terms" className="auth-form__link">{t('auth.termsLink')}</Link>
-            {' '}{t('auth.legalAnd')}{' '}
-            <Link to="/privacy" className="auth-form__link">{t('auth.privacyLink')}</Link>.
-          </p>
-        </>
-      )}
+        <Input
+          label={t('auth.businessEmail')}
+          type="email"
+          id="signup-email"
+          name="email"
+          autoComplete="email"
+          placeholder={t('auth.enterYourEmail')}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
 
-      {step === 2 && (
-        <form onSubmit={handleSubmit} className="auth-form__body">
-          <button
-            type="button"
-            className="auth-back-link"
-            onClick={() => { setError(''); setStep(1); }}
-          >
-            <ArrowLeft size={16} /> {email}
-          </button>
+        <Input
+          label={t('auth.companyOptional')}
+          id="signup-company"
+          name="company"
+          autoComplete="organization"
+          value={company}
+          onChange={(e) => setCompany(e.target.value)}
+        />
 
-          <Input
-            label={t('auth.yourName')}
-            id="signup-name"
-            name="name"
-            placeholder={t('auth.yourNamePlaceholder')}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-
-          {!LOGIN_OTP_ENABLED && (
-          <>
+        {!LOGIN_OTP_ENABLED && (
           <Input
             label={t('auth.passwordRequired')}
             type={showPassword ? 'text' : 'password'}
@@ -327,6 +308,7 @@ function SimpleClientSignUp() {
             rightElement={
               <button
                 type="button"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
                 onClick={() => setShowPassword(!showPassword)}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', display: 'flex', padding: '4px' }}
               >
@@ -334,64 +316,40 @@ function SimpleClientSignUp() {
               </button>
             }
           />
+        )}
 
-          <Input
-            label={t('auth.confirmPassword')}
-            type={showConfirmPassword ? 'text' : 'password'}
-            id="signup-confirm"
-            name="confirmPassword"
-            autoComplete="new-password"
-            placeholder={t('auth.confirmPasswordPlaceholder')}
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-            rightElement={
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', display: 'flex', padding: '4px' }}
-              >
-                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            }
+        {LOGIN_OTP_ENABLED && (
+          <p className="auth-form__hint">{t('auth.signupNoPassword')}</p>
+        )}
+
+        {customFields.map(field => (
+          <CustomFieldRenderer
+            key={field.id}
+            field={field}
+            value={customValues[field.field_key]}
+            onChange={(v) => setCustomValues(prev => ({ ...prev, [field.field_key]: v }))}
           />
-          </>
-          )}
+        ))}
 
-          {LOGIN_OTP_ENABLED && (
-            <p className="auth-form__hint">{t('auth.signupNoPassword')}</p>
-          )}
-
-          {customFields.map(field => (
-            <CustomFieldRenderer
-              key={field.id}
-              field={field}
-              value={customValues[field.field_key]}
-              onChange={(v) => setCustomValues(prev => ({ ...prev, [field.field_key]: v }))}
-            />
-          ))}
-
-          <label className="auth-form__check">
-            <input
-              type="checkbox"
-              checked={marketingOptIn}
-              onChange={(e) => setMarketingOptIn(e.target.checked)}
-            />
-            <span>{t('auth.marketingOptIn')}</span>
-          </label>
-
-          <Button type="submit" variant="primary" size="lg" fullWidth loading={loading}>
-            {t('auth.createAccount')}
-          </Button>
-
-          <p className="auth-form__legal">
-            {t('auth.legalPrefix')}{' '}
-            <Link to="/terms" className="auth-form__link">{t('auth.termsLink')}</Link>
+        <label className="auth-form__check">
+          <input type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} required />
+          <span>
+            {t('auth.agreePrefix')}{' '}
+            <Link to="/terms" className="auth-form__link" target="_blank" rel="noopener noreferrer">{t('auth.termsLink')}</Link>
             {' '}{t('auth.legalAnd')}{' '}
-            <Link to="/privacy" className="auth-form__link">{t('auth.privacyLink')}</Link>.
-          </p>
-        </form>
-      )}
+            <Link to="/privacy" className="auth-form__link" target="_blank" rel="noopener noreferrer">{t('auth.privacyLink')}</Link>
+          </span>
+        </label>
+
+        <label className="auth-form__check">
+          <input type="checkbox" checked={marketingOptIn} onChange={(e) => setMarketingOptIn(e.target.checked)} />
+          <span>{t('auth.marketingOptIn')}</span>
+        </label>
+
+        <Button type="submit" variant="primary" size="lg" fullWidth loading={loading}>
+          {t('auth.createAccount')}
+        </Button>
+      </form>
 
       <AuthSwitch to="/login" prompt={t('auth.alreadyMember')} label={t('auth.logInLink')} />
     </div>
@@ -704,7 +662,7 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
     if (isPureIndividual ? !validateSimple() : !validateStep()) return;
 
     // Code sign-up: prove the mailbox first. The account is created only after the code is typed.
-    if (LOGIN_OTP_ENABLED) {
+    if (SIGNUP_CODE_ENABLED) {
       setLoading(true);
       const sent = await requestSignupCode(formData.email.trim());
       setLoading(false);
@@ -728,9 +686,10 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
     if (!verified.success) {
       setError(verified.error);
       setLoading(false);
-      return;
+      return { success: false };
     }
     await createAccount(verified.session.access_token);
+    return { success: true };
   };
 
   const createAccount = async (accessToken) => {
@@ -780,7 +739,7 @@ function StakeholderSignUpWizard({ stakeholderConfig, registrationType }) {
       // Verification was removed — sign in and go straight to the dashboard.
       // For a pending contractor this fails by design (see AuthContext.signup)
       // and falls through to the pending-approval notice below.
-      if (LOGIN_OTP_ENABLED && accessToken) {
+      if (SIGNUP_CODE_ENABLED && accessToken) {
         // Signed in from the code step. A pending contractor must not stay signed in.
         if (targetRole === 'contractor') {
           await logout();

@@ -79,7 +79,7 @@ export default async function handler(req, res) {
     // session must belong to this very address. The mailbox is therefore proven BEFORE the account
     // exists, and nobody can register an address they do not control.
     let verifiedUser = null;
-    if (isSelfSignup && process.env.VITE_LOGIN_OTP_ENABLED === 'true') {
+    if (isSelfSignup && (process.env.VITE_LOGIN_OTP_ENABLED === 'true' || process.env.VITE_SIGNUP_CODE_ENABLED === 'true')) {
       const authHeader = req.headers?.authorization || req.headers?.Authorization || '';
       const token = String(authHeader).replace(/^Bearer\s+/i, '').trim();
       if (!token) {

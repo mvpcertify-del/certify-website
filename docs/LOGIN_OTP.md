@@ -58,3 +58,28 @@ This is **email-code sign-in**: possession of the mailbox is the proof. It avoid
 
 Auditor and contractor documents are uploaded after the code step with the verified session, which the upload
 actions already accept for the person's own profile.
+
+## Registration by email only, then password login (client spec, 17 Nov 2026)
+
+Google and LinkedIn are off (`GOOGLE_ENABLED` needs `VITE_GOOGLE_LOGIN_ENABLED=true`, LinkedIn needs
+`VITE_LINKEDIN_LOGIN_ENABLED=true`); the buttons and code stay in the repo so they can come back without new work.
+
+The client's flow, built:
+
+1. **Registration:** one form with full name, business email, company name (optional), password and a tick box for
+   the Terms & Conditions and Privacy Policy (never pre-ticked), plus a separate unticked marketing box.
+2. **Email verification:** a six-digit code is emailed first; the account is created only after it is typed
+   (six boxes, paste and auto-advance, 60-second resend, 5 wrong codes lock the boxes until a new code is requested).
+   The code's lifetime (10 minutes) is the Supabase OTP expiry setting (Authentication > Providers > Email).
+3. **Login:** email + password, "Forgot password".
+
+Two build-time switches (the server reads the same names):
+
+| `VITE_LOGIN_OTP_ENABLED` | `VITE_SIGNUP_CODE_ENABLED` | Result |
+|---|---|---|
+| true | (any) | Code login, no password; registration also needs the code |
+| not set | true | **The spec above:** password login, registration verified by code |
+| not set | not set | The old password flow, no verification code |
+
+Not built yet: optional 2FA with an authenticator app and backup recovery codes (Supabase supports the app codes;
+backup codes need extra work). The attempt limit is enforced in the page; Supabase also rate-limits code requests.

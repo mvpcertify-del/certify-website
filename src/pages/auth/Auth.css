@@ -631,3 +631,20 @@
 .auth-google-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .auth-form--login .auth-google-btn,
 .auth-form--simple .auth-google-btn { min-height: 56px; font-size: 1.0625rem; border-radius: 12px; }
+
+/* ---- Six-box code entry ---- */
+.auth-otp-field { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.auth-otp-field__label { font-size: var(--font-size-sm); font-weight: 600; color: var(--color-text-secondary); }
+.auth-otp-field__hint { font-size: var(--font-size-sm); color: var(--color-text-tertiary); text-align: center; }
+.auth-otp-boxes { display: flex; gap: 10px; justify-content: center; direction: ltr; }
+.auth-otp-box {
+  width: 48px; height: 58px; padding: 0; text-align: center;
+  font: inherit; font-size: 1.5rem; font-weight: 700; color: var(--color-text-primary);
+  background: var(--color-bg-primary); border: 1px solid var(--color-border); border-radius: 12px;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.auth-otp-box:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(62, 207, 142, 0.25); }
+.auth-otp-box:disabled { opacity: 0.55; }
+.auth-otp-resend-block { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+.auth-otp-back { align-self: center; }
+@media (max-width: 380px) { .auth-otp-box { width: 42px; height: 52px; } .auth-otp-boxes { gap: 8px; } }

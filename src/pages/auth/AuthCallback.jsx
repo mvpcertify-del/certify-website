@@ -123,9 +123,10 @@ function CodeGate() {
     if (!result.success) {
       setError(result.error);
       setLoading(false);
-      return;
+      return { success: false };
     }
     setPhase('done');
+    return { success: true };
   };
 
   if (phase === 'done') return <ProviderCallback />;
@@ -148,6 +149,7 @@ function CodeGate() {
               title={t('auth.oauthCodeTitle')}
               subtitle={t('auth.oauthCodeSubtitle', { email })}
               verifyLabel={t('auth.otpVerify')}
+              backLabel={t('auth.otpUseDifferentEmail')}
               onVerify={verify}
               onResend={() => requestLoginOtp(email)}
               onBack={() => { try { sessionStorage.removeItem(OAUTH_GATE_KEY); } catch { /* ignore */ } navigate('/login', { replace: true }); }}

@@ -12,6 +12,14 @@
 
 export const LOGIN_OTP_ENABLED = (import.meta.env || {}).VITE_LOGIN_OTP_ENABLED === 'true';
 
+// Registration needs the emailed six-digit code BEFORE the account exists (client, 17 Nov: "activate the
+// account only after successful verification"). On whenever code login is on, or by itself with
+// VITE_SIGNUP_CODE_ENABLED=true while login stays email + password. The server reads the same two switches.
+export const SIGNUP_CODE_ENABLED = LOGIN_OTP_ENABLED || (import.meta.env || {}).VITE_SIGNUP_CODE_ENABLED === 'true';
+
+/** Wrong codes allowed before a new one must be requested. */
+export const OTP_MAX_ATTEMPTS = 5;
+
 // Google and LinkedIn sign-up / sign-in. With code login on, a provider sign-in is NOT enough on its
 // own: the person is brought back, the provider session is dropped, and they must type the code
 // emailed to the address the provider confirmed. Only then are they signed in (or registered).
@@ -21,8 +29,9 @@ export function oauthGateActive() {
   try { return LOGIN_OTP_ENABLED && sessionStorage.getItem(OAUTH_GATE_KEY) === '1'; } catch { return false; }
 }
 
-// Google is on unless explicitly switched off (VITE_GOOGLE_LOGIN_ENABLED=false).
-export const GOOGLE_ENABLED = (import.meta.env || {}).VITE_GOOGLE_LOGIN_ENABLED !== 'false';
+// Google sign-in is OFF unless switched on (VITE_GOOGLE_LOGIN_ENABLED=true). Client, 17 Nov: registration
+// is by email only. The buttons and code stay in place so it can be switched back on without new work.
+export const GOOGLE_ENABLED = (import.meta.env || {}).VITE_GOOGLE_LOGIN_ENABLED === 'true';
 
 // LinkedIn sign-up / sign-in. Off until the LinkedIn app is connected in Supabase
 // (Authentication > Providers > LinkedIn (OIDC)); then set VITE_LINKEDIN_LOGIN_ENABLED=true and redeploy.
