@@ -24,22 +24,27 @@ const HOOK_SECRET = process.env.SUPABASE_AUTH_HOOK_SECRET;
 
 // Vercel serverless: read raw body for signature verification.
 //
-// The signature covers the exact bytes Supabase sent, so the body must come back byte for byte. The chunks are
-// therefore collected as Buffers and decoded ONCE at the end. Decoding each chunk on its own (data += chunk)
-// breaks any character that is split across two chunks: a name or company with Arabic letters, an accent or a
-// symbol such as the trademark sign turns into replacement characters and the signature no longer matches
-// ("No matching signature found"). That is what rejected the password-reset email of an account whose profile
-// had such characters while ordinary-name accounts worked.
+// The signature covers the exact bytes Supabase sent, so the body has to come back byte for byte.
+//   1. The stream is read FIRST, as Buffers, decoded once at the end. Vercel parses the JSON body lazily the
+//      first time `req.body` is touched, which consumes the stream; so `req.body` must not be touched before.
+//   2. Rebuilding the text with JSON.stringify(req.body) is not byte for byte: Supabase (Go) writes & < > as
+//      & < >, JavaScript writes them as they are. An account whose profile holds such a character
+//      (a company called "A & B") then failed with "No matching signature found" while plain-name accounts worked.
+//   3. Decoding each chunk on its own would also corrupt a character split across two chunks.
+// The req.body branches stay only as a last resort for a request whose stream was already consumed.
 export async function readRawBody(req) {
+  if (typeof req.on === 'function' && req.readable !== false && !req.readableEnded) {
+    return await new Promise((resolve, reject) => {
+      const chunks = [];
+      req.on('data', (chunk) => { chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)); });
+      req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+      req.on('error', reject);
+    });
+  }
   if (typeof req.body === 'string') return req.body;
   if (Buffer.isBuffer(req.body)) return req.body.toString('utf8');
   if (req.body && typeof req.body === 'object') return JSON.stringify(req.body);
-  return await new Promise((resolve, reject) => {
-    const chunks = [];
-    req.on('data', (chunk) => { chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)); });
-    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
-    req.on('error', reject);
-  });
+  return '';
 }
 
 export function buildVerifyUrl({ site_url, token_hash, email_action_type, redirect_to }) {
