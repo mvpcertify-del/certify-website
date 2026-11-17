@@ -35,8 +35,11 @@ async function readRawBody(req) {
   });
 }
 
-function buildVerifyUrl({ site_url, token_hash, email_action_type, redirect_to }) {
-  const base = (site_url || '').replace(/\/$/, '');
+export function buildVerifyUrl({ site_url, token_hash, email_action_type, redirect_to }) {
+  // Supabase sends site_url as the Auth server address, which already ends in /auth/v1
+  // (https://<project>.supabase.co/auth/v1). Adding /auth/v1 again made every link
+  // .../auth/v1/auth/v1/verify, which answers "No API key found". Strip it first so either shape works.
+  const base = (site_url || '').replace(/\/$/, '').replace(/\/auth\/v1$/, '');
   const params = new URLSearchParams({
     token_hash,
     type: email_action_type,

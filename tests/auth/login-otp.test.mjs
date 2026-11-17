@@ -118,3 +118,16 @@ test('the sign-in code email keeps its sign-in wording', () => {
   assert.match(m.subject, /sign-in code/);
   assert.match(m.html, /sign-in page/);
 });
+
+// ---------------------------------------------------------------------------
+// The confirmation / password-reset link
+// ---------------------------------------------------------------------------
+import { buildVerifyUrl } from '../../api/auth-email-hook.js';
+
+test('the reset link points at /auth/v1/verify once, whichever way site_url arrives', () => {
+  const data = { token_hash: 'abc', email_action_type: 'recovery', redirect_to: 'https://certify.cx/reset-password' };
+  const want = 'https://proj.supabase.co/auth/v1/verify?token_hash=abc&type=recovery&redirect_to=https%3A%2F%2Fcertify.cx%2Freset-password';
+  assert.equal(buildVerifyUrl({ ...data, site_url: 'https://proj.supabase.co/auth/v1' }), want); // what Supabase really sends
+  assert.equal(buildVerifyUrl({ ...data, site_url: 'https://proj.supabase.co/auth/v1/' }), want);
+  assert.equal(buildVerifyUrl({ ...data, site_url: 'https://proj.supabase.co' }), want);
+});
