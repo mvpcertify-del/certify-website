@@ -1,5 +1,5 @@
 import {
-  Sparkles, LayoutDashboard, Briefcase, Megaphone, CreditCard,
+  Sparkles, LayoutDashboard, LayoutGrid, Briefcase, Megaphone, CreditCard,
   CheckCircle2, Building2, Puzzle, Shield, LifeBuoy,
 } from 'lucide-react';
 import { ROLES } from '../utils/roles';
@@ -291,11 +291,28 @@ const DEPARTMENTS = [
   },
 ];
 
+// "All Pages" (client, 18 Nov): the working pages from every department in one list, pinned at the
+// very top. It only mirrors the department entries (same paths), so it is skipped when matching a
+// route to its department and when building the coming-soon routes.
+const PAGE_LABEL = { '/admin/outreach': 'Email Marketing (Outreach)', '/admin/notifications': 'Notification Automation' };
+const ALL_PAGES = {
+  id: 'all_pages',
+  label: 'All Pages',
+  icon: LayoutGrid,
+  mirror: true,
+  items: DEPARTMENTS
+    .flatMap((d) => d.items)
+    .filter((it) => it.path && !it.soon)
+    .map((it) => ({ id: `all_${it.id}`, label: PAGE_LABEL[it.path] || it.label, path: it.path }))
+    .sort((a, b) => a.label.localeCompare(b.label)),
+};
+
 export const ZONES = [
   {
     id: 'core',
     label: 'PLATFORM',
     modules: [
+      ALL_PAGES,
       {
         id: 'exec_dashboard',
         label: 'Executive Dashboard',
@@ -370,6 +387,7 @@ export function allModules() {
 export function comingSoonItems() {
   const out = [];
   for (const m of allModules()) {
+    if (m.mirror) continue;
     if (m.soon && m.path) out.push({ ...m, moduleId: m.id, moduleLabel: m.label, agent: m.agent });
     for (const it of m.items || []) {
       if (it.soon) out.push({ ...it, moduleId: m.id, moduleLabel: m.label, agent: m.agent, upsell: m.upsell });
@@ -386,7 +404,7 @@ export function moduleVisibleTo(mod, role) {
 /** The module whose items (or own path) match the current pathname. */
 export function moduleForPath(pathname) {
   const hit = (p) => pathname === p || pathname.startsWith(`${p}/`);
-  return allModules().find(
+  return allModules().filter((m) => !m.mirror).find(
     (m) => (m.path && hit(m.path)) || (m.items || []).some((it) => it.path && hit(it.path)),
   );
 }
