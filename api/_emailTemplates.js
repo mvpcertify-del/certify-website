@@ -18,6 +18,10 @@ import {
 } from './_outreachCopy.js';
 
 const BRAND_TEXT = 'Certify.cx';
+// The green letterhead at the top of every Certify.cx email (client, 18 Nov): white logo, the name and
+// "Global Compliance Marketplace". The logo is hosted with the marketing-email images.
+const BANNER_BG = '#06231a';
+const BANNER_LOGO_URL = "https://certify.cx/email/logo-white.png";
 const SUPPORT_EMAIL = 'support@certify.cx';
 
 // Two greens, each for the job it is actually good at on a white card:
@@ -103,21 +107,25 @@ const layout = ({ title, bodyHtml, preheader, headerHtml, footerHtml }) => `<!DO
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${SURFACE_BG};">
     <tr><td align="center" class="ccx-wrap" style="padding:40px 16px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="ccx-card" style="max-width:560px;background:${CARD_BG};border-radius:16px;border:1px solid ${BORDER};box-shadow:0 4px 24px rgba(16,24,40,0.06);overflow:hidden;">
-        <tr><td class="ccx-head" style="padding:28px 36px 24px;border-bottom:1px solid ${BORDER};">
-          ${headerHtml || `<table role="presentation" cellpadding="0" cellspacing="0" border="0">
+        ${headerHtml
+    ? `<tr><td class="ccx-head" style="padding:28px 36px 24px;border-bottom:1px solid ${BORDER};">${headerHtml}</td></tr>`
+    : `<tr><td class="ccx-head" align="center" bgcolor="${BANNER_BG}" style="padding:34px 24px 30px;background-color:${BANNER_BG};background-image:linear-gradient(135deg,#0a3a2a 0%,#06231a 55%,#08301f 100%);">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center">
             <tr>
-              <td style="padding-right:12px;vertical-align:middle;">${logoMark(36)}</td>
-              <td style="vertical-align:middle;">${wordmark(22)}</td>
+              <td style="padding-right:12px;vertical-align:middle;"><img src="${BANNER_LOGO_URL}" width="42" height="40" alt="" style="display:block;border:0;outline:none;" /></td>
+              <td style="vertical-align:middle;font-size:30px;font-weight:700;letter-spacing:-0.01em;line-height:1;color:#ffffff;white-space:nowrap;">Certify.cx<sup style="font-size:0.45em;vertical-align:super;margin-left:1px;font-weight:500;color:#b7d1c5;">™</sup></td>
             </tr>
-          </table>`}
-        </td></tr>
+          </table>
+          <table role="presentation" width="48" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:14px auto 12px;"><tr><td style="height:1px;line-height:1px;font-size:0;background:#5f8a76;">&nbsp;</td></tr></table>
+          <div style="font-size:14px;font-weight:600;letter-spacing:0.02em;color:#e6f2ec;">Global Compliance Marketplace</div>
+        </td></tr>`}
         <tr><td class="ccx-body" style="padding:36px;">${bodyHtml}</td></tr>
         <tr><td class="ccx-foot" style="padding:24px 36px;border-top:1px solid ${BORDER};background:#fafbfd;">
           ${footerHtml || `<p style="margin:0;font-size:13px;line-height:1.6;color:${TEXT_SECONDARY};">
             Need help? Reach us at <a href="mailto:${SUPPORT_EMAIL}" style="color:${ACCENT_ON_WHITE};text-decoration:none;font-weight:500;">${SUPPORT_EMAIL}</a>.
           </p>
           <p style="margin:8px 0 0;font-size:12px;line-height:1.5;color:${TEXT_TERTIARY};">
-            ${BRAND_TEXT}™ — ISO certification, simplified.
+            ${BRAND_TEXT}™ — Global Compliance Marketplace.
           </p>`}
         </td></tr>
       </table>
@@ -908,7 +916,7 @@ export function iso9001MiddleEastInviteEmail({ name, companyName, registerUrl, w
         Need help? Reach us at <a href="mailto:${SUPPORT_EMAIL}" style="color:${ACCENT_ON_WHITE};text-decoration:none;font-weight:500;">${SUPPORT_EMAIL}</a>.
       </p>
       <p style="margin:8px 0 0;font-size:12px;line-height:1.5;color:${TEXT_TERTIARY};">
-        ${BRAND_TEXT}™ — ISO certification, simplified.
+        ${BRAND_TEXT}™ — Global Compliance Marketplace.
       </p>`,
   });
 
@@ -955,7 +963,7 @@ export function investorOutreachEmail({ contactName, fundName, replyUrl }) {
 
   const html = layout({
     title: subject,
-    preheader: 'Certify.cx — ISO certification, simplified. An introduction and an invitation to talk.',
+    preheader: 'Certify.cx — Global Compliance Marketplace. An introduction and an invitation to talk.',
     bodyHtml: `
       ${heading('A quick introduction from Certify.cx')}
       ${body(`Hi ${greetName}, I'm Midhat Abu Ghazaleh, Founder &amp; CEO of <strong style="color:${TEXT_PRIMARY};">${BRAND_TEXT}</strong> — a platform that takes a business from ISO certification application through audit to an accredited certificate, all in one place.`)}
@@ -968,7 +976,7 @@ export function investorOutreachEmail({ contactName, fundName, replyUrl }) {
       <p style="margin:0 0 4px;font-size:13px;line-height:1.6;color:${TEXT_SECONDARY};font-weight:600;">Midhat Abu Ghazaleh</p>
       <p style="margin:0 0 14px;font-size:13px;line-height:1.5;color:${TEXT_TERTIARY};">Founder &amp; CEO — ${BRAND_TEXT}</p>
       <p style="margin:0;font-size:12px;line-height:1.5;color:${TEXT_TERTIARY};">
-        ${BRAND_TEXT}™ — ISO certification, simplified.
+        ${BRAND_TEXT}™ — Global Compliance Marketplace.
       </p>`,
   });
 
@@ -1295,7 +1303,7 @@ export function investorCampaignEmail({ subject, body: bodyText, unsubscribeUrl,
         Reach us at <a href="mailto:${SUPPORT_EMAIL}" style="color:${ACCENT_ON_WHITE};text-decoration:none;font-weight:500;">${SUPPORT_EMAIL}</a>.
       </p>
       <p style="margin:0;font-size:12px;line-height:1.6;color:${TEXT_TERTIARY};">
-        ${BRAND_TEXT}™ — ISO certification, simplified. ·
+        ${BRAND_TEXT}™ — Global Compliance Marketplace. ·
         <a href="${escapeHtml(unsubscribeUrl)}" style="color:${TEXT_TERTIARY};text-decoration:underline;">Unsubscribe</a>
       </p>`,
   });
