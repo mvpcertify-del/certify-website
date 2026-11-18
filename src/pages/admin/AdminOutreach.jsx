@@ -283,8 +283,8 @@ ${outside} of them are outside business hours right now.` : '';
         </div>
       </div>
 
-      {error && <div className="ntf__alert ntf__alert--bad"><AlertCircle size={16} /> {error}</div>}
-      {notice && !error && <div className="ntf__alert ntf__alert--ok"><Check size={16} /> {notice}</div>}
+      {error && <div className="ntf__alert ntf__alert--bad otr__sticky"><AlertCircle size={16} /> {error}</div>}
+      {notice && !error && <div className="ntf__alert ntf__alert--ok otr__sticky"><Check size={16} /> {notice}</div>}
       {loading && !data && <p className="ntf__muted">Loading...</p>}
       {data && data.migrated === false && <div className="ntf__alert ntf__alert--bad"><AlertCircle size={16} /> The outreach tables are not set up yet. Run supabase/phase48_outreach.sql in Supabase.</div>}
 
@@ -373,7 +373,19 @@ ${outside} of them are outside business hours right now.` : '';
                 </div>
               </Section>
 
-              <Section icon={Send} title="Emails sent" desc="Every institution that has received an email, and which of the three emails it has had, with the date and time.">
+              <Section icon={LayoutDashboard} title="Results" desc="How the emails are doing. These numbers come from our own mailbox: emails sent, replies, bounces and unsubscribes.">
+                <div className="otr__funnel">
+                  <div className="otr__stat"><strong>{data.sentTotal}</strong><span className="otr__stat-label">Emails sent</span><span className="otr__muted">Email 1: {data.analytics.sentByStep[0]} · Email 2: {data.analytics.sentByStep[1]} · Email 3: {data.analytics.sentByStep[2]}</span></div>
+                  <div className="otr__stat"><strong>{data.analytics.contacted}</strong><span className="otr__stat-label">Institutions contacted</span><span className="otr__muted">Of {totalLeads} on the list.</span></div>
+                  <div className="otr__stat"><strong>{data.analytics.replies}</strong><span className="otr__stat-label">Replies</span><span className="otr__muted">{data.analytics.contacted ? `${Math.round((data.analytics.replies / data.analytics.contacted) * 100)}% of those contacted.` : 'No emails sent yet.'}</span></div>
+                  <div className="otr__stat"><strong>{data.analytics.bounces}</strong><span className="otr__stat-label">Bounced</span><span className="otr__muted">Address did not work.</span></div>
+                  <div className="otr__stat"><strong>{data.analytics.unsubscribes}</strong><span className="otr__stat-label">Unsubscribed</span><span className="otr__muted">Asked not to be emailed.</span></div>
+                  <div className="otr__stat"><strong>{data.analytics.failed}</strong><span className="otr__stat-label">Failed to send</span><span className="otr__muted">Mail server refused; it is retried.</span></div>
+                </div>
+                <p className="otr__muted">Open and click counts are not tracked. Tracking pixels and rewritten links make cold emails more likely to land in spam, and many mail apps hide opens anyway. Replies and Calendly bookings are the numbers that matter.</p>
+              </Section>
+
+              <Section icon={Send} title="Emails sent\" desc="Every institution that has received an email, and which of the three emails it has had, with the date and time.">
                 {data.sentLog.length === 0 ? <p className="ntf__empty">Nothing has been sent to any institution yet.</p> : (
                   <div className="ntf__table-wrap">
                     <table className="ntf__table">

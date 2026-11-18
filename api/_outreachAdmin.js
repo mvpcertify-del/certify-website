@@ -60,6 +60,19 @@ async function overview(db, body) {
     .not('first_sent_at', 'is', null).order('last_sent_at', { ascending: false }).limit(200);
   const sentLog = (sentLeads || []).map((l) => ({ ...l, sent: sentMap[l.id] || {} }));
 
+  // Results so far, counted from the event log.
+  const { data: evAll } = await db.from('outreach_events').select('type, step')
+    .in('type', ['sent', 'failed', 'reply', 'auto_reply', 'bounce', 'unsubscribed']).limit(10000);
+  const analytics = { sentByStep: [0, 0, 0], failed: 0, replies: 0, autoReplies: 0, bounces: 0, unsubscribes: 0, contacted: Object.keys(sentMap).length };
+  for (const e of evAll || []) {
+    if (e.type === 'sent' && e.step >= 1 && e.step <= 3) analytics.sentByStep[e.step - 1] += 1;
+    else if (e.type === 'failed') analytics.failed += 1;
+    else if (e.type === 'reply') analytics.replies += 1;
+    else if (e.type === 'auto_reply') analytics.autoReplies += 1;
+    else if (e.type === 'bounce') analytics.bounces += 1;
+    else if (e.type === 'unsubscribed') analytics.unsubscribes += 1;
+  }
+
   const { data: supp } = await db.from('outreach_suppressions').select('email').limit(10000);
 
   // Who gets which email when, in the recipient's own time.
@@ -88,6 +101,7 @@ async function overview(db, body) {
     sendNowBlockers: sendWhy,
     sent24h: (sentRows || []).length,
     sentTotal: (sentEv || []).length,
+    analytics,
     sentLog,
     suppressed: (supp || []).length,
     counts,
