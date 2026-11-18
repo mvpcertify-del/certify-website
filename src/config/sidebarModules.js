@@ -77,7 +77,7 @@ const agents = (dept, deptLabel, list) => list.map(([slug, label, path]) => (
 
 const heading = (id, text) => ({ id, heading: text });
 
-export const DEPARTMENTS = [
+const DEPARTMENTS_RAW = [
   {
     id: 'dept_marketing',
     label: '01. Marketing',
@@ -109,8 +109,8 @@ export const DEPARTMENTS = [
         blurb: 'Which links, invitations and partners bring in the best-converting leads.' },
       { id: 'mkt_affiliates', label: 'Affiliate & Referral Campaigns', path: '/marketing/affiliates', soon: true,
         blurb: 'Referral links and promotional copy for registered affiliates, with attribution.' },
-      { id: 'mkt_referral_dashboard', label: 'Referral Program Dashboard', path: '/referral-dashboard' },
-      { id: 'mkt_content', label: 'Content & Resource Hub', path: '/admin/outreach-docs' },
+      { id: 'mkt_referral_dashboard', label: 'Affiliate Program Dashboard', path: '/referral-dashboard' },
+      { id: 'mkt_content', label: 'Briefing Documents', path: '/admin/outreach-docs' },
       { id: 'mkt_links', label: 'Shareable Links', path: '/admin/shareable-links' },
     ],
   },
@@ -140,10 +140,10 @@ export const DEPARTMENTS = [
         blurb: 'US$ proposals drafted from headcount, locations and standards, with the cancellation policy built in.' },
       { id: 'sales_pipeline', label: 'Deal Conversion Pipeline', path: '/sales/pipeline', soon: true,
         blurb: 'Deals from inquiry to paid order, with follow-up prompts for proposals not yet opened.' },
-      { id: 'sales_revenue', label: 'Revenue & Commissions', path: '/admin/sales' },
+      { id: 'sales_revenue', label: 'Sales', path: '/admin/sales' },
       { id: 'sales_tiers', label: 'Commission Tiers', path: '/admin/commission-tiers' },
-      { id: 'sales_coupons', label: 'Coupons', path: '/admin/coupons' },
-      { id: 'crm_referral_partners', label: 'Referral Partners', path: '/admin/referral-partners' },
+      { id: 'sales_coupons', label: 'Discount Coupons', path: '/admin/coupons' },
+      { id: 'crm_referral_partners', label: 'Affiliates', path: '/admin/referral-partners' },
     ],
   },
   {
@@ -165,7 +165,7 @@ export const DEPARTMENTS = [
       ]),
       heading('cs_h_pages', 'PAGES'),
       { id: 'crm_messages', label: 'Messages', path: '/messages' },
-      { id: 'crm_accounts', label: 'Enterprise Accounts', path: '/admin/companies' },
+      { id: 'crm_accounts', label: 'Clients', path: '/admin/companies' },
       { id: 'sup_docs', label: 'SOPs & Help Documentation', path: '/support/docs', soon: true,
         blurb: 'Help articles and internal SOPs for using each module.' },
       { id: 'sup_status', label: 'Platform & API Status', path: '/support/status', soon: true,
@@ -194,12 +194,12 @@ export const DEPARTMENTS = [
         ['scheduling', 'Compliance Scheduling Agent'],
       ]),
       heading('ops_h_pages', 'PAGES'),
-      { id: 'ops_certification_dashboard', label: 'Certification Dashboard', path: '/dashboard' },
+      { id: 'ops_certification_dashboard', label: 'Dashboard', path: '/dashboard' },
       { id: 'ops_applications', label: 'Applications', path: '/admin/applications' },
-      { id: 'ops_vetting', label: 'Verification & Vetting', path: '/admin/registrations' },
+      { id: 'ops_vetting', label: 'Registrations', path: '/admin/registrations' },
       { id: 'crm_auditors', label: 'Auditors', path: '/admin/auditors' },
-      { id: 'crm_cert_bodies', label: 'Certification Bodies', path: '/admin/cert-bodies' },
-      { id: 'leg_cb_registry', label: 'Certification Body Registry', path: '/admin/cb-registry' },
+      { id: 'crm_cert_bodies', label: 'CB Accounts', path: '/admin/cert-bodies' },
+      { id: 'leg_cb_registry', label: 'CB Registry', path: '/admin/cb-registry' },
       { id: 'leg_accreditation', label: 'Accreditation Bodies', path: '/admin/accreditation-bodies' },
       { id: 'ops_calendars', label: 'Audit Calendars & Workflows', path: '/operations/calendars', soon: true,
         blurb: 'Audit schedules and workflow stages, with conflict detection and suggested reschedules.' },
@@ -229,14 +229,14 @@ export const DEPARTMENTS = [
       ]),
       heading('adm_h_pages', 'PAGES'),
       { id: 'su_users', label: 'Users', path: '/admin/users' },
-      { id: 'su_permissions', label: 'User Access & Permissions', path: '/admin/permissions' },
-      { id: 'su_delegations', label: 'Sub-Admin Delegations', path: '/admin/regional-admins' },
-      { id: 'crm_contractors', label: 'Contractor Directory', path: '/admin/contractors' },
-      { id: 'crm_consultancy', label: 'Consultancy Network', path: '/admin/consultancies' },
+      { id: 'su_permissions', label: 'Roles & Permissions', path: '/admin/permissions' },
+      { id: 'su_delegations', label: 'Country Admins', path: '/admin/regional-admins' },
+      { id: 'crm_contractors', label: 'Contractors', path: '/admin/contractors' },
+      { id: 'crm_consultancy', label: 'Consultancies', path: '/admin/consultancies' },
       { id: 'crm_investors', label: 'Investors', path: '/admin/investors' },
-      { id: 'su_user_fields', label: 'User Fields', path: '/admin/user-fields' },
-      { id: 'su_app_fields', label: 'Application Fields', path: '/admin/application-fields' },
-      { id: 'su_countries', label: 'Countries & Regions', path: '/admin/countries' },
+      { id: 'su_user_fields', label: 'Custom User Fields', path: '/admin/user-fields' },
+      { id: 'su_app_fields', label: 'Custom App Fields', path: '/admin/application-fields' },
+      { id: 'su_countries', label: 'Countries', path: '/admin/countries' },
       { id: 'set_profile', label: 'My Profile', path: '/profile' },
       { id: 'set_notifications', label: 'Notifications', path: '/notifications' },
       { id: 'su_tenant', label: 'Tenant & Account Settings', path: '/system/tenant', soon: true,
@@ -272,9 +272,9 @@ export const DEPARTMENTS = [
         ['fraud', 'Fraud & Financial Risk Agent'],
       ]),
       heading('fin_h_pages', 'PAGES'),
-      { id: 'fin_payment_approvals', label: 'Contractor Payment Approvals', path: '/finance/payments' },
-      { id: 'fin_billing', label: 'Billing & Invoices', path: '/admin/billing' },
-      { id: 'fin_payouts', label: 'Referral Payouts', path: '/admin/payouts' },
+      { id: 'fin_payment_approvals', label: 'Payment Approvals', path: '/finance/payments' },
+      { id: 'fin_billing', label: 'Billing', path: '/admin/billing' },
+      { id: 'fin_payouts', label: 'Payouts', path: '/admin/payouts' },
       { id: 'fin_treasury', label: 'Treasury & Cash Flow', path: '/finance/treasury', soon: true,
         blurb: 'Cash position and flow across gateways and accounts.' },
       { id: 'fin_profitability', label: 'Project Profitability', path: '/finance/profitability', soon: true,
@@ -290,6 +290,27 @@ export const DEPARTMENTS = [
     ],
   },
 ];
+
+// Client (18 Nov): inside each department the working pages come first and everything that is
+// still "coming soon" goes below them (soon pages, then the Department Head and the AI agents).
+function working_first(d) {
+  const sections = [];
+  let cur = null;
+  for (const it of d.items) {
+    if (it.heading) { cur = { head: it, list: [] }; sections.push(cur); } else cur.list.push(it);
+  }
+  const live = sections.flatMap((sec) => sec.list.filter((it) => !it.soon));
+  const out = [heading(`${d.id}_h_live`, 'WORKING PAGES'), ...live];
+  const soonPages = sections.filter((sec) => sec.head.heading === 'PAGES').flatMap((sec) => sec.list.filter((it) => it.soon));
+  if (soonPages.length) out.push(heading(`${d.id}_h_soonpages`, 'COMING SOON: PAGES'), ...soonPages);
+  for (const sec of sections) {
+    if (sec.head.heading === 'PAGES') continue;
+    const soon = sec.list.filter((it) => it.soon);
+    if (soon.length) out.push(heading(`${d.id}_h_soon_${sec.head.id}`, `COMING SOON: ${sec.head.heading}`), ...soon);
+  }
+  return { ...d, items: out };
+}
+export const DEPARTMENTS = DEPARTMENTS_RAW.map(working_first);
 
 // "All Pages" (client, 18 Nov): the working pages from every department in one list, pinned at the
 // very top. It only mirrors the department entries (same paths), so it is skipped when matching a

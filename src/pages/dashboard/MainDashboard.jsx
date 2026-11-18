@@ -174,12 +174,10 @@ export default function MainDashboard() {
   const toggle = (id) => saveOpen(open.includes(id) ? open.filter((x) => x !== id) : [...open, id]);
 
   const departments = useMemo(() => DEPARTMENTS.map((d) => {
-    const at = d.items.findIndex((it) => it.heading === 'PAGES');
-    const pages = d.items.slice(at + 1).filter((it) => it.path);
-    // Working agent screens (Email Marketing, Notification Automation) sit in the agents block.
-    const liveAgents = d.items.slice(0, at).filter((it) => it.path && !it.soon && !it.heading);
+    // Working pages first, then the soon pages (the department's agents are counted, not boxed).
+    const pages = d.items.filter((it) => it.path && (!it.soon || !/_a_|_f_|_head$/.test(it.id)));
     const agentCount = d.items.filter((it) => it.path && /_a_/.test(it.id)).length;
-    const tiles = [...liveAgents, ...pages].map((it) => {
+    const tiles = pages.map((it) => {
       const box = BOXES.find((b) => b.path === it.path);
       if (box) {
         return {
