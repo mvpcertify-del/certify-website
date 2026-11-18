@@ -51,7 +51,7 @@ function shot(name, w, h, bodyHtml, transparent = false) {
 
 // ------------------------------------------------------------------ banners (1200 x 420, shown at 600 x 210)
 const BANNERS = [
-  { name: 'banner-intro', eyebrow: 'ISO 21001  &  ISO 9001', title: 'Quality that students and<br>parents can trust', sub: 'Internationally recognised certification for schools and universities, matched with IAF-accredited bodies.', art: GraduationCap },
+  { name: 'banner-intro', eyebrow: 'ISO 21001  &  ISO 9001', title: 'Quality that students and<br>parents can trust', sub: 'Internationally recognized certification for schools and universities, matched with IAF-accredited bodies.', art: GraduationCap },
   { name: 'banner-followup', eyebrow: 'Following up', title: 'Certification without<br>the friction', sub: 'One marketplace. Vetted auditors. IAF-accredited Certification Bodies.', art: ShieldCheck },
   { name: 'banner-final', eyebrow: 'One last note', title: 'Quality and accreditation,<br>made simpler', sub: 'Zero obligation to get started.', art: BadgeCheck },
 ];
@@ -97,7 +97,7 @@ shot('graphic-steps', 1200, 380, `
   <div style="width:1200px;height:380px;background:#ffffff;position:relative;padding-top:20px">
     <div style="position:absolute;left:210px;right:210px;top:112px;border-top:4px dashed #bfe9d5"></div>
     <div style="display:flex;justify-content:space-between;padding:0 30px;position:relative">
-      ${[['1', 'Share your goals', 'Tell us the standard', Target], ['2', 'Compare proposals', 'Pre-vetted bodies', Scale], ['3', 'Get certified', 'Recognised worldwide', BadgeCheck]].map(([n, t, d, I]) => `
+      ${[['1', 'Share your goals', 'Tell us the standard', Target], ['2', 'Compare proposals', 'Pre-vetted bodies', Scale], ['3', 'Get certified', 'Recognized worldwide', BadgeCheck]].map(([n, t, d, I]) => `
       <div style="width:340px;text-align:center">
         <div style="position:relative;width:184px;height:184px;margin:0 auto 22px;border-radius:50%;background:#06231a;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 12px #e6f8ef">
           ${icon(I, 80, '#3ECF8E', 1.6)}

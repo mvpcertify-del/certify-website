@@ -52,6 +52,6 @@ placeholders. Nothing was invented.
 
 ## Footer
 
-The footer carries "Operated by Certify International OPC Private Limited" and the founder's WhatsApp number in small
-letters. Company address and other legal details are deliberately not in the emails; the client will publish
+The footer says the email was sent through Certify.wiki, associated with Certify.cx, and carries "Operated by Certify International OPC Private Limited"
+and the founder's WhatsApp number in small letters. Company address and other legal details are deliberately not in the emails; the client will publish
 them on the platform's Contact us page.
