@@ -79,10 +79,9 @@ const heading = (id, text) => ({ id, heading: text });
 
 const DEPARTMENTS = [
   {
-    id: 'marketing',
+    id: 'dept_marketing',
     label: '01. Marketing',
     icon: Megaphone,
-    agent: 'Maya AI',
     items: [
       heading('mkt_h_head', 'DEPARTMENT HEAD'),
       head('marketing', 'AI Marketing Department Head', 'Monthly marketing strategy, agent task allocation, campaign supervision, budget monitoring and weekly and monthly reports.'),
@@ -116,10 +115,9 @@ const DEPARTMENTS = [
     ],
   },
   {
-    id: 'sales',
+    id: 'dept_sales',
     label: '02. Sales',
     icon: Briefcase,
-    agent: 'Leo AI',
     items: [
       heading('sales_h_head', 'DEPARTMENT HEAD'),
       head('sales', 'AI Sales Department Head', 'Sales targets, agent task allocation, pipeline supervision and weekly and monthly sales reports.'),
@@ -149,10 +147,9 @@ const DEPARTMENTS = [
     ],
   },
   {
-    id: 'customer_service',
+    id: 'dept_customer_service',
     label: '03. Customer Service',
     icon: LifeBuoy,
-    agent: 'Sami AI',
     items: [
       heading('cs_h_head', 'DEPARTMENT HEAD'),
       head('customer-service', 'AI Customer Service Department Head', 'Customer satisfaction, agent task allocation, escalations and weekly and monthly service reports.'),
@@ -176,10 +173,9 @@ const DEPARTMENTS = [
     ],
   },
   {
-    id: 'operations',
+    id: 'dept_operations',
     label: '04. Operations & Compliance',
     icon: CheckCircle2,
-    agent: 'Omar AI',
     items: [
       heading('ops_h_head', 'DEPARTMENT HEAD'),
       head('operations', 'AI Operations & Compliance Department Head', 'Certification workload, agent task allocation, compliance supervision and weekly and monthly operations reports.'),
@@ -214,10 +210,9 @@ const DEPARTMENTS = [
     ],
   },
   {
-    id: 'administration',
+    id: 'dept_administration',
     label: '05. Administration',
     icon: Shield,
-    agent: 'Layla AI',
     items: [
       heading('adm_h_head', 'DEPARTMENT HEAD'),
       head('administration', 'AI Administration Department Head', 'Accounts, partners, contracts and platform governance, agent task allocation and weekly and monthly reports.'),
@@ -257,10 +252,9 @@ const DEPARTMENTS = [
     ],
   },
   {
-    id: 'finance',
+    id: 'dept_finance',
     label: '06. Finance',
     icon: CreditCard,
-    agent: 'Ziad AI',
     restricted: true,
     items: [
       heading('fin_h_head', 'DEPARTMENT HEAD'),
