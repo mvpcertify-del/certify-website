@@ -126,6 +126,7 @@ export default function AdminOutreach() {
   const [preview, setPreview] = useState(null);
   const [previewLeadId, setPreviewLeadId] = useState('');
   const [csv, setCsv] = useState(null);
+  const [picked, setPicked] = useState([]);
   const fileRef = useRef(null);
 
   const goTab = (t) => { setTab(t); try { localStorage.setItem('otr_tab', t); } catch { /* storage blocked */ } };
@@ -187,6 +188,26 @@ export default function AdminOutreach() {
     const outside = row.businessNow ? '' : '\n\nNote: it is outside their business hours right now.';
     if (!window.confirm(`Send email ${row.step} of 3 to ${row.institution} now?${outside}`)) return;
     act(`now-${row.id}`, () => call('outreach-send-now', { id: row.id }), `Email ${row.step} sent to ${row.institution}.`);
+  };
+  const togglePick = (id) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
+  const sendPicked = () => {
+    const rows = data.schedule.filter((r) => picked.includes(r.id));
+    if (!rows.length) return;
+    const outside = rows.filter((r) => !r.businessNow).length;
+    const warn = outside ? `
+
+${outside} of them are outside business hours right now.` : '';
+    if (!window.confirm(`Send the next email to ${rows.length} institution${rows.length > 1 ? 's' : ''} right now? This cannot be undone.${warn}`)) return;
+    act('picked', async () => {
+      let done = 0;
+      try {
+        for (const r of rows) { await call('outreach-send-now', { id: r.id }); done += 1; }
+      } catch (e) {
+        setPicked([]);
+        throw new Error(`Sent ${done} of ${rows.length}, then stopped: ${e.message || 'error'}`);
+      }
+      setPicked([]);
+    }, `Sent ${rows.length} email${rows.length > 1 ? 's' : ''}.`);
   };
   const leadAction = (id, what, label) => {
     if (what === 'delete' && !window.confirm('Delete this lead? Its address stays on the do-not-email list if it was added there.')) return;
@@ -373,13 +394,21 @@ export default function AdminOutreach() {
           {tab === 'schedule' && (
             <Section icon={CalendarClock} title="Schedule" desc="Who receives which email, and when. Times are shown in the recipient's own time and in yours. Follow-ups keep their day-4 and day-9 times; new leads are spread out so no day goes over the limit (an estimate: the real run also depends on the hourly limit). You can also send one yourself right now.">
               {!data.canSendNow && <div className="ntf__alert ntf__alert--bad"><AlertCircle size={16} /> &quot;Send now&quot; is off: {data.sendNowBlockers.join('; ')}.</div>}
+              {data.schedule.length > 0 && (
+                <div className="otr__row">
+                  <button type="button" className="ntf__btn" onClick={() => setPicked(picked.length === data.schedule.length ? [] : data.schedule.map((r) => r.id))}>{picked.length === data.schedule.length ? 'Clear selection' : 'Select all'}</button>
+                  <button type="button" className="ntf__btn ntf__btn--primary" disabled={!!busy || !data.canSendNow || picked.length === 0} onClick={sendPicked}><Send size={14} /> Send selected now{picked.length ? ` (${picked.length})` : ''}</button>
+                  <span className="otr__muted">{picked.length} selected</span>
+                </div>
+              )}
               {data.schedule.length === 0 ? <p className="ntf__empty">Nothing is scheduled. Add leads in the Leads tab.</p> : (
                 <div className="ntf__table-wrap">
                   <table className="ntf__table">
-                    <thead><tr><th>Institution</th><th>Country</th><th>Email</th><th>Their time</th><th>Your time</th><th>State</th><th /></tr></thead>
+                    <thead><tr><th /><th>Institution</th><th>Country</th><th>Email</th><th>Their time</th><th>Your time</th><th>State</th><th /></tr></thead>
                     <tbody>
                       {data.schedule.map((r) => (
                         <tr key={r.id}>
+                          <td><input type="checkbox" aria-label={`Select ${r.institution}`} checked={picked.includes(r.id)} onChange={() => togglePick(r.id)} /></td>
                           <td><strong>{r.institution}</strong><br /><span className="ntf__muted">{r.email}</span></td>
                           <td>{r.country || '-'}<br /><span className="ntf__muted">{r.timezone}</span></td>
                           <td>{STEP_NAME[r.step - 1]}<br /><span className="ntf__muted">email {r.step} of 3, day {STEP_DAY[r.step - 1]}</span></td>
