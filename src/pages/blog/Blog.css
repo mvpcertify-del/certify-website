@@ -228,3 +228,25 @@
 /* Sidebar categories in two groups */
 .blog-topics__group + .blog-topics__group { margin-top: 14px; }
 .blog-topics__title { margin: 0 0 6px; padding: 0 10px; font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-text-tertiary); }
+
+/* Categories page (/blog/categories) */
+.blog-cats-page { padding-top: 34px; padding-bottom: 20px; }
+.blog-cats-group + .blog-cats-group { margin-top: 44px; }
+.blog-cats-group__head { margin-bottom: 18px; }
+.blog-cats-group__head h2 { margin: 0 0 4px; font-size: 1.5rem; }
+.blog-cats-group__head p { margin: 0; color: var(--color-text-secondary); }
+.blog-cats-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.blog-catcard { display: flex; flex-direction: column; gap: 12px; padding: 18px; background: var(--color-bg-surface); border: 1px solid var(--color-border); border-radius: 14px; transition: border-color 0.15s ease, transform 0.15s ease; }
+.blog-catcard:hover { border-color: var(--cat); transform: translateY(-2px); }
+.blog-catcard__head { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; }
+.blog-catcard__name { flex: 1; min-width: 0; }
+.blog-catcard__name strong { display: block; font-size: 1.05rem; }
+.blog-catcard__name small { display: block; margin-top: 2px; font-size: var(--font-size-xs); color: var(--color-text-secondary); }
+.blog-catcard__head em { min-width: 28px; padding: 2px 9px; border-radius: var(--radius-full); font-style: normal; font-size: var(--font-size-xs); font-weight: 700; text-align: center; color: var(--cat); background: color-mix(in srgb, var(--cat) 14%, transparent); }
+.blog-catcard ul { list-style: none; margin: 0; padding: 12px 0 0; border-top: 1px solid var(--color-border); display: grid; gap: 8px; flex: 1; }
+.blog-catcard li a { font-size: var(--font-size-sm); line-height: 1.4; color: var(--color-text-secondary); text-decoration: none; }
+.blog-catcard li a:hover { color: var(--color-accent-text); }
+.blog-catcard__more { display: inline-flex; align-items: center; gap: 6px; font-size: var(--font-size-sm); font-weight: 700; color: var(--color-accent-text); text-decoration: none; }
+@media (max-width: 900px) { .blog-cats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .blog-cats-grid { grid-template-columns: 1fr; } }
+.blog-tile--all { text-decoration: none; }

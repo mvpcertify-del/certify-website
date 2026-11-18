@@ -100,6 +100,7 @@ const IsoLanding = lazy(() => import('./pages/iso/IsoLanding'));
 const ComplianceLanding = lazy(() => import('./pages/compliance/ComplianceLanding'));
 const Blog = lazy(() => import('./pages/blog/Blog'));
 const BlogPost = lazy(() => import('./pages/blog/BlogPost'));
+const BlogCategories = lazy(() => import('./pages/blog/BlogCategories'));
 
 // Dashboard Pages
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'));
@@ -174,6 +175,7 @@ function AppRoutes() {
 
           {/* ---- Public blog: article list with categories and search, and one page per article ---- */}
           <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/categories" element={<BlogCategories />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
 
           {/* ---- Public legal pages (linked from signup + footer) ---- */}

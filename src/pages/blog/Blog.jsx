@@ -40,14 +40,6 @@ export default function Blog() {
     for (const p of all) c[p.category] = (c[p.category] || 0) + 1;
     return c;
   }, [all]);
-  // Sidebar categories, in two groups: the ISO standards and the other topics (real article counts).
-  const groups = useMemo(() => {
-    const keys = Object.keys(CATEGORIES).filter((k) => counts[k]);
-    return [
-      { title: 'ISO standards', keys: keys.filter((k) => CATEGORIES[k].badge) },
-      { title: 'Topics', keys: keys.filter((k) => !CATEGORIES[k].badge) },
-    ].filter((g) => g.keys.length);
-  }, [counts]);
 
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -131,10 +123,10 @@ export default function Blog() {
               </button>
             );
           })}
-          <button type="button" className="blog-tile blog-tile--all" onClick={() => setTopic('all')}>
+          <Link to="/blog/categories" className="blog-tile blog-tile--all">
             <span><strong>View all</strong><small>Categories</small></span>
             <ArrowRight size={18} aria-hidden="true" />
-          </button>
+          </Link>
         </nav>
 
         <div className="blog-layout">
@@ -182,25 +174,6 @@ export default function Blog() {
 
           {/* ---- Sidebar ---- */}
           <aside className="blog-side">
-            <section className="blog-box">
-              <h3>Categories</h3>
-              {groups.map((g) => (
-                <div key={g.title} className="blog-topics__group">
-                  <p className="blog-topics__title">{g.title}</p>
-                  <ul className="blog-topics">
-                    {g.keys.map((k) => (
-                      <li key={k}>
-                        <button type="button" className={topic === k ? 'on' : ''} onClick={() => setTopic(topic === k ? 'all' : k)}>
-                          <span>{CATEGORIES[k].label}</span>
-                          <em>{counts[k]}</em>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </section>
-
             <section className="blog-box blog-box--accent">
               <ClipboardCheck size={30} aria-hidden="true" className="blog-box__icon" />
               <h3>Free gap analysis</h3>
