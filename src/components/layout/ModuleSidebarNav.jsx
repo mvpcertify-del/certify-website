@@ -153,12 +153,24 @@ export default function ModuleSidebarNav({ role, collapsed, onExpand, onNavigate
           className={`msb__row${isActive ? ' msb__row--current' : ''}`}
           aria-expanded={isOpen}
           aria-controls={`msb-${mod.id}`}
-          onClick={() => toggle(mod.id)}
+          onClick={() => {
+            // A department also opens its own page, so the header is the active item.
+            if (mod.path) {
+              if (!isOpen) toggle(mod.id);
+              navigate(mod.path);
+              onNavigate?.();
+            } else toggle(mod.id);
+          }}
         >
           <Icon size={20} className="msb__icon" />
           <span className="msb__label">{label(mod)}</span>
           {chips}
-          <ChevronDown size={15} className={`msb__chev${isOpen ? ' msb__chev--open' : ''}`} aria-hidden="true" />
+          <ChevronDown
+            size={15}
+            className={`msb__chev${isOpen ? ' msb__chev--open' : ''}`}
+            aria-hidden="true"
+            onClick={mod.path ? (e) => { e.stopPropagation(); toggle(mod.id); } : undefined}
+          />
         </button>
         {isOpen && (
           <ul className="msb__sub" id={`msb-${mod.id}`}>

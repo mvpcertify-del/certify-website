@@ -80,6 +80,7 @@ const heading = (id, text) => ({ id, heading: text });
 const DEPARTMENTS_RAW = [
   {
     id: 'dept_marketing',
+    path: '/department/marketing',
     label: '01. Marketing',
     icon: Megaphone,
     items: [
@@ -116,6 +117,7 @@ const DEPARTMENTS_RAW = [
   },
   {
     id: 'dept_sales',
+    path: '/department/sales',
     label: '02. Sales',
     icon: Briefcase,
     items: [
@@ -148,6 +150,7 @@ const DEPARTMENTS_RAW = [
   },
   {
     id: 'dept_customer_service',
+    path: '/department/customer-service',
     label: '03. Customer Service',
     icon: LifeBuoy,
     items: [
@@ -174,6 +177,7 @@ const DEPARTMENTS_RAW = [
   },
   {
     id: 'dept_operations',
+    path: '/department/operations',
     label: '04. Operations & Compliance',
     icon: CheckCircle2,
     items: [
@@ -211,6 +215,7 @@ const DEPARTMENTS_RAW = [
   },
   {
     id: 'dept_administration',
+    path: '/department/administration',
     label: '05. Administration',
     icon: Shield,
     items: [
@@ -253,6 +258,7 @@ const DEPARTMENTS_RAW = [
   },
   {
     id: 'dept_finance',
+    path: '/department/finance',
     label: '06. Finance',
     icon: CreditCard,
     restricted: true,
@@ -311,6 +317,9 @@ function working_first(d) {
   return { ...d, items: out };
 }
 export const DEPARTMENTS = DEPARTMENTS_RAW.map(working_first);
+
+/** URL slug of a department: dept_customer_service becomes customer-service. */
+export const departmentSlug = (d) => d.id.replace(/^dept_/, '').replace(/_/g, '-');
 
 // "All Pages" (client, 18 Nov): the working pages from every department in one list, pinned at the
 // very top. It only mirrors the department entries (same paths), so it is skipped when matching a

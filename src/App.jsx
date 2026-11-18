@@ -102,6 +102,7 @@ const ComplianceLanding = lazy(() => import('./pages/compliance/ComplianceLandin
 // Dashboard Pages
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'));
 const MainDashboard = lazy(() => import('./pages/dashboard/MainDashboard'));
+const DepartmentPage = lazy(() => import('./pages/dashboard/DepartmentPage'));
 const Sales = lazy(() => import('./pages/admin/Sales'));
 const Settings = lazy(() => import('./pages/settings/Settings'));
 const Notifications = lazy(() => import('./pages/notifications/Notifications'));
@@ -209,6 +210,13 @@ function AppRoutes() {
             <Route path="/main-dashboard" element={
               <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}>
                 <MainDashboard />
+              </ProtectedRoute>
+            } />
+
+            {/* One page per department (Super Admin): lists everything under it. */}
+            <Route path="/department/:slug" element={
+              <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}>
+                <DepartmentPage />
               </ProtectedRoute>
             } />
 
