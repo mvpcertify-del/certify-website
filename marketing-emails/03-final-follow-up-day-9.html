@@ -2,6 +2,7 @@
   Certify.cx marketing email: Email 3 of 3, final follow-up. Send on day 9 (same thread). Has the unsubscribe link.
   Subject: Quick question regarding quality & accreditation at {{institution_name}}
   Placeholders to fill per recipient: {{recipient_name}} {{institution_name}} {{calendly_url}} {{website_url}} {{sender_email}} {{phone}} {{unsubscribe_url}}
+  Layout: card layout on a dark background (client reference, 18 Nov). Generated, so edit the generator rather than this file.
   Images are hosted at https://certify.cx/email/ (built by marketing-emails/build-assets.mjs).
 -->
 <!DOCTYPE html>
@@ -10,101 +11,130 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="color-scheme" content="light only">
-<meta name="supported-color-schemes" content="light only">
+<meta name="color-scheme" content="dark light">
+<meta name="supported-color-schemes" content="dark light">
 <title>Quick question regarding quality &amp; accreditation at {{institution_name}}</title>
 <style>
-  /* Embedded CSS: phone layout. Every rule that matters is also written inline below, because
-     Gmail, Outlook and Apple Mail drop or ignore parts of a <style> block. */
-  body { margin: 0; padding: 0; background: #eef1f6; }
+  body { margin: 0; padding: 0; background: #0B0B0C; }
   img { border: 0; line-height: 100%; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; }
-  a { color: #0e9f6e; }
+  a { color: #3ECF8E; }
   @media only screen and (max-width: 620px) {
-    .wrap { padding: 0 !important; }
-    .card { width: 100% !important; border-radius: 0 !important; }
-    .pad { padding-left: 22px !important; padding-right: 22px !important; }
-    .col { display: block !important; width: 100% !important; padding: 0 0 18px 0 !important; }
-    .btn a { display: block !important; }
+    .outer { padding: 16px 10px 32px !important; }
+    .wrap { width: 100% !important; }
+    .px { padding-left: 20px !important; padding-right: 20px !important; }
+    .h1 { font-size: 24px !important; line-height: 30px !important; }
+    .col { display: block !important; width: 100% !important; padding: 0 0 12px 0 !important; box-sizing: border-box; }
+    .btn, .btn td { width: 100% !important; }
     .hero { width: 100% !important; height: auto !important; }
   }
 </style>
 </head>
-<body style="margin:0;padding:0;background:#eef1f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1a1f36;-webkit-font-smoothing:antialiased;">
-  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#eef1f6;opacity:0;">One last note on quality and accreditation for {{institution_name}}.&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;</div>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#eef1f6;">
-    <tr><td align="center" class="wrap" style="padding:28px 12px;">
-      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" class="card" style="width:600px;max-width:600px;background:#ffffff;border-radius:14px;overflow:hidden;">
+<body style="margin:0;padding:0;background:#0B0B0C;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;color:#F3F2EF;-webkit-font-smoothing:antialiased;">
+  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#0B0B0C;opacity:0;">A last short note. Zero obligation to get started.&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#0B0B0C" style="background:#0B0B0C;">
+    <tr><td class="outer" align="center" style="padding:28px 12px 44px;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" class="wrap" style="width:600px;max-width:600px;">
 
-        <!-- Banner image -->
-        <tr><td bgcolor="#06231a" style="background:#06231a;">
-          <img src="https://certify.cx/email/banner-final.png" width="600" height="210" alt="Certify.cx: quality and accreditation, made simpler" class="hero" style="display:block;width:100%;max-width:600px;height:auto;color:#ffffff;font-size:22px;font-weight:700;">
+        <tr><td style="padding:4px 8px 22px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+            <td style="padding:0 10px 0 0;"><img src="https://certify.cx/email/logo-white.png" width="32" height="30" alt="Certify.cx" style="display:block;border:0;"></td>
+            <td style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-weight:700;font-size:18px;letter-spacing:0.02em;color:#F3F2EF;white-space:nowrap;">Certify.cx<span style="font-size:10px;vertical-align:super;">&trade;</span></td>
+          </tr></table>
         </td></tr>
 
-        <!-- Body -->
-        <tr><td class="pad" style="padding:34px 40px 8px;font-size:16px;line-height:1.7;color:#1a1f36;">
-          <p style="margin:0 0 16px;">Dear {{recipient_name}},</p>
-          <p style="margin:0 0 16px;font-size:17px;line-height:1.6;">I will keep this brief. <strong>ISO 21001</strong> and <strong>ISO 9001</strong> help {{institution_name}}:</p>
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 26px;"><tr>
-              <td class="col" width="33%" valign="top" align="center" style="padding:0 6px;">
-                <img src="https://certify.cx/email/icon-clipboard.png" width="52" height="52" alt="" style="display:block;margin:0 auto 10px;">
-                <div style="font-size:15px;font-weight:700;line-height:1.3;color:#1a1f36;">Show accountability to boards and ministries</div>
+        <tr><td style="padding:0 0 16px;">
+          <div style="border-radius:18px;overflow:hidden;background:#000;">
+            <img src="https://certify.cx/email/banner-final.png" width="600" height="210" alt="Certify.cx: quality and accreditation, made simpler" class="hero" style="display:block;width:100%;max-width:600px;height:auto;border:0;background:#06231a;">
+            <div class="px" style="padding:24px 26px 26px;background:#0B0B0C;border:1px solid #26262B;border-top:0;border-radius:0 0 18px 18px;">
+              <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;font-weight:800;letter-spacing:0.12em;color:#3ECF8E;padding-bottom:10px;">ONE LAST NOTE</div>
+              <div class="h1" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-weight:700;font-size:28px;line-height:34px;color:#F3F2EF;letter-spacing:-0.01em;padding-bottom:10px;">A quick question about quality &amp; accreditation</div>
+              <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:26px;color:#C9C9CE;padding-bottom:12px;">I will keep this brief. ISO 21001 and ISO 9001 help {{institution_name}}:</div>
+              <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;line-height:22px;color:#C9C9CE;"><strong style="color:#F3F2EF;">Zero obligation</strong> to get started.</div>
+            </div>
+          </div>
+        </td></tr>
+
+        <tr><td style="padding:0 0 16px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#131316;border:1px solid #26262B;border-radius:16px;border-collapse:separate;">
+            <tr><td style="height:3px;line-height:3px;font-size:0;background:#3ECF8E;border-radius:16px 16px 0 0;">&nbsp;</td></tr>
+            <tr><td class="px" style="padding:26px 28px;">
+          <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:26px;color:#F3F2EF;padding-bottom:12px;">Dear {{recipient_name}},</div>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+              <td class="col" width="33%" valign="top" style="padding:0 6px 12px 0px;">
+                <div style="padding:18px;border-radius:14px;background:#0B0B0C;border:1px solid #26262B;">
+                  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:24px;font-weight:700;line-height:28px;color:#3ECF8E;">1</div>
+                  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;font-weight:800;line-height:20px;color:#F3F2EF;padding-top:8px;">Show accountability</div>
+                  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:19px;color:#A9A9AF;padding-top:3px;">To boards and ministries.</div>
+                </div>
               </td>
-              <td class="col" width="33%" valign="top" align="center" style="padding:0 6px;">
-                <img src="https://certify.cx/email/icon-users.png" width="52" height="52" alt="" style="display:block;margin:0 auto 10px;">
-                <div style="font-size:15px;font-weight:700;line-height:1.3;color:#1a1f36;">Raise student and staff satisfaction</div>
+              <td class="col" width="33%" valign="top" style="padding:0 6px 12px 6px;">
+                <div style="padding:18px;border-radius:14px;background:#0B0B0C;border:1px solid #26262B;">
+                  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:24px;font-weight:700;line-height:28px;color:#7FD4FF;">2</div>
+                  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;font-weight:800;line-height:20px;color:#F3F2EF;padding-top:8px;">Raise satisfaction</div>
+                  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:19px;color:#A9A9AF;padding-top:3px;">Student and staff satisfaction.</div>
+                </div>
               </td>
-              <td class="col" width="33%" valign="top" align="center" style="padding:0 6px;">
-                <img src="https://certify.cx/email/icon-award.png" width="52" height="52" alt="" style="display:block;margin:0 auto 10px;">
-                <div style="font-size:15px;font-weight:700;line-height:1.3;color:#1a1f36;">Gain IAF-backed recognition</div>
+              <td class="col" width="33%" valign="top" style="padding:0 0px 12px 6px;">
+                <div style="padding:18px;border-radius:14px;background:#0B0B0C;border:1px solid #26262B;">
+                  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:24px;font-weight:700;line-height:28px;color:#F2B35E;">3</div>
+                  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;font-weight:800;line-height:20px;color:#F3F2EF;padding-top:8px;">Gain recognition</div>
+                  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:19px;color:#A9A9AF;padding-top:3px;">IAF-backed recognition.</div>
+                </div>
               </td>
-          </tr></table>
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 24px;"><tr><td align="center">
-            <img src="https://certify.cx/email/graphic-standards.png" width="520" alt="ISO 21001, Educational Organizations Management Systems. ISO 9001, Quality Management Systems." style="display:block;width:100%;max-width:520px;height:auto;border-radius:0;">
-          </td></tr></table>
-          <p style="margin:0 0 16px;font-size:17px;line-height:1.6;">Zero obligation to get started.</p>
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 22px;"><tr><td class="btn" align="center" bgcolor="#3ECF8E" style="border-radius:10px;background:#3ECF8E;">
-            <a href="{{calendly_url}}" style="display:inline-block;padding:15px 32px;font-size:16px;font-weight:700;color:#0a1f17;text-decoration:none;border-radius:10px;border:1px solid #2EB87A;">Book a 15-minute call</a>
-          </td></tr></table>
-          <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#5b6478;margin-bottom:12px;">Or <a href="{{calendly_url}}" style="color:#0e9f6e;font-weight:600;text-decoration:underline;">select a convenient 15-minute slot on my calendar</a>. If a colleague oversees quality or accreditation, I would be grateful if you could point me their way.</p>
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:14px 0 30px;border-top:1px solid #e6e9f0;">
-            <tr><td style="padding-top:22px;font-size:15px;line-height:1.6;color:#1a1f36;">
-              Warm regards,<br>
-              <span style="display:inline-block;margin-top:6px;font-size:17px;font-weight:700;">Midhat Abu-Ghazaleh</span><br>
-              <span style="color:#5b6478;font-size:14px;">Founder &amp; CEO, Certify.cx&trade;</span><br>
-              <span style="color:#5b6478;font-size:14px;"><a href="mailto:{{sender_email}}" style="color:#0e9f6e;text-decoration:none;">{{sender_email}}</a> &nbsp;|&nbsp; {{phone}}</span>
-            </td></tr>
+            </tr></table>
+          <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:24px;color:#C9C9CE;padding-bottom:0px;">If a colleague oversees quality or accreditation, I would be grateful if you could point me their way.</div></td></tr>
           </table>
         </td></tr>
 
-        <!-- Footer -->
-        <tr><td bgcolor="#06231a" style="background:#06231a;padding:34px 0 28px;">
+        <tr><td style="padding:0 0 16px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#0f1d17;border:1px solid #1f4a37;border-radius:16px;border-collapse:separate;">
+            
+            <tr><td class="px" style="padding:34px 28px;">
+          <div style="text-align:center;">
+            <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;font-weight:800;letter-spacing:0.12em;color:#3ECF8E;padding-bottom:10px;">NEXT STEP</div>
+            <div class="h1" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-weight:700;font-size:26px;line-height:32px;color:#F3F2EF;letter-spacing:-0.01em;padding-bottom:10px;">Zero obligation to get started</div>
+            <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:24px;color:#A9A9AF;padding-bottom:20px;">Select a convenient 15-minute slot on my calendar, or reply to this email.</div>
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" class="btn" style="margin:0 auto;"><tr>
+              <td align="center" style="border-radius:12px;background:#3ECF8E;border:1px solid #3ECF8E;">
+                <a href="{{calendly_url}}" style="display:block;padding:15px 32px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;font-weight:800;border-radius:12px;text-align:center;text-decoration:none;color:#06231a;">Book a 15-minute call</a>
+              </td></tr></table>
+          </div></td></tr>
+          </table>
+        </td></tr>
+
+        <tr><td style="padding:0 0 16px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#131316;border:1px solid #26262B;border-radius:16px;border-collapse:separate;">
+            
+            <tr><td class="px" style="padding:26px 28px;">
+<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:24px;color:#A9A9AF;">
+  Warm regards,<br>
+  <span style="display:inline-block;margin-top:6px;font-size:17px;font-weight:700;color:#F3F2EF;">Midhat Abu-Ghazaleh</span><br>
+  <span style="font-size:14px;">Founder &amp; CEO, Certify.cx&trade;</span><br>
+  <span style="font-size:14px;"><a href="mailto:{{sender_email}}" style="color:#3ECF8E;text-decoration:none;">{{sender_email}}</a> &nbsp;|&nbsp; {{phone}}</span>
+</div></td></tr>
+          </table>
+        </td></tr>
+
+        <tr><td style="padding:12px 8px 0;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-            <tr><td align="center" style="padding:0 36px 16px;">
-              <img src="https://certify.cx/email/logo-white.png" width="40" height="38" alt="Certify.cx" style="display:inline-block;vertical-align:middle;">
-              <span style="display:inline-block;vertical-align:middle;margin-left:10px;font-size:20px;font-weight:700;color:#ffffff;letter-spacing:-0.01em;">Certify.cx<span style="font-size:11px;vertical-align:super;">&trade;</span></span>
+            <tr><td style="padding-bottom:16px;border-bottom:1px solid #26262B;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+                <td style="padding:0 9px 0 0;"><img src="https://certify.cx/email/logo-white.png" width="26" height="24" alt="Certify.cx" style="display:block;border:0;"></td>
+                <td style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-weight:700;font-size:15px;color:#F3F2EF;">Certify.cx<span style="font-size:9px;vertical-align:super;">&trade;</span></td>
+              </tr></table>
+              <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:17px;font-weight:700;color:#F3F2EF;padding-top:14px;">The Global Compliance Marketplace.</div>
+              <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;color:#A9A9AF;padding-top:4px;">Connect with trusted providers, access compliance solutions and get certified, anytime, anywhere.</div>
             </td></tr>
-            <tr><td align="center" style="padding:0 36px 20px;font-size:13px;line-height:1.6;color:#b7d1c5;">The Global Compliance Marketplace.<br>Connect with trusted providers, access compliance solutions and get certified, anytime, anywhere.</td></tr>
-            <tr><td align="center" style="padding:0 36px 22px;">
-              <a href="https://www.linkedin.com/company/certifycx" style="text-decoration:none;"><img src="https://certify.cx/email/social-linkedin.png" width="36" height="36" alt="LinkedIn" style="display:inline-block;margin:0 5px;"></a>
-              <a href="https://www.youtube.com/@certifycx" style="text-decoration:none;"><img src="https://certify.cx/email/social-youtube.png" width="36" height="36" alt="YouTube" style="display:inline-block;margin:0 5px;"></a>
-              <a href="https://twitter.com/certifycx" style="text-decoration:none;"><img src="https://certify.cx/email/social-x.png" width="36" height="36" alt="X" style="display:inline-block;margin:0 5px;"></a>
-              <a href="https://www.facebook.com/certifycx" style="text-decoration:none;"><img src="https://certify.cx/email/social-facebook.png" width="36" height="36" alt="Facebook" style="display:inline-block;margin:0 5px;"></a>
+            <tr><td style="padding:16px 0 6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;line-height:22px;">
+              <a href="{{website_url}}" style="color:#A9A9AF;text-decoration:none;display:inline-block;padding:0 16px 6px 0;">Website</a>
+              <a href="https://certify.cx/privacy" style="color:#A9A9AF;text-decoration:none;display:inline-block;padding:0 16px 6px 0;">Privacy Policy</a>
+              <a href="https://certify.cx/terms" style="color:#A9A9AF;text-decoration:none;display:inline-block;padding:0 16px 6px 0;">Terms</a>
+              <a href="https://www.linkedin.com/company/certifycx" style="color:#A9A9AF;text-decoration:none;display:inline-block;padding:0 16px 6px 0;">LinkedIn</a>
+              <a href="https://www.youtube.com/@certifycx" style="color:#A9A9AF;text-decoration:none;display:inline-block;padding:0 16px 6px 0;">YouTube</a>
             </td></tr>
-            <tr><td align="center" style="padding:0 36px 14px;font-size:13px;line-height:1.7;">
-              <a href="{{website_url}}" style="color:#ffffff;text-decoration:none;">Website</a>
-              <span style="color:#5f8a76;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
-              <a href="https://certify.cx/privacy" style="color:#ffffff;text-decoration:none;">Privacy Policy</a>
-              <span style="color:#5f8a76;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
-              <a href="https://certify.cx/terms" style="color:#ffffff;text-decoration:none;">Terms</a>
-            </td></tr>
-            <tr><td align="center" style="padding:0 36px 8px;font-size:12px;line-height:1.7;color:#9fb8ad;">You are receiving this because we believe quality management may be relevant to your institution.<br>If you would rather not hear from us again, you can <a href="{{unsubscribe_url}}" style="color:#ffffff;text-decoration:underline;">unsubscribe</a> at any time.</td></tr>
-            <tr><td align="center" style="padding:4px 36px 8px;font-size:12px;line-height:1.7;color:#b7d1c5;">
-              This email was sent through <a href="https://certify.wiki" style="color:#ffffff;text-decoration:underline;">Certify.wiki</a>, associated with <a href="https://certify.cx" style="color:#ffffff;text-decoration:underline;">Certify.cx</a>&trade;.
-            </td></tr>
-            <tr><td align="center" style="padding:6px 36px 0;font-size:11px;line-height:1.7;color:#7fa593;">
-              &copy; Certify.cx&trade; &nbsp;|&nbsp; Operated by Certify International OPC Private Limited<br>
-              WhatsApp: <a href="https://wa.me/971506449356" style="color:#7fa593;text-decoration:none;">+971 50 644 9356</a>
-            </td></tr>
+            <tr><td style="padding:0 0 12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;line-height:19px;color:#6E6E74;">You are receiving this because we believe quality management may be relevant to your institution. If you would rather not hear from us again, you can <a href="{{unsubscribe_url}}" style="color:#A9A9AF;text-decoration:underline;">unsubscribe</a> at any time.</td></tr>
+            <tr><td style="padding:0 0 8px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;line-height:19px;color:#6E6E74;">This email was sent through <a href="https://certify.wiki" style="color:#A9A9AF;text-decoration:underline;">Certify.wiki</a>, associated with <a href="https://certify.cx" style="color:#A9A9AF;text-decoration:underline;">Certify.cx</a>&trade;.</td></tr>
+            <tr><td style="padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;line-height:18px;color:#6E6E74;">&copy; Certify.cx&trade; &nbsp;|&nbsp; Operated by Certify International OPC Private Limited<br>WhatsApp: <a href="https://wa.me/971506449356" style="color:#6E6E74;text-decoration:none;">+971 50 644 9356</a></td></tr>
           </table>
         </td></tr>
       </table>
