@@ -180,8 +180,12 @@ export default function MainDashboard() {
     const tiles = pages.map((it) => {
       const box = BOXES.find((b) => b.path === it.path);
       if (box) {
-        // The numbers are in the original boxes above; here the page is just a link.
-        return { key: box.key, icon: box.icon, path: box.path, color: DEPT_COLOR[d.id], noValue: true, label: t(`mainDash.${box.key}`), desc: 'Open' };
+        // The original count boxes live inside their department now (client, 18 Nov: the six
+        // departments replace the old grid).
+        return {
+          ...box, color: DEPT_COLOR[d.id], value: formatValue(box),
+          label: t(`mainDash.${box.key}`), desc: t(`mainDash.${box.key}Desc`),
+        };
       }
       return {
         key: it.id, icon: d.icon, path: it.path, color: DEPT_COLOR[d.id], noValue: true,
@@ -204,16 +208,6 @@ export default function MainDashboard() {
           </p>
         </div>
       </div>
-
-      <DashboardBoxes
-        loading={loading}
-        boxes={BOXES.map((box) => ({
-          ...box,
-          value: formatValue(box),
-          label: t(`mainDash.${box.key}`),
-          desc: t(`mainDash.${box.key}Desc`),
-        }))}
-      />
 
       <div className="main-dash__bar">
         <span className="main-dash__bar-text">Six departments. Open one to see its pages.</span>
