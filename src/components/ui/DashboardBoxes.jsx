@@ -50,9 +50,11 @@ export default function DashboardBoxes({ boxes, loading = false, selectedKey = n
             {/* An em-dash, not a zero, when a figure could not be read: zero is
                 a real answer and must not be faked. The ellipsis marks the
                 short window where the count is still being fetched. */}
-            <div className="main-dash__value">
-              {loading ? '…' : (box.value == null ? '—' : box.value)}
-            </div>
+            {!box.noValue && (
+              <div className="main-dash__value">
+                {loading ? '…' : (box.value == null ? '—' : box.value)}
+              </div>
+            )}
             <div className="main-dash__label">{box.label}</div>
             {box.desc && <div className="main-dash__desc">{box.desc}</div>}
           </button>

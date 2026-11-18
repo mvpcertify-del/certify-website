@@ -77,7 +77,7 @@ const agents = (dept, deptLabel, list) => list.map(([slug, label, path]) => (
 
 const heading = (id, text) => ({ id, heading: text });
 
-const DEPARTMENTS = [
+export const DEPARTMENTS = [
   {
     id: 'dept_marketing',
     label: '01. Marketing',

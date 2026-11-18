@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { ROLES } from '../../utils/roles';
-import { Users, Building, UserCheck, Briefcase, Gift, CircleDollarSign, MessagesSquare, Bell, HardHat } from 'lucide-react';
+import { Users, Building, UserCheck, Briefcase, Gift, CircleDollarSign, MessagesSquare, Bell, HardHat, ChevronDown } from 'lucide-react';
 import DashboardBoxes from '../../components/ui/DashboardBoxes';
+import { DEPARTMENTS } from '../../config/sidebarModules';
 import './MainDashboard.css';
 
 // Super Admin landing overview. A grid of clickable "category" boxes that each
@@ -29,6 +30,18 @@ const BOXES = [
   { key: 'notifications', icon: Bell,             path: '/notifications',                    color: '#f97316' },
 ];
 
+// Client (18 Nov): the dashboard shows the six departments, and every existing box sits inside the
+// department it belongs to. A department opens to its pages; the counts above are matched to a
+// department by their page path, so a page is listed once, under its department.
+const DEPT_COLOR = {
+  dept_marketing: '#ec4899', dept_sales: '#10b981', dept_customer_service: '#0ea5e9',
+  dept_operations: '#6366f1', dept_administration: '#f59e0b', dept_finance: '#14b8a6',
+};
+const OPEN_KEY = 'certifycx-dash-depts';
+const readOpen = () => {
+  try { const v = JSON.parse(localStorage.getItem(OPEN_KEY) || '[]'); return Array.isArray(v) ? v : []; } catch { return []; }
+};
+
 // 'verified' is the legacy offline-verified value; both mean money arrived.
 const PAID_STATUSES = ['paid', 'verified'];
 
@@ -37,6 +50,7 @@ export default function MainDashboard() {
   const { user } = useAuth();
   const [counts, setCounts] = useState({});
   const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(readOpen);
 
   const isRegionalAdmin = user?.role === ROLES.REGIONAL_ADMIN;
   const userRegion = user?.region || null;
@@ -153,6 +167,37 @@ export default function MainDashboard() {
     return Number(v).toLocaleString();
   };
 
+  const saveOpen = (next) => {
+    setOpen(next);
+    try { localStorage.setItem(OPEN_KEY, JSON.stringify(next)); } catch { /* storage blocked */ }
+  };
+  const toggle = (id) => saveOpen(open.includes(id) ? open.filter((x) => x !== id) : [...open, id]);
+
+  const departments = useMemo(() => DEPARTMENTS.map((d) => {
+    const at = d.items.findIndex((it) => it.heading === 'PAGES');
+    const pages = d.items.slice(at + 1).filter((it) => it.path);
+    // Working agent screens (Email Marketing, Notification Automation) sit in the agents block.
+    const liveAgents = d.items.slice(0, at).filter((it) => it.path && !it.soon && !it.heading);
+    const agentCount = d.items.filter((it) => it.path && /_a_/.test(it.id)).length;
+    const tiles = [...liveAgents, ...pages].map((it) => {
+      const box = BOXES.find((b) => b.path === it.path);
+      if (box) {
+        return {
+          ...box, color: DEPT_COLOR[d.id], value: formatValue(box),
+          label: t(`mainDash.${box.key}`), desc: t(`mainDash.${box.key}Desc`),
+        };
+      }
+      return {
+        key: it.id, icon: d.icon, path: it.path, color: DEPT_COLOR[d.id], noValue: true,
+        label: it.path === '/admin/outreach' ? 'Email Marketing (Outreach)' : it.path === '/admin/notifications' ? 'Notification Automation' : it.label,
+        desc: it.soon ? 'Coming soon' : 'Open',
+      };
+    });
+    return { id: d.id, label: d.label, icon: d.icon, tiles, agentCount };
+  // formatValue only reads `counts`
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [counts, t]);
+
   return (
     <div className="page-container">
       <div className="page-header">
@@ -164,15 +209,28 @@ export default function MainDashboard() {
         </div>
       </div>
 
-      <DashboardBoxes
-        loading={loading}
-        boxes={BOXES.map((box) => ({
-          ...box,
-          value: formatValue(box),
-          label: t(`mainDash.${box.key}`),
-          desc: t(`mainDash.${box.key}Desc`),
-        }))}
-      />
+      <div className="main-dash__bar">
+        <span className="main-dash__bar-text">Six departments. Open one to see its pages.</span>
+        <button type="button" className="main-dash__bar-btn" onClick={() => saveOpen(open.length === departments.length ? [] : departments.map((d) => d.id))}>
+          {open.length === departments.length ? 'Collapse all' : 'Expand all'}
+        </button>
+      </div>
+
+      {departments.map((d) => {
+        const Icon = d.icon;
+        const isOpen = open.includes(d.id);
+        return (
+          <section key={d.id} className="main-dash__dept">
+            <button type="button" className="main-dash__dept-head" aria-expanded={isOpen} onClick={() => toggle(d.id)} style={{ '--card-accent': DEPT_COLOR[d.id] }}>
+              <span className="main-dash__dept-icon" style={{ background: `${DEPT_COLOR[d.id]}1a`, color: DEPT_COLOR[d.id] }}><Icon size={22} /></span>
+              <span className="main-dash__dept-title">{d.label}</span>
+              <span className="main-dash__dept-meta">{d.tiles.length} pages · AI Department Head · {d.agentCount} AI agents</span>
+              <ChevronDown size={18} className={`main-dash__chev${isOpen ? ' main-dash__chev--open' : ''}`} aria-hidden="true" />
+            </button>
+            {isOpen && <DashboardBoxes loading={loading} boxes={d.tiles} />}
+          </section>
+        );
+      })}
     </div>
   );
 }
