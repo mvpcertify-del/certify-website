@@ -25,11 +25,15 @@ export const AUTHOR = 'Certify.cx Editorial Team';
 
 // key → label, accent colour and the lucide icon name used on the cover art.
 export const CATEGORIES = {
-  'iso-standards': { label: 'ISO Standards', color: '#3ECF8E', icon: 'Award' },
-  education: { label: 'Education', color: '#60A5FA', icon: 'GraduationCap' },
-  auditing: { label: 'Auditing', color: '#FBBF24', icon: 'ClipboardCheck' },
-  'certification-bodies': { label: 'Certification Bodies', color: '#A78BFA', icon: 'ShieldCheck' },
+  'iso-9001': { label: 'ISO 9001', badge: 'ISO 9001', sub: 'Quality Management', color: '#3ECF8E', icon: 'Award' },
+  'iso-14001': { label: 'ISO 14001', badge: 'ISO 14001', sub: 'Environmental Management', color: '#4ADE80', icon: 'Leaf' },
+  'iso-21001': { label: 'ISO 21001', badge: 'ISO 21001', sub: 'Educational Organizations', color: '#818CF8', icon: 'GraduationCap' },
+  'iso-27001': { label: 'ISO 27001', badge: 'ISO 27001', sub: 'Information Security', color: '#FBBF24', icon: 'Lock' },
+  'iso-22000': { label: 'ISO 22000', badge: 'ISO 22000', sub: 'Food Safety', color: '#FB923C', icon: 'Wheat' },
+  auditing: { label: 'Auditing', color: '#60A5FA', icon: 'ClipboardCheck' },
+  'risk-management': { label: 'Risk Management', color: '#F87171', icon: 'TriangleAlert' },
   compliance: { label: 'Compliance', color: '#F472B6', icon: 'FileCheck2' },
+  'certification-bodies': { label: 'Certification Bodies', color: '#A78BFA', icon: 'ShieldCheck' },
   'business-guides': { label: 'Business Guides', color: '#2DD4BF', icon: 'Compass' },
 };
 
@@ -67,7 +71,7 @@ export const POSTS = [
     slug: 'iso-21001-for-schools-and-universities',
     title: 'ISO 21001 for schools and universities: what it is and why it matters',
     excerpt: 'The management system standard written for educational organisations, and how it sits alongside national accreditation.',
-    category: 'education',
+    category: 'iso-21001',
     date: '2026-11-14',
     minutes: 5,
     featured: true,
@@ -93,7 +97,6 @@ export const POSTS = [
     category: 'certification-bodies',
     date: '2026-11-12',
     minutes: 5,
-    featured: true,
     body: [
       { t: 'p', x: 'A certificate is only as credible as the body that issued it. Two organisations can both be "ISO certified" and yet hold certificates that customers, regulators and tenders treat very differently. The difference is usually accreditation.' },
       { t: 'h2', x: '1. Check the accreditation' },
@@ -118,7 +121,6 @@ export const POSTS = [
     category: 'auditing',
     date: '2026-11-10',
     minutes: 5,
-    featured: true,
     body: [
       { t: 'p', x: 'Most organisations feel nervous before a first certification audit. It helps to know that the process is structured and that auditors are looking for evidence that a system works, not for people to blame.' },
       { t: 'h2', x: 'Stage 1: readiness' },
@@ -179,9 +181,10 @@ export const POSTS = [
     slug: 'iso-27001-protecting-information',
     title: 'ISO 27001 in practice: protecting information the way auditors expect',
     excerpt: 'The building blocks of an information security management system, without the jargon.',
-    category: 'iso-standards',
+    category: 'iso-27001',
     date: '2026-11-04',
     minutes: 5,
+    featured: true,
     body: [
       { t: 'p', x: 'ISO 27001 is the international standard for information security management systems (ISMS). It does not prescribe a list of tools. It asks an organisation to understand its information risks and to manage them in an organised, repeatable way.' },
       { t: 'h2', x: 'Start with risk' },
@@ -223,9 +226,10 @@ export const POSTS = [
     slug: 'iso-9001-plain-language-guide',
     title: 'ISO 9001 explained: a plain-language guide to quality management',
     excerpt: 'What the standard asks for, who it suits and the mistakes that make it feel harder than it is.',
-    category: 'iso-standards',
+    category: 'iso-9001',
     date: '2026-10-30',
     minutes: 6,
+    featured: true,
     body: [
       { t: 'p', x: 'ISO 9001 is the most widely used quality management standard in the world. It is not tied to an industry or a size. It describes how an organisation can consistently deliver products or services that meet customer and regulatory requirements, and keep improving.' },
       { t: 'h2', x: 'The ideas behind it' },
@@ -245,7 +249,7 @@ export const POSTS = [
     slug: 'iso-22000-food-safety-management',
     title: 'ISO 22000: building a food safety management system',
     excerpt: 'How the standard combines hazard control with management-system discipline across the food chain.',
-    category: 'iso-standards',
+    category: 'iso-22000',
     date: '2026-10-27',
     minutes: 5,
     body: [
@@ -267,7 +271,7 @@ export const POSTS = [
     slug: 'quality-management-and-national-accreditation',
     title: 'Quality management and national accreditation: how they work together in universities',
     excerpt: 'Why an international management system standard and a national quality scheme are partners, not rivals.',
-    category: 'education',
+    category: 'iso-21001',
     date: '2026-10-24',
     minutes: 5,
     body: [
@@ -283,7 +287,53 @@ export const POSTS = [
       { t: 'p', x: 'Begin with a gap analysis against the standard, using the evidence you already hold for national accreditation. The result shows what a management system adds, and what you already have.' },
     ],
   },
+  {
+    slug: 'iso-14001-environmental-management',
+    title: 'ISO 14001: managing your environmental responsibilities in a structured way',
+    excerpt: 'What an environmental management system asks for, from identifying impacts to meeting legal obligations.',
+    category: 'iso-14001',
+    date: '2026-11-17',
+    minutes: 5,
+    body: [
+      { t: 'p', x: 'ISO 14001 is the international standard for environmental management systems. It helps an organisation understand how its activities affect the environment, and gives it a structured way to reduce harm, meet legal obligations and keep improving.' },
+      { t: 'h2', x: 'Environmental aspects and impacts' },
+      { t: 'p', x: 'The starting point is to identify the parts of your activities, products and services that interact with the environment, such as energy use, emissions, waste and water. These are your environmental aspects. You then judge which of them have a significant impact and need control.' },
+      { t: 'h2', x: 'Compliance obligations' },
+      { t: 'p', x: 'The standard expects you to know which environmental laws, permits and other requirements apply to you, and to check regularly that you meet them. This is one of the areas auditors look at most closely.' },
+      { t: 'h2', x: 'The main elements' },
+      { t: 'ul', items: ['An environmental policy approved by top management', 'Objectives and plans to reduce significant impacts', 'Operational controls for the activities that matter', 'Preparation for emergencies such as spills or fires', 'Monitoring, internal audit and management review'] },
+      { t: 'h2', x: 'A life-cycle perspective' },
+      { t: 'p', x: 'ISO 14001 asks you to think beyond your own site. Consider what happens to your product when it is used and disposed of, and what your suppliers do on your behalf, within the limits of what you can influence.' },
+      { t: 'note', x: 'Start with a simple register of aspects and impacts. It is the document auditors read first, and the rest of the system grows from it.' },
+      { t: 'h2', x: 'Why organisations adopt it' },
+      { t: 'ul', items: ['Customers and tenders increasingly ask for it', 'It reduces waste and resource costs', 'It helps avoid legal and reputational problems'] },
+    ],
+  },
+  {
+    slug: 'risk-based-thinking-in-management-systems',
+    title: 'Risk-based thinking: a simple approach that works across ISO standards',
+    excerpt: 'How to identify, rate and treat risks in a way that satisfies auditors without creating a paperwork mountain.',
+    category: 'risk-management',
+    date: '2026-11-15',
+    minutes: 4,
+    body: [
+      { t: 'p', x: 'Modern ISO management system standards, including ISO 9001, ISO 14001 and ISO 27001, expect an organisation to think about risk. They do not demand a particular method. They expect you to have considered what could go wrong, and what could go right, and to act on it.' },
+      { t: 'h2', x: 'Start with context' },
+      { t: 'p', x: 'Risks come from your situation: customers, suppliers, regulations, technology, people and the market. List the main internal and external issues that affect your ability to reach your objectives.' },
+      { t: 'h2', x: 'A simple way to rate risks' },
+      { t: 'ol', items: ['Describe the risk in one clear sentence.', 'Score how likely it is, for example from 1 to 5.', 'Score how serious the effect would be, from 1 to 5.', 'Multiply the two scores to rank the risks.', 'Decide what to do about the highest ones.'] },
+      { t: 'h2', x: 'Ways to treat a risk' },
+      { t: 'ul', items: ['Avoid it by changing the activity', 'Reduce it with controls or training', 'Share it, for example through insurance or contracts', 'Accept it knowingly, and record that decision'] },
+      { t: 'note', x: 'Do not forget opportunities. The standards ask for both, and a good review often finds one worth pursuing.' },
+      { t: 'h2', x: 'Keep it alive' },
+      { t: 'p', x: 'A risk register that is written once and never read is a common audit finding. Review it at management review, after incidents, and when something significant changes in the business.' },
+    ],
+  },
 ];
+
+/** The articles in the hero slider, in this order (ISO 9001 first). */
+const FEATURED = ['iso-9001-plain-language-guide', 'iso-21001-for-schools-and-universities', 'iso-27001-protecting-information', 'roadmap-to-iso-certification'];
+export const featuredPosts = () => FEATURED.map((slug) => POSTS.find((p) => p.slug === slug)).filter(Boolean);
 
 /** Posts sorted newest first. */
 export const sortedPosts = () => [...POSTS].sort((a, b) => b.date.localeCompare(a.date));

@@ -1,42 +1,54 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Search, ChevronLeft, ChevronRight, ArrowRight, X } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { Search, ChevronLeft, ChevronRight, ChevronDown, ArrowRight, X, BookOpen, ClipboardCheck } from 'lucide-react';
 import PublicNav from '../../components/layout/PublicNav';
-import { CATEGORIES, POSTS, sortedPosts } from '../../content/blog/posts';
-import { BlogCover, PostCard, PostMeta, BlogFooter } from './BlogParts';
+import { CATEGORIES, POSTS, featuredPosts, sortedPosts } from '../../content/blog/posts';
+import { BlogCover, PostCard, PostMeta, BlogFooter, SocialLinks, TopicIcon } from './BlogParts';
 import usePageMeta from './usePageMeta';
 import './Blog.css';
 
 const SLIDE_MS = 6000;
+const PAGE = 6;
+const TILE_TOPICS = ['iso-9001', 'iso-14001', 'iso-21001', 'iso-27001'];
 
-// /blog: a featured banner that slides by itself, a search box, category filters and the article grid.
+// /blog: hero slider (text left, cover right), topic tiles, latest articles with a sidebar (popular
+// topics, free gap analysis, follow us), a call to action and the footer.
 // Articles are plain data in src/content/blog/posts.js.
 export default function Blog() {
   usePageMeta('Blog | Certify.cx™ - Global Compliance Marketplace', 'Guides on ISO standards, certification, audits and accreditation from the Certify.cx editorial team.');
 
-  const all = useMemo(() => sortedPosts(), []);
-  const featured = useMemo(() => all.filter((p) => p.featured), [all]);
-  const [query, setQuery] = useState('');
-  const [cat, setCat] = useState('all');
+  const [params, setParams] = useSearchParams();
+  const topic = CATEGORIES[params.get('topic')] ? params.get('topic') : 'all';
+  const setTopic = (k) => {
+    setParams(k === 'all' ? {} : { topic: k }, { replace: true });
+    setLimit(PAGE);
+  };
 
-  // Lower-cased text per article, so search covers title, summary, category and the article itself.
+  const all = useMemo(() => sortedPosts(), []);
+  const featured = useMemo(() => featuredPosts(), []);
+  const [query, setQuery] = useState('');
+  const [limit, setLimit] = useState(PAGE);
+
+  // Lower-cased text per article, so search covers title, summary, topic and the article itself.
   const index = useMemo(() => Object.fromEntries(POSTS.map((p) => [
     p.slug,
     [p.title, p.excerpt, CATEGORIES[p.category].label, ...p.body.map((b) => b.x || (b.items || []).join(' '))].join(' ').toLowerCase(),
   ])), []);
 
   const counts = useMemo(() => {
-    const c = { all: all.length };
+    const c = {};
     for (const p of all) c[p.category] = (c[p.category] || 0) + 1;
     return c;
   }, [all]);
+  // Popular topics: the topics with the most articles, with their real counts.
+  const popular = useMemo(() => Object.keys(counts).sort((a, b) => counts[b] - counts[a]).slice(0, 8), [counts]);
 
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return all.filter((p) => (cat === 'all' || p.category === cat) && (!q || index[p.slug].includes(q)));
-  }, [all, cat, query, index]);
+    return all.filter((p) => (topic === 'all' || p.category === topic) && (!q || index[p.slug].includes(q)));
+  }, [all, topic, query, index]);
 
-  // ---- auto-sliding banner ----
+  // ---- auto-sliding hero ----
   const [slide, setSlide] = useState(0);
   const [paused, setPaused] = useState(false);
   const reduced = useRef(typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
@@ -47,135 +59,162 @@ export default function Blog() {
     return () => clearInterval(id);
   }, [paused, featured.length]);
 
-  const searching = query.trim() !== '' || cat !== 'all';
+  const filtered = topic !== 'all' || query.trim() !== '';
+  const visible = shown.slice(0, limit);
 
   return (
     <div className="blog-page">
       <PublicNav />
 
-      {/* ---- Hero ---- */}
-      <header className="blog-hero">
+      {/* ---- Hero slider ---- */}
+      <section
+        className="blog-hero"
+        aria-roledescription="carousel"
+        aria-label="Featured articles"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+        onFocus={() => setPaused(true)}
+        onBlur={() => setPaused(false)}
+      >
         <div className="blog-wrap">
-          <p className="blog-hero__kicker">Certify.cx Blog</p>
-          <h1 className="blog-hero__title">Insights on ISO standards, audits and certification</h1>
-          <p className="blog-hero__sub">Practical guides from the Certify.cx editorial team, for organisations preparing to get certified.</p>
-          <form className="blog-search" role="search" onSubmit={(e) => e.preventDefault()}>
-            <Search size={18} aria-hidden="true" className="blog-search__icon" />
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search articles, for example ISO 9001, audit, accreditation"
-              aria-label="Search articles"
-            />
-            {query && (
-              <button type="button" className="blog-search__clear" onClick={() => setQuery('')} aria-label="Clear search"><X size={16} /></button>
-            )}
-          </form>
-        </div>
-      </header>
-
-      <main className="blog-wrap blog-main">
-        {/* ---- Featured slider ---- */}
-        {!searching && featured.length > 0 && (
-          <section
-            className="blog-slider"
-            aria-roledescription="carousel"
-            aria-label="Featured articles"
-            onMouseEnter={() => setPaused(true)}
-            onMouseLeave={() => setPaused(false)}
-            onFocus={() => setPaused(true)}
-            onBlur={() => setPaused(false)}
-          >
-            <div className="blog-slider__viewport">
-              <div className="blog-slider__track" style={{ transform: `translateX(-${slide * 100}%)` }}>
-                {featured.map((p, i) => {
-                  const c = CATEGORIES[p.category];
-                  return (
-                    <article
-                      key={p.slug}
-                      className="blog-slide"
-                      style={{ '--cat': c.color }}
-                      aria-roledescription="slide"
-                      aria-label={`${i + 1} of ${featured.length}`}
-                      aria-hidden={i !== slide}
-                    >
-                      <BlogCover post={p} large />
-                      <div className="blog-slide__body">
-                        <span className="blog-chip-label">Featured · {c.label}</span>
-                        <h2 className="blog-slide__title">{p.title}</h2>
-                        <p className="blog-slide__excerpt">{p.excerpt}</p>
-                        <PostMeta post={p} />
+          <div className="blog-hero__viewport">
+            <div className="blog-hero__track" style={{ transform: `translateX(-${slide * 100}%)` }}>
+              {featured.map((p, i) => {
+                const c = CATEGORIES[p.category];
+                return (
+                  <article key={p.slug} className="blog-hero__slide" style={{ '--cat': c.color }} aria-roledescription="slide" aria-label={`${i + 1} of ${featured.length}`} aria-hidden={i !== slide}>
+                    <div className="blog-hero__text">
+                      <span className="blog-pill blog-pill--outline">Featured article</span>
+                      <h1 className="blog-hero__title">{p.title}</h1>
+                      <p className="blog-hero__excerpt">{p.excerpt}</p>
+                      <div className="blog-hero__row">
+                        <PostMeta post={p} calendar />
                         <Link to={`/blog/${p.slug}`} className="blog-btn" tabIndex={i === slide ? 0 : -1}>Read article <ArrowRight size={16} /></Link>
                       </div>
-                    </article>
-                  );
-                })}
-              </div>
+                    </div>
+                    <div className="blog-hero__art"><BlogCover post={p} large /></div>
+                  </article>
+                );
+              })}
             </div>
-            {featured.length > 1 && (
-              <div className="blog-slider__controls">
-                <button type="button" className="blog-slider__arrow" onClick={() => go(slide - 1)} aria-label="Previous article"><ChevronLeft size={18} /></button>
-                <div className="blog-slider__dots" role="tablist" aria-label="Choose a featured article">
-                  {featured.map((p, i) => (
-                    <button key={p.slug} type="button" role="tab" aria-selected={i === slide} aria-label={`Show article ${i + 1}`} className={`blog-slider__dot${i === slide ? ' blog-slider__dot--on' : ''}`} onClick={() => go(i)} />
-                  ))}
-                </div>
-                <button type="button" className="blog-slider__arrow" onClick={() => go(slide + 1)} aria-label="Next article"><ChevronRight size={18} /></button>
-              </div>
-            )}
-          </section>
-        )}
+          </div>
+          <div className="blog-hero__controls">
+            <button type="button" className="blog-arrow" onClick={() => go(slide - 1)} aria-label="Previous article"><ChevronLeft size={16} /></button>
+            <div className="blog-dots" role="tablist" aria-label="Choose a featured article">
+              {featured.map((p, i) => (
+                <button key={p.slug} type="button" role="tab" aria-selected={i === slide} aria-label={`Show article ${i + 1}`} className={`blog-dot${i === slide ? ' blog-dot--on' : ''}`} onClick={() => go(i)} />
+              ))}
+            </div>
+            <button type="button" className="blog-arrow" onClick={() => go(slide + 1)} aria-label="Next article"><ChevronRight size={16} /></button>
+          </div>
+        </div>
+      </section>
 
-        {/* ---- Category filters ---- */}
-        <nav className="blog-cats" aria-label="Categories">
-          {['all', ...Object.keys(CATEGORIES)].map((k) => (
-            <button
-              key={k}
-              type="button"
-              className={`blog-cat${cat === k ? ' blog-cat--on' : ''}`}
-              style={k !== 'all' ? { '--cat': CATEGORIES[k].color } : undefined}
-              aria-pressed={cat === k}
-              onClick={() => setCat(k)}
-            >
-              {k !== 'all' && <span className="blog-cat__dot" aria-hidden="true" />}
-              {k === 'all' ? 'All articles' : CATEGORIES[k].label}
-              <span className="blog-cat__count">{counts[k] || 0}</span>
-            </button>
-          ))}
+      <div className="blog-wrap">
+        {/* ---- Standards tiles ---- */}
+        <nav className="blog-tiles" aria-label="Browse by standard">
+          {TILE_TOPICS.map((k) => {
+            const c = CATEGORIES[k];
+            return (
+              <button key={k} type="button" className={`blog-tile${topic === k ? ' blog-tile--on' : ''}`} style={{ '--cat': c.color }} onClick={() => setTopic(topic === k ? 'all' : k)} aria-pressed={topic === k}>
+                <span className="blog-tile__icon"><TopicIcon topic={k} /></span>
+                <span>
+                  <strong>{c.label}</strong>
+                  <small>{c.sub}</small>
+                </span>
+              </button>
+            );
+          })}
+          <button type="button" className="blog-tile blog-tile--all" onClick={() => setTopic('all')}>
+            <span><strong>View all</strong><small>Categories</small></span>
+            <ArrowRight size={18} aria-hidden="true" />
+          </button>
         </nav>
 
-        <p className="blog-result" aria-live="polite">
-          {searching ? `${shown.length} article${shown.length === 1 ? '' : 's'} found` : 'Latest articles'}
-          {searching && (
-            <button type="button" className="blog-result__reset" onClick={() => { setQuery(''); setCat('all'); }}>Clear filters</button>
-          )}
-        </p>
+        <div className="blog-layout">
+          {/* ---- Articles ---- */}
+          <main className="blog-main" id="latest">
+            <div className="blog-main__head">
+              <h2>{topic === 'all' ? 'Latest articles' : CATEGORIES[topic].label}</h2>
+              <form className="blog-search" role="search" onSubmit={(e) => e.preventDefault()}>
+                <Search size={16} aria-hidden="true" className="blog-search__icon" />
+                <input type="search" value={query} onChange={(e) => { setQuery(e.target.value); setLimit(PAGE); }} placeholder="Search articles" aria-label="Search articles" />
+                {query && <button type="button" className="blog-search__clear" onClick={() => setQuery('')} aria-label="Clear search"><X size={14} /></button>}
+              </form>
+            </div>
 
-        {/* ---- Grid ---- */}
-        {shown.length === 0 ? (
-          <div className="blog-empty">
-            <h3>No articles match your search</h3>
-            <p>Try a different word, or clear the filters to see everything.</p>
-          </div>
-        ) : (
-          <div className="blog-grid">
-            {shown.map((p) => <PostCard key={p.slug} post={p} />)}
-          </div>
-        )}
+            {/* Topic filter for phones, where the sidebar sits below the articles. */}
+            <div className="blog-chips" aria-label="Topics">
+              <button type="button" className={`blog-chip${topic === 'all' ? ' blog-chip--on' : ''}`} onClick={() => setTopic('all')}>All</button>
+              {Object.keys(CATEGORIES).filter((k) => counts[k]).map((k) => (
+                <button key={k} type="button" className={`blog-chip${topic === k ? ' blog-chip--on' : ''}`} onClick={() => setTopic(k)}>{CATEGORIES[k].label}</button>
+              ))}
+            </div>
+
+            <p className="blog-result" aria-live="polite">
+              {filtered ? `${shown.length} article${shown.length === 1 ? '' : 's'} found` : `${all.length} articles`}
+              {filtered && <button type="button" className="blog-result__reset" onClick={() => { setQuery(''); setTopic('all'); }}>Clear filters</button>}
+            </p>
+
+            {shown.length === 0 ? (
+              <div className="blog-empty">
+                <h3>No articles match your search</h3>
+                <p>Try a different word, or clear the filters to see everything.</p>
+              </div>
+            ) : (
+              <div className="blog-grid">
+                {visible.map((p) => <PostCard key={p.slug} post={p} />)}
+              </div>
+            )}
+
+            {shown.length > limit && (
+              <div className="blog-more">
+                <button type="button" className="blog-btn blog-btn--ghost" onClick={() => setLimit((n) => n + PAGE)}>Load more articles <ChevronDown size={16} /></button>
+              </div>
+            )}
+          </main>
+
+          {/* ---- Sidebar ---- */}
+          <aside className="blog-side">
+            <section className="blog-box">
+              <h3>Popular topics</h3>
+              <ul className="blog-topics">
+                {popular.map((k) => (
+                  <li key={k}>
+                    <button type="button" className={topic === k ? 'on' : ''} onClick={() => setTopic(topic === k ? 'all' : k)}>
+                      <span>{CATEGORIES[k].label}</span>
+                      <em>{counts[k]}</em>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            <section className="blog-box blog-box--accent">
+              <ClipboardCheck size={30} aria-hidden="true" className="blog-box__icon" />
+              <h3>Free gap analysis</h3>
+              <p>Find out how close your organisation is to the standard, before you commit to certification.</p>
+              <Link to="/gap-analysis" className="blog-btn">Start now <ArrowRight size={16} /></Link>
+            </section>
+
+            <section className="blog-box">
+              <h3>Follow Certify.cx</h3>
+              <p>Get new guides and updates on our channels.</p>
+              <SocialLinks />
+            </section>
+          </aside>
+        </div>
 
         {/* ---- Call to action ---- */}
         <section className="blog-cta">
+          <BookOpen size={34} aria-hidden="true" className="blog-cta__icon" />
           <div>
-            <h2>Ready to find out where you stand?</h2>
-            <p>Take the free gap analysis, then compare certification options in one place.</p>
+            <h2>New to ISO standards?</h2>
+            <p>Start your learning journey with our beginner-friendly guides, then compare certification options in one place.</p>
           </div>
-          <div className="blog-cta__actions">
-            <Link to="/gap-analysis" className="blog-btn">Start the gap analysis <ArrowRight size={16} /></Link>
-            <Link to="/certifications" className="blog-btn blog-btn--ghost">Browse certifications</Link>
-          </div>
+          <Link to="/certifications" className="blog-btn blog-btn--light">Explore standards <ArrowRight size={16} /></Link>
         </section>
-      </main>
+      </div>
 
       <BlogFooter />
     </div>

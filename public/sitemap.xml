@@ -90,6 +90,20 @@
     <priority>0.6</priority>
   </url>
 
+  <url>
+    <loc>https://certify.cx/blog/iso-14001-environmental-management</loc>
+    <lastmod>2026-11-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://certify.cx/blog/risk-based-thinking-in-management-systems</loc>
+    <lastmod>2026-11-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
   <!-- ISO standard landing pages -->
   <url><loc>https://certify.cx/iso/iso-9001</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://certify.cx/iso/iso-14001</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
