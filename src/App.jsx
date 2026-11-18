@@ -65,6 +65,8 @@ const AdminAccreditationBodies = lazy(() => import('./pages/admin/AdminAccredita
 const AdminCountries = lazy(() => import('./pages/admin/AdminCountries'));
 const AdminCoupons = lazy(() => import('./pages/admin/AdminCoupons'));
 const AdminNotifications = lazy(() => import('./pages/admin/AdminNotifications'));
+const AdminOutreach = lazy(() => import('./pages/admin/AdminOutreach'));
+const Unsubscribe = lazy(() => import('./pages/public/Unsubscribe'));
 const AdminCommissionTiers = lazy(() => import('./pages/admin/AdminCommissionTiers'));
 const AdminConsultancies = lazy(() => import('./pages/admin/AdminConsultancies'));
 const AdminContractors = lazy(() => import('./pages/admin/AdminContractors'));
@@ -184,6 +186,7 @@ function AppRoutes() {
             <Route path="/signup" element={<SignUp />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/unsubscribe" element={<Unsubscribe />} />
           </Route>
 
           {/* ---- OAuth Callback ---- */}
@@ -349,6 +352,13 @@ function AppRoutes() {
             <Route path="/admin/countries" element={
               <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}>
                 <AdminCountries />
+              </ProtectedRoute>
+            } />
+
+            {/* Admin — Outreach: cold emails to schools and universities */}
+            <Route path="/admin/outreach" element={
+              <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}>
+                <AdminOutreach />
               </ProtectedRoute>
             } />
 

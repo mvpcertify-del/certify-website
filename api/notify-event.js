@@ -33,6 +33,9 @@ import { applyContractorTaskDecision } from './_contractorTaskScoring.js';
 import { handleOdooAdminAction, runOdooSyncIfEnabled } from './_odooAdmin.js';
 import { runNotificationEngine } from './_notifyEngine.js';
 import { handleNotifyAdminAction } from './_notifyAdmin.js';
+import { handleOutreachAction } from './_outreachAdmin.js';
+import { runOutreachSend, runOutreachReplies, unsubscribeByToken } from './_outreachEngine.js';
+import { createMailer } from './_outreachMail.js';
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -81,6 +84,24 @@ export default async function handler(req, res) {
     if (job === 'investor-campaign-draft') {
       return await handleInvestorCampaignDraftCron(req, res);
     }
+    // Cold outreach (api/_outreachEngine.js). Called hourly by the GitHub Actions workflow with its own secret,
+    // OUTREACH_CRON_SECRET (Vercel's cron is once a day on this plan, too coarse for sending in each country's
+    // business hours). The answer carries counts only, never an address.
+    if (job === 'outreach-send' || job === 'outreach-replies') {
+      const secret = process.env.OUTREACH_CRON_SECRET;
+      const auth = req.headers?.authorization || req.headers?.Authorization || '';
+      if (!secret || auth !== `Bearer ${secret}`) return res.status(401).json({ error: 'Unauthorized' });
+      try {
+        const mail = createMailer();
+        const out = job === 'outreach-send'
+          ? await runOutreachSend({ supabase: supabaseAdmin, mail, sleepBetweenMs: 500 })
+          : await runOutreachReplies({ supabase: supabaseAdmin, mail });
+        return res.status(200).json(out);
+      } catch (e) {
+        console.error('[outreach] job failed', job, e?.message || e);
+        return res.status(500).json({ ok: false, error: 'Outreach job failed' });
+      }
+    }
     // Manual check of the notification engine, same CRON_SECRET as the crons. With dry=1 it only
     // counts who would be messaged (nothing is logged or sent); `rule` limits it to one rule.
     if (job === 'notify-engine') {
@@ -106,6 +127,20 @@ export default async function handler(req, res) {
   }
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  // One-click unsubscribe (RFC 8058): mail apps POST here when someone presses their own "Unsubscribe" button.
+  // POST only, because a GET could be triggered by a link scanner opening the email.
+  {
+    const q = new URL(req.url, 'http://localhost').searchParams;
+    if (q.get('job') === 'unsubscribe') {
+      const out = await unsubscribeByToken(supabaseAdmin, q.get('t'));
+      return res.status(out.ok ? 200 : 404).json({ ok: out.ok });
+    }
+  }
+  // Cold outreach: the Super Admin page, and the public unsubscribe page.
+  if (typeof req.body?.action === 'string' && req.body.action.startsWith('outreach-')) {
+    return handleOutreachAction(req, res);
   }
 
   // Odoo admin actions (test connection, sync now, retry). Super Admin only;

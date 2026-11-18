@@ -1,0 +1,29 @@
+name: Outreach hourly job
+
+# Vercel's own cron runs once a day on this plan, which is too coarse for sending in each country's business hours.
+# This free scheduler calls the two outreach jobs every hour. They send nothing unless the Outreach page is set to
+# Live (after a test email and an approval), so a run while it is off or in dry run is harmless.
+
+on:
+  schedule:
+    - cron: '7 * * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: outreach
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      OUTREACH_CRON_SECRET: ${{ secrets.OUTREACH_CRON_SECRET }}
+    steps:
+      - name: Send what is due
+        run: |
+          if [ -z "$OUTREACH_CRON_SECRET" ]; then echo 'OUTREACH_CRON_SECRET is not set in GitHub (Settings, Secrets and variables, Actions)'; exit 1; fi
+          curl --fail-with-body -sS -m 90 -H "Authorization: Bearer $OUTREACH_CRON_SECRET" "https://certify.cx/api/notify-event?job=outreach-send"
+      - name: Read replies
+        run: |
+          curl --fail-with-body -sS -m 90 -H "Authorization: Bearer $OUTREACH_CRON_SECRET" "https://certify.cx/api/notify-event?job=outreach-replies"

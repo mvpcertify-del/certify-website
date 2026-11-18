@@ -10,7 +10,8 @@
     "test:odoo": "node --test \"tests/odoo/*.test.mjs\"",
     "test:auth": "node --test \"tests/auth/*.test.mjs\"",
     "test:notify": "node --test \"tests/notify/*.test.mjs\"",
-    "test": "npm run test:odoo && npm run test:auth && npm run test:notify",
+    "test:outreach": "node --test \"tests/outreach/*.test.mjs\"",
+    "test": "npm run test:odoo && npm run test:auth && npm run test:notify && npm run test:outreach",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -20,7 +21,9 @@
     "dotenv": "^17.3.1",
     "i18next": "^26.0.4",
     "i18next-browser-languagedetector": "^8.2.1",
+    "imapflow": "^2.12.1",
     "lucide-react": "^0.577.0",
+    "nodemailer": "^10.6.0",
     "pdf-lib": "^1.17.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
