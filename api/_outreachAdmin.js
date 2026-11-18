@@ -16,6 +16,13 @@ const EMAIL_RE = /^[^\s@<>()",;:]+@[^\s@<>()",;:]+\.[A-Za-z]{2,}$/;
 const STATUSES = ['new', 'in_sequence', 'completed', 'replied', 'unsubscribed', 'bounced', 'stopped', 'needs_timezone'];
 const SAMPLE = { institution_name: 'Sample University', contact_name: 'Dr. Sample', unsubscribe_token: '0'.repeat(32) };
 
+// Preview and test emails use a real lead's name when one is chosen, but always a harmless unsubscribe token.
+async function previewLead(db, id) {
+  if (!id) return SAMPLE;
+  const { data } = await db.from('outreach_leads').select('institution_name, contact_name').eq('id', id).maybeSingle();
+  return data ? { ...SAMPLE, institution_name: data.institution_name, contact_name: data.contact_name } : SAMPLE;
+}
+
 const fail = (status, message) => Object.assign(new Error(message), { status });
 
 async function overview(db, body) {
@@ -42,6 +49,16 @@ async function overview(db, body) {
 
   const since = new Date(Date.now() - 86400000).toISOString();
   const { data: sentRows } = await db.from('outreach_events').select('id').eq('type', 'sent').gte('created_at', since);
+
+  // Every email actually sent, grouped by lead: which email number went out, and when.
+  const { data: sentEv } = await db.from('outreach_events').select('lead_id, step, created_at')
+    .eq('type', 'sent').order('created_at', { ascending: true }).limit(5000);
+  const sentMap = {};
+  for (const e of sentEv || []) { (sentMap[e.lead_id] ||= {})[e.step] = e.created_at; }
+  const { data: sentLeads } = await db.from('outreach_leads')
+    .select('id, email, institution_name, country, status, step, last_sent_at')
+    .not('first_sent_at', 'is', null).order('last_sent_at', { ascending: false }).limit(200);
+  const sentLog = (sentLeads || []).map((l) => ({ ...l, sent: sentMap[l.id] || {} }));
 
   const { data: supp } = await db.from('outreach_suppressions').select('email').limit(10000);
 
@@ -70,9 +87,11 @@ async function overview(db, body) {
     canSendNow: sendWhy.length === 0,
     sendNowBlockers: sendWhy,
     sent24h: (sentRows || []).length,
+    sentTotal: (sentEv || []).length,
+    sentLog,
     suppressed: (supp || []).length,
     counts,
-    leads: leads || [],
+    leads: (leads || []).map((l) => ({ ...l, sent: sentMap[l.id] || {} })),
     events: (events || []).map((e) => ({ id: e.id, type: e.type, step: e.step, at: e.created_at, institution: e.lead?.institution_name || null, email: e.lead?.email || null, detail: e.detail })),
   };
 }
@@ -142,7 +161,7 @@ export async function handleOutreachAction(req, res) {
       const step = [1, 2, 3].includes(Number(body.step)) ? Number(body.step) : 1;
       const { settings } = await getSettings(db);
       const mail = { user: outreachMailConfig().user };
-      const rendered = renderEmail(step, SAMPLE, { calendlyUrl: settings?.calendly_url || 'https://calendly.com/your-link', senderEmail: mail.user || 'midhat@certify.wiki', unsubscribeUrl: `${APP_URL}/unsubscribe?t=${SAMPLE.unsubscribe_token}` });
+      const rendered = renderEmail(step, await previewLead(db, body.lead_id), { calendlyUrl: settings?.calendly_url || 'https://calendly.com/your-link', senderEmail: mail.user || 'midhat@certify.wiki', unsubscribeUrl: `${APP_URL}/unsubscribe?t=${SAMPLE.unsubscribe_token}` });
       return res.status(200).json({ subject: rendered.subject, html: rendered.html });
     }
 
@@ -154,7 +173,7 @@ export async function handleOutreachAction(req, res) {
       const to = String(body.to || settings.test_recipient || '').trim().toLowerCase();
       if (!EMAIL_RE.test(to)) throw fail(400, 'Enter the address to send the test to.');
       const step = [1, 2, 3].includes(Number(body.step)) ? Number(body.step) : 1;
-      const rendered = renderEmail(step, SAMPLE, { calendlyUrl: settings.calendly_url, senderEmail: mailer.user, unsubscribeUrl: `${APP_URL}/unsubscribe?t=${SAMPLE.unsubscribe_token}` });
+      const rendered = renderEmail(step, await previewLead(db, body.lead_id), { calendlyUrl: settings.calendly_url, senderEmail: mailer.user, unsubscribeUrl: `${APP_URL}/unsubscribe?t=${SAMPLE.unsubscribe_token}` });
       await mailer.send({ to, subject: `[TEST] ${rendered.subject}`, html: rendered.html, text: rendered.text });
       const now = new Date().toISOString();
       await db.from('outreach_settings').update({ test_sent_at: now, test_recipient: to, updated_at: now }).eq('id', 1);

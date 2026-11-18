@@ -124,6 +124,7 @@ export default function AdminOutreach() {
   const [query, setQuery] = useState('');
   const [previewStep, setPreviewStep] = useState(1);
   const [preview, setPreview] = useState(null);
+  const [previewLeadId, setPreviewLeadId] = useState('');
   const [csv, setCsv] = useState(null);
   const fileRef = useRef(null);
 
@@ -148,10 +149,11 @@ export default function AdminOutreach() {
 
   useEffect(() => { const t = setTimeout(load, query ? 350 : 0); return () => clearTimeout(t); }, [load, query]);
 
+  const firstLeadId = data?.leads?.[0]?.id;
   useEffect(() => {
     if (!data?.migrated || tab !== 'emails') return;
-    call('outreach-preview-email', { step: previewStep }).then(setPreview).catch(() => setPreview(null));
-  }, [previewStep, tab, data?.migrated, data?.settings?.calendly_url]);
+    call('outreach-preview-email', { step: previewStep, lead_id: previewLeadId || firstLeadId || undefined }).then(setPreview).catch(() => setPreview(null));
+  }, [previewStep, previewLeadId, tab, data?.migrated, data?.settings?.calendly_url, firstLeadId]);
 
   const act = async (key, fn, okText) => {
     setBusy(key); setError(''); setNotice('');
@@ -170,11 +172,11 @@ export default function AdminOutreach() {
   const saveSettings = () => act('save', () => call('outreach-update-settings', form), 'Settings saved.');
   const sendTest = () => act('test', async () => {
     if (formDirty) await call('outreach-update-settings', form);
-    await call('outreach-send-test', { to: form.test_recipient });
+    await call('outreach-send-test', { to: form.test_recipient, lead_id: previewLeadId || data?.leads?.[0]?.id });
   }, `Test email sent to ${form.test_recipient}. Check that inbox, and the spam folder.`);
   const sendAllTests = () => act('tests', async () => {
     if (formDirty) await call('outreach-update-settings', form);
-    for (const step of [1, 2, 3]) await call('outreach-send-test', { to: form.test_recipient, step });
+    for (const step of [1, 2, 3]) await call('outreach-send-test', { to: form.test_recipient, step, lead_id: previewLeadId || data?.leads?.[0]?.id });
   }, `All 3 test emails sent to ${form.test_recipient}. Check that inbox, and the spam folder.`);
   const approve = () => {
     if (!window.confirm("Approve going live? From the next hourly run the system will email real schools and universities, within the daily limit.")) return;
@@ -252,7 +254,8 @@ export default function AdminOutreach() {
               <span className="otr__mode-text">{MODES[s.mode][1]}</span>
             </div>
             <div className="otr__status-nums">
-              <span><strong>{data.sent24h}</strong> sent in the last 24 hours</span>
+              <span><strong>{data.sentTotal}</strong> sent in total</span>
+              <span><strong>{data.sent24h}</strong> in the last 24 hours</span>
               <span>daily limit <strong>{data.effectiveDailyCap}</strong>{data.effectiveDailyCap < s.daily_cap ? ' (warming up)' : ''}</span>
               <span><strong>{data.suppressed}</strong> on the do-not-email list</span>
             </div>
@@ -326,6 +329,26 @@ export default function AdminOutreach() {
                     </button>
                   ))}
                 </div>
+              </Section>
+
+              <Section icon={Send} title="Emails sent" desc="Every institution that has received an email, and which of the three emails it has had, with the date and time.">
+                {data.sentLog.length === 0 ? <p className="ntf__empty">Nothing has been sent to any institution yet.</p> : (
+                  <div className="ntf__table-wrap">
+                    <table className="ntf__table">
+                      <thead><tr><th>Institution</th><th>Email 1</th><th>Email 2</th><th>Email 3</th><th>Emails sent</th><th>Status</th></tr></thead>
+                      <tbody>
+                        {data.sentLog.map((l) => (
+                          <tr key={l.id}>
+                            <td><strong>{l.institution_name}</strong><br /><span className="ntf__muted">{l.email}</span></td>
+                            {[1, 2, 3].map((n) => <td key={n}>{l.sent[n] ? <span className="otr__badge otr__badge--completed">{when(l.sent[n])}</span> : <span className="ntf__muted">-</span>}</td>)}
+                            <td><strong>{Object.keys(l.sent).length}</strong> of 3</td>
+                            <td><span className={`otr__badge otr__badge--${l.status}`}>{STATUS[l.status]?.[0] || l.status}</span></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </Section>
 
               <Section icon={CalendarClock} title="Coming up next" desc="The next emails due, shown in the recipient's own time.">
@@ -405,7 +428,7 @@ export default function AdminOutreach() {
                             <td>{l.contact_name || '-'}</td>
                             <td>{l.country || '-'}<br /><span className="ntf__muted">{l.timezone || ''}</span></td>
                             <td><span className={`otr__badge otr__badge--${l.status}`} title={STATUS[l.status]?.[1]}>{STATUS[l.status]?.[0] || l.status}</span></td>
-                            <td>{l.step} of 3</td>
+                            <td>{[1, 2, 3].filter((n) => l.sent?.[n]).length === 0 ? <span className="ntf__muted">None yet</span> : [1, 2, 3].filter((n) => l.sent?.[n]).map((n) => <div key={n}><span className="otr__badge otr__badge--completed">Email {n}</span> <span className="ntf__muted">{when(l.sent[n])}</span></div>)}</td>
                             <td>{l.status === 'in_sequence' ? when(l.next_send_at) : '-'}</td>
                             <td className="otr__actions">
                               {['new', 'in_sequence'].includes(l.status) && <button type="button" className="ntf__btn" disabled={!!busy} onClick={() => leadAction(l.id, 'stop', 'Stopped.')}>Stop</button>}
@@ -427,10 +450,17 @@ export default function AdminOutreach() {
           {/* ------------------------------------------------------------ EMAILS */}
           {tab === 'emails' && (
             <>
-              <Section icon={Eye} title="The three emails" desc="Exactly what a school or university will receive. The names shown are samples; each real email uses the institution's own name. Every email carries your Calendly link, and emails 2 and 3 carry an unsubscribe link.">
+              <Section icon={Eye} title="The three emails" desc="Exactly what a school or university will receive. The preview uses the institution you pick below; each real email uses that institution's own name. Every email carries your Calendly link, and emails 2 and 3 carry an unsubscribe link.">
                 <div className="otr__tabs" role="tablist">
                   {[1, 2, 3].map((n) => <button key={n} type="button" role="tab" aria-selected={previewStep === n} className={`otr__tab ${previewStep === n ? 'otr__tab--on' : ''}`} onClick={() => setPreviewStep(n)}>Day {STEP_DAY[n - 1]}: {STEP_NAME[n - 1]}</button>)}
                 </div>
+                <label className="otr__field">
+                  <span className="otr__field-label">Preview as</span>
+                  <select value={previewLeadId || data.leads[0]?.id || ''} onChange={(e) => setPreviewLeadId(e.target.value)} disabled={data.leads.length === 0}>
+                    {data.leads.length === 0 && <option value="">Sample university (add leads to preview real names)</option>}
+                    {data.leads.map((l) => <option key={l.id} value={l.id}>{l.institution_name}</option>)}
+                  </select>
+                </label>
                 {preview && (
                   <>
                     <p className="otr__subject"><strong>Subject:</strong> {preview.subject}</p>
