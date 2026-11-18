@@ -1,6 +1,6 @@
 import {
-  Sparkles, LayoutDashboard, Users, Briefcase, Megaphone, Settings, CreditCard, Scale,
-  CheckCircle2, Building2, Puzzle, Shield, LifeBuoy, UsersRound,
+  Sparkles, LayoutDashboard, Briefcase, Megaphone, CreditCard,
+  CheckCircle2, Building2, Puzzle, Shield, LifeBuoy,
 } from 'lucide-react';
 import { ROLES } from '../utils/roles';
 
@@ -55,10 +55,252 @@ export const SARA = {
   ],
 };
 
+// ---------------------------------------------------------------------------
+// The six departments (client, 18 Nov): the approved structure is Sara, then six AI
+// Department Heads, then 49 specialised agents. Every existing page sits inside the
+// department it belongs to. A department opens to: its Department Head, its AI agents,
+// (Marketing only, for now) its functions, and the existing pages. An agent with no screen
+// yet shows "Soon" and opens a placeholder workspace; activate it later by dropping `soon`
+// and pointing `path` at the real screen.
+// ---------------------------------------------------------------------------
+const head = (dept, label, blurb) => ({ id: `${dept}_head`, label, path: `/${dept}/head`, soon: true, blurb });
+
+// [slug, label, optional live path] -> menu items. The blurb is generic until the agent is built.
+const agents = (dept, deptLabel, list) => list.map(([slug, label, path]) => (
+  path
+    ? { id: `${dept}_a_${slug}`, label, path }
+    : {
+      id: `${dept}_a_${slug}`, label, path: `/${dept}/agents/${slug}`, soon: true,
+      blurb: `${label}: its own workspace, tasks and reports, supervised by the ${deptLabel} Department Head.`,
+    }
+));
+
+const heading = (id, text) => ({ id, heading: text });
+
+const DEPARTMENTS = [
+  {
+    id: 'marketing',
+    label: '01. Marketing',
+    icon: Megaphone,
+    agent: 'Maya AI',
+    items: [
+      heading('mkt_h_head', 'DEPARTMENT HEAD'),
+      head('marketing', 'AI Marketing Department Head', 'Monthly marketing strategy, agent task allocation, campaign supervision, budget monitoring and weekly and monthly reports.'),
+      heading('mkt_h_agents', 'AI AGENTS'),
+      ...agents('marketing', 'Marketing', [
+        ['digital', 'Digital Marketing Agent'],
+        ['social', 'Social Media Agent'],
+        ['email', 'Email Marketing Agent', '/admin/outreach'],
+        ['content', 'Content Marketing Agent'],
+        ['paid', 'Paid Advertising Agent'],
+        ['partnerships', 'Partnerships & Affiliates Agent'],
+        ['events', 'Events & Webinars Agent'],
+      ]),
+      heading('mkt_h_functions', 'DEPARTMENT FUNCTIONS'),
+      ...agents('marketing', 'Marketing', [
+        ['crm', 'Marketing CRM & Lead Management'],
+        ['budget', 'Marketing Budget & ROI'],
+        ['integrations', 'Integrations & Automation'],
+        ['governance', 'Governance & Approvals'],
+      ]).map((it) => ({ ...it, id: it.id.replace('_a_', '_f_'), path: it.path.replace('/agents/', '/functions/') })),
+      heading('mkt_h_pages', 'PAGES'),
+      { id: 'mkt_lead_gen', label: 'Lead Generation Pipelines', path: '/marketing/lead-gen', soon: true,
+        blurb: 'Target companies by country, sector and ISO need, verified and handed to the sales outreach hub.' },
+      { id: 'mkt_campaigns', label: 'Platform Campaigns', path: '/marketing/campaigns', soon: true,
+        blurb: 'Which links, invitations and partners bring in the best-converting leads.' },
+      { id: 'mkt_affiliates', label: 'Affiliate & Referral Campaigns', path: '/marketing/affiliates', soon: true,
+        blurb: 'Referral links and promotional copy for registered affiliates, with attribution.' },
+      { id: 'mkt_referral_dashboard', label: 'Referral Program Dashboard', path: '/referral-dashboard' },
+      { id: 'mkt_content', label: 'Content & Resource Hub', path: '/admin/outreach-docs' },
+      { id: 'mkt_links', label: 'Shareable Links', path: '/admin/shareable-links' },
+    ],
+  },
+  {
+    id: 'sales',
+    label: '02. Sales',
+    icon: Briefcase,
+    agent: 'Leo AI',
+    items: [
+      heading('sales_h_head', 'DEPARTMENT HEAD'),
+      head('sales', 'AI Sales Department Head', 'Sales targets, agent task allocation, pipeline supervision and weekly and monthly sales reports.'),
+      heading('sales_h_agents', 'AI AGENTS'),
+      ...agents('sales', 'Sales', [
+        ['lead-qualification', 'Lead Generation & Qualification Agent'],
+        ['outreach', 'Sales Outreach Agent'],
+        ['pipeline', 'Sales Pipeline Agent'],
+        ['packages', 'Product & Package Recommendation Agent'],
+        ['pricing', 'Pricing & Proposal Agent'],
+        ['conversion', 'Sales Conversion Agent'],
+        ['referral', 'Referral Sales Agent'],
+      ]),
+      heading('sales_h_pages', 'PAGES'),
+      { id: 'crm_outreach', label: 'Lead & Outreach Hub', path: '/crm/outreach', soon: true,
+        blurb: 'Leads handed over from Marketing, with approved English and local-language email sequences and automated follow-ups.' },
+      { id: 'sales_inquiries', label: 'Marketplace Inquiries', path: '/sales/inquiries', soon: true,
+        blurb: 'Every inquiry arriving from the marketplace, with its status and owner.' },
+      { id: 'sales_proposals', label: 'Quotes & Proposals', path: '/sales/proposals', soon: true,
+        blurb: 'US$ proposals drafted from headcount, locations and standards, with the cancellation policy built in.' },
+      { id: 'sales_pipeline', label: 'Deal Conversion Pipeline', path: '/sales/pipeline', soon: true,
+        blurb: 'Deals from inquiry to paid order, with follow-up prompts for proposals not yet opened.' },
+      { id: 'sales_revenue', label: 'Revenue & Commissions', path: '/admin/sales' },
+      { id: 'sales_tiers', label: 'Commission Tiers', path: '/admin/commission-tiers' },
+      { id: 'sales_coupons', label: 'Coupons', path: '/admin/coupons' },
+      { id: 'crm_referral_partners', label: 'Referral Partners', path: '/admin/referral-partners' },
+    ],
+  },
+  {
+    id: 'customer_service',
+    label: '03. Customer Service',
+    icon: LifeBuoy,
+    agent: 'Sami AI',
+    items: [
+      heading('cs_h_head', 'DEPARTMENT HEAD'),
+      head('customer-service', 'AI Customer Service Department Head', 'Customer satisfaction, agent task allocation, escalations and weekly and monthly service reports.'),
+      heading('cs_h_agents', 'AI AGENTS'),
+      ...agents('customer-service', 'Customer Service', [
+        ['sara-assistant', 'Sara Customer Assistant Agent'],
+        ['onboarding', 'Customer Onboarding Agent'],
+        ['support', 'Customer Support Agent'],
+        ['technical', 'Technical Support Agent'],
+        ['communication', 'Customer Communication Agent', '/admin/notifications'],
+        ['escalation', 'Complaints & Escalation Agent'],
+        ['retention', 'Customer Retention Agent'],
+      ]),
+      heading('cs_h_pages', 'PAGES'),
+      { id: 'crm_messages', label: 'Messages', path: '/messages' },
+      { id: 'crm_accounts', label: 'Enterprise Accounts', path: '/admin/companies' },
+      { id: 'sup_docs', label: 'SOPs & Help Documentation', path: '/support/docs', soon: true,
+        blurb: 'Help articles and internal SOPs for using each module.' },
+      { id: 'sup_status', label: 'Platform & API Status', path: '/support/status', soon: true,
+        blurb: 'Current status of the platform and its integrations.' },
+    ],
+  },
+  {
+    id: 'operations',
+    label: '04. Operations & Compliance',
+    icon: CheckCircle2,
+    agent: 'Omar AI',
+    items: [
+      heading('ops_h_head', 'DEPARTMENT HEAD'),
+      head('operations', 'AI Operations & Compliance Department Head', 'Certification workload, agent task allocation, compliance supervision and weekly and monthly operations reports.'),
+      heading('ops_h_agents', 'AI AGENTS'),
+      ...agents('operations', 'Operations & Compliance', [
+        ['iso-9001', 'ISO 9001 Compliance Agent'],
+        ['iso-27001', 'ISO 27001 Compliance Agent'],
+        ['iso-22000', 'ISO 22000 Compliance Agent'],
+        ['other-standards', 'Other Standards Compliance Agent'],
+        ['evidence', 'Document & Evidence Management Agent'],
+        ['internal-audit', 'Internal Audit & Readiness Agent'],
+        ['nonconformity', 'Nonconformity & Corrective Action Agent'],
+        ['risk', 'Risk & Regulatory Intelligence Agent'],
+        ['contractors', 'Contractor & Service Provider Agent'],
+        ['cb-coordination', 'Certification Body Coordination Agent'],
+        ['scheduling', 'Compliance Scheduling Agent'],
+      ]),
+      heading('ops_h_pages', 'PAGES'),
+      { id: 'ops_certification_dashboard', label: 'Certification Dashboard', path: '/dashboard' },
+      { id: 'ops_applications', label: 'Applications', path: '/admin/applications' },
+      { id: 'ops_vetting', label: 'Verification & Vetting', path: '/admin/registrations' },
+      { id: 'crm_auditors', label: 'Auditors', path: '/admin/auditors' },
+      { id: 'crm_cert_bodies', label: 'Certification Bodies', path: '/admin/cert-bodies' },
+      { id: 'leg_cb_registry', label: 'Certification Body Registry', path: '/admin/cb-registry' },
+      { id: 'leg_accreditation', label: 'Accreditation Bodies', path: '/admin/accreditation-bodies' },
+      { id: 'ops_calendars', label: 'Audit Calendars & Workflows', path: '/operations/calendars', soon: true,
+        blurb: 'Audit schedules and workflow stages, with conflict detection and suggested reschedules.' },
+      { id: 'ops_contractor_matrix', label: 'Contractor Matrix', path: '/operations/contractor-matrix', soon: true,
+        blurb: 'Contractor evidence checked against monthly KPIs before payouts are approved.' },
+      { id: 'ops_frameworks', label: 'Standards & ISO Frameworks', path: '/operations/frameworks', soon: true,
+        blurb: 'The standards and ISO frameworks the platform supports, and the requirements behind each.' },
+    ],
+  },
+  {
+    id: 'administration',
+    label: '05. Administration',
+    icon: Shield,
+    agent: 'Layla AI',
+    items: [
+      heading('adm_h_head', 'DEPARTMENT HEAD'),
+      head('administration', 'AI Administration Department Head', 'Accounts, partners, contracts and platform governance, agent task allocation and weekly and monthly reports.'),
+      heading('adm_h_agents', 'AI AGENTS'),
+      ...agents('administration', 'Administration', [
+        ['users', 'User & Account Administration Agent'],
+        ['contractors', 'Contractor Administration Agent'],
+        ['partners', 'Partner Administration Agent'],
+        ['contracts', 'Contracts & NDA Agent'],
+        ['documents', 'Document Governance Agent'],
+        ['platform', 'Platform Administration Agent'],
+        ['security', 'Security & Access Governance Agent'],
+        ['reporting', 'Performance & Reporting Agent'],
+      ]),
+      heading('adm_h_pages', 'PAGES'),
+      { id: 'su_users', label: 'Users', path: '/admin/users' },
+      { id: 'su_permissions', label: 'User Access & Permissions', path: '/admin/permissions' },
+      { id: 'su_delegations', label: 'Sub-Admin Delegations', path: '/admin/regional-admins' },
+      { id: 'crm_contractors', label: 'Contractor Directory', path: '/admin/contractors' },
+      { id: 'crm_consultancy', label: 'Consultancy Network', path: '/admin/consultancies' },
+      { id: 'crm_investors', label: 'Investors', path: '/admin/investors' },
+      { id: 'su_user_fields', label: 'User Fields', path: '/admin/user-fields' },
+      { id: 'su_app_fields', label: 'Application Fields', path: '/admin/application-fields' },
+      { id: 'su_countries', label: 'Countries & Regions', path: '/admin/countries' },
+      { id: 'set_profile', label: 'My Profile', path: '/profile' },
+      { id: 'set_notifications', label: 'Notifications', path: '/notifications' },
+      { id: 'su_tenant', label: 'Tenant & Account Settings', path: '/system/tenant', soon: true,
+        blurb: 'Workspace identity, branding, billing contact and account-level settings for the tenant.' },
+      { id: 'leg_vault', label: 'Corporate Vault', path: '/legal/corporate-vault', soon: true,
+        blurb: 'Restricted storage for corporate documents, with access logging.' },
+      { id: 'leg_vetting', label: 'Partner Vetting & Vouching', path: '/legal/vetting', soon: true,
+        blurb: 'Accreditation certificates, registries and insurance checked for authenticity and expiry.' },
+      { id: 'leg_contracts', label: 'Contract Lifecycle (CLM)', path: '/legal/contracts', soon: true,
+        blurb: 'Drafting, approval, signature and renewal of contracts and tri-party NDAs.' },
+      { id: 'set_logs', label: 'System Audit Logs', path: '/settings/logs', soon: true,
+        blurb: 'Who did what, and when, across the platform.' },
+    ],
+  },
+  {
+    id: 'finance',
+    label: '06. Finance',
+    icon: CreditCard,
+    agent: 'Ziad AI',
+    restricted: true,
+    items: [
+      heading('fin_h_head', 'DEPARTMENT HEAD'),
+      head('finance', 'AI Finance Department Head', 'Revenue, spending and risk across the platform, agent task allocation and weekly and monthly financial reports.'),
+      heading('fin_h_agents', 'AI AGENTS'),
+      ...agents('finance', 'Finance', [
+        ['revenue', 'Revenue & Sales Accounting Agent'],
+        ['payments', 'Payment Processing Agent'],
+        ['invoicing', 'Invoicing Agent'],
+        ['subscriptions', 'Subscription & Renewal Agent'],
+        ['contractor-pay', 'Contractor Payment Agent'],
+        ['commissions', 'Affiliate Commission Agent'],
+        ['budget', 'Budget & Expenditure Agent'],
+        ['reporting', 'Financial Reporting Agent'],
+        ['fraud', 'Fraud & Financial Risk Agent'],
+      ]),
+      heading('fin_h_pages', 'PAGES'),
+      { id: 'fin_payment_approvals', label: 'Contractor Payment Approvals', path: '/finance/payments' },
+      { id: 'fin_billing', label: 'Billing & Invoices', path: '/admin/billing' },
+      { id: 'fin_payouts', label: 'Referral Payouts', path: '/admin/payouts' },
+      { id: 'fin_treasury', label: 'Treasury & Cash Flow', path: '/finance/treasury', soon: true,
+        blurb: 'Cash position and flow across gateways and accounts.' },
+      { id: 'fin_profitability', label: 'Project Profitability', path: '/finance/profitability', soon: true,
+        blurb: 'US$ revenue less gateway, auditor, contractor and ad costs, with a margin alert.' },
+      { id: 'fin_statements', label: 'Statement Upload Center', path: '/finance/statements', soon: true,
+        blurb: 'Upload bank statements and match lines to open invoices and gateway payouts.' },
+      { id: 'fin_refunds', label: 'Disputes & Refunds', path: '/finance/refunds', soon: true,
+        blurb: 'Cancellation requests checked against the 30-day policy, with the deduction calculated.' },
+      { id: 'fin_gateways', label: 'Gateway Integrations', path: '/finance/gateways', soon: true,
+        blurb: 'Connected payment gateways and their status.' },
+      { id: 'set_currency', label: 'Currency & FX Rate Engine', path: '/settings/currency', soon: true,
+        blurb: 'Base currency and exchange rates used across quotes, invoices and reports.' },
+    ],
+  },
+];
+
 export const ZONES = [
   {
     id: 'core',
-    label: 'CORE PLATFORM MODULES',
+    label: 'PLATFORM',
     modules: [
       {
         id: 'exec_dashboard',
@@ -66,10 +308,7 @@ export const ZONES = [
         icon: LayoutDashboard,
         path: '/main-dashboard',
       },
-      // Client (13 Nov): "Modules & Subscriptions" sits at the TOP of the Super Admin
-      // menu, right under the Executive Dashboard, so it is visible without scrolling.
-      // Everything else in the menu is unchanged. (It used to be the first entry of
-      // SYSTEM & GOVERNANCE, far down the list.)
+      // Client (13 Nov): "Modules & Subscriptions" sits right under the Executive Dashboard.
       {
         id: 'subscriptions',
         label: 'Modules & Subscriptions',
@@ -78,132 +317,12 @@ export const ZONES = [
         soon: true,
         blurb: 'Switch modules on or off and manage monthly or yearly plans for each client workspace.',
       },
-      {
-        id: 'system_users',
-        label: 'System & Users',
-        icon: Shield,
-        roles: [ROLES.SUPER_ADMIN],
-        items: [
-          { id: 'su_permissions', label: 'User Access & Permissions', path: '/admin/permissions' },
-          { id: 'su_users', label: 'Users', path: '/admin/users' },
-          { id: 'su_delegations', label: 'Sub-Admin Delegations', path: '/admin/regional-admins' },
-          { id: 'su_tenant', label: 'Tenant & Account Settings', path: '/system/tenant', soon: true,
-            blurb: 'Workspace identity, branding, billing contact and account-level settings for the tenant.' },
-          { id: 'su_user_fields', label: 'User Fields', path: '/admin/user-fields' },
-          { id: 'su_app_fields', label: 'Application Fields', path: '/admin/application-fields' },
-          { id: 'su_countries', label: 'Countries & Regions', path: '/admin/countries' },
-        ],
-      },
-      {
-        id: 'crm',
-        label: 'CRM',
-        icon: Users,
-        agent: 'Nora AI',
-        items: [
-          { id: 'crm_outreach', label: 'Lead & Outreach Hub', path: '/crm/outreach', soon: true,
-            blurb: 'Leads handed over from Marketing, with approved English and local-language email sequences and automated follow-ups.' },
-          { id: 'crm_accounts', label: 'Enterprise Accounts', path: '/admin/companies' },
-          { id: 'crm_consultancy', label: 'Consultancy Network', path: '/admin/consultancies' },
-          { id: 'crm_cert_bodies', label: 'Certification Bodies', path: '/admin/cert-bodies' },
-          { id: 'crm_auditors', label: 'Auditors', path: '/admin/auditors' },
-          { id: 'crm_contractors', label: 'Contractor Directory', path: '/admin/contractors' },
-          { id: 'crm_referral_partners', label: 'Referral Partners', path: '/admin/referral-partners' },
-          { id: 'crm_investors', label: 'Investors', path: '/admin/investors' },
-          { id: 'crm_messages', label: 'Messages', path: '/messages' },
-        ],
-      },
-      {
-        id: 'sales',
-        label: 'Sales',
-        icon: Briefcase,
-        agent: 'Leo AI',
-        items: [
-          { id: 'sales_inquiries', label: 'Marketplace Inquiries', path: '/sales/inquiries', soon: true,
-            blurb: 'Every inquiry arriving from the marketplace, with its status and owner.' },
-          { id: 'sales_proposals', label: 'Quotes & Proposals', path: '/sales/proposals', soon: true,
-            blurb: 'US$ proposals drafted from headcount, locations and standards, with the cancellation policy built in.' },
-          { id: 'sales_pipeline', label: 'Deal Conversion Pipeline', path: '/sales/pipeline', soon: true,
-            blurb: 'Deals from inquiry to paid order, with follow-up prompts for proposals not yet opened.' },
-          { id: 'sales_revenue', label: 'Revenue & Commissions', path: '/admin/sales' },
-          { id: 'sales_tiers', label: 'Commission Tiers', path: '/admin/commission-tiers' },
-          { id: 'sales_coupons', label: 'Coupons', path: '/admin/coupons' },
-        ],
-      },
-      {
-        id: 'marketing',
-        label: 'Marketing',
-        icon: Megaphone,
-        agent: 'Maya AI',
-        items: [
-          { id: 'mkt_email', label: 'Email Marketing (Outreach)', path: '/admin/outreach' },
-          { id: 'mkt_lead_gen', label: 'Lead Generation Pipelines', path: '/marketing/lead-gen', soon: true,
-            blurb: 'Target companies by country, sector and ISO need, verified and handed to the CRM outreach hub.' },
-          { id: 'mkt_campaigns', label: 'Platform Campaigns', path: '/marketing/campaigns', soon: true,
-            blurb: 'Which links, invitations and partners bring in the best-converting leads.' },
-          { id: 'mkt_affiliates', label: 'Affiliate & Referral Campaigns', path: '/marketing/affiliates', soon: true,
-            blurb: 'Referral links and promotional copy for registered affiliates, with attribution.' },
-          { id: 'mkt_referral_dashboard', label: 'Referral Program Dashboard', path: '/referral-dashboard' },
-          { id: 'mkt_content', label: 'Content & Resource Hub', path: '/admin/outreach-docs' },
-          { id: 'mkt_links', label: 'Shareable Links', path: '/admin/shareable-links' },
-        ],
-      },
-      {
-        id: 'operations',
-        label: 'Operations',
-        icon: Settings,
-        agent: 'Omar AI',
-        items: [
-          { id: 'ops_certification_dashboard', label: 'Certification Dashboard', path: '/dashboard' },
-          { id: 'ops_applications', label: 'Applications', path: '/admin/applications' },
-          { id: 'ops_calendars', label: 'Audit Calendars & Workflows', path: '/operations/calendars', soon: true,
-            blurb: 'Audit schedules and workflow stages, with conflict detection and suggested reschedules.' },
-          { id: 'ops_vetting', label: 'Verification & Vetting', path: '/admin/registrations' },
-          { id: 'ops_contractor_matrix', label: 'Contractor Matrix', path: '/operations/contractor-matrix', soon: true,
-            blurb: 'Contractor evidence checked against monthly KPIs before payouts are approved.' },
-          { id: 'ops_frameworks', label: 'Standards & ISO Frameworks', path: '/operations/frameworks', soon: true,
-            blurb: 'The standards and ISO frameworks the platform supports, and the requirements behind each.' },
-        ],
-      },
-      {
-        id: 'finance',
-        label: 'Finance',
-        icon: CreditCard,
-        agent: 'Ziad AI',
-        restricted: true,
-        items: [
-          { id: 'fin_payment_approvals', label: 'Contractor Payment Approvals', path: '/finance/payments' },
-          { id: 'fin_billing', label: 'Billing & Invoices', path: '/admin/billing' },
-          { id: 'fin_payouts', label: 'Referral Payouts', path: '/admin/payouts' },
-          { id: 'fin_treasury', label: 'Treasury & Cash Flow', path: '/finance/treasury', soon: true,
-            blurb: 'Cash position and flow across gateways and accounts.' },
-          { id: 'fin_profitability', label: 'Project Profitability', path: '/finance/profitability', soon: true,
-            blurb: 'US$ revenue less gateway, auditor, contractor and ad costs, with a margin alert.' },
-          { id: 'fin_statements', label: 'Statement Upload Center', path: '/finance/statements', soon: true,
-            blurb: 'Upload bank statements and match lines to open invoices and gateway payouts.' },
-          { id: 'fin_refunds', label: 'Disputes & Refunds', path: '/finance/refunds', soon: true,
-            blurb: 'Cancellation requests checked against the 30-day policy, with the deduction calculated.' },
-          { id: 'fin_gateways', label: 'Gateway Integrations', path: '/finance/gateways', soon: true,
-            blurb: 'Connected payment gateways and their status.' },
-        ],
-      },
-      {
-        id: 'legal',
-        label: 'Legal & Compliance',
-        icon: Scale,
-        agent: 'Layla AI',
-        restricted: true,
-        items: [
-          { id: 'leg_cb_registry', label: 'Certification Body Registry', path: '/admin/cb-registry' },
-          { id: 'leg_accreditation', label: 'Accreditation Bodies', path: '/admin/accreditation-bodies' },
-          { id: 'leg_vault', label: 'Corporate Vault', path: '/legal/corporate-vault', soon: true,
-            blurb: 'Restricted storage for corporate documents, with access logging.' },
-          { id: 'leg_vetting', label: 'Partner Vetting & Vouching', path: '/legal/vetting', soon: true,
-            blurb: 'Accreditation certificates, registries and insurance checked for authenticity and expiry.' },
-          { id: 'leg_contracts', label: 'Contract Lifecycle (CLM)', path: '/legal/contracts', soon: true,
-            blurb: 'Drafting, approval, signature and renewal of contracts and tri-party NDAs.' },
-        ],
-      },
     ],
+  },
+  {
+    id: 'departments',
+    label: 'SIX MAIN DEPARTMENTS',
+    modules: DEPARTMENTS,
   },
   {
     id: 'suite',
@@ -242,38 +361,6 @@ export const ZONES = [
       },
     ],
   },
-  {
-    id: 'system',
-    label: 'SYSTEM & GOVERNANCE',
-    modules: [
-      {
-        id: 'admin_settings',
-        label: 'Admin & Settings',
-        icon: UsersRound,
-        items: [
-          { id: 'set_profile', label: 'My Profile', path: '/profile' },
-          { id: 'set_notifications', label: 'Notifications', path: '/notifications' },
-          { id: 'set_notification_automation', label: 'Notification Automation', path: '/admin/notifications' },
-          { id: 'set_currency', label: 'Currency & FX Rate Engine', path: '/settings/currency', soon: true,
-            blurb: 'Base currency and exchange rates used across quotes, invoices and reports.' },
-          { id: 'set_logs', label: 'System Audit Logs', path: '/settings/logs', soon: true,
-            blurb: 'Who did what, and when, across the platform.' },
-        ],
-      },
-      {
-        id: 'support',
-        label: 'Support',
-        icon: LifeBuoy,
-        agent: 'Sami AI',
-        items: [
-          { id: 'sup_docs', label: 'SOPs & Help Documentation', path: '/support/docs', soon: true,
-            blurb: 'Help articles and internal SOPs for using each module.' },
-          { id: 'sup_status', label: 'Platform & API Status', path: '/support/status', soon: true,
-            blurb: 'Current status of the platform and its integrations.' },
-        ],
-      },
-    ],
-  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -306,6 +393,6 @@ export function moduleVisibleTo(mod, role) {
 export function moduleForPath(pathname) {
   const hit = (p) => pathname === p || pathname.startsWith(`${p}/`);
   return allModules().find(
-    (m) => (m.path && hit(m.path)) || (m.items || []).some((it) => hit(it.path)),
+    (m) => (m.path && hit(m.path)) || (m.items || []).some((it) => it.path && hit(it.path)),
   );
 }

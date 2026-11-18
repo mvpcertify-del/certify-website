@@ -289,7 +289,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
               collapsed={collapsed}
               onExpand={onToggleCollapse}
               onNavigate={onClose}
-              zoneIds={['core', 'suite', 'system']}
+              zoneIds={['core', 'departments', 'suite']}
             />
           )}
         </nav>

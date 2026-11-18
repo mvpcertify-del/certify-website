@@ -184,3 +184,5 @@
   color: var(--color-text-tertiary);
 }
 .msb__row--rail.msb__row--sara { padding: 10px; }
+
+.msb__subhead { margin: 10px 0 2px; padding: 0 12px; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-tertiary); list-style: none; }

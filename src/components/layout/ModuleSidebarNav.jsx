@@ -162,7 +162,9 @@ export default function ModuleSidebarNav({ role, collapsed, onExpand, onNavigate
         </button>
         {isOpen && (
           <ul className="msb__sub" id={`msb-${mod.id}`}>
-            {mod.items.map((it) => (
+            {mod.items.map((it) => (it.heading ? (
+              <li key={it.id} className="msb__subhead" role="presentation">{it.heading}</li>
+            ) : (
               <li key={it.id}>
                 <NavLink
                   to={it.path}
@@ -173,7 +175,7 @@ export default function ModuleSidebarNav({ role, collapsed, onExpand, onNavigate
                   {it.soon && <span className="msb__soon">{t('modules.soon', 'Soon')}</span>}
                 </NavLink>
               </li>
-            ))}
+            )))}
           </ul>
         )}
       </div>
