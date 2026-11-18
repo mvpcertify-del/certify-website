@@ -189,3 +189,52 @@ export function effectiveDailyCap({ daily_cap, warmup_started_at } = {}, now = n
   const ramp = days < 7 ? 10 : days < 14 ? 20 : cap;
   return Math.min(cap, ramp);
 }
+
+/** "Thu 26 Nov, 12:28" in the given time zone. */
+export function formatLocal(date, timezone) {
+  return new Intl.DateTimeFormat('en-GB', { timeZone: timezone, weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(date);
+}
+
+/**
+ * The schedule the Super Admin sees: for every lead still in play, which email goes next and when, in the
+ * recipient's own time. Follow-ups keep their fixed time; leads not yet started are spread across days so that no
+ * day goes over the daily limit (an estimate: the real run also depends on the hourly limit and on when it runs).
+ */
+export function projectSchedule(leads, now, dailyCap) {
+  const key = (d) => d.toISOString().slice(0, 10);
+  const perDay = new Map();
+  const items = [];
+  const entry = (l, at, step, state, schedule) => ({
+    id: l.id, institution: l.institution_name, email: l.email, country: l.country || null, timezone: schedule.timezone,
+    step, plannedAt: at.toISOString(), local: formatLocal(at, schedule.timezone), state,
+    businessNow: isBusinessMoment(now, schedule),
+  });
+
+  const going = leads.filter((l) => l.status === 'in_sequence' && l.next_send_at)
+    .sort((a, b) => String(a.next_send_at).localeCompare(String(b.next_send_at)));
+  for (const l of going) {
+    const sched = resolveSchedule(l);
+    if (!sched) continue;
+    const at = new Date(l.next_send_at);
+    perDay.set(key(at), (perDay.get(key(at)) || 0) + 1);
+    items.push(entry(l, at, l.step + 1, at <= now ? 'due' : 'waiting', sched));
+  }
+
+  const fresh = leads.filter((l) => l.status === 'new').sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
+  for (const l of fresh) {
+    const sched = resolveSchedule(l);
+    if (!sched) continue;
+    let base = now;
+    for (let i = 0; i < 120; i += 1) {
+      const slot = nextSlot(base, sched, seedFrom(l.id));
+      if (!slot) break;
+      if ((perDay.get(key(slot)) || 0) < dailyCap) {
+        perDay.set(key(slot), (perDay.get(key(slot)) || 0) + 1);
+        items.push(entry(l, slot, 1, 'planned', sched));
+        break;
+      }
+      base = new Date(slot.getTime() + DAY);
+    }
+  }
+  return items.sort((a, b) => a.plannedAt.localeCompare(b.plannedAt));
+}

@@ -157,6 +157,56 @@ export function liveBlockers(settings, mail) {
 }
 
 /**
+ * Sends the next email of the sequence to one lead. Used by the hourly job and by the Super Admin "Send now" button,
+ * so both go through the same safeguards. The row is claimed (step moved on) BEFORE sending, so only one caller can
+ * send a given email; if sending fails the row is put back exactly as it was.
+ *   { ok: true, step }  sent
+ *   { skipped: true }   someone else claimed it first
+ *   { ok: false, code, error }  failed (recorded as an event)
+ */
+export async function sendStep({ supabase, mail, settings, lead, schedule, now = new Date(), by = null }) {
+  const step = lead.step + 1;
+  const previous = { step: lead.step, status: lead.status, next_send_at: lead.next_send_at };
+  const { data: claimed, error: claimErr } = await supabase.from('outreach_leads')
+    .update({ step, status: 'in_sequence', next_send_at: null, last_sent_at: now.toISOString(), updated_at: now.toISOString() })
+    .eq('id', lead.id).eq('step', lead.step).in('status', ['new', 'in_sequence']).select('id');
+  if (claimErr || !claimed || !claimed.length) return { skipped: true };
+
+  try {
+    const ctx = mailContext(settings, mail, lead);
+    const rendered = renderEmail(step, lead, ctx);
+    const messageId = newMessageId(mail.user);
+    const ids = lead.message_ids || [];
+    await mail.send({
+      to: lead.email, subject: rendered.subject, html: rendered.html, text: rendered.text, messageId,
+      inReplyTo: ids.length ? ids[ids.length - 1] : undefined,
+      references: ids.length ? ids.join(' ') : undefined,
+      headers: {
+        'List-Unsubscribe': `<${ctx.oneClickUrl}>, <mailto:${mail.user}?subject=unsubscribe>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
+    });
+    const firstSent = lead.first_sent_at || now.toISOString();
+    const done = step >= 3;
+    const nextAt = done ? null : followUpAt(firstSent, step, schedule, seedFrom(lead.id));
+    await supabase.from('outreach_leads').update({
+      status: done ? 'completed' : 'in_sequence',
+      first_sent_at: firstSent,
+      message_ids: [...ids, messageId],
+      next_send_at: nextAt ? nextAt.toISOString() : null,
+      updated_at: now.toISOString(),
+    }).eq('id', lead.id);
+    await event(supabase, lead.id, 'sent', step, { messageId, subject: rendered.subject, ...(by ? { manual: true, by } : {}) });
+    return { ok: true, step };
+  } catch (e) {
+    // Put the row back exactly as it was so it is tried again, and record why.
+    await supabase.from('outreach_leads').update({ ...previous, updated_at: now.toISOString() }).eq('id', lead.id);
+    await event(supabase, lead.id, 'failed', step, { error: String(e.message || e).slice(0, 300), code: e.code || null, ...(by ? { manual: true } : {}) });
+    return { ok: false, code: e.code || null, error: String(e.message || e) };
+  }
+}
+
+/**
  * Sends what is due. Returns counts per outcome.
  *   mode off   nothing
  *   mode dry / test   works out who would be emailed, sends nothing
@@ -217,48 +267,16 @@ export async function runOutreachSend({ supabase, mail, now = new Date(), deadli
       continue;
     }
 
-    // Claim the row first: only one run can move it from step N to N+1.
-    const previous = { step: lead.step, status: lead.status, next_send_at: lead.next_send_at };
-    const { data: claimed, error: claimErr } = await supabase.from('outreach_leads')
-      .update({ step, status: 'in_sequence', next_send_at: null, last_sent_at: now.toISOString(), updated_at: now.toISOString() })
-      .eq('id', lead.id).eq('step', lead.step).in('status', ['new', 'in_sequence']).select('id');
-    if (claimErr || !claimed || !claimed.length) continue;
-
-    try {
-      const ctx = mailContext(settings, mail, lead);
-      const mail1 = renderEmail(step, lead, ctx);
-      const messageId = newMessageId(mail.user);
-      const ids = lead.message_ids || [];
-      await mail.send({
-        to: lead.email, subject: mail1.subject, html: mail1.html, text: mail1.text, messageId,
-        inReplyTo: ids.length ? ids[ids.length - 1] : undefined,
-        references: ids.length ? ids.join(' ') : undefined,
-        headers: {
-          'List-Unsubscribe': `<${ctx.oneClickUrl}>, <mailto:${mail.user}?subject=unsubscribe>`,
-          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-        },
-      });
-      const firstSent = lead.first_sent_at || now.toISOString();
-      const done = step >= 3;
-      const nextAt = done ? null : followUpAt(firstSent, step, schedule, seedFrom(lead.id));
-      await supabase.from('outreach_leads').update({
-        status: done ? 'completed' : 'in_sequence',
-        first_sent_at: firstSent,
-        message_ids: [...ids, messageId],
-        next_send_at: nextAt ? nextAt.toISOString() : null,
-        updated_at: now.toISOString(),
-      }).eq('id', lead.id);
-      await event(supabase, lead.id, 'sent', step, { messageId, subject: mail1.subject });
+    const outcome = await sendStep({ supabase, mail, settings, lead, schedule, now });
+    if (outcome.skipped) continue; // another run got there first
+    if (outcome.ok) {
       summary.sent += 1;
       sentThisRun += 1;
       if (sleepBetweenMs) await new Promise((r) => setTimeout(r, sleepBetweenMs));
-    } catch (e) {
-      // Put the row back exactly as it was so it is tried again, and record why.
-      await supabase.from('outreach_leads').update({ ...previous, updated_at: now.toISOString() }).eq('id', lead.id);
-      await event(supabase, lead.id, 'failed', step, { error: String(e.message || e).slice(0, 300), code: e.code || null });
+    } else {
       summary.failed += 1;
       // A login or connection problem will hit every other email too: stop here rather than hammer the server.
-      if (['EAUTH', 'ENOCONFIG', 'ECONNECTION', 'ETIMEDOUT', 'ESOCKET', 'EDNS'].includes(e.code)) { summary.aborted = e.code; break; }
+      if (['EAUTH', 'ENOCONFIG', 'ECONNECTION', 'ETIMEDOUT', 'ESOCKET', 'EDNS'].includes(outcome.code)) { summary.aborted = outcome.code; break; }
     }
   }
   return summary;

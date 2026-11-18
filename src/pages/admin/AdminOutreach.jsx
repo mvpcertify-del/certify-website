@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, Check, CheckCircle2, Download, Eye, FileUp, Mail, Pause, RefreshCw, Rocket, Search, Send, XCircle } from 'lucide-react';
+import { AlertCircle, CalendarClock, Check, CheckCircle2, Download, Eye, FileUp, Mail, Pause, RefreshCw, Rocket, Search, Send, XCircle } from 'lucide-react';
 import { apiPost } from '../../lib/apiClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROLES } from '../../utils/roles';
@@ -123,6 +123,17 @@ export default function AdminOutreach() {
     if (!window.confirm('Approve going live? From the next hourly run the system will email real schools and universities, within the daily limit.')) return;
     act('live', () => call('outreach-approve-live'), 'Live. The first emails go out at the next hourly run, inside each recipient\'s business hours.');
   };
+  const sendAllTests = () => act('tests', async () => {
+    if (formDirty) await call('outreach-update-settings', form);
+    for (const step of [1, 2, 3]) await call('outreach-send-test', { to: form.test_recipient, step });
+  }, `All 3 test emails sent to ${form.test_recipient}. Check that inbox (and the spam folder).`);
+  const sendNow = (row) => {
+    const outside = row.businessNow ? '' : `
+
+Note: it is outside their business hours right now.`;
+    if (!window.confirm(`Send email ${row.step} of 3 to ${row.institution} now?${outside}`)) return;
+    act(`now-${row.id}`, () => call('outreach-send-now', { id: row.id }), `Email ${row.step} sent to ${row.institution}.`);
+  };
   const pause = () => act('pause', () => call('outreach-pause'), 'Paused: back to dry run. Nothing will be sent.');
 
   const pickFile = (e) => {
@@ -207,6 +218,32 @@ export default function AdminOutreach() {
           </section>
 
           <section className="otr__panel">
+            <h2 className="ntf__h2"><CalendarClock size={18} /> Schedule</h2>
+            <p className="ntf__muted">Who gets which email and when, shown in the recipient&apos;s own time. Follow-ups keep their day-4 and day-9 times; new leads are spread out so no day goes over the limit (an estimate: the real run also depends on the hourly limit). You can also send one yourself right now.</p>
+            {!data.canSendNow && <p className="ntf__muted">&quot;Send now&quot; is off: {data.sendNowBlockers.join('; ')}.</p>}
+            {data.schedule.length === 0 ? <p className="ntf__empty">Nothing is scheduled. Add leads below.</p> : (
+              <div className="ntf__table-wrap">
+                <table className="ntf__table">
+                  <thead><tr><th>Institution</th><th>Country</th><th>Email</th><th>Their time</th><th>Your time</th><th>State</th><th /></tr></thead>
+                  <tbody>
+                    {data.schedule.map((r) => (
+                      <tr key={r.id}>
+                        <td><strong>{r.institution}</strong><br /><span className="ntf__muted">{r.email}</span></td>
+                        <td>{r.country || '-'}<br /><span className="ntf__muted">{r.timezone}</span></td>
+                        <td>{['Introduction', 'Follow-up', 'Final follow-up'][r.step - 1]}<br /><span className="ntf__muted">email {r.step} of 3, day {[1, 4, 9][r.step - 1]}</span></td>
+                        <td>{r.local}</td>
+                        <td>{when(r.plannedAt)}</td>
+                        <td><span className={`otr__badge ${r.state === 'due' ? 'otr__badge--needs_timezone' : ''}`}>{{ due: 'Due now', waiting: 'Waiting', planned: 'Planned' }[r.state]}</span></td>
+                        <td><button type="button" className="ntf__btn" disabled={!!busy || !data.canSendNow} onClick={() => sendNow(r)}><Send size={14} /> Send now</button></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+
+          <section className="otr__panel">
             <h2 className="ntf__h2"><Mail size={18} /> Settings</h2>
             <div className="otr__form">
               <label>Calendly link
@@ -232,6 +269,7 @@ export default function AdminOutreach() {
             <div className="otr__row">
               <button type="button" className="ntf__btn ntf__btn--primary" onClick={saveSettings} disabled={!!busy || !formDirty}>Save</button>
               <button type="button" className="ntf__btn" onClick={sendTest} disabled={!!busy || !form.test_recipient || !form.calendly_url || !data.mailbox.configured}><Send size={15} /> Send test email</button>
+              <button type="button" className="ntf__btn" onClick={sendAllTests} disabled={!!busy || !form.test_recipient || !form.calendly_url || !data.mailbox.configured}><Send size={15} /> Send all 3 tests</button>
               <span className="ntf__muted">New mailboxes warm up: 10 a day the first week, 20 the second, then your limit.</span>
             </div>
           </section>

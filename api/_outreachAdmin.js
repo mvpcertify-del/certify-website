@@ -7,9 +7,9 @@
 import { verifyAdmin, getAdmin } from './_verifyAdmin.js';
 import { createMailer, outreachMailConfig } from './_outreachMail.js';
 import {
-  getSettings, importLeads, renderEmail, liveBlockers, suppress, unsubscribeByToken,
+  getSettings, importLeads, renderEmail, liveBlockers, suppress, unsubscribeByToken, sendStep,
 } from './_outreachEngine.js';
-import { effectiveDailyCap } from './_outreachSchedule.js';
+import { effectiveDailyCap, projectSchedule, resolveSchedule } from './_outreachSchedule.js';
 import { APP_URL } from './_appUrl.js';
 
 const EMAIL_RE = /^[^\s@<>()",;:]+@[^\s@<>()",;:]+\.[A-Za-z]{2,}$/;
@@ -45,6 +45,17 @@ async function overview(db, body) {
 
   const { data: supp } = await db.from('outreach_suppressions').select('email').limit(10000);
 
+  // Who gets which email when, in the recipient's own time.
+  const { data: inPlay } = await db.from('outreach_leads')
+    .select('id, email, institution_name, country, timezone, status, step, next_send_at, created_at')
+    .in('status', ['new', 'in_sequence']).limit(1500);
+  const cap = effectiveDailyCap(settings);
+  const schedule = projectSchedule(inPlay || [], new Date(), cap).slice(0, 200);
+  const sendWhy = [];
+  if (!cfg.configured) sendWhy.push('the outreach mailbox is not connected');
+  if (!settings.calendly_url) sendWhy.push('the Calendly link is not set');
+  if (!settings.test_sent_at) sendWhy.push('send a test email first');
+
   return {
     migrated: true,
     settings: {
@@ -54,7 +65,10 @@ async function overview(db, body) {
     },
     mailbox: { configured: cfg.configured, user: cfg.user || null, host: cfg.host || null },
     blockers: liveBlockers(settings, mail),
-    effectiveDailyCap: effectiveDailyCap(settings),
+    effectiveDailyCap: cap,
+    schedule,
+    canSendNow: sendWhy.length === 0,
+    sendNowBlockers: sendWhy,
     sent24h: (sentRows || []).length,
     suppressed: (supp || []).length,
     counts,
@@ -161,6 +175,31 @@ export async function handleOutreachAction(req, res) {
       if (error) throw error;
       await db.from('outreach_events').insert({ lead_id: null, type: 'approved_live', step: null, detail: { by: auth.caller.id } });
       return res.status(200).json({ ok: true });
+    }
+
+    // The Super Admin sends the next email to one lead right now, instead of waiting for the hourly run.
+    // The same safeguards apply (suppression list, one claim per email); a test must have been sent first.
+    if (action === 'outreach-send-now') {
+      const id = String(body.id || '');
+      if (!/^[0-9a-f-]{36}$/i.test(id)) throw fail(400, 'Missing lead.');
+      const mailer = createMailer();
+      const { settings } = await getSettings(db);
+      const why = [];
+      if (!mailer.configured) why.push('the outreach mailbox is not connected');
+      if (!settings?.calendly_url) why.push('the Calendly link is not set');
+      if (!settings?.test_sent_at) why.push('no test email has been sent yet');
+      if (why.length) throw fail(409, `Cannot send yet: ${why.join('; ')}.`);
+      const { data: lead } = await db.from('outreach_leads').select('*').eq('id', id).maybeSingle();
+      if (!lead) throw fail(404, 'Lead not found.');
+      if (!['new', 'in_sequence'].includes(lead.status) || lead.step >= 3) throw fail(409, 'This lead has nothing left to send.');
+      const { data: blocked } = await db.from('outreach_suppressions').select('email').eq('email', lead.email.toLowerCase()).maybeSingle();
+      if (blocked) throw fail(409, 'This address is on the do-not-email list.');
+      const schedule = resolveSchedule(lead);
+      if (!schedule) throw fail(409, 'Set a country or time zone for this lead first.');
+      const out = await sendStep({ supabase: db, mail: mailer, settings, lead, schedule, by: auth.caller.id });
+      if (out.skipped) throw fail(409, 'This email is already being sent.');
+      if (!out.ok) throw fail(502, `The email was not sent: ${out.error}`);
+      return res.status(200).json({ ok: true, step: out.step });
     }
 
     if (action === 'outreach-pause') {

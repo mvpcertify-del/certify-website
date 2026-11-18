@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  resolveSchedule, findCountry, isBusinessMoment, nextSlot, followUpAt, seedFrom, localParts, effectiveDailyCap, isValidTimezone,
+  resolveSchedule, findCountry, isBusinessMoment, nextSlot, followUpAt, seedFrom, localParts, effectiveDailyCap, isValidTimezone, projectSchedule, formatLocal,
 } from '../../api/_outreachSchedule.js';
 import {
-  renderEmail, htmlToText, importLeads, runOutreachSend, runOutreachReplies, unsubscribeByToken, liveBlockers,
+  renderEmail, htmlToText, importLeads, runOutreachSend, runOutreachReplies, unsubscribeByToken, liveBlockers, sendStep,
 } from '../../api/_outreachEngine.js';
 
 const DAY = 86400000;
@@ -393,4 +393,51 @@ test('the unsubscribe link works once, for a valid token only, and shows nothing
   const mail = fakeMail();
   await run(db, mail, new Date('2026-12-30T10:00:00Z'));
   assert.equal(mail.sent.length, 0);
+});
+
+// ---------------------------------------------------------------------------
+// The schedule the Super Admin sees, and "Send now"
+// ---------------------------------------------------------------------------
+test('the schedule shows the next email of each lead in the recipient own time, soonest first', () => {
+  const leads = [
+    lead({ id: 'a1', email: 'a@x.eg', status: 'in_sequence', step: 1, next_send_at: '2026-11-26T10:28:00Z' }),
+    lead({ id: 'a2', email: 'b@x.eg', status: 'in_sequence', step: 2, next_send_at: '2026-11-23T09:00:00Z' }),
+    lead({ id: 'a3', email: 'c@x.eg', status: 'new', created_at: '2026-11-01T00:00:00Z' }),
+    lead({ id: 'a4', email: 'd@x.org', status: 'new', country: 'Atlantis', timezone: null }), // no time zone: not scheduled
+  ];
+  const plan = projectSchedule(leads, MON_NOON_CAIRO, 40);
+  assert.equal(plan.length, 3);
+  assert.deepEqual(plan.map((p) => p.id).includes('a4'), false);
+  assert.deepEqual([...plan.map((p) => p.plannedAt)], [...plan.map((p) => p.plannedAt)].sort());
+  const f = plan.find((p) => p.id === 'a1');
+  assert.equal(f.step, 2); assert.equal(f.state, 'waiting'); assert.equal(f.timezone, 'Africa/Cairo');
+  assert.equal(f.local, formatLocal(new Date('2026-11-26T10:28:00Z'), 'Africa/Cairo'));
+  assert.equal(plan.find((p) => p.id === 'a2').state, 'due');
+  assert.equal(plan.find((p) => p.id === 'a3').step, 1);
+});
+
+test('new leads are spread over days so that no day passes the daily limit', () => {
+  const leads = Array.from({ length: 7 }, (_, i) => lead({ id: `n${i}`, email: `n${i}@x.eg`, status: 'new', created_at: `2026-11-0${i + 1}T00:00:00Z` }));
+  const plan = projectSchedule(leads, MON_NOON_CAIRO, 3);
+  const perDay = {};
+  for (const p of plan) { const d = p.plannedAt.slice(0, 10); perDay[d] = (perDay[d] || 0) + 1; }
+  assert.equal(plan.length, 7);
+  assert.ok(Math.max(...Object.values(perDay)) <= 3, JSON.stringify(perDay));
+  assert.ok(Object.keys(perDay).length >= 3);
+});
+
+test('"Send now" sends the next email through the same safeguards and records who did it', async () => {
+  const db = fakeDb({ outreach_settings: [LIVE], outreach_leads: [lead()] });
+  const mail = fakeMail();
+  const sched = resolveSchedule(lead());
+  const out = await sendStep({ supabase: db, mail, settings: LIVE, lead: db.t.outreach_leads[0], schedule: sched, now: MON_NOON_CAIRO, by: 'admin-1' });
+  assert.deepEqual(out, { ok: true, step: 1 });
+  assert.equal(mail.sent.length, 1);
+  assert.equal(db.t.outreach_leads[0].step, 1);
+  const ev = db.t.outreach_events.find((e) => e.type === 'sent');
+  assert.equal(ev.detail.manual, true); assert.equal(ev.detail.by, 'admin-1');
+  // pressing it again for the same state cannot send a second copy of email 1
+  const again = await sendStep({ supabase: db, mail, settings: LIVE, lead: lead(), schedule: sched, now: MON_NOON_CAIRO });
+  assert.equal(again.skipped, true);
+  assert.equal(mail.sent.length, 1);
 });
