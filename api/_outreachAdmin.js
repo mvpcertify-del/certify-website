@@ -247,6 +247,61 @@ export async function handleOutreachAction(req, res) {
       return res.status(200).json({ ok: true });
     }
 
+    // ---- people (several contacts per institution) ----
+    if (action === 'outreach-contacts') {
+      const leadId = String(body.lead_id || '');
+      if (!/^[0-9a-f-]{36}$/i.test(leadId)) throw fail(400, 'Missing institution.');
+      const { data, error } = await db.from('outreach_contacts').select('*').eq('lead_id', leadId)
+        .order('active', { ascending: false }).order('created_at', { ascending: true });
+      if (error) throw fail(409, 'The people table is not set up yet. Run supabase/phase49_outreach_contacts.sql in Supabase.');
+      return res.status(200).json({ contacts: data || [] });
+    }
+
+    if (action === 'outreach-contact-save') {
+      const leadId = String(body.lead_id || '');
+      if (!/^[0-9a-f-]{36}$/i.test(leadId)) throw fail(400, 'Missing institution.');
+      const name = String(body.name || '').trim().slice(0, 120);
+      if (!name) throw fail(400, 'Enter the name of the person.');
+      const email = String(body.email || '').trim().toLowerCase();
+      if (email && !EMAIL_RE.test(email)) throw fail(400, 'That email address is not valid.');
+      const row = {
+        name, job_title: String(body.job_title || '').trim().slice(0, 120) || null, email: email || null,
+        whatsapp: String(body.whatsapp || '').trim().slice(0, 40) || null, active: body.active !== false, updated_at: new Date().toISOString(),
+      };
+      const id = String(body.id || '');
+      const q = /^[0-9a-f-]{36}$/i.test(id)
+        ? db.from('outreach_contacts').update(row).eq('id', id).eq('lead_id', leadId)
+        : db.from('outreach_contacts').insert({ ...row, lead_id: leadId });
+      const { error } = await q;
+      if (error) throw fail(409, 'Could not save. Run supabase/phase49_outreach_contacts.sql in Supabase if you have not yet.');
+      return res.status(200).json({ ok: true });
+    }
+
+    if (action === 'outreach-contact-delete') {
+      const id = String(body.id || '');
+      if (!/^[0-9a-f-]{36}$/i.test(id)) throw fail(400, 'Missing person.');
+      await db.from('outreach_contacts').delete().eq('id', id);
+      return res.status(200).json({ ok: true });
+    }
+
+    // Make this person the one the emails are addressed to (for example when the old contact left).
+    if (action === 'outreach-contact-main') {
+      const id = String(body.id || '');
+      if (!/^[0-9a-f-]{36}$/i.test(id)) throw fail(400, 'Missing person.');
+      const { data: c } = await db.from('outreach_contacts').select('lead_id, name, email, active').eq('id', id).maybeSingle();
+      if (!c) throw fail(404, 'Person not found.');
+      if (!c.email) throw fail(400, 'This person has no email address yet.');
+      if (!c.active) throw fail(409, 'This person is marked as no longer working there.');
+      const { data: sup } = await db.from('outreach_suppressions').select('email').eq('email', c.email).maybeSingle();
+      if (sup) throw fail(409, 'That address is on the do-not-email list.');
+      const { data: clash } = await db.from('outreach_leads').select('id').eq('email', c.email).neq('id', c.lead_id).maybeSingle();
+      if (clash) throw fail(409, 'That address is already used by another institution in the list.');
+      const { error } = await db.from('outreach_leads').update({ email: c.email, contact_name: c.name, updated_at: new Date().toISOString() }).eq('id', c.lead_id);
+      if (error) throw error;
+      await db.from('outreach_events').insert({ lead_id: c.lead_id, type: 'admin_main_contact', step: null, detail: { by: auth.caller.id } });
+      return res.status(200).json({ ok: true });
+    }
+
     return res.status(400).json({ error: `Unknown action: ${action}` });
   } catch (e) {
     console.error('[outreach-admin]', action, e?.message || e);

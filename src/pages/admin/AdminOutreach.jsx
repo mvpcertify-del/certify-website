@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertCircle, ArrowRight, CalendarClock, Check, CheckCircle2, Download, Eye, FileUp, History, LayoutDashboard, Mail,
-  Pause, RefreshCw, Rocket, Search, Send, Settings, Users, XCircle,
+  Pause, RefreshCw, Rocket, Search, Send, Settings, Users, XCircle, UserPlus,
 } from 'lucide-react';
 import { apiPost } from '../../lib/apiClient';
 import { useAuth } from '../../contexts/AuthContext';
@@ -127,6 +127,27 @@ export default function AdminOutreach() {
   const [previewLeadId, setPreviewLeadId] = useState('');
   const [csv, setCsv] = useState(null);
   const [picked, setPicked] = useState([]);
+  const [peopleLead, setPeopleLead] = useState(null);
+  const [people, setPeople] = useState([]);
+  const [person, setPerson] = useState(null);
+  const loadPeople = useCallback(async (leadId) => {
+    try { setPeople((await call('outreach-contacts', { lead_id: leadId })).contacts || []); } catch (e) { setPeople([]); setError(e.message || 'Could not load the people.'); }
+  }, []);
+  const openPeople = (l) => { setPeopleLead(l); setPerson(null); setPeople([]); loadPeople(l.id); };
+  const savePerson = async () => {
+    setBusy('person'); setError(''); setNotice('');
+    try { await call('outreach-contact-save', { ...person, lead_id: peopleLead.id }); setPerson(null); await loadPeople(peopleLead.id); setNotice('Saved.'); } catch (e) { setError(e.message || 'Could not save.'); } finally { setBusy(''); }
+  };
+  const personAction = async (action, p, okText, confirmText) => {
+    if (confirmText && !window.confirm(confirmText)) return;
+    setBusy('person'); setError(''); setNotice('');
+    try {
+      await call(action, { id: p.id, lead_id: peopleLead.id, name: p.name, job_title: p.job_title, email: p.email, whatsapp: p.whatsapp, active: !p.active });
+      await loadPeople(peopleLead.id);
+      if (action === 'outreach-contact-main') await load();
+      setNotice(okText);
+    } catch (e) { setError(e.message || 'That did not work.'); } finally { setBusy(''); }
+  };
   const fileRef = useRef(null);
 
   const goTab = (t) => { setTab(t); try { localStorage.setItem('otr_tab', t); } catch { /* storage blocked */ } };
@@ -464,6 +485,7 @@ ${outside} of them are outside business hours right now.` : '';
                               {['new', 'in_sequence', 'completed'].includes(l.status) && <button type="button" className="ntf__btn" disabled={!!busy} onClick={() => leadAction(l.id, 'replied', 'Marked as replied.')}>Replied</button>}
                               {l.status === 'stopped' && l.step === 0 && <button type="button" className="ntf__btn" disabled={!!busy} onClick={() => leadAction(l.id, 'restart', 'Restarted.')}>Restart</button>}
                               {!['unsubscribed', 'bounced'].includes(l.status) && <button type="button" className="ntf__btn" disabled={!!busy} onClick={() => leadAction(l.id, 'unsubscribe', 'Added to the do-not-email list.')}>Do not email</button>}
+                              <button type="button" className="ntf__btn" onClick={() => openPeople(l)}><UserPlus size={13} /> People</button>
                               <button type="button" className="ntf__btn" disabled={!!busy} onClick={() => leadAction(l.id, 'delete', 'Deleted.')}>Delete</button>
                             </td>
                           </tr>
@@ -473,6 +495,54 @@ ${outside} of them are outside business hours right now.` : '';
                   </div>
                 )}
               </Section>
+
+              {peopleLead && (
+                <Section icon={UserPlus} title={`People at ${peopleLead.institution_name}`} desc="Everyone you know at this institution. Add a person, edit anyone at any time, and mark someone as no longer working there. 'Use for emails' makes that person the one our emails are addressed to.">
+                  {people.length === 0 && !person && <p className="ntf__empty">No people added yet.</p>}
+                  {people.length > 0 && (
+                    <div className="ntf__table-wrap">
+                      <table className="ntf__table">
+                        <thead><tr><th>Name</th><th>Job title</th><th>Email</th><th>WhatsApp</th><th /></tr></thead>
+                        <tbody>
+                          {people.map((p) => (
+                            <tr key={p.id} style={p.active ? undefined : { opacity: 0.55 }}>
+                              <td><strong>{p.name}</strong>{!p.active && <><br /><span className="otr__badge otr__badge--bounced">Left</span></>}{p.email && p.email === peopleLead.email && <><br /><span className="otr__badge otr__badge--completed">Gets our emails</span></>}</td>
+                              <td>{p.job_title || '-'}</td>
+                              <td>{p.email || '-'}</td>
+                              <td>{p.whatsapp || '-'}</td>
+                              <td className="otr__actions">
+                                <button type="button" className="ntf__btn" disabled={!!busy} onClick={() => setPerson({ ...p })}>Edit</button>
+                                {p.active && p.email && p.email !== peopleLead.email && <button type="button" className="ntf__btn" disabled={!!busy} onClick={() => personAction('outreach-contact-main', p, `${p.name} now gets the emails.`, `Address the emails to ${p.name} (${p.email}) from now on?`)}>Use for emails</button>}
+                                <button type="button" className="ntf__btn" disabled={!!busy} onClick={() => personAction('outreach-contact-save', p, p.active ? 'Marked as no longer working there.' : 'Marked as working there again.')}>{p.active ? 'Left' : 'Back'}</button>
+                                <button type="button" className="ntf__btn" disabled={!!busy} onClick={() => personAction('outreach-contact-delete', p, 'Deleted.', `Delete ${p.name}?`)}>Delete</button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                  {person ? (
+                    <>
+                      <div className="otr__form">
+                        <Field label="Name"><input type="text" value={person.name || ''} onChange={(e) => setPerson({ ...person, name: e.target.value })} /></Field>
+                        <Field label="Job title"><input type="text" value={person.job_title || ''} onChange={(e) => setPerson({ ...person, job_title: e.target.value })} /></Field>
+                        <Field label="Email"><input type="email" value={person.email || ''} onChange={(e) => setPerson({ ...person, email: e.target.value })} /></Field>
+                        <Field label="WhatsApp" hint="With country code, for example +855 10 654 666"><input type="text" value={person.whatsapp || ''} onChange={(e) => setPerson({ ...person, whatsapp: e.target.value })} /></Field>
+                      </div>
+                      <div className="otr__row">
+                        <button type="button" className="ntf__btn ntf__btn--primary" disabled={!!busy || !(person.name || '').trim()} onClick={savePerson}>Save person</button>
+                        <button type="button" className="ntf__btn" onClick={() => setPerson(null)}>Cancel</button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="otr__row">
+                      <button type="button" className="ntf__btn ntf__btn--primary" onClick={() => setPerson({ name: '', job_title: '', email: '', whatsapp: '', active: true })}><UserPlus size={14} /> Add a person</button>
+                      <button type="button" className="ntf__btn" onClick={() => setPeopleLead(null)}>Close</button>
+                    </div>
+                  )}
+                </Section>
+              )}
             </>
           )}
 
