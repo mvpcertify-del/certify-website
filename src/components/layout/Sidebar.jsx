@@ -208,10 +208,12 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     { path: '/notifications', labelKey: 'nav.notifications', icon: Bell, kind: KIND_VIEW, permissions: [PERMISSIONS.VIEW_DASHBOARD] },
   ];
 
-  // Client (16 Nov): the Main Admin keeps the existing menu and gets the collapsible QMS & ERP suite under it.
+  // Client (18 Nov): the Main Admin's menu is organised by department. Every page sits in a
+  // collapsible department (CRM, Sales, Marketing, Operations, Finance, Legal, ...), and the
+  // QMS & ERP suite is one more group. Other roles keep their flat menu.
   const showSuite = MODULE_MENU_ROLES.includes(user?.role);
 
-  const filteredNav = navItems.filter(item =>
+  const filteredNav = showSuite ? [] : navItems.filter(item =>
     hasAnyPermission(user?.role, item.permissions) &&
     !(item.excludeRoles && item.excludeRoles.includes(user?.role)) &&
     (!item.allowedRoles || item.allowedRoles.includes(user?.role))
@@ -287,7 +289,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
               collapsed={collapsed}
               onExpand={onToggleCollapse}
               onNavigate={onClose}
-              zoneIds={['suite']}
+              zoneIds={['core', 'suite', 'system']}
             />
           )}
         </nav>

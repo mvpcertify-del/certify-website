@@ -135,6 +135,7 @@ export const ZONES = [
         icon: Megaphone,
         agent: 'Maya AI',
         items: [
+          { id: 'mkt_email', label: 'Email Marketing (Outreach)', path: '/admin/outreach' },
           { id: 'mkt_lead_gen', label: 'Lead Generation Pipelines', path: '/marketing/lead-gen', soon: true,
             blurb: 'Target companies by country, sector and ISO need, verified and handed to the CRM outreach hub.' },
           { id: 'mkt_campaigns', label: 'Platform Campaigns', path: '/marketing/campaigns', soon: true,
@@ -252,6 +253,7 @@ export const ZONES = [
         items: [
           { id: 'set_profile', label: 'My Profile', path: '/profile' },
           { id: 'set_notifications', label: 'Notifications', path: '/notifications' },
+          { id: 'set_notification_automation', label: 'Notification Automation', path: '/admin/notifications' },
           { id: 'set_currency', label: 'Currency & FX Rate Engine', path: '/settings/currency', soon: true,
             blurb: 'Base currency and exchange rates used across quotes, invoices and reports.' },
           { id: 'set_logs', label: 'System Audit Logs', path: '/settings/logs', soon: true,
