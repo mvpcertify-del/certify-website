@@ -39,8 +39,15 @@
          public/brand-mark.png (and regenerate api/_brandAsset.js) rather than
          reintroducing a second, competing icon link here.
     ==================================================================== -->
-    <link rel="icon" type="image/png" href="/brand-mark.png" />
-    <link rel="apple-touch-icon" href="/logo-square.png" />
+    <!-- Client (18 Nov): the icon must show in the tab and in Google and Bing results. Search engines
+         want a SQUARE icon whose size is a multiple of 48px, at a stable URL, plus /favicon.ico. The
+         set below is the white Certify.cx mark on the brand green (public/logo-square.png), so it
+         reads on both light and dark browser themes. No SVG icon is linked on purpose (see above). -->
+    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192x192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
     <!-- Browser UI chrome (Android address bar, iOS PWA, Safari tab strip).
          Matches --color-bg-primary in src/index.css for each theme. -->
