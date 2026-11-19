@@ -3,10 +3,9 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowRight, BadgeCheck, Check, Clock, MapPin, ShieldCheck, Sparkles, Users, Award, CircleCheck } from 'lucide-react';
 import PublicNav from '../../components/layout/PublicNav';
 import SegmentBar from '../../components/layout/SegmentBar';
-import { BlogFooter } from '../blog/BlogParts';
+import MicroFooter from './MicroFooter';
 import usePageMeta from '../blog/usePageMeta';
 import { apiPost } from '../../lib/apiClient';
-import '../blog/Blog.css'; // the footer's styles
 import './MicroLanding.css';
 import './MicroBudget.css';
 
@@ -127,6 +126,21 @@ export default function MicroBudget() {
             ))}
           </ol>
           <div className="mb-cert"><ShieldCheck size={22} aria-hidden="true" /> <span><strong>Certificate valid for 1 year</strong> is included.</span></div>
+
+          <h3 className="mb-sub">Who can apply</h3>
+          <ul className="mb-list">
+            <li><Check size={14} /> MICRO companies only</li>
+            <li><Check size={14} /> 1 to 9 employees</li>
+            <li><Check size={14} /> 1 location</li>
+            <li><Check size={14} /> ISO 9001 only. One standard per company.</li>
+          </ul>
+
+          <h3 className="mb-sub">What happens next</h3>
+          <ol className="mb-next">
+            <li>You send your request with your budget.</li>
+            <li>Our team reviews it.</li>
+            <li>If approved, you get the confirmation by email within 3 hours.</li>
+          </ol>
         </section>
 
         {/* ---------------- Right: the request ---------------- */}
@@ -204,7 +218,7 @@ export default function MicroBudget() {
         </ul>
       </section>
 
-      <BlogFooter />
+      <MicroFooter />
     </div>
   );
 }

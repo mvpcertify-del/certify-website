@@ -74,3 +74,10 @@
 @media (max-width: 520px) {
   .mb-row { grid-template-columns: 1fr; }
 }
+
+.mb-list { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 8px; }
+.mb-list li { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--m-text-2); }
+.mb-list svg { color: var(--m-green); flex: none; }
+.mb-next { margin: 0; padding-left: 20px; display: grid; gap: 8px; font-size: 14px; line-height: 1.5; color: var(--m-text-2); }
+.mb-next li::marker { color: var(--m-green); font-weight: 700; }
+.mb .mb-terms { padding-top: 12px; padding-bottom: 56px; }
