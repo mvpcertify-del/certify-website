@@ -11,7 +11,8 @@
     "test:auth": "node --test \"tests/auth/*.test.mjs\"",
     "test:notify": "node --test \"tests/notify/*.test.mjs\"",
     "test:outreach": "node --test \"tests/outreach/*.test.mjs\"",
-    "test": "npm run test:odoo && npm run test:auth && npm run test:notify && npm run test:outreach",
+    "test:micro": "node --test \"tests/micro/*.test.mjs\"",
+    "test": "npm run test:odoo && npm run test:auth && npm run test:notify && npm run test:outreach && npm run test:micro",
     "preview": "vite preview"
   },
   "dependencies": {

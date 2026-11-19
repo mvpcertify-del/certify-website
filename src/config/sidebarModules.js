@@ -134,6 +134,7 @@ const DEPARTMENTS_RAW = [
         ['referral', 'Referral Sales Agent'],
       ]),
       heading('sales_h_pages', 'PAGES'),
+      { id: 'sales_micro_offers', label: 'Micro Offer Requests', path: '/admin/micro-offers' },
       { id: 'crm_outreach', label: 'Lead & Outreach Hub', path: '/crm/outreach', soon: true,
         blurb: 'Leads handed over from Marketing, with approved English and local-language email sequences and automated follow-ups.' },
       { id: 'sales_inquiries', label: 'Marketplace Inquiries', path: '/sales/inquiries', soon: true,

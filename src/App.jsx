@@ -38,6 +38,8 @@ const ModuleComingSoon = lazy(() => import('./pages/modules/ModuleComingSoon'));
 const LandingPage = lazy(() => import('./pages/landing/LandingPage'));
 const PublicGapAnalysis = lazy(() => import('./pages/public/PublicGapAnalysis'));
 const MicroLanding = lazy(() => import('./pages/micro/MicroLanding'));
+const MicroBudget = lazy(() => import('./pages/micro/MicroBudget'));
+const AdminMicroOffers = lazy(() => import('./pages/admin/AdminMicroOffers'));
 const SmeLanding = lazy(() => import('./pages/sme/SmeLanding'));
 // Public pay-first checkout (no signup gate). Replaces the old /start-checkout
 // auth gate — buyers create their account AT payment. /start-checkout is kept
@@ -167,6 +169,8 @@ function AppRoutes() {
 
           {/* ---- MICRO companies (1-9 employees) landing page ---- */}
           <Route path="/micro" element={<MicroLanding />} />
+          {/* The "What's your budget?" special offer for MICRO companies (shared on social media and LinkedIn). */}
+          <Route path="/micro/budget" element={<MicroBudget />} />
 
           <Route path="/gap-analysis" element={<PublicGapAnalysis />} />
 
@@ -218,6 +222,13 @@ function AppRoutes() {
             <Route path="/main-dashboard" element={
               <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}>
                 <MainDashboard />
+              </ProtectedRoute>
+            } />
+
+            {/* MICRO offer requests (Super Admin): approve or decline, the company is told by email. */}
+            <Route path="/admin/micro-offers" element={
+              <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}>
+                <AdminMicroOffers />
               </ProtectedRoute>
             } />
 

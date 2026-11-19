@@ -34,6 +34,7 @@ import { handleOdooAdminAction, runOdooSyncIfEnabled } from './_odooAdmin.js';
 import { runNotificationEngine } from './_notifyEngine.js';
 import { handleNotifyAdminAction } from './_notifyAdmin.js';
 import { handleOutreachAction } from './_outreachAdmin.js';
+import { handleMicroOfferAction } from './_microOffer.js';
 import { runOutreachSend, runOutreachReplies, unsubscribeByToken } from './_outreachEngine.js';
 import { createMailer } from './_outreachMail.js';
 
@@ -141,6 +142,11 @@ export default async function handler(req, res) {
   // Cold outreach: the Super Admin page, and the public unsubscribe page.
   if (typeof req.body?.action === 'string' && req.body.action.startsWith('outreach-')) {
     return handleOutreachAction(req, res);
+  }
+
+  // MICRO "What's your budget?" offer: the public request form, and the Super Admin decision.
+  if (typeof req.body?.action === 'string' && req.body.action.startsWith('micro-offer-')) {
+    return handleMicroOfferAction(req, res);
   }
 
   // Odoo admin actions (test connection, sync now, retry). Super Admin only;

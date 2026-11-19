@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  ArrowRight, Check, Users, Globe, CircleDollarSign, Play, Lock,
+  ArrowRight, Check, Users, Globe, CircleDollarSign, Play, Sparkles,
   FilePen, Search, ClipboardCheck, ChartNoAxesCombined, BadgeCheck,
-  ShieldCheck, Award, Linkedin, Twitter, Youtube, Mail,
+  ShieldCheck, Linkedin, Twitter, Youtube, Mail,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROLES } from '../../utils/roles';
@@ -98,6 +98,7 @@ export default function MicroLanding() {
   const navigate = useNavigate();
   const [busyStage, setBusyStage] = useState(null);
   const [payError, setPayError] = useState('');
+  const [budget, setBudget] = useState(900); // the "What's your budget?" slider, $500 to $1,500
 
   // Signed-in visitors must never be sent to /signup (it is the account-creation
   // wizard and has no "you are already signed in" state). Clients get the
@@ -241,7 +242,6 @@ export default function MicroLanding() {
             {plans.map((p) => (
               <article key={p.key} className="micro-plan">
                 <div className="micro-plan__top">
-                  <span className="micro-tag">{t('micro.stepLabel', { n: p.n })}</span>
                   <span className={`micro-tag micro-tag--pill${p.n === 1 ? ' micro-tag--plain' : ''}`}>{p.tag}</span>
                 </div>
                 <div className="micro-plan__head">
@@ -276,14 +276,22 @@ export default function MicroLanding() {
               </article>
             ))}
 
-            <aside className="micro-cert">
-              <div className="micro-cert__head">
-                <Award size={30} strokeWidth={1.5} className="micro-cert__icon" />
-                <h3>{t('micro.certTitle')}</h3>
-              </div>
-              <p>{t('micro.certDesc')}</p>
-              <p>{t('micro.certNote')}</p>
-              <Lock size={22} className="micro-cert__lock" />
+            <aside className="micro-cert micro-offer">
+              <p className="micro-offer__head"><span className="micro-offer__new"><Sparkles size={12} aria-hidden="true" /> NEW</span> <span>Limited time offer</span></p>
+              <h3 className="micro-offer__title">What&apos;s your budget?</h3>
+              <p>ISO 9001 for MICRO companies (1 to 9 employees, 1 location). Pick a price from $500 to $1,500.</p>
+              <div className="micro-offer__price" aria-live="polite">${budget.toLocaleString('en-US')}</div>
+              <input
+                className="micro-offer__range" type="range" min={500} max={1500} step={50} value={budget}
+                style={{ '--fill': `${((budget - 500) / 1000) * 100}%` }}
+                onChange={(e) => setBudget(Number(e.target.value))} aria-label="Budget in US dollars"
+              />
+              <div className="micro-offer__ends"><span>$500</span><span>$1,500</span></div>
+              <p className="micro-offer__incl">Includes all 3 stages and a certificate valid for 1 year.</p>
+              <Link to={`/micro/budget?budget=${budget}`} className="micro-btn micro-btn--block micro-btn--primary">
+                Request this offer <ArrowRight size={16} />
+              </Link>
+              <p className="micro-offer__fine">Valid up to 31.12.2026. Confirmation in 3 hours if approved.</p>
             </aside>
           </div>
 

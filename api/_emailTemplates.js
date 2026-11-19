@@ -1321,3 +1321,54 @@ export function investorCampaignEmail({ subject, body: bodyText, unsubscribeUrl,
 
   return { subject, html, text };
 }
+
+// ---- MICRO offer (ISO 9001, USD 500 to 1,500). Sent from support@certify.cx. ----
+
+export function microOfferReceivedEmail({ name, companyName, budget, hours = 3 }) {
+  const greeting = name ? `Hi ${escapeHtml(name)},` : 'Hello,';
+  const subject = 'We received your ISO 9001 offer request';
+  const html = layout({
+    title: subject,
+    preheader: `We will reply within ${hours} hours.`,
+    bodyHtml: `
+      ${heading('Request received')}
+      ${body(`${greeting} thank you for your interest in the MICRO offer for ISO 9001. Our team is reviewing your request and will reply by email <strong>within ${hours} hours</strong>.`)}
+      ${detailsBox([
+        ['Company', escapeHtml(companyName)],
+        ['Standard', 'ISO 9001'],
+        ['Your budget', `$${Number(budget).toLocaleString('en-US')}`],
+      ])}
+      ${body('The offer is for companies with 1 to 9 employees and 1 location. It includes all three stages and a certificate valid for one year.')}
+      ${muted(`Questions? Reply to this email or write to ${SUPPORT_EMAIL}.`)}`,
+  });
+  const text = `${name ? `Hi ${name},` : 'Hello,'}\n\nThank you for your interest in the MICRO offer for ISO 9001. We are reviewing your request and will reply by email within ${hours} hours.\n\nCompany: ${companyName}\nStandard: ISO 9001\nYour budget: $${budget}\n\nQuestions? ${SUPPORT_EMAIL}\n\n— ${BRAND_TEXT}`;
+  return { subject, html, text };
+}
+
+export function microOfferDecisionEmail({ name, companyName, budget, decision, note, appUrl }) {
+  const greeting = name ? `Hi ${escapeHtml(name)},` : 'Hello,';
+  const approved = decision === 'approved';
+  const subject = approved ? 'Your ISO 9001 offer request is approved' : 'Your ISO 9001 offer request';
+  const noteHtml = note ? `<p style="margin:0 0 24px;padding:14px 16px;border-left:3px solid ${ACCENT};background:#fafbfd;font-size:14px;line-height:1.6;color:${TEXT_PRIMARY};">${escapeHtml(note)}</p>` : '';
+  const site = appUrl || 'https://certify.cx';
+  const html = layout({
+    title: subject,
+    bodyHtml: approved
+      ? `
+      ${heading('Good news: your request is approved')}
+      ${body(`${greeting} your MICRO offer request for <strong>${escapeHtml(companyName)}</strong> has been approved at <strong>$${Number(budget).toLocaleString('en-US')}</strong>. It covers all three stages of the ISO 9001 programme and a certificate valid for one year.`)}
+      ${noteHtml}
+      ${body('A member of our team will contact you shortly with the next steps. You can also reply to this email.')}
+      <p style="margin:0 0 28px;">${button(site, 'Visit Certify.cx')}</p>`
+      : `
+      ${heading('About your request')}
+      ${body(`${greeting} thank you for applying for the MICRO offer for ISO 9001. Unfortunately we are not able to approve the request for <strong>${escapeHtml(companyName)}</strong> at this time.`)}
+      ${noteHtml}
+      ${body('You are welcome to reply to this email, or take our free gap analysis to see where your company stands today.')}
+      <p style="margin:0 0 28px;">${button(`${site}/gap-analysis`, 'Start the free gap analysis')}</p>`,
+  });
+  const text = approved
+    ? `${name ? `Hi ${name},` : 'Hello,'}\n\nYour MICRO offer request for ${companyName} is approved at $${budget}. It covers all three stages and a certificate valid for one year.\n${note ? `\n${note}\n` : ''}\nOur team will contact you shortly with the next steps.\n\n— ${BRAND_TEXT}`
+    : `${name ? `Hi ${name},` : 'Hello,'}\n\nThank you for applying for the MICRO offer for ISO 9001. Unfortunately we cannot approve the request for ${companyName} at this time.\n${note ? `\n${note}\n` : ''}\nYou are welcome to reply to this email.\n\n— ${BRAND_TEXT}`;
+  return { subject, html, text };
+}
