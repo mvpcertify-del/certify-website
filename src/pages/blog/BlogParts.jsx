@@ -106,7 +106,7 @@ export function BlogFooter() {
         </div>
         <div className="blog-footer__bar">
           <span>&copy; Certify.cx&trade; | Operated by Certify International OPC Private Limited</span>
-          <span>Global Compliance Marketplace</span>
+          <span>Certify.cx™ — Global Compliance Marketplace</span>
         </div>
       </div>
     </footer>

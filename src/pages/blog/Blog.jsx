@@ -15,7 +15,7 @@ const TILE_TOPICS = ['iso-9001', 'iso-14001', 'iso-21001', 'iso-27001'];
 // topics, free gap analysis, follow us), a call to action and the footer.
 // Articles are plain data in src/content/blog/posts.js.
 export default function Blog() {
-  usePageMeta('Blog | Certify.cx™ - Global Compliance Marketplace', 'Guides on ISO standards, certification, audits and accreditation from the Certify.cx editorial team.');
+  usePageMeta('Blog | Certify.cx™ — Global Compliance Marketplace', 'Guides on ISO standards, certification, audits and accreditation from the Certify.cx editorial team.');
 
   const [params, setParams] = useSearchParams();
   const topic = CATEGORIES[params.get('topic')] ? params.get('topic') : 'all';

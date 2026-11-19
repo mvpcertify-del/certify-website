@@ -15,7 +15,7 @@ export default function BlogPost() {
   const { slug } = useParams();
   const post = getPost(slug);
 
-  usePageMeta(post ? `${post.title} | Certify.cx™ Blog` : 'Blog | Certify.cx™', post?.excerpt);
+  usePageMeta(post ? `${post.title} | Certify.cx™ — Global Compliance Marketplace` : 'Blog | Certify.cx™ — Global Compliance Marketplace', post?.excerpt);
 
   useEffect(() => { window.scrollTo(0, 0); }, [slug]);
 

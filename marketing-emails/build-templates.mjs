@@ -99,7 +99,7 @@ const footer = (unsub) => `
                 <td style="padding:0 9px 0 0;"><img src="${IMG}logo-white.png" width="26" height="24" alt="Certify.cx" style="display:block;border:0;"></td>
                 <td style="font-family:${F};font-weight:700;font-size:15px;color:${C.text};">Certify.cx<span style="font-size:9px;vertical-align:super;">&trade;</span></td>
               </tr></table>
-              <div style="font-family:${F};font-size:17px;font-weight:700;color:${C.text};padding-top:14px;">The Global Compliance Marketplace.</div>
+              <div style="font-family:${F};font-size:17px;font-weight:700;color:${C.text};padding-top:14px;">Certify.cx&trade; &mdash; Global Compliance Marketplace</div>
               <div style="font-family:${F};font-size:13px;line-height:20px;color:${C.mute};padding-top:4px;">Connect with trusted providers, access compliance solutions and get certified, anytime, anywhere.</div>
             </td></tr>
             <tr><td style="padding:16px 0 6px;font-family:${F};font-size:12px;line-height:22px;">

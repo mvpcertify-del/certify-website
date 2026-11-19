@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 
-const DEFAULT_TITLE = 'Certify.cx™ - ISO Certification Platform';
+const DEFAULT_TITLE = 'Certify.cx™ — Global Compliance Marketplace';
 const DEFAULT_DESCRIPTION =
-  'Certify.cx™ — ISO Certification Marketplace. Apply for ISO certifications, manage audits, and streamline your compliance workflow.';
+  'Certify.cx™ — Global Compliance Marketplace. Connect with trusted providers, apply for ISO certifications, manage audits and streamline your compliance workflow.';
 const SITE_URL = 'https://certify.cx';
 
 function upsertMeta(attribute, key, content) {

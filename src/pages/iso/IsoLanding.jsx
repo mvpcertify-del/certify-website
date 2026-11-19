@@ -77,7 +77,7 @@ export default function IsoLanding() {
   return (
     <>
       <SEO
-        title={`${config.fullCode || config.code} | ${t(config.titleKey)} | Certify.cx`}
+        title={`${config.fullCode || config.code} | ${t(config.titleKey)} | Certify.cx™ — Global Compliance Marketplace`}
         description={t(config.descKey)}
         path={`/iso/${config.slug}`}
       />

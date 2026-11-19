@@ -10,7 +10,7 @@ import './Blog.css';
 // /blog/categories: every category in one place, in two groups (the ISO standards and the other
 // topics), each with its latest articles. A category opens the article list filtered to it.
 export default function BlogCategories() {
-  usePageMeta('Blog categories | Certify.cx™', 'Browse Certify.cx articles by ISO standard and topic.');
+  usePageMeta('Blog categories | Certify.cx™ — Global Compliance Marketplace', 'Browse Certify.cx articles by ISO standard and topic.');
 
   const groups = useMemo(() => {
     const posts = sortedPosts();

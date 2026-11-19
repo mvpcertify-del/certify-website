@@ -963,7 +963,7 @@ export function investorOutreachEmail({ contactName, fundName, replyUrl }) {
 
   const html = layout({
     title: subject,
-    preheader: 'Certify.cx — Global Compliance Marketplace. An introduction and an invitation to talk.',
+    preheader: 'Certify.cx™ — Global Compliance Marketplace. An introduction and an invitation to talk.',
     bodyHtml: `
       ${heading('A quick introduction from Certify.cx')}
       ${body(`Hi ${greetName}, I'm Midhat Abu Ghazaleh, Founder &amp; CEO of <strong style="color:${TEXT_PRIMARY};">${BRAND_TEXT}</strong> — a platform that takes a business from ISO certification application through audit to an accredited certificate, all in one place.`)}
