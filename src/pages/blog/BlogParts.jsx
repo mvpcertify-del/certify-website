@@ -1,12 +1,12 @@
 import { Link } from 'react-router-dom';
 import {
-  Award, GraduationCap, ClipboardCheck, ShieldCheck, FileCheck2, Compass, Leaf, Lock, Wheat, TriangleAlert,
+  Award, GraduationCap, ClipboardCheck, ShieldCheck, FileCheck2, Compass, Leaf, Lock, Wheat, TriangleAlert, Handshake,
   Clock, CalendarDays, Linkedin, Youtube, Twitter, Facebook,
 } from 'lucide-react';
 import BrandLogo from '../../components/ui/BrandLogo';
 import { CATEGORIES, formatDate } from '../../content/blog/posts';
 
-const ICONS = { Award, GraduationCap, ClipboardCheck, ShieldCheck, FileCheck2, Compass, Leaf, Lock, Wheat, TriangleAlert };
+const ICONS = { Award, GraduationCap, ClipboardCheck, ShieldCheck, FileCheck2, Compass, Leaf, Lock, Wheat, TriangleAlert, Handshake };
 
 /** A topic's icon, used on the topic tiles. */
 export function TopicIcon({ topic, size = 20 }) {
@@ -74,7 +74,7 @@ export function SocialLinks() {
 }
 
 export function BlogFooter() {
-  const topics = ['iso-9001', 'iso-14001', 'iso-21001', 'iso-27001'];
+  const topics = ['about-certify', 'iso-certification', 'micro-companies', 'compliance-audits'];
   return (
     <footer className="blog-footer">
       <div className="blog-wrap">
@@ -93,7 +93,7 @@ export function BlogFooter() {
             <Link to="/micro/budget">What&apos;s your budget? (MICRO offer)</Link>
           </div>
           <div className="blog-footer__col">
-            <h4>ISO Standards</h4>
+            <h4>Topics</h4>
             {topics.map((k) => <Link key={k} to={`/blog?topic=${k}`}>{CATEGORIES[k].label}</Link>)}
             <Link to="/blog">All topics</Link>
           </div>

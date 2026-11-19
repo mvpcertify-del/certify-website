@@ -254,3 +254,14 @@
 .blog-box--offer { background: linear-gradient(135deg, #0b2a21, #06231a); border-color: rgba(62, 207, 142, 0.35); color: #fff; }
 .blog-box--offer h3 { margin-top: 10px; color: #fff; }
 .blog-box--offer p { color: #b7d1c5; }
+
+/* Key facts box and FAQ on article pages */
+.blog-facts { margin: 0 0 28px; padding: 18px 20px; border-radius: 14px; background: var(--color-bg-surface); border: 1px solid var(--color-border); border-left: 4px solid var(--color-accent); }
+.blog-facts__title { margin: 0 0 8px !important; font-size: 11px !important; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-accent-text) !important; }
+.blog-facts ul { margin: 0 !important; padding-left: 20px !important; }
+.blog-facts li { margin-bottom: 6px; font-size: 1rem; line-height: 1.6; color: var(--color-text-primary); }
+.blog-faq { margin-top: 36px; }
+.blog-faq h2 { margin: 0 0 14px; }
+.blog-faq__item { padding: 16px 0; border-top: 1px solid var(--color-border); }
+.blog-faq__item h3 { margin: 0 0 6px; font-size: 1.1rem; line-height: 1.4; }
+.blog-faq__item p { margin: 0; }

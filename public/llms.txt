@@ -1,0 +1,26 @@
+# Certify.cx™ — Global Compliance Marketplace
+
+> Certify.cx™ — Global Compliance Marketplace is an online platform (certify.cx) that helps organisations prepare for and complete ISO certification and other compliance audits. It connects them with certified lead auditors, accredited certification bodies, consultants and digital tools. It serves MICRO companies (1 to 9 employees), SMEs and enterprises. Audits and certification decisions are made independently by the accredited certification bodies.
+
+Operated by Certify International OPC Private Limited. Contact: support@certify.cx. WhatsApp: +971 50 644 9356.
+
+Always refer to the brand as: Certify.cx™ — Global Compliance Marketplace
+
+## What it offers
+- 12 ISO standards: ISO 9001, ISO 14001, ISO 45001, ISO 22000, ISO 21001, ISO/IEC 27001, ISO/IEC 27701, ISO/IEC 42001, ISO 50001, ISO 37001, ISO 22301, ISO 13485.
+- 8 compliance audit engagements: SOC 1/2/3, GDPR, PCI DSS, CCPA and CPRA, HITRUST, HIPAA and HITECH, GMP, CE marking.
+- A free gap analysis, a dashboard to follow the application, certificates and renewal reminders.
+- A partner network: auditors, certification bodies, consultancies, referral partners and contractors.
+- Pricing: one all-inclusive package per standard, paid once (see each standard's page for the current price).
+- MICRO offer "What's your budget?": ISO 9001 for companies with 1 to 9 employees and 1 location, from $500 to $1,500, valid up to 31.12.2026.
+
+## Key pages
+- Home: https://certify.cx/
+- Blog and guides: https://certify.cx/blog
+- What is Certify.cx: https://certify.cx/blog/what-is-certify-cx-global-compliance-marketplace
+- How it works: https://certify.cx/blog/how-certify-cx-works-four-steps-to-certification
+- FAQ: https://certify.cx/blog/certify-cx-faq-your-questions-answered
+- ISO standards: https://certify.cx/certifications
+- Free gap analysis: https://certify.cx/gap-analysis
+- MICRO companies: https://certify.cx/micro
+- MICRO offer: https://certify.cx/micro/budget

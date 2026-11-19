@@ -19,8 +19,8 @@ export default function BlogCategories() {
     const keys = Object.keys(CATEGORIES).filter((k) => byCat[k]);
     const card = (k) => ({ key: k, ...CATEGORIES[k], posts: byCat[k] });
     return [
-      { title: 'ISO standards', note: 'Guides organised by the standard they cover.', items: keys.filter((k) => CATEGORIES[k].badge).map(card) },
-      { title: 'Topics', note: 'Audits, risk, compliance, certification bodies and practical guides.', items: keys.filter((k) => !CATEGORIES[k].badge).map(card) },
+      { title: 'Certify.cx', note: 'The platform, the standards, MICRO companies and compliance audits.', items: keys.filter((k) => CATEGORIES[k].group === 'Certify.cx').map(card) },
+      { title: 'Sectors and partners', note: 'Guides for education and for professionals who join the network.', items: keys.filter((k) => CATEGORIES[k].group !== 'Certify.cx').map(card) },
     ].filter((g) => g.items.length);
   }, []);
 
@@ -32,7 +32,7 @@ export default function BlogCategories() {
         <div className="blog-wrap">
           <Link to="/blog" className="blog-back"><ArrowLeft size={15} /> All articles</Link>
           <h1 className="blog-post-hero__title">Categories</h1>
-          <p className="blog-post-hero__excerpt">Browse every article by ISO standard or topic.</p>
+          <p className="blog-post-hero__excerpt">Browse every article by topic.</p>
         </div>
       </header>
 

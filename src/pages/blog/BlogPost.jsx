@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Lightbulb } from 'lucide-react';
 import PublicNav from '../../components/layout/PublicNav';
-import { AUTHOR, CATEGORIES, formatDate, getPost, sortedPosts } from '../../content/blog/posts';
+import { AUTHOR, BRAND, CATEGORIES, formatDate, getPost, sortedPosts } from '../../content/blog/posts';
 import { BlogCover, PostCard, BlogFooter } from './BlogParts';
 import usePageMeta from './usePageMeta';
+import useJsonLd from './useJsonLd';
 import './Blog.css';
 
 const slugify = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -18,6 +19,27 @@ export default function BlogPost() {
   usePageMeta(post ? `${post.title} | Certify.cx™ — Global Compliance Marketplace` : 'Blog | Certify.cx™ — Global Compliance Marketplace', post?.excerpt);
 
   useEffect(() => { window.scrollTo(0, 0); }, [slug]);
+
+  // Structured data: the article, and its questions and answers, for search engines and AI assistants.
+  const url = post ? `https://certify.cx/blog/${post.slug}` : '';
+  useJsonLd('article', post && {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: post.title,
+    description: post.excerpt,
+    datePublished: post.date,
+    dateModified: post.date,
+    inLanguage: 'en',
+    mainEntityOfPage: url,
+    image: 'https://certify.cx/og-image.png',
+    author: { '@type': 'Organization', name: 'Certify.cx', url: 'https://certify.cx/' },
+    publisher: { '@type': 'Organization', name: BRAND, url: 'https://certify.cx/', logo: { '@type': 'ImageObject', url: 'https://certify.cx/logo-square.png' } },
+  });
+  useJsonLd('faq', post?.faq?.length ? {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: post.faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+  } : null);
 
   // Reading progress bar.
   const [progress, setProgress] = useState(0);
@@ -79,6 +101,12 @@ export default function BlogPost() {
 
           <div className="blog-prose">
             <BlogCover post={post} large />
+            {post.keyFacts?.length > 0 && (
+              <aside className="blog-facts" aria-label="Key facts">
+                <p className="blog-facts__title">Key facts</p>
+                <ul>{post.keyFacts.map((f) => <li key={f}>{f}</li>)}</ul>
+              </aside>
+            )}
             {post.body.map((b, i) => {
               if (b.t === 'h2') return <h2 key={i} id={slugify(b.x)}>{b.x}</h2>;
               if (b.t === 'ul') return <ul key={i}>{b.items.map((it) => <li key={it}>{it}</li>)}</ul>;
@@ -86,6 +114,18 @@ export default function BlogPost() {
               if (b.t === 'note') return <aside key={i} className="blog-note"><Lightbulb size={18} aria-hidden="true" /><p>{b.x}</p></aside>;
               return <p key={i}>{b.x}</p>;
             })}
+
+            {post.faq?.length > 0 && (
+              <section className="blog-faq" aria-labelledby="blog-faq-h">
+                <h2 id="blog-faq-h">Frequently asked questions</h2>
+                {post.faq.map((f) => (
+                  <div key={f.q} className="blog-faq__item">
+                    <h3>{f.q}</h3>
+                    <p>{f.a}</p>
+                  </div>
+                ))}
+              </section>
+            )}
 
             <section className="blog-cta blog-cta--inline">
               <div>

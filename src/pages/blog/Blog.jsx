@@ -9,7 +9,7 @@ import './Blog.css';
 
 const SLIDE_MS = 6000;
 const PAGE = 6;
-const TILE_TOPICS = ['iso-9001', 'iso-14001', 'iso-21001', 'iso-27001'];
+const TILE_TOPICS = ['about-certify', 'iso-certification', 'micro-companies', 'compliance-audits'];
 
 // /blog: hero slider (text left, cover right), topic tiles, latest articles with a sidebar (popular
 // topics, free gap analysis, follow us), a call to action and the footer.
