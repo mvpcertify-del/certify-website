@@ -1372,3 +1372,39 @@ export function microOfferDecisionEmail({ name, companyName, budget, decision, n
     : `${name ? `Hi ${name},` : 'Hello,'}\n\nThank you for applying for the MICRO offer for ISO 9001. Unfortunately we cannot approve the request for ${companyName} at this time.\n${note ? `\n${note}\n` : ''}\nYou are welcome to reply to this email.\n\n— ${BRAND_TEXT}`;
   return { subject, html, text };
 }
+
+// ---- Outreach campaign report (Super Admin). Sent from support@certify.cx with the CSV attached. ----
+
+export function outreachReportEmail({ name, report, dashboardUrl }) {
+  const t = report.totals;
+  const greeting = name ? `Hi ${escapeHtml(name)},` : 'Hello,';
+  const subject = `Outreach campaign report: ${t.emails} email${t.emails === 1 ? '' : 's'} sent to ${t.contacted} institution${t.contacted === 1 ? '' : 's'}`;
+  const perDay = report.perDay.map(([d, n]) => `${d}: ${n}`).join(', ') || 'no emails sent yet';
+  const notesHtml = report.notes.length
+    ? `<p style="margin:0 0 6px;font-size:14px;font-weight:600;color:${TEXT_PRIMARY};">Worth a look</p><ul style="margin:0 0 24px;padding-left:20px;font-size:14px;line-height:1.7;color:${TEXT_SECONDARY};">${report.notes.map((n) => `<li>${escapeHtml(n)}</li>`).join('')}</ul>`
+    : '';
+  const html = layout({
+    title: subject,
+    preheader: `${t.emails} sent, ${t.replies} replies, ${t.bounces} bounces.`,
+    bodyHtml: `
+      ${heading('Outreach campaign report')}
+      ${body(`${greeting} here is the report for the university outreach campaign, as of ${escapeHtml(report.generatedAt.slice(0, 16).replace('T', ' '))} UTC. The full list, one row per institution, is attached as a CSV file.`)}
+      ${detailsBox([
+        ['Emails sent', `${t.emails} (Email 1: ${t.email1}, Email 2: ${t.email2}, Email 3: ${t.email3})`],
+        ['Institutions contacted', `${t.contacted} of ${t.leads} on the list`],
+        ['Replies', String(t.replies)],
+        ['Automatic replies', String(t.autoReplies)],
+        ['Bounced', String(t.bounces)],
+        ['Unsubscribed', String(t.unsubscribes)],
+        ['Failed to send', String(t.failed)],
+        ['Not started', String(t.notStarted)],
+        ['In sequence', String(t.inSequence)],
+        ['Sent per day (UTC)', escapeHtml(perDay)],
+      ])}
+      ${notesHtml}
+      ${body('Open and click counts are not tracked. Replies and Calendly bookings are the numbers that matter.')}
+      <p style="margin:0 0 28px;">${button(dashboardUrl, 'Open the Outreach page')}</p>`,
+  });
+  const text = `Outreach campaign report\n\nEmails sent: ${t.emails} (Email 1: ${t.email1}, Email 2: ${t.email2}, Email 3: ${t.email3})\nInstitutions contacted: ${t.contacted} of ${t.leads}\nReplies: ${t.replies}\nBounced: ${t.bounces}\nUnsubscribed: ${t.unsubscribes}\nFailed: ${t.failed}\nNot started: ${t.notStarted}\nSent per day (UTC): ${perDay}\n${report.notes.length ? `\nWorth a look:\n- ${report.notes.join('\n- ')}\n` : ''}\nThe full list is attached as a CSV file.\n\n— ${BRAND_TEXT}`;
+  return { subject, html, text };
+}

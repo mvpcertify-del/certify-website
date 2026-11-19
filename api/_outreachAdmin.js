@@ -11,6 +11,9 @@ import {
 } from './_outreachEngine.js';
 import { effectiveDailyCap, projectSchedule, resolveSchedule } from './_outreachSchedule.js';
 import { APP_URL } from './_appUrl.js';
+import { buildReport } from './_outreachReport.js';
+import { sendViaResend } from './_resendClient.js';
+import { outreachReportEmail } from './_emailTemplates.js';
 
 const EMAIL_RE = /^[^\s@<>()",;:]+@[^\s@<>()",;:]+\.[A-Za-z]{2,}$/;
 const STATUSES = ['new', 'in_sequence', 'completed', 'replied', 'unsubscribed', 'bounced', 'stopped', 'needs_timezone'];
@@ -157,6 +160,22 @@ export async function handleOutreachAction(req, res) {
 
   try {
     if (action === 'outreach-overview') return res.status(200).json(await overview(db, body));
+
+    // The campaign report: the numbers and one CSV row per institution.
+    if (action === 'outreach-report') return res.status(200).json(await buildReport(db));
+
+    // The same report by email, with the CSV attached. It goes only to the signed-in Super Admin's own address.
+    if (action === 'outreach-email-report') {
+      const { data: me } = await db.from('profiles').select('email, full_name').eq('id', auth.caller.id).maybeSingle();
+      if (!me?.email) throw fail(409, 'Your account has no email address.');
+      const report = await buildReport(db);
+      const mail = outreachReportEmail({ name: (me.full_name || '').split(' ')[0], report, dashboardUrl: `${APP_URL}/admin/outreach` });
+      await sendViaResend({
+        to: me.email, ...mail,
+        attachments: [{ filename: `outreach-report-${report.generatedAt.slice(0, 10)}.csv`, content: Buffer.from(`\uFEFF${report.csv}`, 'utf8').toString('base64') }],
+      });
+      return res.status(200).json({ ok: true, to: me.email });
+    }
 
     if (action === 'outreach-import') {
       const result = await importLeads(db, body.rows, { source: 'csv' });

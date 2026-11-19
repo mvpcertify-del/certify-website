@@ -247,6 +247,18 @@ ${outside} of them are outside business hours right now.` : '';
     if (fileRef.current) fileRef.current.value = '';
     setNotice(`Imported ${r.added}. Skipped: ${r.duplicates} already in the list, ${r.suppressed} on the do-not-email list, ${r.invalid} invalid${r.needsTimezone ? `; ${r.needsTimezone} need a time zone` : ''}.${r.problems?.length ? ` ${r.problems.slice(0, 3).join(' ')}` : ''}`);
   });
+  const downloadReport = () => act('report', async () => {
+    const r = await call('outreach-report');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([`\uFEFF${r.csv}`], { type: 'text/csv;charset=utf-8' }));
+    a.download = `outreach-report-${r.generatedAt.slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }, 'Report downloaded.');
+  const emailReport = () => act('report', async () => {
+    const r = await call('outreach-email-report');
+    setNotice(`Report sent to ${r.to}.`);
+  });
   const downloadTemplate = () => {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([TEMPLATE_CSV], { type: 'text/csv' }));
@@ -382,10 +394,14 @@ ${outside} of them are outside business hours right now.` : '';
                   <div className="otr__stat"><strong>{data.analytics.unsubscribes}</strong><span className="otr__stat-label">Unsubscribed</span><span className="otr__muted">Asked not to be emailed.</span></div>
                   <div className="otr__stat"><strong>{data.analytics.failed}</strong><span className="otr__stat-label">Failed to send</span><span className="otr__muted">Mail server refused; it is retried.</span></div>
                 </div>
+                <div className="otr__row">
+                  <button type="button" className="ntf__btn" onClick={downloadReport} disabled={!!busy}><Download size={15} /> Download report (CSV)</button>
+                  <button type="button" className="ntf__btn ntf__btn--primary" onClick={emailReport} disabled={!!busy}><Mail size={15} /> Email me this report</button>
+                </div>
                 <p className="otr__muted">Open and click counts are not tracked. Tracking pixels and rewritten links make cold emails more likely to land in spam, and many mail apps hide opens anyway. Replies and Calendly bookings are the numbers that matter.</p>
               </Section>
 
-              <Section icon={Send} title="Emails sent\" desc="Every institution that has received an email, and which of the three emails it has had, with the date and time.">
+              <Section icon={Send} title="Emails sent" desc="Every institution that has received an email, and which of the three emails it has had, with the date and time.">
                 {data.sentLog.length === 0 ? <p className="ntf__empty">Nothing has been sent to any institution yet.</p> : (
                   <div className="ntf__table-wrap">
                     <table className="ntf__table">
