@@ -90,6 +90,7 @@ export function BlogFooter() {
             <Link to="/blog">Blog</Link>
             <Link to="/certifications">Get certified</Link>
             <Link to="/gap-analysis">Gap analysis</Link>
+            <Link to="/micro/budget">What&apos;s your budget? (MICRO offer)</Link>
           </div>
           <div className="blog-footer__col">
             <h4>ISO Standards</h4>

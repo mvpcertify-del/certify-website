@@ -355,3 +355,5 @@
     display: flex;
   }
 }
+
+.pubnav__new { display: inline-block; margin-left: 4px; padding: 1px 6px; border-radius: 999px; font-size: 9px; font-weight: 800; letter-spacing: 0.06em; color: #04140e; background: var(--color-accent); vertical-align: middle; }

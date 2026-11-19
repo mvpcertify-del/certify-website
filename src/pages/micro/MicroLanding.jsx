@@ -197,6 +197,9 @@ export default function MicroLanding() {
                 {t('micro.ctaSecondary')} <Play size={14} />
               </a>
             </div>
+            <Link to="/micro/budget" className="micro-newlink">
+              <span>NEW</span> What&apos;s your budget? ISO 9001 from $500 to $1,500 <ArrowRight size={14} />
+            </Link>
           </div>
 
           <div className="micro-hero__visual">
@@ -324,6 +327,7 @@ export default function MicroLanding() {
               <Link to="/#standards">{t('nav.standards')}</Link>
               <Link to="/#benefits">{t('nav.benefits')}</Link>
               <Link to="/micro">{t('nav.micro')}</Link>
+              <Link to="/micro/budget">{t('nav.microOffer', "What's your budget? (MICRO offer)")}</Link>
             </div>
             <div className="micro-footer__col">
               <h4>{t('micro.footResources')}</h4>

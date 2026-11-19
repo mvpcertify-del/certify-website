@@ -68,6 +68,7 @@ export default function PublicNav() {
           <a href={anchor('standards')} className="pubnav__link">{t('nav.standards')}</a>
           <a href={anchor('benefits')} className="pubnav__link">{t('nav.benefits')}</a>
           <Link to="/blog" className="pubnav__link">{t('nav.blog', 'Blog')}</Link>
+          <Link to="/micro/budget" className="pubnav__link pubnav__link--offer">{t('nav.microOfferShort', "What's your budget?")} <span className="pubnav__new">NEW</span></Link>
           <LanguageSwitcher variant="landing" />
           <button
             type="button"
@@ -158,6 +159,7 @@ export default function PublicNav() {
           <a href={anchor('standards')} className="pubnav__mobile-link" onClick={closeMobile}>{t('nav.standards')}</a>
           <a href={anchor('benefits')} className="pubnav__mobile-link" onClick={closeMobile}>{t('nav.benefits')}</a>
           <Link to="/blog" className="pubnav__mobile-link" onClick={closeMobile}>{t('nav.blog', 'Blog')}</Link>
+          <Link to="/micro/budget" className="pubnav__mobile-link" onClick={closeMobile}>{t('nav.microOfferShort', "What's your budget?")} <span className="pubnav__new">NEW</span></Link>
           {isLoggedIn ? (
             <>
               <div className="pubnav__mobile-profile">

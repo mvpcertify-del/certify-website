@@ -230,6 +230,7 @@ export default function LandingPage() {
               <Link to="/sme#compliance-audits">{t('compliance.title')}</Link>
               <Link to="/sme#benefits">{t('nav.benefits')}</Link>
               <Link to="/micro">{t('nav.micro')}</Link>
+              <Link to="/micro/budget">{t('nav.microOffer', "What's your budget? (MICRO offer)")}</Link>
               <Link to="/certifications">{t('landing.footerGetCertified')}</Link>
             </div>
             <div className="home__footer-col">

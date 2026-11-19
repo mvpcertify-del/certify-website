@@ -240,6 +240,7 @@ export default function SmeLanding() {
               <a href="#standards" className="landing__footer-link">{t('landing.footerISOStandards')}</a>
               <a href="#compliance-audits" className="landing__footer-link">{t('compliance.title')}</a>
               <a href="#benefits" className="landing__footer-link">{t('nav.benefits')}</a>
+              <Link to="/micro/budget" className="landing__footer-link">{t('nav.microOffer', "What's your budget? (MICRO offer)")}</Link>
               <Link to="/certifications" className="landing__footer-link">{t('landing.footerGetCertified')}</Link>
             </div>
             <div className="landing__footer-col">

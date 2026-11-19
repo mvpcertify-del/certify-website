@@ -250,3 +250,7 @@
 @media (max-width: 900px) { .blog-cats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .blog-cats-grid { grid-template-columns: 1fr; } }
 .blog-tile--all { text-decoration: none; }
+
+.blog-box--offer { background: linear-gradient(135deg, #0b2a21, #06231a); border-color: rgba(62, 207, 142, 0.35); color: #fff; }
+.blog-box--offer h3 { margin-top: 10px; color: #fff; }
+.blog-box--offer p { color: #b7d1c5; }

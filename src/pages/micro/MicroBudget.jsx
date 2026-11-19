@@ -6,6 +6,7 @@ import SegmentBar from '../../components/layout/SegmentBar';
 import { BlogFooter } from '../blog/BlogParts';
 import usePageMeta from '../blog/usePageMeta';
 import { apiPost } from '../../lib/apiClient';
+import '../blog/Blog.css'; // the footer's styles
 import './MicroLanding.css';
 import './MicroBudget.css';
 

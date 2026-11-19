@@ -174,6 +174,13 @@ export default function Blog() {
 
           {/* ---- Sidebar ---- */}
           <aside className="blog-side">
+            <section className="blog-box blog-box--offer">
+              <span className="blog-pill blog-pill--outline">New &middot; Limited time offer</span>
+              <h3>What&apos;s your budget?</h3>
+              <p>ISO 9001 for MICRO companies, from $500 to $1,500. Valid up to 31.12.2026.</p>
+              <Link to="/micro/budget" className="blog-btn">See the offer <ArrowRight size={16} /></Link>
+            </section>
+
             <section className="blog-box blog-box--accent">
               <ClipboardCheck size={30} aria-hidden="true" className="blog-box__icon" />
               <h3>Free gap analysis</h3>
