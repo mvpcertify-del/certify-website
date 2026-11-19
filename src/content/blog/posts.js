@@ -16,6 +16,7 @@
 //   slug       URL part:  /blog/<slug>
 //   title      headline
 //   excerpt    one or two sentences for cards, search results and the page description
+//   draft      true = not published yet (kept here for later)
 //   category   one of CATEGORIES (the key)
 //   date       ISO date (YYYY-MM-DD)
 //   minutes    reading time
@@ -23,6 +24,9 @@
 //   body       array of blocks:
 //                { t: 'p', x: 'text' }          paragraph
 //                { t: 'h2', x: 'text' }         section heading (feeds the table of contents)
+//                { t: 'h3', x: 'text' }         sub heading
+//                { t: 'table', head: [...], rows: [[...]] }  table
+//              Any text may contain links written as [words](/path).
 //                { t: 'ul', items: [...] }      bullet list
 //                { t: 'ol', items: [...] }      numbered list
 //                { t: 'note', x: 'text' }       highlighted tip
@@ -42,9 +46,114 @@ export const CATEGORIES = {
   partners: { label: 'Partner Network', badge: 'Partners', sub: 'Auditors, bodies, consultancies', group: 'Sectors and partners', color: '#2DD4BF', icon: 'Handshake' },
 };
 
-export const POSTS = [
+const ALL_POSTS = [
+  {
+    slug: 'how-to-get-iso-9001-certification-step-by-step-guide',
+    title: 'How to Get ISO 9001 Certification: Step-by-Step Guide, Requirements and Cost',
+    excerpt: 'A practical guide to ISO 9001 certification: what it is, the requirements, the eight steps to get certified, what it costs and how long it takes, with answers to the most common questions.',
+    category: 'iso-certification',
+    date: '2026-11-19',
+    minutes: 9,
+    keyFacts: [
+      'ISO 9001 is the international standard for a quality management system (QMS). The current edition is ISO 9001:2015.',
+      'To get ISO 9001 certified you build and run a QMS, then pass an independent audit by a certification body.',
+      'Use an accredited certification body. Accreditation is what makes the certificate trusted across borders.',
+      'On Certify.cx™ — Global Compliance Marketplace, ISO 9001 is currently US$1,500 for up to 50 employees at 1 location, paid once.',
+      'MICRO companies (1 to 9 employees) can choose a price from $500 to $1,500 under a limited-time offer valid up to 31.12.2026.',
+    ],
+    body: [
+      { t: 'p', x: 'ISO 9001 certification shows customers, regulators and partners that your organisation runs a quality management system that works. It is the most widely used management system standard in the world, and it is often the first certificate a company is asked for.' },
+      { t: 'p', x: 'This guide explains what ISO 9001 certification is, what the requirements are, the eight steps to get certified, what it costs and how long it takes. It is written for owners, quality managers and anyone preparing for a first audit. At [Certify.cx™ — Global Compliance Marketplace](/certifications) we help organisations with exactly this process, and we explain where that help fits along the way.' },
+
+      { t: 'h2', x: 'What is ISO 9001 certification?' },
+      { t: 'p', x: 'ISO 9001 is an international standard published by the International Organization for Standardization (ISO). It sets out the requirements for a quality management system (QMS). The current edition is ISO 9001:2015.' },
+      { t: 'p', x: 'The standard does not tell you how to make your product. It tells you how to manage your organisation so that you consistently deliver products and services that meet customer and legal requirements, and so that you keep improving.' },
+      { t: 'p', x: 'Certification is the independent confirmation of that. An external certification body audits your system against the standard. If you meet the requirements, it issues an ISO 9001 certificate.' },
+
+      { t: 'h2', x: 'Who needs ISO 9001 certification?' },
+      { t: 'p', x: 'The standard is not tied to an industry or a size. It is used by factories, software companies, schools, clinics, contractors and one-person consultancies. Organisations usually go for certification when:' },
+      { t: 'ul', items: ['A customer or tender asks for an ISO 9001 certificate.', 'They want to win larger contracts or sell in new markets.', 'They need a structured way to cut errors, rework and complaints.', 'They are growing and the way of working has to be written down.', 'Investors or partners want proof of good management.'] },
+
+      { t: 'h2', x: 'Benefits of ISO 9001 certification' },
+      { t: 'ul', items: ['Customer confidence: a recognised certificate is a short answer to "can we trust you?"', 'Access to tenders and contracts that require ISO 9001.', 'Fewer mistakes, complaints and wasted effort.', 'Clear roles and processes, so the business depends less on a few people.', 'Better decisions, because you measure results.', 'A habit of improvement that continues after the audit.'] },
+
+      { t: 'h2', x: 'ISO 9001 requirements: what the standard asks for' },
+      { t: 'p', x: 'ISO 9001:2015 is organised in ten clauses. Clauses 1 to 3 cover scope, references and terms. Clauses 4 to 10 contain the requirements you are audited against.' },
+      { t: 'table', head: ['Clause', 'Topic', 'What it asks you to do'], rows: [
+        ['4', 'Context of the organization', 'Understand your issues and interested parties, and define the scope of your system.'],
+        ['5', 'Leadership', 'Top management shows commitment, sets a quality policy and assigns roles.'],
+        ['6', 'Planning', 'Address risks and opportunities and set measurable quality objectives.'],
+        ['7', 'Support', 'Provide resources, competent people, communication and documented information.'],
+        ['8', 'Operation', 'Plan and control how you deliver products and services, including suppliers.'],
+        ['9', 'Performance evaluation', 'Monitor results, measure customer satisfaction, run internal audits and management reviews.'],
+        ['10', 'Improvement', 'Deal with nonconformities, take corrective action and keep improving.'],
+      ] },
+
+      { t: 'h2', x: 'How to get ISO 9001 certification: 8 steps' },
+      { t: 'h3', x: 'Step 1. Run a gap analysis' },
+      { t: 'p', x: 'Compare what you do today with what the standard requires. Most organisations already meet part of it. The gap analysis shows what is missing, so you only build what you need. You can take a free [gap analysis on Certify.cx](/gap-analysis) before you commit to anything.' },
+      { t: 'h3', x: 'Step 2. Decide the scope' },
+      { t: 'p', x: 'The scope is the part of the organisation the certificate covers: sites, products, services and processes. Keep it honest. Too narrow can mislead customers. Too wide makes the project heavier than it needs to be.' },
+      { t: 'h3', x: 'Step 3. Get top management on board' },
+      { t: 'p', x: 'The standard puts responsibility on top management. Someone senior must own the policy, approve the objectives and attend the management review. Without that, the system becomes paperwork.' },
+      { t: 'h3', x: 'Step 4. Build your quality management system' },
+      { t: 'p', x: 'Write down how work is really done. You will need, at least:' },
+      { t: 'ul', items: ['A quality policy and measurable objectives.', 'Descriptions of your main processes and who does what.', 'A way to handle risks, complaints and problems.', 'Records that prove the processes were followed.'] },
+      { t: 'p', x: 'Keep it proportionate. Auditors look for a system that works, not the thickest manual.' },
+      { t: 'h3', x: 'Step 5. Run the system and collect records' },
+      { t: 'p', x: 'The system must operate for a period before the audit, so there is real evidence: completed audits, corrective actions, training records and results against objectives.' },
+      { t: 'h3', x: 'Step 6. Hold an internal audit and a management review' },
+      { t: 'p', x: 'Both are required by the standard and both are your best rehearsal. They find problems while they are still cheap to fix.' },
+      { t: 'h3', x: 'Step 7. Choose an accredited certification body' },
+      { t: 'p', x: 'Pick a body accredited for ISO 9001 and for your sector, by an accreditation body that is part of the International Accreditation Forum (IAF) arrangement. Accreditation is why a certificate is recognised across borders. On [Certify.cx](/certifications) the package and price are shown up front and the accredited partners are part of the platform.' },
+      { t: 'h3', x: 'Step 8. Pass the certification audit' },
+      { t: 'p', x: 'The audit has two stages, shown in the table below. If you pass, the certificate is issued.' },
+      { t: 'table', head: ['Stage', 'What happens', 'What the auditor looks at'], rows: [
+        ['Stage 1', 'Readiness review', 'Your documents, scope, internal audit and management review plans.'],
+        ['Stage 2', 'Main audit', 'Whether the system is implemented and effective, through interviews and records.'],
+        ['Surveillance audits', 'Usually once a year', 'That the system is still working and improving.'],
+        ['Recertification', 'Before the end of the three-year cycle', 'A full review to renew the certificate.'],
+      ] },
+
+      { t: 'h2', x: 'How much does ISO 9001 certification cost?' },
+      { t: 'p', x: 'The cost depends mainly on the size of your organisation, the number of locations and the audit days needed. Preparation costs (time, training, consultants) come on top of the audit.' },
+      { t: 'p', x: 'Certify.cx™ offers ISO 9001 as one all-inclusive package, paid once. At the time of writing:' },
+      { t: 'table', head: ['Option', 'Price', 'Who it is for'], rows: [
+        ['ISO 9001 certification package', 'US$1,500', 'Organisations of up to 50 employees at 1 location. Larger sizes and extra locations add a flat surcharge shown at checkout.'],
+        ['MICRO offer "What’s your budget?"', '$500 to $1,500', 'Companies with 1 to 9 employees and 1 location. You choose the price. Includes all three stages and a certificate valid for one year. Valid up to 31.12.2026.'],
+      ] },
+      { t: 'note', x: 'Prices change. The [ISO 9001 page](/iso/iso-9001) always shows the current price, and the MICRO offer page is at certify.cx/micro/budget.' },
+      { t: 'p', x: 'Questions worth asking about any quote:' },
+      { t: 'ul', items: ['Does it include the audit or only the preparation?', 'How many people and locations does it cover?', 'What do surveillance audits and recertification cost?', 'Are there extra fees for travel, reports or re-audits?'] },
+
+      { t: 'h2', x: 'How long does it take to get ISO 9001 certified?' },
+      { t: 'p', x: 'It depends on the size of the organisation and how much of the system already exists. A very small company with clear processes can move quickly. A larger company with several sites takes longer. A gap analysis gives you a realistic picture before you plan dates.' },
+
+      { t: 'h2', x: 'How Certify.cx helps you get ISO 9001 certified' },
+      { t: 'p', x: 'Certify.cx™ — Global Compliance Marketplace connects organisations with certified lead auditors, accredited certification bodies and digital tools, so the steps above live in one place.' },
+      { t: 'ul', items: ['A free gap analysis to start.', 'One package and one price for ISO 9001, with the rules for size and locations published.', 'Four steps: create an account, choose the certification, pay securely, pass the audit and receive the certificate.', 'A dashboard to follow your application, documents and audit dates, with email updates.', 'A reminder before your certificate is due for renewal.', 'A MICRO path for companies with 1 to 9 employees, starting with a free gap assessment.', 'Sara, an AI compliance assistant, and support in nine languages.'] },
+      { t: 'p', x: 'Audits and certification decisions are made independently by the accredited certification bodies. Certify.cx organises the marketplace and the workflow around the audit, and cannot promise that you will pass. [Start the free gap analysis](/gap-analysis) or [see the MICRO offer](/micro/budget).' },
+
+      { t: 'h2', x: 'Common mistakes to avoid' },
+      { t: 'ul', items: ['Copying another company’s manual instead of describing your own processes.', 'Leaving the project to one person with no support from top management.', 'Writing records the day before the audit.', 'Treating the internal audit as a formality.', 'Choosing a certification body that is not accredited.', 'Making the scope wider than you can cover.'] },
+
+      { t: 'h2', x: 'After certification: keeping your ISO 9001 certificate' },
+      { t: 'p', x: 'A certificate is normally valid for three years. In between, surveillance audits check that the system is alive. Before the cycle ends, a recertification audit renews it. Treat the system as the way you run the business, and these audits become routine.' },
+    ],
+    faq: [
+      { q: 'What is ISO 9001 certification?', a: 'It is an independent confirmation by a certification body that your organisation has a quality management system that meets the requirements of ISO 9001:2015.' },
+      { q: 'How do I get ISO 9001 certified?', a: 'Run a gap analysis, define the scope, get top management support, build and run your quality management system, hold an internal audit and a management review, choose an accredited certification body and pass the two-stage certification audit.' },
+      { q: 'How much does ISO 9001 certification cost?', a: 'It depends on size, locations and audit days. On Certify.cx, ISO 9001 is currently US$1,500 for up to 50 employees at 1 location, paid once. MICRO companies can choose a price from $500 to $1,500 under an offer valid up to 31.12.2026.' },
+      { q: 'How long does ISO 9001 certification take?', a: 'It depends on the size of the organisation and how much of the system already exists. A gap analysis gives a realistic estimate.' },
+      { q: 'How long is an ISO 9001 certificate valid?', a: 'Normally three years, with surveillance audits in between and a recertification audit before the cycle ends.' },
+      { q: 'Can a small business get ISO 9001 certified?', a: 'Yes. The standard fits any size. Small businesses keep the system light: a short policy, a few measurable objectives, simple records, one internal audit and one management review a year.' },
+      { q: 'Do I need a consultant to get ISO 9001 certified?', a: 'No. Many organisations do it themselves, with templates and guidance. A consultant can save time, but the certification body must be independent and cannot be your consultant.' },
+      { q: 'Why does the certification body need to be accredited?', a: 'Accreditation shows that the body is competent and impartial. Certificates from accredited bodies are recognised across borders.' },
+    ],
+  },
   {
     slug: 'what-is-certify-cx-global-compliance-marketplace',
+    draft: true,
     title: 'What is Certify.cx™ — Global Compliance Marketplace? The complete guide',
     excerpt: 'Certify.cx™ — Global Compliance Marketplace connects organisations with certified auditors, accredited certification bodies and digital tools, so they can prepare for ISO certification and other compliance audits in one place.',
     category: 'about-certify',
@@ -107,6 +216,7 @@ export const POSTS = [
   },
   {
     slug: 'how-certify-cx-works-four-steps-to-certification',
+    draft: true,
     title: 'How Certify.cx works: from first gap analysis to certificate in four steps',
     excerpt: 'A plain walk through the Certify.cx™ — Global Compliance Marketplace journey: register, choose, pay and get audited, with what happens at each stage and what you should have ready.',
     category: 'about-certify',
@@ -150,6 +260,7 @@ export const POSTS = [
   },
   {
     slug: 'iso-9001-micro-companies-three-stage-path-and-budget-offer',
+    draft: true,
     title: 'ISO 9001 for MICRO companies: the three-stage path and the $500 to $1,500 offer',
     excerpt: 'How companies with 1 to 9 employees can reach ISO 9001 on Certify.cx™ — Global Compliance Marketplace, with a free first stage and a limited-time offer valid up to 31.12.2026.',
     category: 'micro-companies',
@@ -196,6 +307,7 @@ export const POSTS = [
   },
   {
     slug: 'iso-standards-on-certify-cx-all-12-explained',
+    draft: true,
     title: 'ISO standards on Certify.cx: all 12 supported certifications explained',
     excerpt: 'A clear guide to the 12 ISO standards you can certify against through Certify.cx™ — Global Compliance Marketplace, what each covers and who it suits.',
     category: 'iso-certification',
@@ -247,6 +359,7 @@ export const POSTS = [
   },
   {
     slug: 'iso-certification-cost-how-pricing-works-on-certify-cx',
+    draft: true,
     title: 'ISO certification cost: how pricing works on Certify.cx',
     excerpt: 'One all-inclusive package per standard, a one-time payment and clear rules for size and locations. How pricing works on Certify.cx™ — Global Compliance Marketplace.',
     category: 'iso-certification',
@@ -286,6 +399,7 @@ export const POSTS = [
   },
   {
     slug: 'compliance-audits-beyond-iso-soc-2-gdpr-pci-dss-hipaa',
+    draft: true,
     title: 'Compliance audits beyond ISO: SOC 2, GDPR, PCI DSS, HIPAA and more on Certify.cx',
     excerpt: 'Eight independent compliance audit engagements offered through Certify.cx™ — Global Compliance Marketplace, what each covers and what is included.',
     category: 'compliance-audits',
@@ -319,6 +433,7 @@ export const POSTS = [
   },
   {
     slug: 'iso-21001-schools-colleges-universities-certify-cx',
+    draft: true,
     title: 'ISO 21001 for schools, colleges and universities with Certify.cx',
     excerpt: 'How educational organisations can use ISO 21001 and ISO 9001 through Certify.cx™ — Global Compliance Marketplace, and how they sit alongside national accreditation.',
     category: 'education',
@@ -355,6 +470,7 @@ export const POSTS = [
   },
   {
     slug: 'join-the-certify-cx-partner-network',
+    draft: true,
     title: 'Join the Certify.cx partner network: auditors, certification bodies, consultancies and referral partners',
     excerpt: 'Certify.cx™ — Global Compliance Marketplace is a two-sided marketplace. Here is how professionals can join the network and reach clients.',
     category: 'partners',
@@ -392,6 +508,7 @@ export const POSTS = [
   },
   {
     slug: 'certify-cx-vs-the-traditional-route-to-iso-certification',
+    draft: true,
     title: 'Certify.cx vs the traditional route to ISO certification: an honest comparison',
     excerpt: 'What changes when you use a marketplace instead of finding auditors, consultants and a certification body one by one, and what does not change.',
     category: 'about-certify',
@@ -432,6 +549,7 @@ export const POSTS = [
   },
   {
     slug: 'certify-cx-faq-your-questions-answered',
+    draft: true,
     title: 'Certify.cx frequently asked questions: your questions answered',
     excerpt: 'Short, clear answers about Certify.cx™ — Global Compliance Marketplace: what it is, prices, standards, the process, the MICRO offer and how to get help.',
     category: 'about-certify',
@@ -466,13 +584,11 @@ export const POSTS = [
   },
 ];
 
+// Only articles that are not drafts are live. To publish a draft, delete its `draft: true` line.
+export const POSTS = ALL_POSTS.filter((p) => !p.draft);
+
 /** The articles in the hero slider, in this order. */
-const FEATURED = [
-  'what-is-certify-cx-global-compliance-marketplace',
-  'how-certify-cx-works-four-steps-to-certification',
-  'iso-9001-micro-companies-three-stage-path-and-budget-offer',
-  'iso-standards-on-certify-cx-all-12-explained',
-];
+const FEATURED = ['how-to-get-iso-9001-certification-step-by-step-guide'];
 export const featuredPosts = () => FEATURED.map((slug) => POSTS.find((p) => p.slug === slug)).filter(Boolean);
 
 /** Posts sorted newest first. */

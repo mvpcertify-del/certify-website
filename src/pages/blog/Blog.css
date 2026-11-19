@@ -265,3 +265,13 @@
 .blog-faq__item { padding: 16px 0; border-top: 1px solid var(--color-border); }
 .blog-faq__item h3 { margin: 0 0 6px; font-size: 1.1rem; line-height: 1.4; }
 .blog-faq__item p { margin: 0; }
+
+/* Sub headings and tables in articles */
+.blog-prose h3 { margin: 26px 0 8px; font-size: 1.2rem; line-height: 1.35; color: var(--color-text-primary); }
+.blog-prose a { color: var(--color-accent-text); text-decoration: underline; text-underline-offset: 3px; }
+.blog-table-wrap { margin: 22px 0 26px; overflow-x: auto; border: 1px solid var(--color-border); border-radius: 12px; }
+.blog-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; line-height: 1.55; }
+.blog-table th { padding: 12px 14px; text-align: left; font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-secondary); background: var(--color-bg-surface); border-bottom: 1px solid var(--color-border); white-space: nowrap; }
+.blog-table td { padding: 12px 14px; vertical-align: top; color: var(--color-text-secondary); border-bottom: 1px solid var(--color-border); }
+.blog-table tr:last-child td { border-bottom: 0; }
+.blog-table td:first-child { font-weight: 700; color: var(--color-text-primary); white-space: nowrap; }

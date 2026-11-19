@@ -8,6 +8,16 @@ import { CATEGORIES, formatDate } from '../../content/blog/posts';
 
 const ICONS = { Award, GraduationCap, ClipboardCheck, ShieldCheck, FileCheck2, Compass, Leaf, Lock, Wheat, TriangleAlert, Handshake };
 
+/** Text with [words](/path) links turned into real links. Plain text stays plain text. */
+export function RichText({ text }) {
+  const parts = String(text).split(/(\[[^\]]+\]\([^)]+\))/g);
+  return parts.map((part, i) => {
+    const m = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+    if (!m) return part;
+    return m[2].startsWith('/') ? <Link key={i} to={m[2]}>{m[1]}</Link> : <a key={i} href={m[2]}>{m[1]}</a>;
+  });
+}
+
 /** A topic's icon, used on the topic tiles. */
 export function TopicIcon({ topic, size = 20 }) {
   const Icon = ICONS[CATEGORIES[topic].icon] || Award;

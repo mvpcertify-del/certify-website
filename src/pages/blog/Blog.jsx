@@ -96,22 +96,24 @@ export default function Blog() {
               })}
             </div>
           </div>
-          <div className="blog-hero__controls">
-            <button type="button" className="blog-arrow" onClick={() => go(slide - 1)} aria-label="Previous article"><ChevronLeft size={16} /></button>
-            <div className="blog-dots" role="tablist" aria-label="Choose a featured article">
-              {featured.map((p, i) => (
-                <button key={p.slug} type="button" role="tab" aria-selected={i === slide} aria-label={`Show article ${i + 1}`} className={`blog-dot${i === slide ? ' blog-dot--on' : ''}`} onClick={() => go(i)} />
-              ))}
+          {featured.length > 1 && (
+            <div className="blog-hero__controls">
+              <button type="button" className="blog-arrow" onClick={() => go(slide - 1)} aria-label="Previous article"><ChevronLeft size={16} /></button>
+              <div className="blog-dots" role="tablist" aria-label="Choose a featured article">
+                {featured.map((p, i) => (
+                  <button key={p.slug} type="button" role="tab" aria-selected={i === slide} aria-label={`Show article ${i + 1}`} className={`blog-dot${i === slide ? ' blog-dot--on' : ''}`} onClick={() => go(i)} />
+                ))}
+              </div>
+              <button type="button" className="blog-arrow" onClick={() => go(slide + 1)} aria-label="Next article"><ChevronRight size={16} /></button>
             </div>
-            <button type="button" className="blog-arrow" onClick={() => go(slide + 1)} aria-label="Next article"><ChevronRight size={16} /></button>
-          </div>
+          )}
         </div>
       </section>
 
       <div className="blog-wrap">
         {/* ---- Standards tiles ---- */}
         <nav className="blog-tiles" aria-label="Browse by standard">
-          {TILE_TOPICS.map((k) => {
+          {TILE_TOPICS.filter((k) => counts[k]).map((k) => {
             const c = CATEGORIES[k];
             return (
               <button key={k} type="button" className={`blog-tile${topic === k ? ' blog-tile--on' : ''}`} style={{ '--cat': c.color }} onClick={() => setTopic(topic === k ? 'all' : k)} aria-pressed={topic === k}>
@@ -150,7 +152,7 @@ export default function Blog() {
             </div>
 
             <p className="blog-result" aria-live="polite">
-              {filtered ? `${shown.length} article${shown.length === 1 ? '' : 's'} found` : `${all.length} articles`}
+              {filtered ? `${shown.length} article${shown.length === 1 ? '' : 's'} found` : `${all.length} article${all.length === 1 ? '' : 's'}`}
               {filtered && <button type="button" className="blog-result__reset" onClick={() => { setQuery(''); setTopic('all'); }}>Clear filters</button>}
             </p>
 

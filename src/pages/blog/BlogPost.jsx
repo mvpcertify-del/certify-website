@@ -3,7 +3,7 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Lightbulb } from 'lucide-react';
 import PublicNav from '../../components/layout/PublicNav';
 import { AUTHOR, BRAND, CATEGORIES, formatDate, getPost, sortedPosts } from '../../content/blog/posts';
-import { BlogCover, PostCard, BlogFooter } from './BlogParts';
+import { BlogCover, PostCard, BlogFooter, RichText } from './BlogParts';
 import usePageMeta from './usePageMeta';
 import useJsonLd from './useJsonLd';
 import './Blog.css';
@@ -38,7 +38,7 @@ export default function BlogPost() {
   useJsonLd('faq', post?.faq?.length ? {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: post.faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+    mainEntity: post.faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') } })),
   } : null);
 
   // Reading progress bar.
@@ -109,10 +109,21 @@ export default function BlogPost() {
             )}
             {post.body.map((b, i) => {
               if (b.t === 'h2') return <h2 key={i} id={slugify(b.x)}>{b.x}</h2>;
-              if (b.t === 'ul') return <ul key={i}>{b.items.map((it) => <li key={it}>{it}</li>)}</ul>;
-              if (b.t === 'ol') return <ol key={i}>{b.items.map((it) => <li key={it}>{it}</li>)}</ol>;
-              if (b.t === 'note') return <aside key={i} className="blog-note"><Lightbulb size={18} aria-hidden="true" /><p>{b.x}</p></aside>;
-              return <p key={i}>{b.x}</p>;
+              if (b.t === 'h3') return <h3 key={i}>{b.x}</h3>;
+              if (b.t === 'ul') return <ul key={i}>{b.items.map((it) => <li key={it}><RichText text={it} /></li>)}</ul>;
+              if (b.t === 'ol') return <ol key={i}>{b.items.map((it) => <li key={it}><RichText text={it} /></li>)}</ol>;
+              if (b.t === 'table') {
+                return (
+                  <div key={i} className="blog-table-wrap">
+                    <table className="blog-table">
+                      <thead><tr>{b.head.map((h) => <th key={h}>{h}</th>)}</tr></thead>
+                      <tbody>{b.rows.map((row) => <tr key={row[0]}>{row.map((c, ci) => <td key={ci}><RichText text={c} /></td>)}</tr>)}</tbody>
+                    </table>
+                  </div>
+                );
+              }
+              if (b.t === 'note') return <aside key={i} className="blog-note"><Lightbulb size={18} aria-hidden="true" /><p><RichText text={b.x} /></p></aside>;
+              return <p key={i}><RichText text={b.x} /></p>;
             })}
 
             {post.faq?.length > 0 && (
@@ -121,7 +132,7 @@ export default function BlogPost() {
                 {post.faq.map((f) => (
                   <div key={f.q} className="blog-faq__item">
                     <h3>{f.q}</h3>
-                    <p>{f.a}</p>
+                    <p><RichText text={f.a} /></p>
                   </div>
                 ))}
               </section>
