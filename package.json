@@ -12,7 +12,8 @@
     "test:notify": "node --test \"tests/notify/*.test.mjs\"",
     "test:outreach": "node --test \"tests/outreach/*.test.mjs\"",
     "test:micro": "node --test \"tests/micro/*.test.mjs\"",
-    "test": "npm run test:odoo && npm run test:auth && npm run test:notify && npm run test:outreach && npm run test:micro",
+    "test:finance": "node --test \"tests/finance/*.test.mjs\"",
+    "test": "npm run test:odoo && npm run test:auth && npm run test:notify && npm run test:outreach && npm run test:micro && npm run test:finance",
     "preview": "vite preview"
   },
   "dependencies": {

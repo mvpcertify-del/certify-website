@@ -35,6 +35,7 @@ import { runNotificationEngine } from './_notifyEngine.js';
 import { handleNotifyAdminAction } from './_notifyAdmin.js';
 import { handleOutreachAction } from './_outreachAdmin.js';
 import { handleMicroOfferAction } from './_microOffer.js';
+import { handleCoaAction } from './_financeCoa.js';
 import { runOutreachSend, runOutreachReplies, unsubscribeByToken } from './_outreachEngine.js';
 import { createMailer } from './_outreachMail.js';
 
@@ -144,6 +145,10 @@ export default async function handler(req, res) {
     return handleOutreachAction(req, res);
   }
 
+  // Finance ERP, Chart of Accounts (Super Admin only; the handler checks the caller).
+  if (typeof req.body?.action === 'string' && req.body.action.startsWith('coa-')) {
+    return handleCoaAction(req, res);
+  }
   // MICRO "What's your budget?" offer: the public request form, and the Super Admin decision.
   if (typeof req.body?.action === 'string' && req.body.action.startsWith('micro-offer-')) {
     return handleMicroOfferAction(req, res);
