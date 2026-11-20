@@ -41,6 +41,7 @@ const MicroLanding = lazy(() => import('./pages/micro/MicroLanding'));
 const MicroBudget = lazy(() => import('./pages/micro/MicroBudget'));
 const AdminMicroOffers = lazy(() => import('./pages/admin/AdminMicroOffers'));
 const AdminChartOfAccounts = lazy(() => import('./pages/admin/AdminChartOfAccounts'));
+const AdminJournals = lazy(() => import('./pages/admin/AdminJournals'));
 const SmeLanding = lazy(() => import('./pages/sme/SmeLanding'));
 // Public pay-first checkout (no signup gate). Replaces the old /start-checkout
 // auth gate — buyers create their account AT payment. /start-checkout is kept
@@ -462,6 +463,13 @@ function AppRoutes() {
             <Route path="/finance/chart-of-accounts" element={
               <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}>
                 <AdminChartOfAccounts />
+              </ProtectedRoute>
+            } />
+
+            {/* Finance ERP: journals, trial balance, general ledger (Super Admin only) */}
+            <Route path="/finance/journals" element={
+              <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}>
+                <AdminJournals />
               </ProtectedRoute>
             } />
 

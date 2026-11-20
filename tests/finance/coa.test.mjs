@@ -149,3 +149,62 @@ test('currency, tax treatment, department, cost centre and project can be set', 
   assert.equal(r.values.tax_treatment, 'VAT 5%');
   assert.ok(validateAccount({ currency: 'DOLLAR' }, { mode: 'update', byCode: chart, current: chart['1101'] }).errors.currency);
 });
+
+// ---- journals (api/_financeGl.js) ----
+import { validateJournal, marketplaceTemplate, subscriptionTemplate, reversalLines } from '../../api/_financeGl.js';
+
+const acc = Object.fromEntries(ACCOUNTS.map((a) => [a.code, { code: a.code, name: a.name, is_header: a.isHeader, allow_posting: a.allowPosting, is_active: true, currency: null }]));
+const ENT = '11111111-1111-1111-1111-111111111111';
+const J = (lines, o = {}) => ({ entity_id: ENT, entry_date: '2026-11-20', currency: 'USD', lines, ...o });
+
+test('the marketplace example: $1,000 paid, $800 to the certification body, $200 commission', () => {
+  const t = marketplaceTemplate({ amount: 1000, cbShare: 800 });
+  assert.deepEqual(t.lines.map((l) => [l.account_code, l.debit, l.credit]), [['1120', 1000, 0], ['2110', 0, 800], ['4101', 0, 200]]);
+  const r = validateJournal(J(t.lines), acc);
+  assert.deepEqual(r.errors, []);
+  assert.equal(r.value.totals.debit, 1000);
+  assert.equal(r.value.totals.credit, 1000);
+});
+
+test('the subscription example: $120 deferred, then $10 recognised per month', () => {
+  const a = subscriptionTemplate({ kind: 'receipt', amount: 120 });
+  assert.deepEqual(a.lines.map((l) => [l.account_code, l.debit, l.credit]), [['1120', 120, 0], ['2140', 0, 120]]);
+  const m = subscriptionTemplate({ kind: 'recognition', amount: 10 });
+  assert.deepEqual(m.lines.map((l) => [l.account_code, l.debit, l.credit]), [['2140', 10, 0], ['4201', 0, 10]]);
+  assert.deepEqual(validateJournal(J(m.lines), acc).errors, []);
+});
+
+test('an unbalanced, empty or one-line journal is refused', () => {
+  assert.ok(validateJournal(J([{ account_code: '1120', debit: 100 }, { account_code: '4101', credit: 90 }]), acc).errors.some((e) => /not balanced/.test(e)));
+  assert.ok(validateJournal(J([]), acc).errors.length);
+  assert.ok(validateJournal(J([{ account_code: '1120', debit: 100 }]), acc).errors.some((e) => /at least two/.test(e)));
+});
+
+test('a line needs a debit or a credit, never both', () => {
+  assert.ok(validateJournal(J([{ account_code: '1120', debit: 5, credit: 5 }, { account_code: '4101', credit: 0 }]), acc).errors.some((e) => /either a debit or a credit/.test(e)));
+});
+
+test('group, inactive and wrong-currency accounts cannot be posted to', () => {
+  const lines = (c) => [{ account_code: c, debit: 10 }, { account_code: '4101', credit: 10 }];
+  assert.ok(validateJournal(J(lines('1100')), acc).errors.some((e) => /group/.test(e)));
+  assert.ok(validateJournal(J(lines('1120')), { ...acc, 1120: { ...acc['1120'], is_active: false } }).errors.some((e) => /inactive/.test(e)));
+  assert.ok(validateJournal(J(lines('1120')), { ...acc, 1120: { ...acc['1120'], currency: 'EUR' } }).errors.some((e) => /only accepts EUR/.test(e)));
+});
+
+test('multi-currency: amounts convert at the rate and the base amounts must still balance', () => {
+  const r = validateJournal(J([{ account_code: '1111', debit: 100 }, { account_code: '4101', credit: 100 }], { currency: 'EUR', fx_rate: 1.08 }), acc);
+  assert.deepEqual(r.errors, []);
+  assert.equal(r.value.lines[0].debit, 108);
+  assert.equal(r.value.lines[0].amount_original, 100);
+  assert.ok(validateJournal(J([{ account_code: '1120', debit: 1 }, { account_code: '4101', credit: 1 }], { fx_rate: 0 }), acc).errors.some((e) => /exchange rate/.test(e)));
+});
+
+test('a reversal swaps debits and credits', () => {
+  const rev = reversalLines([{ account_code: '1120', debit: 1000, credit: 0 }, { account_code: '2110', debit: 0, credit: 800 }]);
+  assert.deepEqual(rev.map((l) => [l.account_code, l.debit, l.credit]), [['1120', 0, 1000], ['2110', 800, 0]]);
+});
+
+test('the entity and the date are required', () => {
+  assert.ok(validateJournal({ ...J([{ account_code: '1120', debit: 1 }, { account_code: '4101', credit: 1 }]), entity_id: '' }, acc).errors.some((e) => /entity/.test(e)));
+  assert.ok(validateJournal(J([{ account_code: '1120', debit: 1 }, { account_code: '4101', credit: 1 }], { entry_date: 'x' }), acc).errors.some((e) => /date/.test(e)));
+});
