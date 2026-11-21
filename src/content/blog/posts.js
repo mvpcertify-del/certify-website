@@ -48,6 +48,153 @@ export const CATEGORIES = {
 
 const ALL_POSTS = [
   {
+    slug: 'iso-14001-certification-cost-requirements-steps-timeline',
+    title: 'ISO 14001 Certification: What It Is, Requirements, Cost and How to Get Certified (2026 Guide)',
+    excerpt: 'What is ISO 14001, what does it require, how much does certification cost and how do you get certified? A plain guide to the environmental management system standard, with the steps, a cost table and answers to common questions.',
+    category: 'iso-certification',
+    date: '2026-11-22',
+    minutes: 10,
+    keyFacts: [
+      'ISO 14001 is the international standard for an environmental management system (EMS). The current edition is ISO 14001:2015, with a 2024 amendment that adds climate change considerations.',
+      'It does not set pollution limits. It asks you to find how your activities affect the environment, meet the laws that apply to you and keep improving.',
+      'Certification means an independent, accredited certification body audits your EMS and issues a certificate, normally valid for three years with yearly surveillance audits.',
+      'ISO 14001 uses the same clause structure (4 to 10) as ISO 9001 and ISO 45001, so the three can run as one integrated system.',
+      'On Certify.cx™ — Global Compliance Marketplace, ISO 14001 is currently US$1,500 for up to 50 employees at 1 location, paid once.',
+    ],
+    body: [
+      { t: 'p', x: 'More buyers, tenders and investors now ask one simple question: how do you manage your impact on the environment? ISO 14001 certification is the most widely recognised way to answer it. It shows that you manage environmental responsibilities in a structured, audited way, instead of leaving them to chance.' },
+      { t: 'p', x: 'This guide covers what ISO 14001 is, what it requires, what it costs, how long it takes and the steps to get certified. At [Certify.cx™ — Global Compliance Marketplace](/iso/iso-14001) we help organisations through this process, and we say where that help fits.' },
+
+      { t: 'h2', x: 'What is ISO 14001?' },
+      { t: 'p', x: 'ISO 14001 is an international standard that sets out the requirements for an environmental management system (EMS). It is published by the International Organization for Standardization (ISO). The current edition is ISO 14001:2015. In 2024 ISO published an amendment that makes organisations consider climate change when they look at their context and the needs of interested parties.' },
+      { t: 'p', x: 'An EMS is the set of policies, processes, roles and records you use to understand, control and reduce your environmental impact. The standard does not tell you how much waste or energy is acceptable. It asks you to find your own significant impacts, follow the law and set your own goals for improvement.' },
+      { t: 'p', x: 'ISO 14001 certification is the independent confirmation of that system. An accredited certification body audits you against the standard and, if you meet it, issues a certificate.' },
+
+      { t: 'h2', x: 'Who needs ISO 14001?' },
+      { t: 'ul', items: ['Manufacturers, construction and engineering companies with waste, emissions, energy or water use.', 'Suppliers to large companies and public bodies that ask for environmental certification in tenders.', 'Logistics, hospitality, healthcare and facilities businesses with a real site footprint.', 'Organisations that report on sustainability and want a recognised system behind the numbers.', 'Any company that wants to cut waste and energy costs in a planned way.'] },
+      { t: 'p', x: 'Office-based and service companies can certify too. Their impacts are smaller (energy, travel, paper, IT equipment), so their EMS is lighter, but the standard applies in the same way.' },
+
+      { t: 'h2', x: 'Benefits of ISO 14001' },
+      { t: 'ul', items: ['Access to tenders and supply chains that require environmental certification.', 'Lower costs from using less energy, water and materials and producing less waste.', 'Fewer legal surprises, because you keep a clear list of the environmental laws that apply to you.', 'A planned response to spills, leaks and other emergencies.', 'Stronger trust with customers, investors, regulators and neighbours.', 'A base for energy management (ISO 50001) and for sustainability reporting.'] },
+
+      { t: 'h2', x: 'The key ideas in ISO 14001' },
+      { t: 'p', x: 'Four terms appear again and again in an ISO 14001 audit. Understanding them is most of the work.' },
+      { t: 'figure', variant: 'cards', title: 'ISO 14001 in four ideas', items: [
+        { big: '1', label: 'Environmental aspects', sub: 'Your activities, products and services that touch the environment', color: '#3ECF8E' },
+        { big: '2', label: 'Environmental impacts', sub: 'The change they cause: pollution, waste, resource use', color: '#60A5FA' },
+        { big: '3', label: 'Compliance obligations', sub: 'Laws, permits and promises you must meet', color: '#FBBF24' },
+        { big: '4', label: 'Risks and opportunities', sub: 'What could go wrong, and what you can gain', color: '#F472B6' },
+      ], caption: 'Find your aspects, judge which impacts are significant, know your obligations, then plan.' },
+      { t: 'p', x: 'The standard also asks you to take a life cycle perspective. You do not have to assess the whole life cycle of every product, but you must think about what happens before and after your own site: the materials you buy, the delivery, the use and the disposal.' },
+
+      { t: 'h2', x: 'Requirements (clauses 4 to 10)' },
+      { t: 'p', x: 'ISO 14001 follows the same high-level structure as other ISO management system standards. Clauses 4 to 10 are mandatory for every certified organisation.' },
+      { t: 'table', head: ['Clause', 'Topic', 'What it asks you to do'], rows: [
+        ['4', 'Context of the organization', 'Understand your issues (including climate change) and interested parties, and define the scope of the EMS.'],
+        ['5', 'Leadership', 'Top management commits to the EMS, sets an environmental policy and assigns roles.'],
+        ['6', 'Planning', 'Identify environmental aspects and compliance obligations, assess risks and opportunities, and set environmental objectives.'],
+        ['7', 'Support', 'Provide resources, competent and aware people, communication and documented information.'],
+        ['8', 'Operation', 'Control the activities that matter, including their life cycle, and prepare for emergencies.'],
+        ['9', 'Performance evaluation', 'Monitor and measure, evaluate compliance, run internal audits and hold management reviews.'],
+        ['10', 'Improvement', 'Correct nonconformities and keep improving the EMS.'],
+      ] },
+      { t: 'note', x: 'The environmental policy is a short public statement with three promises: protect the environment, meet your compliance obligations and keep improving. Auditors check that people know it and that it matches what you really do.' },
+
+      { t: 'h2', x: 'How to get ISO 14001 certified: 9 steps' },
+      { t: 'figure', variant: 'steps', cols: 3, title: 'Your ISO 14001 roadmap', items: [
+        { label: 'Gap analysis', sub: 'See what is missing' },
+        { label: 'Management commitment', sub: 'Owner, policy, budget' },
+        { label: 'Scope', sub: 'Sites and activities covered' },
+        { label: 'Aspects and impacts', sub: 'Find what matters' },
+        { label: 'Legal register', sub: 'Laws and permits' },
+        { label: 'Objectives and controls', sub: 'Plan and operate' },
+        { label: 'Run and record', sub: 'Real evidence' },
+        { label: 'Internal audit and review', sub: 'Your rehearsal' },
+        { label: 'Certification audit', sub: 'Stage 1 and Stage 2' },
+      ], caption: 'The nine steps explained below.' },
+      { t: 'h3', x: 'Step 1. Run a gap analysis' },
+      { t: 'p', x: 'Compare what you do today with the standard. Most organisations already track some waste, energy or legal items. The gap analysis shows what is missing so you only build what you need. You can start with a free [gap analysis on Certify.cx](/gap-analysis).' },
+      { t: 'h3', x: 'Step 2. Get management commitment' },
+      { t: 'p', x: 'Top management must own the policy, give resources and review results. An EMS that sits only with one environmental officer rarely survives the first audit.' },
+      { t: 'h3', x: 'Step 3. Define the scope' },
+      { t: 'p', x: 'Decide which sites, activities, products and services the EMS covers. Be honest and clear, because the scope is written on your certificate.' },
+      { t: 'h3', x: 'Step 4. Identify environmental aspects and impacts' },
+      { t: 'p', x: 'List your activities and the aspects linked to them: energy use, water use, waste, emissions, chemicals, noise, transport. Rate which impacts are significant. These become the centre of your EMS.' },
+      { t: 'h3', x: 'Step 5. Build your legal register' },
+      { t: 'p', x: 'List the environmental laws, permits and customer requirements that apply to you, and who is responsible for each. Check them on a schedule. Auditors always ask for this register.' },
+      { t: 'h3', x: 'Step 6. Set objectives and put controls in place' },
+      { t: 'p', x: 'Set a few measurable objectives, such as less waste to landfill or lower energy per unit produced. Write only the procedures you need to control significant aspects, and prepare an emergency plan for realistic events like a spill or fire. Train the people involved.' },
+      { t: 'h3', x: 'Step 7. Run the EMS and keep records' },
+      { t: 'p', x: 'The EMS must run for a period before the audit, so there are real records: meter readings, waste logs, legal checks, training records and emergency drills.' },
+      { t: 'h3', x: 'Step 8. Hold an internal audit and a management review' },
+      { t: 'p', x: 'Both are required and both are your best rehearsal. Fix what they find before the external audit.' },
+      { t: 'h3', x: 'Step 9. Pass the certification audit' },
+      { t: 'p', x: 'Choose a certification body that is accredited for ISO 14001. The audit has two stages, followed by surveillance audits.' },
+      { t: 'figure', variant: 'steps', cols: 3, title: 'The three-year certificate cycle', items: [
+        { label: 'Stage 1 audit', sub: 'Readiness review' },
+        { label: 'Stage 2 audit', sub: 'Main audit, certificate issued' },
+        { label: 'Surveillance audit', sub: 'Year 1' },
+        { label: 'Surveillance audit', sub: 'Year 2' },
+        { label: 'Recertification', sub: 'Year 3, full review' },
+        { label: 'New cycle', sub: 'Certificate renewed' },
+      ] },
+      { t: 'table', head: ['Stage', 'What happens', 'What the auditor looks at'], rows: [
+        ['Stage 1', 'Readiness review', 'Your scope, aspects and impacts, legal register, policy, internal audit and management review.'],
+        ['Stage 2', 'Main audit', 'Whether the EMS is implemented and effective, through site visits, interviews and records.'],
+        ['Surveillance audits', 'Usually once a year', 'That the EMS is still working and improving.'],
+        ['Recertification', 'Before the end of the three-year cycle', 'A full review to renew the certificate.'],
+      ] },
+
+      { t: 'h2', x: 'How much does ISO 14001 certification cost?' },
+      { t: 'p', x: 'The total cost has two parts: the certification audit, and the work to get ready. The audit cost mainly depends on the number of employees, the number of sites and how complex your activities are, because these set the audit days. A factory with several sites needs more audit time than a small office. Preparation costs (staff time, training, metering or waste tools, any consultant) come on top.' },
+      { t: 'p', x: 'Certify.cx™ offers ISO 14001 as one all-inclusive package, paid once. At the time of writing:' },
+      { t: 'table', head: ['What', 'Price', 'Notes'], rows: [
+        ['ISO 14001 certification package', 'US$1,500', 'Up to 50 employees at 1 location. Each additional band of 50 employees and each additional location adds a flat surcharge, shown at checkout.'],
+        ['Free gap analysis', 'US$0', 'A first view of how close you are before you commit.'],
+      ] },
+      { t: 'note', x: 'Prices change. The [ISO 14001 page](/iso/iso-14001) always shows the current price.' },
+      { t: 'p', x: 'Costs that are often forgotten when budgeting:' },
+      { t: 'ul', items: ['Staff time to map aspects, build the legal register and collect records.', 'Equipment you may need to close gaps, such as spill kits, waste bins, meters or secure chemical storage.', 'Awareness training for staff, and deeper training for the people who run key controls.', 'Surveillance audits in years two and three, and recertification after three years.', 'Any re-audit if a major nonconformity is found.'] },
+
+      { t: 'h2', x: 'How long does it take?' },
+      { t: 'p', x: 'It depends on the size of the organisation, how many sites you have and how much of an EMS you already run. A small company with good habits can prepare quickly. A larger company with several sites and permits takes longer. A gap analysis gives you a realistic plan before you set dates.' },
+      { t: 'p', x: 'Plan for the EMS to run for a few months before the audit. Auditors want to see real records, not documents written the week before.' },
+
+      { t: 'h2', x: 'ISO 14001 vs ISO 9001 vs ISO 45001' },
+      { t: 'p', x: 'These three are often called the core management system standards. They share the same structure, so many organisations certify to more than one and run them as an integrated system with one set of audits, one internal audit programme and one management review.' },
+      { t: 'table', head: ['', 'ISO 9001', 'ISO 14001', 'ISO 45001'], rows: [
+        ['Topic', 'Quality', 'Environment', 'Occupational health and safety'],
+        ['Edition', 'ISO 9001:2015', 'ISO 14001:2015', 'ISO 45001:2018'],
+        ['Main question', 'Do we deliver what customers expect?', 'How do our activities affect the environment?', 'How do we keep our people safe and healthy?'],
+        ['Price on Certify.cx (up to 50 employees, 1 location)', 'US$1,500', 'US$1,500', 'US$1,500'],
+      ] },
+      { t: 'p', x: 'See the guide on [how to get ISO 9001 certification](/blog/how-to-get-iso-9001-certification-step-by-step-guide), or compare every standard on the [certifications page](/certifications).' },
+
+      { t: 'h2', x: 'How Certify.cx helps' },
+      { t: 'p', x: 'Certify.cx™ — Global Compliance Marketplace connects organisations with certified lead auditors, accredited certification bodies and digital tools, so the steps above live in one place.' },
+      { t: 'ul', items: ['A free gap analysis to start.', 'One package and one price for ISO 14001, with the size and location rules published.', 'Four steps: create an account, choose the certification, pay securely, pass the audit and receive the certificate.', 'A dashboard to follow your application, documents and audit dates, with email updates.', 'A reminder before your certificate is due for renewal.', 'Sara, an AI compliance assistant, and support in nine languages.'] },
+      { t: 'p', x: 'Audits and certification decisions are made independently by the accredited certification bodies. Certify.cx organises the marketplace and the workflow around the audit, and cannot promise that you will pass. [Start the free gap analysis](/gap-analysis) or [see the ISO 14001 package](/iso/iso-14001).' },
+
+      { t: 'h2', x: 'Common mistakes to avoid' },
+      { t: 'ul', items: ['Listing aspects but never deciding which ones are significant.', 'Having no legal register, or one nobody checks.', 'Writing an environmental policy that is not true to daily practice.', 'Setting objectives that cannot be measured.', 'Forgetting contractors, suppliers and waste carriers who work on your behalf.', 'Never testing the emergency plan.', 'Using a certification body that is not accredited.'] },
+
+      { t: 'h2', x: 'After certification' },
+      { t: 'p', x: 'A certificate is normally valid for three years. In between, yearly surveillance audits check that the EMS is alive. Before the cycle ends, a recertification audit renews it. Treat the EMS as the way you run the site every day, and the audits become routine.' },
+    ],
+    faq: [
+      { q: 'What is ISO 14001 certification?', a: 'It is an independent confirmation by an accredited certification body that your organisation has an environmental management system that meets the requirements of ISO 14001:2015.' },
+      { q: 'How much does ISO 14001 certification cost?', a: 'It depends on employees, locations and audit days, plus your preparation costs. On Certify.cx, ISO 14001 is currently US$1,500 for up to 50 employees at 1 location, paid once. Larger sizes and extra locations add a flat surcharge shown at checkout.' },
+      { q: 'How long does ISO 14001 certification take?', a: 'It depends on your size, number of sites and how much of an environmental system you already run. A gap analysis gives a realistic estimate. Plan for the system to run for a few months before the audit so there are real records.' },
+      { q: 'How do I get ISO 14001 certified?', a: 'Run a gap analysis, get management commitment, define the scope, identify environmental aspects and impacts, build a legal register, set objectives and controls, run the system and keep records, hold an internal audit and a management review, and pass the two-stage audit by an accredited certification body.' },
+      { q: 'Does ISO 14001 set pollution limits?', a: 'No. ISO 14001 does not set environmental performance limits. It asks you to understand your impacts, meet the laws that apply to you and keep improving. Legal limits come from your local regulations and permits.' },
+      { q: 'What are environmental aspects and impacts?', a: 'An aspect is part of your activities, products or services that can interact with the environment, such as energy use or waste. An impact is the change it causes, such as pollution or resource depletion.' },
+      { q: 'How long is an ISO 14001 certificate valid?', a: 'Normally three years, with surveillance audits in between and a recertification audit before the cycle ends.' },
+      { q: 'Can a small company get ISO 14001 certified?', a: 'Yes. The standard fits any size. Small companies keep the system light: a clear scope, a short list of significant aspects, a simple legal register, a few measurable objectives and honest records.' },
+      { q: 'What is the difference between ISO 14001 and ISO 9001?', a: 'ISO 9001 is about quality and customer satisfaction. ISO 14001 is about managing environmental impact. They share the same clause structure, so they can be run as one integrated system.' },
+      { q: 'Do I need a consultant for ISO 14001?', a: 'No. Many organisations prepare on their own with good guidance. A consultant can save time, but the certification body must be independent and cannot be your consultant.' },
+    ],
+  },
+  {
     slug: 'iso-27001-certification-cost-requirements-steps-timeline',
     title: 'ISO 27001 Certification: Cost, Requirements, Steps and Timeline (2026 Guide)',
     excerpt: 'How much does ISO 27001 certification cost in 2026, what does ISO/IEC 27001:2022 require, how long does it take and how do you get certified? A plain guide with the steps, the 93 controls, a cost table and answers to common questions.',
@@ -740,7 +887,7 @@ const ALL_POSTS = [
 export const POSTS = ALL_POSTS.filter((p) => !p.draft);
 
 /** The articles in the hero slider, in this order. */
-const FEATURED = ['iso-27001-certification-cost-requirements-steps-timeline', 'how-to-get-iso-9001-certification-step-by-step-guide'];
+const FEATURED = ['iso-14001-certification-cost-requirements-steps-timeline', 'iso-27001-certification-cost-requirements-steps-timeline'];
 export const featuredPosts = () => FEATURED.map((slug) => POSTS.find((p) => p.slug === slug)).filter(Boolean);
 
 /** Posts sorted newest first. */
