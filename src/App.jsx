@@ -5,6 +5,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import LanguageSuggestionPopup from './components/LanguageSuggestionPopup';
+import BlackFriday from './components/promo/BlackFriday';
 import GoogleOneTap from './components/auth/GoogleOneTap';
 import { GOOGLE_ONE_TAP_ENABLED } from './config/loginMode';
 import { ROLES, PERMISSIONS } from './utils/roles';
@@ -729,6 +730,7 @@ export default function App() {
             <AppRoutes />
             <LanguageSuggestionPopup />
             <GlobalOneTap />
+            <BlackFriday />
           </ErrorBoundary>
         </AuthProvider>
       </ThemeProvider>
