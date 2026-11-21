@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Linkedin, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { GOOGLE_ENABLED, LINKEDIN_ENABLED, LINKEDIN_STAKEHOLDERS } from '../../config/loginMode';
+import { GOOGLE_ENABLED, GOOGLE_ONE_TAP_ENABLED, LINKEDIN_ENABLED, LINKEDIN_STAKEHOLDERS } from '../../config/loginMode';
+import GoogleOneTap from './GoogleOneTap';
 
 const GoogleMark = () => (
   <svg width="20" height="20" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -39,6 +40,7 @@ export default function SocialButtons({ stakeholderType = 'client', dividerKey =
 
   return (
     <>
+      {showGoogle && GOOGLE_ONE_TAP_ENABLED && <GoogleOneTap stakeholderType={stakeholderType} />}
       {showGoogle && (
         <button type="button" className="auth-google-btn" disabled={!!busy} onClick={() => start('google', signInWithGoogle)}>
           <GoogleMark />

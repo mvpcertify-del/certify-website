@@ -225,6 +225,22 @@ export function AuthProvider({ children }) {
   const signInWithLinkedIn = (redirectPath, stakeholderType) => signInWithProvider('linkedin_oidc', redirectPath, stakeholderType);
   const signInWithGoogle = (redirectPath, stakeholderType) => signInWithProvider('google', redirectPath, stakeholderType);
 
+  // Google One Tap gives an ID token instead of a redirect. Supabase turns it into a session; the caller then
+  // goes to /auth/callback exactly like the redirect flow (code step included when code login is on).
+  const signInWithGoogleIdToken = async (idToken, nonce, stakeholderType = null) => {
+    try {
+      if (stakeholderType) sessionStorage.setItem('pendingStakeholderType', stakeholderType);
+      else sessionStorage.removeItem('pendingStakeholderType');
+      if (LOGIN_OTP_ENABLED) sessionStorage.setItem(OAUTH_GATE_KEY, '1');
+    } catch { /* sessionStorage may be unavailable */ }
+    const { error } = await supabase.auth.signInWithIdToken({ provider: 'google', token: idToken, nonce });
+    if (error) {
+      try { sessionStorage.removeItem(OAUTH_GATE_KEY); } catch { /* ignore */ }
+      return { success: false, error: error.message };
+    }
+    return { success: true };
+  };
+
   const login = async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -453,6 +469,7 @@ export function AuthProvider({ children }) {
     verifySignupCode,
     signInWithLinkedIn,
     signInWithGoogle,
+    signInWithGoogleIdToken,
     verifyLoginOtp,
     logout,
     resetPassword,

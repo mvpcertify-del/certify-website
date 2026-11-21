@@ -54,6 +54,21 @@ export default function BlogPost() {
     return () => window.removeEventListener('scroll', onScroll);
   }, [slug]);
 
+  // Highlight the section being read in "In this article".
+  const [activeId, setActiveId] = useState('');
+  useEffect(() => {
+    if (!post) return undefined;
+    const ids = post.body.filter((b) => b.t === 'h2').map((b) => slugify(b.x));
+    const onScroll = () => {
+      let cur = ids[0] || '';
+      for (const id of ids) { const el = document.getElementById(id); if (el && el.getBoundingClientRect().top <= 140) cur = id; }
+      setActiveId(cur);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [post]);
+
   const headings = useMemo(() => (post ? post.body.filter((b) => b.t === 'h2').map((b) => ({ id: slugify(b.x), text: b.x })) : []), [post]);
   const related = useMemo(() => {
     if (!post) return [];
@@ -95,7 +110,7 @@ export default function BlogPost() {
           <aside className="blog-toc" aria-label="In this article">
             <p className="blog-toc__title">In this article</p>
             <ul>
-              {headings.map((h) => <li key={h.id}><a href={`#${h.id}`}>{h.text}</a></li>)}
+              {headings.map((h) => <li key={h.id}><a href={`#${h.id}`} className={activeId === h.id ? 'is-active' : undefined}>{h.text}</a></li>)}
             </ul>
           </aside>
 
@@ -120,6 +135,23 @@ export default function BlogPost() {
                       <tbody>{b.rows.map((row) => <tr key={row[0]}>{row.map((c, ci) => <td key={ci}><RichText text={c} /></td>)}</tr>)}</tbody>
                     </table>
                   </div>
+                );
+              }
+              if (b.t === 'figure') {
+                return (
+                  <figure key={i} className="blog-fig">
+                    {b.title && <p className="blog-fig__title">{b.title}</p>}
+                    {b.variant === 'cards' ? (
+                      <div className="blog-fig__cards">
+                        {b.items.map((it) => <div key={it.label} className="blog-fig__card" style={it.color ? { '--c': it.color } : undefined}><span className="blog-fig__big">{it.big}</span><span className="blog-fig__label">{it.label}</span><span className="blog-fig__sub">{it.sub}</span></div>)}
+                      </div>
+                    ) : (
+                      <ol className="blog-fig__steps" style={{ '--cols': b.cols || 3 }}>
+                        {b.items.map((it, n) => <li key={`${it.label}-${n}`}><strong>{it.label}</strong>{it.sub}</li>)}
+                      </ol>
+                    )}
+                    {b.caption && <figcaption className="blog-fig__cap">{b.caption}</figcaption>}
+                  </figure>
                 );
               }
               if (b.t === 'note') return <aside key={i} className="blog-note"><Lightbulb size={18} aria-hidden="true" /><p><RichText text={b.x} /></p></aside>;

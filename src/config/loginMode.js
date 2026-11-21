@@ -33,6 +33,12 @@ export function oauthGateActive() {
 // is by email only. The buttons and code stay in place so it can be switched back on without new work.
 export const GOOGLE_ENABLED = (import.meta.env || {}).VITE_GOOGLE_LOGIN_ENABLED === 'true';
 
+// Google One Tap (the "Continue as <name>" popup). Needs the Google OAuth Web client ID, the same one that is set in
+// Supabase (Authentication > Providers > Google). It is public, so it is safe in the browser:
+// VITE_GOOGLE_CLIENT_ID on Vercel. One Tap only runs when Google sign-in is switched on and the ID is present.
+export const GOOGLE_CLIENT_ID = (import.meta.env || {}).VITE_GOOGLE_CLIENT_ID || '';
+export const GOOGLE_ONE_TAP_ENABLED = GOOGLE_ENABLED && !!GOOGLE_CLIENT_ID;
+
 // LinkedIn sign-up / sign-in. Off until the LinkedIn app is connected in Supabase
 // (Authentication > Providers > LinkedIn (OIDC)); then set VITE_LINKEDIN_LOGIN_ENABLED=true and redeploy.
 export const LINKEDIN_ENABLED = (import.meta.env || {}).VITE_LINKEDIN_LOGIN_ENABLED === 'true';

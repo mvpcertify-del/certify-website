@@ -71,13 +71,13 @@ const ALL_POSTS = [
       { t: 'p', x: 'An ISMS is the set of policies, processes, people and controls you use to protect the confidentiality, integrity and availability of information. The standard does not prescribe one technology. It asks you to find your own risks and choose proportionate controls.' },
       { t: 'p', x: 'ISO 27001 certification is the independent confirmation of that system. An accredited certification body audits you against the standard and, if you meet it, issues a certificate.' },
 
-      { t: 'h2', x: 'Who needs ISO 27001 certification?' },
+      { t: 'h2', x: 'Who needs ISO 27001?' },
       { t: 'ul', items: ['SaaS and software companies whose customers send security questionnaires.', 'IT, cloud, data and outsourcing providers that handle client data.', 'Fintech, health and legal service providers with strict data duties.', 'Suppliers to large enterprises and governments that make certification a condition of the contract.', 'Any organisation that wants a repeatable way to manage security instead of reacting to incidents.'] },
 
-      { t: 'h2', x: 'Benefits of ISO 27001 certification' },
+      { t: 'h2', x: 'Benefits' },
       { t: 'ul', items: ['Faster sales: one recognised certificate answers many security questionnaires.', 'Access to tenders and enterprise contracts that require it.', 'Lower risk of breaches and a tested plan for when something goes wrong.', 'Clear ownership of risks, assets and responsibilities.', 'Support for meeting legal duties such as data protection law (the certificate does not replace legal advice).', 'A foundation for other frameworks such as ISO/IEC 27701 (privacy) and ISO/IEC 42001 (AI management).'] },
 
-      { t: 'h2', x: 'ISO 27001 requirements: clauses 4 to 10' },
+      { t: 'h2', x: 'Requirements (clauses 4 to 10)' },
       { t: 'p', x: 'ISO/IEC 27001:2022 follows the same high-level structure as other management system standards. Clauses 4 to 10 are mandatory for every certified organisation.' },
       { t: 'table', head: ['Clause', 'Topic', 'What it asks you to do'], rows: [
         ['4', 'Context of the organization', 'Understand your issues and interested parties and define the scope of the ISMS.'],
@@ -89,8 +89,14 @@ const ALL_POSTS = [
         ['10', 'Improvement', 'Correct nonconformities and keep improving the ISMS.'],
       ] },
 
-      { t: 'h2', x: 'The 93 Annex A controls in ISO 27001:2022' },
+      { t: 'h2', x: 'The 93 Annex A controls' },
       { t: 'p', x: 'Annex A is a reference list of controls. The 2022 edition reduced and regrouped the 114 controls of the 2013 edition into 93, in four themes. You do not have to use all of them. You use the ones your risk assessment shows you need, and you explain any you leave out.' },
+      { t: 'figure', variant: 'cards', title: 'ISO/IEC 27001:2022 Annex A at a glance', items: [
+        { big: '37', label: 'Organizational', sub: 'Policies, roles, suppliers, incidents, continuity', color: '#60A5FA' },
+        { big: '8', label: 'People', sub: 'Screening, training, remote work', color: '#3ECF8E' },
+        { big: '14', label: 'Physical', sub: 'Secure areas, equipment, disposal', color: '#FBBF24' },
+        { big: '34', label: 'Technological', sub: 'Access, encryption, logging, backup', color: '#F472B6' },
+      ], caption: '93 controls in four themes. You apply the ones your risk assessment requires.' },
       { t: 'table', head: ['Theme', 'Number of controls', 'Examples'], rows: [
         ['Organizational', '37', 'Policies, roles, asset management, supplier relationships, incident management, business continuity, legal and regulatory compliance.'],
         ['People', '8', 'Screening, terms of employment, awareness and training, remote working, reporting events.'],
@@ -99,7 +105,18 @@ const ALL_POSTS = [
       ] },
       { t: 'note', x: 'The Statement of Applicability (SoA) lists every Annex A control, says whether it applies, and why. It is one of the first documents an auditor asks for.' },
 
-      { t: 'h2', x: 'How to get ISO 27001 certified: 9 steps' },
+      { t: 'h2', x: 'How to get certified: 9 steps' },
+      { t: 'figure', variant: 'steps', cols: 3, title: 'Your ISO 27001 roadmap', items: [
+        { label: 'Gap analysis', sub: 'See what is missing' },
+        { label: 'Management commitment', sub: 'Owner, policy, budget' },
+        { label: 'Scope', sub: 'What the ISMS covers' },
+        { label: 'Risk assessment', sub: 'Assets, threats, ratings' },
+        { label: 'Risk treatment and SoA', sub: 'Choose the controls' },
+        { label: 'Implement controls', sub: 'Documents and training' },
+        { label: 'Run and collect evidence', sub: 'Real records' },
+        { label: 'Internal audit and review', sub: 'Your rehearsal' },
+        { label: 'Certification audit', sub: 'Stage 1 and Stage 2' },
+      ], caption: 'The nine steps explained below.' },
       { t: 'h3', x: 'Step 1. Run a gap analysis' },
       { t: 'p', x: 'Compare what you do today with the standard. Most organisations already have some controls in place. The gap analysis shows what is missing so you only build what you need. You can start with a free [gap analysis on Certify.cx](/gap-analysis).' },
       { t: 'h3', x: 'Step 2. Get management commitment' },
@@ -118,6 +135,14 @@ const ALL_POSTS = [
       { t: 'p', x: 'Both are required and both are your best rehearsal. Fix what they find before the external audit.' },
       { t: 'h3', x: 'Step 9. Pass the certification audit' },
       { t: 'p', x: 'Choose a certification body that is accredited for ISO/IEC 27001. The audit has two stages, followed by surveillance audits.' },
+      { t: 'figure', variant: 'steps', cols: 3, title: 'The three-year certificate cycle', items: [
+        { label: 'Stage 1 audit', sub: 'Readiness review' },
+        { label: 'Stage 2 audit', sub: 'Main audit, certificate issued' },
+        { label: 'Surveillance audit', sub: 'Year 1' },
+        { label: 'Surveillance audit', sub: 'Year 2' },
+        { label: 'Recertification', sub: 'Year 3, full review' },
+        { label: 'New cycle', sub: 'Certificate renewed' },
+      ] },
       { t: 'table', head: ['Stage', 'What happens', 'What the auditor looks at'], rows: [
         ['Stage 1', 'Readiness review', 'Your scope, risk assessment, Statement of Applicability, policies, internal audit and management review.'],
         ['Stage 2', 'Main audit', 'Whether the ISMS is implemented and effective, through interviews, system checks and records.'],
@@ -125,7 +150,7 @@ const ALL_POSTS = [
         ['Recertification', 'Before the end of the three-year cycle', 'A full review to renew the certificate.'],
       ] },
 
-      { t: 'h2', x: 'How much does ISO 27001 certification cost?' },
+      { t: 'h2', x: 'How much does it cost?' },
       { t: 'p', x: 'The total cost has two parts: the certification audit, and the work to get ready. The audit cost mainly depends on the number of employees, the number of sites and the complexity of your systems, because these set the audit days. Preparation costs (staff time, training, tools, any consultant or penetration test) come on top.' },
       { t: 'p', x: 'Certify.cx™ offers ISO/IEC 27001 as one all-inclusive package, paid once. At the time of writing:' },
       { t: 'table', head: ['What', 'Price', 'Notes'], rows: [
@@ -136,11 +161,11 @@ const ALL_POSTS = [
       { t: 'p', x: 'Costs that are often forgotten when budgeting:' },
       { t: 'ul', items: ['Staff time to run the risk assessment, write procedures and collect evidence.', 'Security tools you may need to close gaps, such as logging, backup or access management.', 'Awareness training for all staff.', 'A penetration test or vulnerability scan if your risks call for it.', 'Surveillance audits in years two and three, and recertification after three years.', 'Any re-audit if a major nonconformity is found.'] },
 
-      { t: 'h2', x: 'How long does ISO 27001 certification take?' },
+      { t: 'h2', x: 'How long does it take?' },
       { t: 'p', x: 'It depends on the size of the organisation, how mature your security already is and how much time your team can give. A small company with good habits can prepare quickly. A larger company with several sites and many systems takes longer. A gap analysis gives you a realistic plan before you set dates.' },
       { t: 'p', x: 'The audit itself is set by audit days. As a guide, the international rules for certification bodies (ISO/IEC 27006) start at roughly five audit days for the smallest organisations and rise with the number of people and the complexity of the scope. Your certification body sets the exact figure.' },
 
-      { t: 'h2', x: 'ISO 27001 vs SOC 2: which one do you need?' },
+      { t: 'h2', x: 'ISO 27001 vs SOC 2' },
       { t: 'p', x: 'Both show that you manage security, but they are different. Many organisations end up with both, depending on where their customers are.' },
       { t: 'table', head: ['', 'ISO/IEC 27001', 'SOC 2'], rows: [
         ['What it is', 'An international standard you are certified against', 'An attestation report based on AICPA Trust Services Criteria'],
@@ -150,7 +175,7 @@ const ALL_POSTS = [
       ] },
       { t: 'p', x: 'Certify.cx also supports SOC 2 and other [compliance audits](/certifications), so you can plan both from one place.' },
 
-      { t: 'h2', x: 'How Certify.cx helps you get ISO 27001 certified' },
+      { t: 'h2', x: 'How Certify.cx helps' },
       { t: 'p', x: 'Certify.cx™ — Global Compliance Marketplace connects organisations with certified lead auditors, accredited certification bodies and digital tools, so the steps above live in one place.' },
       { t: 'ul', items: ['A free gap analysis to start.', 'One package and one price for ISO/IEC 27001, with the size and location rules published.', 'Four steps: create an account, choose the certification, pay securely, pass the audit and receive the certificate.', 'A dashboard to follow your application, documents and audit dates, with email updates.', 'A reminder before your certificate is due for renewal.', 'Sara, an AI compliance assistant, and support in nine languages.'] },
       { t: 'p', x: 'Audits and certification decisions are made independently by the accredited certification bodies. Certify.cx organises the marketplace and the workflow around the audit, and cannot promise that you will pass. [Start the free gap analysis](/gap-analysis) or [see the ISO/IEC 27001 package](/iso/iso-iec-27001).' },
@@ -158,7 +183,7 @@ const ALL_POSTS = [
       { t: 'h2', x: 'Common mistakes to avoid' },
       { t: 'ul', items: ['Buying a template pack and copying it without a real risk assessment.', 'Choosing a scope so wide the project never ends, or so narrow it misleads customers.', 'Leaving security to the IT team alone, with no management ownership.', 'Writing records the week before the audit.', 'Ignoring suppliers and cloud services, which auditors always check.', 'Treating the internal audit as a formality.', 'Using a certification body that is not accredited.'] },
 
-      { t: 'h2', x: 'After certification: keeping ISO 27001' },
+      { t: 'h2', x: 'After certification' },
       { t: 'p', x: 'A certificate is normally valid for three years. In between, yearly surveillance audits check that the ISMS is alive. Before the cycle ends, a recertification audit renews it. Treat the ISMS as the way you run security every day, and the audits become routine.' },
     ],
     faq: [
