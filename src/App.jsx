@@ -5,6 +5,8 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import LanguageSuggestionPopup from './components/LanguageSuggestionPopup';
+import GoogleOneTap from './components/auth/GoogleOneTap';
+import { GOOGLE_ONE_TAP_ENABLED } from './config/loginMode';
 import { ROLES, PERMISSIONS } from './utils/roles';
 import { comingSoonItems, MODULE_MENU_ROLES } from './config/sidebarModules';
 
@@ -708,6 +710,15 @@ function HashScroll() {
   return null;
 }
 
+// Google One Tap on every public page. Login / sign-up render their own (they know the stakeholder type), and
+// the auth pages are skipped so the popup never fights a form or the callback.
+const ONE_TAP_SKIP = ['/login', '/signup', '/forgot-password', '/reset-password', '/auth'];
+function GlobalOneTap() {
+  const { pathname } = useLocation();
+  if (!GOOGLE_ONE_TAP_ENABLED || ONE_TAP_SKIP.some((p) => pathname === p || pathname.startsWith(p + '/'))) return null;
+  return <GoogleOneTap />;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -717,6 +728,7 @@ export default function App() {
             <HashScroll />
             <AppRoutes />
             <LanguageSuggestionPopup />
+            <GlobalOneTap />
           </ErrorBoundary>
         </AuthProvider>
       </ThemeProvider>
