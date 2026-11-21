@@ -18,13 +18,14 @@
   color: #fff; font-size: 13px;
 }
 .bf-banner__inner {
-  height: 100%; max-width: 1200px; margin: 0 auto; padding: 0 16px;
-  display: flex; align-items: center; justify-content: center; gap: 14px; white-space: nowrap;
+  height: 100%; max-width: 1200px; margin: 0 auto; padding: 0 var(--spacing-lg, 24px);
+  display: flex; align-items: center; justify-content: space-between; gap: 14px; white-space: nowrap;
 }
 .bf-banner__tag {
   font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; font-size: 12px;
   background: linear-gradient(90deg, var(--bf-orange), var(--bf-pink)); -webkit-background-clip: text; background-clip: text; color: transparent;
 }
+.bf-banner__grp { display: inline-flex; align-items: center; gap: 14px; }
 .bf-banner__text strong { color: #fff; }
 .bf-banner__clock { font-variant-numeric: tabular-nums; color: #f1d9c4; }
 .bf-banner__clock b { color: var(--bf-orange); font-weight: 800; }
@@ -42,7 +43,8 @@
 @media (max-width: 600px) {
   :root.has-bf { --bf-h: 38px; }
   .bf-banner { height: 38px; font-size: 12px; }
-  .bf-banner__inner { gap: 9px; padding: 0 10px; }
+  .bf-banner__inner { gap: 9px; padding: 0 10px; justify-content: center; }
+  .bf-banner__grp { gap: 9px; }
   .bf-hide-sm { display: none; }
   .bf-banner__cta { padding: 4px 10px; }
 }
@@ -147,9 +149,16 @@
 }
 
 /* Short screens (small laptops, phones on their side): drop the extras so it always fits. */
-@media (max-height: 640px) {
-  .bf-modal__art, .bf-perks { display: none; }
-  .bf-modal__top { grid-template-columns: 1fr; }
+@media (max-height: 600px) and (min-width: 561px) {
+  .bf-modal { padding: 14px 18px; }
+  .bf-gift { max-width: 170px; }
+  .bf-title { font-size: 38px; }
+  .bf-pill { margin: 6px 0; }
+  .bf-timer, .bf-actions, .bf-perks { margin-top: 8px; }
+  .bf-fine { display: none; }
+}
+@media (max-height: 520px) and (min-width: 561px) {
+  .bf-perks { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

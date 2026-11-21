@@ -96,16 +96,20 @@ function Banner({ clock }) {
   return (
     <div className="bf-banner" role="region" aria-label="Black Friday offer">
       <div className="bf-banner__inner">
-        <span className="bf-banner__tag">Black Friday</span>
-        <span className="bf-banner__text">
-          <strong>{BF_DISCOUNT}% OFF</strong><span className="bf-hide-sm"> everything</span>
+        <span className="bf-banner__grp">
+          <span className="bf-banner__tag">Black Friday</span>
+          <span className="bf-banner__text">
+            <strong>{BF_DISCOUNT}% OFF</strong><span className="bf-hide-sm"> everything</span>
+          </span>
         </span>
         <span className="bf-banner__clock" aria-label="Time left">
           <span className="bf-hide-sm">Ends in </span>
           <b>{clock.d}d</b> <b>{pad(clock.h)}</b>:<b>{pad(clock.m)}</b>:<b>{pad(clock.s)}</b>
         </span>
-        <span className="bf-banner__code bf-hide-md">Code <b>{BF_CODE}</b></span>
-        <Link to={BF_CTA_PATH} className="bf-banner__cta">Claim now <ArrowRight size={14} /></Link>
+        <span className="bf-banner__grp">
+          <span className="bf-banner__code bf-hide-md">Code <b>{BF_CODE}</b></span>
+          <Link to={BF_CTA_PATH} className="bf-banner__cta">Claim now <ArrowRight size={14} /></Link>
+        </span>
       </div>
     </div>
   );
