@@ -281,6 +281,7 @@ const DEPARTMENTS_RAW = [
       heading('fin_h_pages', 'PAGES'),
       { id: 'fin_coa', label: 'Chart of Accounts', path: '/finance/chart-of-accounts' },
       { id: 'fin_journals', label: 'Journals & Ledger', path: '/finance/journals' },
+      { id: 'fin_statements', label: 'Financial Statements', path: '/finance/statements' },
       { id: 'fin_payment_approvals', label: 'Payment Approvals', path: '/finance/payments' },
       { id: 'fin_billing', label: 'Billing', path: '/admin/billing' },
       { id: 'fin_payouts', label: 'Payouts', path: '/admin/payouts' },

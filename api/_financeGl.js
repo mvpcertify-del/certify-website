@@ -9,12 +9,14 @@
 //   gl-delete-draft  delete a draft (posted journals can never be deleted)
 //   gl-trial-balance every account with debit, credit and balance, per entity, up to a date
 //   gl-ledger        the posted lines of one account with a running balance
+//   gl-statements    statement of profit or loss for a period and statement of financial position at its end date
 //
 // Approval control: an entry is created as a draft and only becomes part of the books when it is explicitly posted.
 // Who created and who posted it are both recorded. Entries made by an automated source (source other than "manual")
 // are flagged for review in the screen.
 
 import { getAdmin, verifyAdmin } from './_verifyAdmin.js';
+import { buildStatements, sumLines } from './_financeStatements.js';
 
 export const CURRENCY_RE = /^[A-Z]{3}$/;
 const r2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
@@ -243,6 +245,32 @@ export async function handleGlAction(req, res) {
       const { error } = await db.from('fin_journal_entries').update({ status: 'reversed' }).eq('id', orig.id).eq('status', 'posted');
       if (error) throw error;
       return res.status(200).json({ ok: true, reference: entry.reference });
+    }
+
+    if (action === 'gl-statements') {
+      const DATE = /^\d{4}-\d{2}-\d{2}$/;
+      const entity = /^[0-9a-f-]{36}$/i.test(String(body.entity_id || '')) ? body.entity_id : null;
+      const to = DATE.test(String(body.to || '')) ? body.to : new Date().toISOString().slice(0, 10);
+      const from = DATE.test(String(body.from || '')) ? body.from : `${to.slice(0, 4)}-01-01`;
+      if (from > to) return res.status(200).json({ ok: false, errors: { from: 'The start date must not be after the end date.' } });
+      let q = db.from('fin_journal_entries').select('id, entry_date').in('status', ['posted', 'reversed']).lte('entry_date', to);
+      if (entity) q = q.eq('entity_id', entity);
+      const { data: entries } = await q.limit(20000);
+      const dateOf = Object.fromEntries((entries || []).map((e) => [e.id, e.entry_date]));
+      const ids = Object.keys(dateOf);
+      let lines = [];
+      for (let i = 0; i < ids.length; i += 200) {
+        const { data } = await db.from('fin_journal_lines').select('entry_id, account_code, debit, credit').in('entry_id', ids.slice(i, i + 200));
+        lines = lines.concat(data || []);
+      }
+      const { data: accounts, error: accErr } = await db.from('coa_accounts').select('code, name, category, parent_code, is_header, ifrs_class').order('code');
+      if (accErr) throw accErr;
+      const out = buildStatements({
+        accounts: accounts || [],
+        cumulative: sumLines(lines),
+        movement: sumLines(lines.filter((l) => dateOf[l.entry_id] >= from)),
+      });
+      return res.status(200).json({ ...out, period: { from, to }, entries: ids.length });
     }
 
     if (action === 'gl-trial-balance' || action === 'gl-ledger') {

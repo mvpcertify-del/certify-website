@@ -46,6 +46,7 @@ const MicroBudget = lazy(() => import('./pages/micro/MicroBudget'));
 const AdminMicroOffers = lazy(() => import('./pages/admin/AdminMicroOffers'));
 const AdminChartOfAccounts = lazy(() => import('./pages/admin/AdminChartOfAccounts'));
 const AdminJournals = lazy(() => import('./pages/admin/AdminJournals'));
+const FinancialStatements = lazy(() => import('./pages/finance/FinancialStatements'));
 const QmsOverview = lazy(() => import('./pages/qms/QmsOverview'));
 const QmsDocuments = lazy(() => import('./pages/qms/QmsDocuments'));
 const QmsCapa = lazy(() => import('./pages/qms/QmsCapa'));
@@ -487,6 +488,11 @@ function AppRoutes() {
             <Route path="/finance/journals" element={
               <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}>
                 <AdminJournals />
+              </ProtectedRoute>
+            } />
+            <Route path="/finance/statements" element={
+              <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}>
+                <FinancialStatements />
               </ProtectedRoute>
             } />
 

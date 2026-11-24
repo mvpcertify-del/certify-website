@@ -1,0 +1,32 @@
+/* Financial statements. Uses the site tokens so it follows the dark and light themes. */
+
+.fs__tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: var(--spacing-md) 0; }
+.fs__tab { font: inherit; font-size: var(--font-size-sm); font-weight: 600; padding: 6px 16px; border-radius: 999px; color: var(--color-text-secondary); background: transparent; border: 1px solid var(--color-border); cursor: pointer; }
+.fs__tab--on { color: var(--color-text-inverse); background: var(--color-accent); border-color: var(--color-accent); }
+.fs__date { display: inline-flex; align-items: center; gap: 8px; font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+.fs__date input { font: inherit; padding: 6px 10px; border-radius: var(--radius-md); border: 1px solid var(--color-border); background: var(--color-bg-surface); color: var(--color-text-primary); }
+
+.fs__title h2 { margin: var(--spacing-md) 0 2px; font-size: var(--font-size-lg); }
+.fs__title p { margin: 0 0 var(--spacing-md); font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+
+.fs__table { max-width: 860px; }
+.fs__table td { padding: 6px 12px; }
+.fs__code { width: 70px; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
+.fs__num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; width: 160px; }
+.fs__head td { font-weight: 700; padding-top: 14px; color: var(--color-text-primary); }
+.fs__head--big td { font-size: var(--font-size-base); text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-accent); }
+.fs__row--sub td:nth-child(2) { padding-inline-start: 28px; }
+.fs__row--total td { border-top: 1px solid var(--color-border); font-weight: 700; }
+.fs__row--strong td { background: var(--color-bg-surface-hover); }
+.fs__check { display: flex; align-items: center; gap: 8px; margin-bottom: var(--spacing-md); padding: 10px 14px; border-radius: var(--radius-md); font-size: var(--font-size-sm); font-weight: 600; max-width: 860px; }
+.fs__check--ok { color: var(--color-success); background: rgba(62, 207, 142, 0.12); }
+.fs__check--bad { color: var(--color-danger); background: rgba(239, 68, 68, 0.12); }
+.fs__note { max-width: 860px; font-size: var(--font-size-sm); line-height: 1.55; }
+
+@media print {
+  body { background: #fff !important; padding-top: 0 !important; }
+  .sidebar, .topbar, .bf-banner, .fs__noprint, [class*="sara"] { display: none !important; }
+  .main-content, .dashboard-main { margin: 0 !important; padding: 0 !important; }
+  .fs, .fs * { color: #111 !important; background: transparent !important; border-color: #bbb !important; }
+  .fs__table { max-width: none; }
+}

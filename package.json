@@ -12,7 +12,7 @@
     "test:notify": "node --test \"tests/notify/*.test.mjs\"",
     "test:outreach": "node --test \"tests/outreach/*.test.mjs\"",
     "test:micro": "node --test \"tests/micro/*.test.mjs\"",
-    "test:finance": "node --test \"tests/finance/*.test.mjs\"",
+    "test:finance": "node --experimental-test-module-mocks --test \"tests/finance/*.test.mjs\"",
     "test:qms": "node --experimental-test-module-mocks --test \"tests/qms/*.test.mjs\"",
     "test": "npm run test:odoo && npm run test:auth && npm run test:notify && npm run test:outreach && npm run test:micro && npm run test:finance && npm run test:qms",
     "preview": "vite preview"

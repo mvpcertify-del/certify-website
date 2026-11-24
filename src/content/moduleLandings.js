@@ -72,7 +72,7 @@ export const LANDINGS = {
       { icon: 'ShoppingCart', title: 'Procurement and vendor evaluation', text: 'Purchase orders and approvals, with supplier certificates checked before an order goes out.', clause: 'In development', status: 'soon' },
       { icon: 'Users', title: 'HR and training', text: 'Employee records, skills and training gaps, with reminders for renewals.', clause: 'In development', status: 'soon' },
       { icon: 'Wrench', title: 'Assets and calibration', text: 'Equipment, maintenance and calibration schedules with records.', clause: 'In development', status: 'soon' },
-      { icon: 'ChartColumn', title: 'Financial statements', text: 'Balance sheet, income statement and cash flow built from the ledger.', clause: 'In development', status: 'soon' },
+      { icon: 'ChartColumn', title: 'Financial statements', text: 'Statement of profit or loss (IFRS 18 categories) and statement of financial position, built from posted journals. Cash flow is next.', clause: 'Available now', status: 'live' },
     ],
     stepsTitle: 'How it works',
     steps: [
