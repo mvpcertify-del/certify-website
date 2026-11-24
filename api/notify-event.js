@@ -37,6 +37,7 @@ import { handleOutreachAction } from './_outreachAdmin.js';
 import { handleMicroOfferAction } from './_microOffer.js';
 import { handleCoaAction } from './_financeCoa.js';
 import { handleGlAction } from './_financeGl.js';
+import { handleQmsAction } from './_qms.js';
 import { runOutreachSend, runOutreachReplies, unsubscribeByToken } from './_outreachEngine.js';
 import { createMailer } from './_outreachMail.js';
 
@@ -149,6 +150,10 @@ export default async function handler(req, res) {
   // Finance ERP, Chart of Accounts (Super Admin only; the handler checks the caller).
   if (typeof req.body?.action === 'string' && req.body.action.startsWith('coa-')) {
     return handleCoaAction(req, res);
+  }
+  // QMS core, ISO 9001 (Super Admin only; the handler checks the caller).
+  if (typeof req.body?.action === 'string' && req.body.action.startsWith('qms-')) {
+    return handleQmsAction(req, res);
   }
   // Finance ERP, journals and ledger reports (Super Admin only).
   if (typeof req.body?.action === 'string' && req.body.action.startsWith('gl-')) {

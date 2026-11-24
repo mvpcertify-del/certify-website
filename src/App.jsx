@@ -46,6 +46,13 @@ const MicroBudget = lazy(() => import('./pages/micro/MicroBudget'));
 const AdminMicroOffers = lazy(() => import('./pages/admin/AdminMicroOffers'));
 const AdminChartOfAccounts = lazy(() => import('./pages/admin/AdminChartOfAccounts'));
 const AdminJournals = lazy(() => import('./pages/admin/AdminJournals'));
+const QmsOverview = lazy(() => import('./pages/qms/QmsOverview'));
+const QmsDocuments = lazy(() => import('./pages/qms/QmsDocuments'));
+const QmsCapa = lazy(() => import('./pages/qms/QmsCapa'));
+const QmsAudits = lazy(() => import('./pages/qms/QmsAudits'));
+const QmsRisks = lazy(() => import('./pages/qms/QmsRisks'));
+const QmsReview = lazy(() => import('./pages/qms/QmsReview'));
+const QmsAuditPack = lazy(() => import('./pages/qms/QmsAuditPack'));
 const SmeLanding = lazy(() => import('./pages/sme/SmeLanding'));
 // Public pay-first checkout (no signup gate). Replaces the old /start-checkout
 // auth gate — buyers create their account AT payment. /start-checkout is kept
@@ -478,6 +485,15 @@ function AppRoutes() {
                 <AdminJournals />
               </ProtectedRoute>
             } />
+
+            {/* QMS core (ISO 9001), Super Admin only */}
+            {[['overview', <QmsOverview />], ['documents', <QmsDocuments />], ['capa', <QmsCapa />], ['audits', <QmsAudits />], ['risks', <QmsRisks />], ['management-review', <QmsReview />], ['audit-pack', <QmsAuditPack />]].map(([seg, page]) => (
+              <Route key={seg} path={`/qms/${seg}`} element={
+                <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}>
+                  {page}
+                </ProtectedRoute>
+              } />
+            ))}
 
             {/* Finance — approve/reject contractor payment requests (phase44) */}
             <Route path="/finance/payments" element={
