@@ -11,6 +11,7 @@ import { call, useRunner } from './qmsLib';
 const NEED = {
   doc: 'An approved document', risk: 'A risk or opportunity in the register', kpi: 'A quality objective (KPI)',
   kpiData: 'A KPI with a recorded result', audit: 'A completed internal audit', review: 'A held management review',
+  supplier: 'An approved supplier', training: 'A completed training or competence record', feedback: 'Customer feedback on record',
 };
 
 export default function QmsOverview() {
@@ -70,6 +71,10 @@ export default function QmsOverview() {
             <Link className={`q-stat${c.highRisks ? ' q-stat--bad' : ''}`} to="/qms/risks"><b>{c.risks}</b><span>Risks and opportunities{c.highRisks ? ` (${c.highRisks} high)` : ''}</span></Link>
             <Link className="q-stat" to="/qms/risks"><b>{c.kpis}</b><span>Objectives and KPIs</span></Link>
             <Link className="q-stat" to="/qms/management-review"><b>{c.reviews}</b><span>Management reviews</span></Link>
+            <Link className={`q-stat${c.suppliersAttention ? ' q-stat--bad' : ''}`} to="/qms/suppliers"><b>{c.suppliersApproved}/{c.suppliers}</b><span>Suppliers approved{c.suppliersAttention ? ` (${c.suppliersAttention} need attention)` : ''}</span></Link>
+            <Link className={`q-stat${c.trainingAttention ? ' q-stat--bad' : ''}`} to="/qms/training"><b>{c.trainingCompleted}/{c.training}</b><span>Training completed{c.trainingAttention ? ` (${c.trainingAttention} need attention)` : ''}</span></Link>
+            <Link className={`q-stat${c.equipmentDue ? ' q-stat--bad' : ''}`} to="/qms/equipment"><b>{c.equipment}</b><span>Equipment{c.equipmentDue ? ` (${c.equipmentDue} calibration due)` : ''}</span></Link>
+            <Link className={`q-stat${c.openComplaints ? ' q-stat--bad' : ''}`} to="/qms/feedback"><b>{c.feedback}</b><span>Customer feedback{c.openComplaints ? ` (${c.openComplaints} open complaints)` : ''}</span></Link>
           </div>
 
           <div className="q-tabs">

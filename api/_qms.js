@@ -87,6 +87,40 @@ export const SPECS = {
       customer_feedback: long(), provider_performance: long(), resources: long(), decisions: long(),
     },
   },
+  supplier: {
+    table: 'qms_suppliers', prefix: 'SUP', numberField: 'supplier_no',
+    fields: {
+      name: text(160, true), category: pick(['certification_body', 'auditor', 'contractor', 'hosting', 'payment', 'software', 'other']),
+      country: text(80), contact: text(200), certificate_name: text(160), certificate_expiry: date(),
+      status: pick(['pending', 'approved', 'conditional', 'disapproved']), next_evaluation: date(), notes: long(1000),
+    },
+  },
+  evaluation: {
+    table: 'qms_supplier_evaluations', prefix: null, numberField: null, parent: 'supplier_id', noDelete: true,
+    fields: { evaluated_on: date(true), quality: int(1, 5), delivery: int(1, 5), responsiveness: int(1, 5), notes: long(1000) },
+  },
+  training: {
+    table: 'qms_training', prefix: null, numberField: null,
+    fields: {
+      person_name: text(120, true), role: text(120), training_title: text(200, true),
+      kind: pick(['training', 'certification', 'induction', 'experience']), provider: text(160),
+      planned_date: date(), completed_on: date(), expires_on: date(), evidence: long(1000), status: pick(['planned', 'completed']),
+    },
+  },
+  equipment: {
+    table: 'qms_equipment', prefix: 'EQ', numberField: 'equipment_no',
+    fields: {
+      name: text(160, true), location: text(120), serial_no: text(80), owner_name: text(120),
+      interval_months: int(1, 120, false), status: pick(['active', 'out_of_service', 'retired']), notes: long(1000),
+    },
+  },
+  feedback: {
+    table: 'qms_feedback', prefix: 'FB', numberField: 'feedback_no',
+    fields: {
+      kind: pick(['complaint', 'compliment', 'survey', 'suggestion']), customer_name: text(160), received_on: date(true),
+      rating: int(1, 5, false), subject: text(200, true), details: long(), status: pick(['new', 'investigating', 'resolved', 'closed']), response: long(),
+    },
+  },
   action: {
     table: 'qms_actions', prefix: null, numberField: null, parent: 'nc_id',
     fields: {
@@ -168,6 +202,36 @@ export function reviewHeldBlocker(review) {
   return null;
 }
 
+/** Why a supplier cannot be approved yet, or null. Needs an evaluation in the last 12 months with an average of at least 3. */
+export function supplierApproveBlocker(evaluations, on = today()) {
+  const since = addMonths(on, -12);
+  const recent = (evaluations || []).filter((e) => (e.evaluated_on || '') >= since);
+  if (!recent.length) return 'Record an evaluation (in the last 12 months) before approving the supplier.';
+  const latest = [...recent].sort((a, b) => b.evaluated_on.localeCompare(a.evaluated_on))[0];
+  const avg = (Number(latest.quality) + Number(latest.delivery) + Number(latest.responsiveness)) / 3;
+  if (avg < 3) return 'The latest evaluation scored below 3 out of 5. Approve only as "conditional" or improve the supplier first.';
+  return null;
+}
+
+/** Why a training record cannot be completed, or null. */
+export function trainingBlocker(t) {
+  if (t.status === 'completed' && !t.completed_on) return 'Enter the date the training was completed.';
+  if (t.completed_on && t.expires_on && t.expires_on < t.completed_on) return 'The expiry date cannot be before the completion date.';
+  return null;
+}
+
+/** Why a piece of feedback cannot be resolved or closed, or null. */
+export function feedbackBlocker(f) {
+  if ((f.status === 'resolved' || f.status === 'closed') && !String(f.response || '').trim()) return 'Record the response to the customer before resolving.';
+  return null;
+}
+
+/** Days from `on` to a date (negative when the date has passed). */
+export function daysUntil(dateStr, on = today()) {
+  if (!dateStr) return null;
+  return Math.round((Date.parse(`${dateStr}T00:00:00Z`) - Date.parse(`${on}T00:00:00Z`)) / 86400000);
+}
+
 /**
  * Clause readiness. Pure.
  *   data: { documents: [{ clauses, status, approved_version }], risks, kpis, audits, reviews }
@@ -182,6 +246,9 @@ export function clauseReadiness(data) {
     kpiData: (data.kpis || []).some((k) => k.actual !== null && k.actual !== undefined),
     audit: (data.audits || []).some((a) => a.status === 'completed'),
     review: (data.reviews || []).some((r) => r.status === 'held'),
+    supplier: (data.suppliers || []).some((s) => s.status === 'approved'),
+    training: (data.training || []).some((t) => t.status === 'completed'),
+    feedback: (data.feedback || []).length > 0,
   };
   return CLAUSES.map((c) => {
     const tagged = docs.filter((d) => (d.clauses || []).includes(c.no) && d.status !== 'obsolete');
@@ -216,7 +283,7 @@ async function nextNo(db, prefix) {
 }
 
 async function loadAll(db) {
-  const [documents, ncs, actions, audits, findings, risks, kpis, reviews] = await Promise.all([
+  const [documents, ncs, actions, audits, findings, risks, kpis, reviews, suppliers, evaluations, training, equipment, calibrations, feedback] = await Promise.all([
     db.from('qms_documents').select('*').order('doc_no'),
     db.from('qms_nonconformities').select('*').order('created_at', { ascending: false }),
     db.from('qms_actions').select('*'),
@@ -225,11 +292,19 @@ async function loadAll(db) {
     db.from('qms_risks').select('*').order('score', { ascending: false }),
     db.from('qms_kpis').select('*').order('period', { ascending: false }),
     db.from('qms_reviews').select('*').order('review_date', { ascending: false }),
+    db.from('qms_suppliers').select('*').order('supplier_no'),
+    db.from('qms_supplier_evaluations').select('*').order('evaluated_on', { ascending: false }),
+    db.from('qms_training').select('*').order('created_at', { ascending: false }),
+    db.from('qms_equipment').select('*').order('equipment_no'),
+    db.from('qms_calibrations').select('*').order('calibrated_on', { ascending: false }),
+    db.from('qms_feedback').select('*').order('received_on', { ascending: false }),
   ]);
-  for (const r of [documents, ncs, actions, audits, findings, risks, kpis, reviews]) if (r.error) throw r.error;
+  for (const r of [documents, ncs, actions, audits, findings, risks, kpis, reviews, suppliers, evaluations, training, equipment, calibrations, feedback]) if (r.error) throw r.error;
   return {
     documents: documents.data, ncs: ncs.data, actions: actions.data, audits: audits.data,
     findings: findings.data, risks: risks.data, kpis: kpis.data, reviews: reviews.data,
+    suppliers: suppliers.data, evaluations: evaluations.data, training: training.data,
+    equipment: equipment.data, calibrations: calibrations.data, feedback: feedback.data,
   };
 }
 
@@ -256,6 +331,16 @@ function overview(all) {
       highRisks: all.risks.filter((r) => r.status !== 'closed' && r.score >= 15).length,
       kpis: all.kpis.length,
       reviews: all.reviews.length,
+      suppliers: all.suppliers.length,
+      suppliersApproved: all.suppliers.filter((s) => s.status === 'approved').length,
+      suppliersAttention: all.suppliers.filter((s) => (s.certificate_expiry && daysUntil(s.certificate_expiry, t) <= 60) || (s.next_evaluation && s.next_evaluation <= t)).length,
+      training: all.training.length,
+      trainingCompleted: all.training.filter((x) => x.status === 'completed').length,
+      trainingAttention: all.training.filter((x) => (x.status === 'planned' && x.planned_date && x.planned_date < t) || (x.status === 'completed' && x.expires_on && daysUntil(x.expires_on, t) <= 60)).length,
+      equipment: all.equipment.filter((e) => e.status !== 'retired').length,
+      equipmentDue: all.equipment.filter((e) => e.status === 'active' && e.next_due && e.next_due <= t).length,
+      feedback: all.feedback.length,
+      openComplaints: all.feedback.filter((f) => f.kind === 'complaint' && f.status !== 'resolved' && f.status !== 'closed').length,
     },
   };
 }
@@ -281,6 +366,26 @@ function reviewInputs(all) {
     },
     risks: { open: all.risks.filter((r) => r.status !== 'closed').length, high: all.risks.filter((r) => r.status !== 'closed' && r.score >= 15).map((r) => r.risk_no) },
     documents: { approved: all.documents.filter((d) => d.approved_version != null && d.status !== 'obsolete').length, review_due: all.documents.filter((d) => d.approved_version != null && d.next_review && d.next_review <= t).map((d) => d.doc_no) },
+    customers: (() => {
+      const recent = all.feedback.filter((f) => (f.received_on || '') >= yearAgo);
+      const rated = recent.filter((f) => f.rating != null);
+      return {
+        feedback_last_12_months: recent.length,
+        complaints: recent.filter((f) => f.kind === 'complaint').length,
+        open_complaints: all.feedback.filter((f) => f.kind === 'complaint' && f.status !== 'resolved' && f.status !== 'closed').length,
+        average_rating: rated.length ? Math.round((rated.reduce((s, f) => s + f.rating, 0) / rated.length) * 10) / 10 : null,
+      };
+    })(),
+    providers: {
+      approved: all.suppliers.filter((s) => s.status === 'approved').length,
+      not_approved: all.suppliers.filter((s) => s.status === 'disapproved').map((s) => s.supplier_no),
+      certificate_or_evaluation_due: all.suppliers.filter((s) => (s.certificate_expiry && daysUntil(s.certificate_expiry, t) <= 60) || (s.next_evaluation && s.next_evaluation <= t)).map((s) => s.supplier_no),
+    },
+    competence: {
+      completed: all.training.filter((x) => x.status === 'completed').length,
+      overdue_or_expiring: all.training.filter((x) => (x.status === 'planned' && x.planned_date && x.planned_date < t) || (x.status === 'completed' && x.expires_on && daysUntil(x.expires_on, t) <= 60)).length,
+    },
+    equipment: { calibration_due: all.equipment.filter((e) => e.status === 'active' && e.next_due && e.next_due <= t).map((e) => e.equipment_no) },
     previous_review: all.reviews.filter((r) => r.status === 'held')[0]?.review_no || null,
   };
 }
@@ -325,10 +430,10 @@ export async function handleQmsAction(req, res) {
       const spec = SPECS[body.entity];
       if (!spec) throw fail(400, 'Unknown list.');
       const all = await loadAll(db);
-      const map = { document: all.documents, nc: all.ncs, audit: all.audits, risk: all.risks, kpi: all.kpis, review: all.reviews };
+      const map = { document: all.documents, nc: all.ncs, audit: all.audits, risk: all.risks, kpi: all.kpis, review: all.reviews, supplier: all.suppliers, training: all.training, equipment: all.equipment, feedback: all.feedback };
       const rows = map[body.entity];
       if (!rows) throw fail(400, 'Unknown list.');
-      const extra = body.entity === 'nc' ? { actions: all.actions } : body.entity === 'audit' ? { findings: all.findings } : {};
+      const extra = body.entity === 'nc' ? { actions: all.actions } : body.entity === 'audit' ? { findings: all.findings } : body.entity === 'supplier' ? { evaluations: all.evaluations } : body.entity === 'equipment' ? { calibrations: all.calibrations } : {};
       return res.status(200).json({ rows, ...extra });
     }
 
@@ -341,6 +446,8 @@ export async function handleQmsAction(req, res) {
       if (body.entity === 'document') out.versions = (await db.from('qms_document_versions').select('*').eq('document_id', row.id).order('version', { ascending: false })).data || [];
       if (body.entity === 'nc') out.actions = (await db.from('qms_actions').select('*').eq('nc_id', row.id).order('created_at')).data || [];
       if (body.entity === 'audit') out.findings = (await db.from('qms_findings').select('*').eq('audit_id', row.id).order('created_at')).data || [];
+      if (body.entity === 'supplier') out.evaluations = (await db.from('qms_supplier_evaluations').select('*').eq('supplier_id', row.id).order('evaluated_on', { ascending: false })).data || [];
+      if (body.entity === 'equipment') out.calibrations = (await db.from('qms_calibrations').select('*').eq('equipment_id', row.id).order('calibrated_on', { ascending: false })).data || [];
       out.trail = (await db.from('qms_trail').select('action, detail, actor, created_at').eq('entity', body.entity).eq('entity_id', row.id).order('created_at', { ascending: false }).limit(50)).data || [];
       return res.status(200).json(out);
     }
@@ -371,6 +478,13 @@ export async function handleQmsAction(req, res) {
         const why = auditCompleteBlocker(merged, fs);
         if (why) errors.status = why;
       }
+      if (body.entity === 'supplier' && merged.status === 'approved' && (mode === 'create' || current.status !== 'approved')) {
+        const evs = mode === 'update' ? (await db.from('qms_supplier_evaluations').select('*').eq('supplier_id', body.id)).data || [] : [];
+        const why = supplierApproveBlocker(evs);
+        if (why) errors.status = why;
+      }
+      if (body.entity === 'training') { const why = trainingBlocker(merged); if (why) errors.status = why; }
+      if (body.entity === 'feedback') { const why = feedbackBlocker(merged); if (why) errors.status = why; }
       if (body.entity === 'review' && merged.status === 'held') {
         const why = reviewHeldBlocker(merged);
         if (why) errors.status = why;
@@ -422,14 +536,15 @@ export async function handleQmsAction(req, res) {
     if (action === 'qms-child-save' || action === 'qms-child-delete') {
       const spec = SPECS[body.entity];
       if (!spec || !spec.parent) throw fail(400, 'Unknown record.');
-      const parentTable = spec.parent === 'nc_id' ? 'qms_nonconformities' : 'qms_audits';
+      const parentTable = { nc_id: 'qms_nonconformities', audit_id: 'qms_audits', supplier_id: 'qms_suppliers' }[spec.parent];
+      if (action === 'qms-child-delete' && spec.noDelete) throw fail(400, 'Evaluations are records and cannot be deleted.');
       if (action === 'qms-child-delete') {
         const { data: row } = await db.from(spec.table).select('*').eq('id', body.id).maybeSingle();
         if (!row) throw fail(404, 'Not found.');
-        const { data: parent } = await db.from(parentTable).select('status, nc_no, audit_no').eq('id', row[spec.parent]).maybeSingle();
+        const { data: parent } = await db.from(parentTable).select('status, nc_no, audit_no, supplier_no').eq('id', row[spec.parent]).maybeSingle();
         if (parent?.status === 'closed' || parent?.status === 'completed') throw fail(400, 'A closed case cannot be changed.');
         await db.from(spec.table).delete().eq('id', body.id);
-        await trail(db, { entity: body.entity, entity_id: body.id, ref: parent?.nc_no || parent?.audit_no || null, action: 'deleted', detail: row, actor });
+        await trail(db, { entity: body.entity, entity_id: body.id, ref: parent?.nc_no || parent?.audit_no || parent?.supplier_no || null, action: 'deleted', detail: row, actor });
         return res.status(200).json({ ok: true });
       }
       const input = body.record || {};
@@ -439,17 +554,61 @@ export async function handleQmsAction(req, res) {
       const { data: parent } = await db.from(parentTable).select('*').eq('id', parentId).maybeSingle();
       if (!parent) throw fail(404, 'The case was not found.');
       if (parent.status === 'closed' || parent.status === 'completed') errors._ = 'A closed case cannot be changed.';
+      if (body.entity === 'evaluation' && mode === 'update') errors._ = 'Evaluations are records and cannot be changed. Add a new evaluation.';
       if (Object.keys(errors).length) return res.status(200).json({ ok: false, errors });
+      const refOf = parent.nc_no || parent.audit_no || parent.supplier_no;
       if (mode === 'create') {
         const { data, error } = await db.from(spec.table).insert({ ...values, [spec.parent]: parentId }).select('*').single();
         if (error) throw error;
-        await trail(db, { entity: body.entity, entity_id: data.id, ref: parent.nc_no || parent.audit_no, action: 'created', detail: values, actor });
+        if (body.entity === 'evaluation') await db.from('qms_suppliers').update({ next_evaluation: addMonths(values.evaluated_on, 12), updated_at: new Date().toISOString() }).eq('id', parentId);
+        await trail(db, { entity: body.entity, entity_id: data.id, ref: refOf, action: 'created', detail: values, actor });
         return res.status(200).json({ ok: true, row: data });
       }
       const { data, error } = await db.from(spec.table).update({ ...values, ...(spec.table === 'qms_actions' ? { updated_at: new Date().toISOString() } : {}) }).eq('id', body.id).select('*').single();
       if (error) throw error;
-      await trail(db, { entity: body.entity, entity_id: body.id, ref: parent.nc_no || parent.audit_no, action: 'updated', detail: values, actor });
+      await trail(db, { entity: body.entity, entity_id: body.id, ref: refOf, action: 'updated', detail: values, actor });
       return res.status(200).json({ ok: true, row: data });
+    }
+
+    // Record a calibration. It sets the date of the next one from the equipment's interval. A failed calibration takes the
+    // equipment out of service until it is calibrated again.
+    if (action === 'qms-calibrate') {
+      const { data: eq } = await db.from('qms_equipment').select('*').eq('id', body.id).maybeSingle();
+      if (!eq) throw fail(404, 'Equipment not found.');
+      if (eq.status === 'retired') return res.status(200).json({ ok: false, errors: { _: 'Retired equipment cannot be calibrated.' } });
+      const on = String(body.calibrated_on || '');
+      const errors = {};
+      if (!DATE.test(on) || Number.isNaN(Date.parse(`${on}T00:00:00Z`))) errors.calibrated_on = 'Use a valid date (YYYY-MM-DD).';
+      else if (on > today()) errors.calibrated_on = 'The calibration date cannot be in the future.';
+      if (!['pass', 'fail'].includes(body.result)) errors.result = 'Choose pass or fail.';
+      if (Object.keys(errors).length) return res.status(200).json({ ok: false, errors });
+      const { error } = await db.from('qms_calibrations').insert({ equipment_id: eq.id, calibrated_on: on, result: body.result, certificate_ref: clean(body.certificate_ref, 120), notes: clean(body.notes, 500) });
+      if (error) throw error;
+      const pass = body.result === 'pass';
+      await db.from('qms_equipment').update({
+        last_calibrated: on, next_due: pass ? addMonths(on, eq.interval_months || 12) : on,
+        status: pass ? 'active' : 'out_of_service', updated_at: new Date().toISOString(),
+      }).eq('id', eq.id);
+      await trail(db, { entity: 'equipment', entity_id: eq.id, ref: eq.equipment_no, action: pass ? 'calibrated: pass' : 'calibrated: FAIL, out of service', detail: { calibrated_on: on, certificate_ref: body.certificate_ref || null }, actor });
+      return res.status(200).json({ ok: true, passed: pass });
+    }
+
+    // Raise a nonconformity from a customer complaint and link them.
+    if (action === 'qms-feedback-to-nc') {
+      const { data: f } = await db.from('qms_feedback').select('*').eq('id', body.id).maybeSingle();
+      if (!f) throw fail(404, 'Feedback not found.');
+      if (f.nc_id) return res.status(200).json({ ok: false, errors: { _: 'A nonconformity was already raised for this complaint.' } });
+      if (f.kind !== 'complaint') return res.status(200).json({ ok: false, errors: { _: 'Only a complaint can raise a nonconformity.' } });
+      const row = {
+        nc_no: await nextNo(db, 'NC'), title: clean(f.subject, 120), source: 'customer_complaint',
+        description: `${f.details || f.subject}${f.customer_name ? `\nCustomer: ${f.customer_name}` : ''}\nFrom ${f.feedback_no}.`,
+        severity: 'minor', status: 'open', created_by: actor,
+      };
+      const { data: nc, error } = await db.from('qms_nonconformities').insert(row).select('*').single();
+      if (error) throw error;
+      await db.from('qms_feedback').update({ nc_id: nc.id, status: f.status === 'new' ? 'investigating' : f.status, updated_at: new Date().toISOString() }).eq('id', f.id);
+      await trail(db, { entity: 'nc', entity_id: nc.id, ref: nc.nc_no, action: 'created from customer complaint', detail: { feedback: f.feedback_no }, actor });
+      return res.status(200).json({ ok: true, row: nc });
     }
 
     // Turn a nonconformity finding into a nonconformity record and link them.
@@ -560,7 +719,12 @@ export async function handleQmsAction(req, res) {
         documents: all.documents.map((d) => ({ ...d, approval: (versions || []).find((v) => v.document_id === d.id && v.version === d.approved_version) || null })),
         nonconformities: all.ncs.map((n) => ({ ...n, actions: all.actions.filter((a) => a.nc_id === n.id) })),
         audits: all.audits.map((a) => ({ ...a, findings: all.findings.filter((f) => f.audit_id === a.id) })),
-        risks: all.risks, kpis: all.kpis, reviews: all.reviews, trail: tr || [],
+        risks: all.risks, kpis: all.kpis, reviews: all.reviews,
+        suppliers: all.suppliers.map((s) => ({ ...s, evaluations: all.evaluations.filter((e) => e.supplier_id === s.id) })),
+        training: all.training,
+        equipment: all.equipment.map((e) => ({ ...e, calibrations: all.calibrations.filter((c) => c.equipment_id === e.id) })),
+        feedback: all.feedback,
+        trail: tr || [],
       });
     }
 

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { CLAUSES, TEMPLATES, EDITION } from '../../api/_qmsMaster.js';
 import {
   SPECS, validateRecord, ncCloseBlocker, auditCompleteBlocker, reviewHeldBlocker, clauseReadiness, readinessPercent, riskLevel, addMonths,
+  supplierApproveBlocker, trainingBlocker, feedbackBlocker, daysUntil,
 } from '../../api/_qms.js';
 
 // ---------------------------------------------------------------- master data
@@ -129,10 +130,10 @@ test('draft documents count as partial, not as evidence', () => {
   assert.equal(readinessPercent(rows), 0);
 });
 
-test('approved documents alone make most clauses ready, but 6.1, 6.2, 9.1, 9.2 and 9.3 also need records', () => {
+test('approved documents alone make most clauses ready, but 6.1, 6.2, 7.2, 8.4, 9.1, 9.2 and 9.3 also need records', () => {
   const rows = clauseReadiness({ documents: approvedAll() });
   const notReady = rows.filter((r) => r.level !== 'ready').map((r) => r.no).sort();
-  assert.deepEqual(notReady, ['6.1', '6.2', '9.1', '9.2', '9.3']);
+  assert.deepEqual(notReady, ['6.1', '6.2', '7.2', '8.4', '9.1', '9.2', '9.3']);
   for (const r of rows.filter((x) => x.level !== 'ready')) assert.equal(r.level, 'partial');
 });
 
@@ -143,6 +144,9 @@ test('records complete the remaining clauses and the system reaches 100 percent'
     kpis: [{ name: 'A', actual: 97 }],
     audits: [{ status: 'completed' }],
     reviews: [{ status: 'held' }],
+    suppliers: [{ status: 'approved' }],
+    training: [{ status: 'completed' }],
+    feedback: [{ id: 1 }],
   });
   assert.ok(rows.every((r) => r.level === 'ready'));
   assert.equal(readinessPercent(rows), 100);
@@ -168,4 +172,61 @@ test('a new draft version of an approved document keeps the approved version as 
 test('addMonths moves a date forward', () => {
   assert.equal(addMonths('2026-11-24', 12), '2027-11-24');
   assert.equal(addMonths('2026-11-24', -12), '2025-11-24');
+});
+
+// ---------------------------------------------------------------- Phase 3 registers
+test('a supplier needs a recent evaluation scoring at least 3 before it is approved', () => {
+  assert.match(supplierApproveBlocker([], '2026-11-25'), /evaluation/);
+  assert.match(supplierApproveBlocker([{ evaluated_on: '2025-01-10', quality: 5, delivery: 5, responsiveness: 5 }], '2026-11-25'), /last 12 months/);
+  assert.match(supplierApproveBlocker([{ evaluated_on: '2026-10-01', quality: 2, delivery: 3, responsiveness: 2 }], '2026-11-25'), /below 3/);
+  assert.equal(supplierApproveBlocker([{ evaluated_on: '2026-10-01', quality: 4, delivery: 3, responsiveness: 4 }], '2026-11-25'), null);
+});
+
+test('the latest evaluation decides, not an old good one', () => {
+  const evals = [{ evaluated_on: '2026-02-01', quality: 5, delivery: 5, responsiveness: 5 }, { evaluated_on: '2026-10-01', quality: 1, delivery: 2, responsiveness: 2 }];
+  assert.match(supplierApproveBlocker(evals, '2026-11-25'), /below 3/);
+});
+
+test('a completed training record needs its completion date, and expiry cannot be earlier', () => {
+  assert.ok(trainingBlocker({ status: 'completed', completed_on: null }));
+  assert.ok(trainingBlocker({ status: 'completed', completed_on: '2026-05-01', expires_on: '2026-04-01' }));
+  assert.equal(trainingBlocker({ status: 'completed', completed_on: '2026-05-01', expires_on: '2028-05-01' }), null);
+  assert.equal(trainingBlocker({ status: 'planned' }), null);
+});
+
+test('feedback cannot be resolved without a response', () => {
+  assert.ok(feedbackBlocker({ status: 'resolved', response: ' ' }));
+  assert.ok(feedbackBlocker({ status: 'closed' }));
+  assert.equal(feedbackBlocker({ status: 'investigating' }), null);
+  assert.equal(feedbackBlocker({ status: 'resolved', response: 'Apology sent and fee refunded' }), null);
+});
+
+test('evaluation ratings are 1 to 5 and the date is required', () => {
+  assert.ok(validateRecord(SPECS.evaluation, { quality: 4, delivery: 4, responsiveness: 6, evaluated_on: '2026-11-01' }, 'create').errors.responsiveness);
+  assert.ok(validateRecord(SPECS.evaluation, { quality: 4, delivery: 4, responsiveness: 4 }, 'create').errors.evaluated_on);
+  assert.deepEqual(validateRecord(SPECS.evaluation, { quality: 4, delivery: 3, responsiveness: 5, evaluated_on: '2026-11-01' }, 'create').errors, {});
+});
+
+test('equipment interval is 1 to 120 months and feedback rating 1 to 5', () => {
+  assert.ok(validateRecord(SPECS.equipment, { name: 'Network tester', interval_months: 0 }, 'create').errors.interval_months);
+  assert.deepEqual(validateRecord(SPECS.equipment, { name: 'Network tester', interval_months: 12 }, 'create').errors, {});
+  assert.ok(validateRecord(SPECS.feedback, { subject: 'Slow', received_on: '2026-11-01', rating: 9 }, 'create').errors.rating);
+});
+
+test('7.2, 8.4 and 9.1 now need training, an approved supplier and customer feedback', () => {
+  const docs = TEMPLATES.map((t) => ({ doc_no: t.doc_no, clauses: t.clauses, status: 'approved', approved_version: 1 }));
+  const get = (rows, no) => rows.find((r) => r.no === no);
+  const base = clauseReadiness({ documents: docs });
+  assert.deepEqual(get(base, '7.2').missing, ['training']);
+  assert.deepEqual(get(base, '8.4').missing, ['supplier']);
+  assert.ok(get(base, '9.1').missing.includes('feedback'));
+  const pending = clauseReadiness({ documents: docs, suppliers: [{ status: 'pending' }], training: [{ status: 'planned' }] });
+  assert.equal(get(pending, '8.4').level, 'partial', 'a pending supplier is not evidence');
+  assert.equal(get(pending, '7.2').level, 'partial', 'planned training is not evidence');
+});
+
+test('daysUntil counts days to a date', () => {
+  assert.equal(daysUntil('2026-12-25', '2026-11-25'), 30);
+  assert.equal(daysUntil('2026-11-20', '2026-11-25'), -5);
+  assert.equal(daysUntil(null), null);
 });

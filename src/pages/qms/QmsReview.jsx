@@ -19,6 +19,10 @@ function Inputs({ inputs }) {
       <li><b>Objectives</b> {inputs.kpis.met} of {inputs.kpis.measured} measured KPIs met{inputs.kpis.not_met.length ? `. Not met: ${inputs.kpis.not_met.join(', ')}` : ''}.</li>
       <li><b>Internal audits</b> {inputs.audits.completed_last_12_months} completed in the last 12 months. Findings: {Object.keys(f).length ? Object.entries(f).map(([k, n]) => `${n} ${k.replace(/_/g, ' ')}`).join(', ') : 'none'}.</li>
       <li><b>Risks</b> {inputs.risks.open} open{inputs.risks.high.length ? `, high: ${inputs.risks.high.join(', ')}` : ''}.</li>
+      {inputs.customers && <li><b>Customers</b> {inputs.customers.feedback_last_12_months} feedback records in the last 12 months, {inputs.customers.complaints} complaints ({inputs.customers.open_complaints} open). Average rating: {inputs.customers.average_rating ?? 'none recorded'}.</li>}
+      {inputs.providers && <li><b>External providers</b> {inputs.providers.approved} approved{inputs.providers.not_approved.length ? `. Not approved: ${inputs.providers.not_approved.join(', ')}` : ''}{inputs.providers.certificate_or_evaluation_due.length ? `. Certificate or evaluation due: ${inputs.providers.certificate_or_evaluation_due.join(', ')}` : ''}.</li>}
+      {inputs.competence && <li><b>Competence</b> {inputs.competence.completed} training records completed, {inputs.competence.overdue_or_expiring} overdue or expiring.</li>}
+      {inputs.equipment && <li><b>Equipment</b> {inputs.equipment.calibration_due.length ? `Calibration due: ${inputs.equipment.calibration_due.join(', ')}` : 'All calibrations up to date'}.</li>}
       <li><b>Documents</b> {inputs.documents.approved} approved{inputs.documents.review_due.length ? `. Due for review: ${inputs.documents.review_due.join(', ')}` : ''}.</li>
     </ul>
   );

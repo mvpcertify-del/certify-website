@@ -14,6 +14,9 @@ export const EDITION = 'ISO 9001:2015';
 //   kpiData at least one KPI with an actual value recorded
 //   audit   at least one completed internal audit
 //   review  at least one held management review
+//   supplier  at least one approved external provider (8.4)
+//   training  at least one completed training or competence record (7.2)
+//   feedback  at least one customer feedback record (9.1)
 export const CLAUSES = [
   ['4.1', 'Understanding the organization and its context', ['doc']],
   ['4.2', 'Understanding the needs and expectations of interested parties', ['doc']],
@@ -26,18 +29,18 @@ export const CLAUSES = [
   ['6.2', 'Quality objectives and planning to achieve them', ['doc', 'kpi']],
   ['6.3', 'Planning of changes', ['doc']],
   ['7.1', 'Resources', ['doc']],
-  ['7.2', 'Competence', ['doc']],
+  ['7.2', 'Competence', ['doc', 'training']],
   ['7.3', 'Awareness', ['doc']],
   ['7.4', 'Communication', ['doc']],
   ['7.5', 'Documented information', ['doc']],
   ['8.1', 'Operational planning and control', ['doc']],
   ['8.2', 'Requirements for products and services', ['doc']],
   ['8.3', 'Design and development of products and services', ['doc']],
-  ['8.4', 'Control of externally provided processes, products and services', ['doc']],
+  ['8.4', 'Control of externally provided processes, products and services', ['doc', 'supplier']],
   ['8.5', 'Production and service provision', ['doc']],
   ['8.6', 'Release of products and services', ['doc']],
   ['8.7', 'Control of nonconforming outputs', ['doc']],
-  ['9.1', 'Monitoring, measurement, analysis and evaluation', ['doc', 'kpiData']],
+  ['9.1', 'Monitoring, measurement, analysis and evaluation', ['doc', 'kpiData', 'feedback']],
   ['9.2', 'Internal audit', ['doc', 'audit']],
   ['9.3', 'Management review', ['doc', 'review']],
   ['10.1', 'Improvement: general', ['doc']],

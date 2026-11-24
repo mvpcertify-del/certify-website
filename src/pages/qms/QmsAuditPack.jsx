@@ -110,7 +110,42 @@ export default function QmsAuditPack() {
           </section>
 
           <section>
-            <h2>8. Change trail (latest 300 entries)</h2>
+            <h2>8. External providers (suppliers)</h2>
+            {d.suppliers.length === 0 && <p>None recorded.</p>}
+            {d.suppliers.length > 0 && (
+              <table>
+                <thead><tr><th>Number</th><th>Supplier</th><th>Type</th><th>Certificate</th><th>Valid until</th><th>Latest evaluation</th><th>Status</th></tr></thead>
+                <tbody>{d.suppliers.map((s) => { const e = s.evaluations[0]; return <tr key={s.id}><td>{s.supplier_no}</td><td>{s.name}</td><td>{label(s.category)}</td><td>{s.certificate_name}</td><td>{fmtDate(s.certificate_expiry)}</td><td>{e ? `${fmtDate(e.evaluated_on)}: ${e.score} / 5` : '-'}</td><td>{label(s.status)}</td></tr>; })}</tbody>
+              </table>
+            )}
+          </section>
+
+          <section>
+            <h2>9. Training and competence</h2>
+            <table>
+              <thead><tr><th>Person</th><th>Role</th><th>Training or qualification</th><th>Type</th><th>Completed</th><th>Expires</th><th>Status</th></tr></thead>
+              <tbody>{d.training.length === 0 && <tr><td colSpan={7}>None recorded.</td></tr>}{d.training.map((t) => <tr key={t.id}><td>{t.person_name}</td><td>{t.role}</td><td>{t.training_title}</td><td>{label(t.kind)}</td><td>{fmtDate(t.completed_on)}</td><td>{fmtDate(t.expires_on)}</td><td>{label(t.status)}</td></tr>)}</tbody>
+            </table>
+          </section>
+
+          <section>
+            <h2>10. Equipment and calibration</h2>
+            <table>
+              <thead><tr><th>Number</th><th>Equipment</th><th>Location</th><th>Last calibrated</th><th>Next due</th><th>Calibrations</th><th>Status</th></tr></thead>
+              <tbody>{d.equipment.length === 0 && <tr><td colSpan={7}>None recorded.</td></tr>}{d.equipment.map((e) => <tr key={e.id}><td>{e.equipment_no}</td><td>{e.name}</td><td>{e.location}</td><td>{fmtDate(e.last_calibrated)}</td><td>{fmtDate(e.next_due)}</td><td>{e.calibrations.map((c) => `${fmtDate(c.calibrated_on)} ${c.result}`).join('; ')}</td><td>{label(e.status)}</td></tr>)}</tbody>
+            </table>
+          </section>
+
+          <section>
+            <h2>11. Customer feedback and complaints</h2>
+            <table>
+              <thead><tr><th>Number</th><th>Date</th><th>Customer</th><th>Subject</th><th>Type</th><th>Rating</th><th>Status</th><th>Response</th></tr></thead>
+              <tbody>{d.feedback.length === 0 && <tr><td colSpan={8}>None recorded.</td></tr>}{d.feedback.map((f) => <tr key={f.id}><td>{f.feedback_no}</td><td>{fmtDate(f.received_on)}</td><td>{f.customer_name}</td><td>{f.subject}</td><td>{label(f.kind)}</td><td>{f.rating ?? ''}</td><td>{label(f.status)}</td><td>{f.response}</td></tr>)}</tbody>
+            </table>
+          </section>
+
+          <section>
+            <h2>12. Change trail (latest 300 entries)</h2>
             <table>
               <thead><tr><th>When</th><th>Record</th><th>Reference</th><th>Action</th></tr></thead>
               <tbody>{d.trail.map((t, i) => <tr key={i}><td>{fmtTime(t.created_at)}</td><td>{label(t.entity)}</td><td>{t.ref}</td><td>{t.action}</td></tr>)}</tbody>

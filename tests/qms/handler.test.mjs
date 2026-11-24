@@ -16,6 +16,10 @@ const DEFAULTS = {
   qms_risks: { status: 'open', kind: 'risk' },
   qms_kpis: { direction: 'higher', target: null, actual: null },
   qms_reviews: { status: 'planned', inputs: {} },
+  qms_suppliers: { status: 'pending' },
+  qms_training: { status: 'planned' },
+  qms_equipment: { status: 'active', interval_months: 12 },
+  qms_feedback: { status: 'new' },
 };
 const store = {};
 const counters = {};
@@ -210,6 +214,77 @@ test('KPIs, risks and the management review feed the readiness score', async () 
   assert.equal(again.ok, false, 'a held review is a record');
 });
 
+test('a supplier is approved only after a good evaluation, and evaluations are records', async () => {
+  const s = await call('qms-save', { entity: 'supplier', record: { name: 'Example Certification Body', category: 'certification_body', country: 'AE', certificate_name: 'ISO/IEC 17021-1 accreditation', certificate_expiry: '2027-06-30' } });
+  assert.ok(s.ok);
+  assert.match(s.row.supplier_no, /^SUP-\d{4}$/);
+  let r = await call('qms-save', { entity: 'supplier', id: s.row.id, record: { status: 'approved' } });
+  assert.equal(r.ok, false, 'no evaluation yet');
+  const ev = await call('qms-child-save', { entity: 'evaluation', record: { supplier_id: s.row.id, evaluated_on: new Date().toISOString().slice(0, 10), quality: 4, delivery: 4, responsiveness: 5, notes: 'On time, good reports' } });
+  assert.ok(ev.ok);
+  assert.ok(one('qms_suppliers', (x) => x.id === s.row.id).next_evaluation, 'next evaluation is set a year ahead');
+  r = await call('qms-save', { entity: 'supplier', id: s.row.id, record: { status: 'approved' } });
+  assert.ok(r.ok);
+  const edit = await call('qms-child-save', { entity: 'evaluation', id: ev.row.id, record: { quality: 5 } });
+  assert.equal(edit.ok, false, 'an evaluation cannot be changed');
+  assert.equal((await call('qms-child-delete', { entity: 'evaluation', id: ev.row.id })).status, 400);
+});
+
+test('training: a completed record needs its date', async () => {
+  const bad = await call('qms-save', { entity: 'training', record: { person_name: 'Ayesha', training_title: 'ISO 9001 internal auditor course', status: 'completed' } });
+  assert.equal(bad.ok, false);
+  const ok = await call('qms-save', { entity: 'training', record: { person_name: 'Ayesha', role: 'Quality Manager', training_title: 'ISO 9001 internal auditor course', kind: 'certification', status: 'completed', completed_on: '2026-09-01', expires_on: '2029-09-01', evidence: 'Certificate on file' } });
+  assert.ok(ok.ok);
+});
+
+test('calibration sets the next due date, and a failed one takes the equipment out of service', async () => {
+  const eq = await call('qms-save', { entity: 'equipment', record: { name: 'Network speed tester', location: 'Head office', interval_months: 6 } });
+  assert.ok(eq.ok);
+  assert.match(eq.row.equipment_no, /^EQ-\d{4}$/);
+  const future = await call('qms-calibrate', { id: eq.row.id, calibrated_on: '2099-01-01', result: 'pass' });
+  assert.equal(future.ok, false);
+  const pass = await call('qms-calibrate', { id: eq.row.id, calibrated_on: '2026-09-01', result: 'pass', certificate_ref: 'CAL-778' });
+  assert.ok(pass.ok && pass.passed);
+  let row = one('qms_equipment', (e) => e.id === eq.row.id);
+  assert.equal(row.last_calibrated, '2026-09-01');
+  assert.equal(row.next_due, '2027-03-01');
+  assert.equal(row.status, 'active');
+  const fail = await call('qms-calibrate', { id: eq.row.id, calibrated_on: '2026-11-01', result: 'fail' });
+  assert.ok(fail.ok && !fail.passed);
+  row = one('qms_equipment', (e) => e.id === eq.row.id);
+  assert.equal(row.status, 'out_of_service');
+  assert.equal(rowsOf('qms_calibrations').filter((c) => c.equipment_id === eq.row.id).length, 2);
+  const retired = await call('qms-save', { entity: 'equipment', id: eq.row.id, record: { status: 'retired' } });
+  assert.ok(retired.ok);
+  assert.equal((await call('qms-calibrate', { id: eq.row.id, calibrated_on: '2026-11-02', result: 'pass' })).ok, false);
+});
+
+test('a complaint raises one nonconformity, and feedback needs a response to be resolved', async () => {
+  const c = await call('qms-save', { entity: 'feedback', record: { kind: 'complaint', customer_name: 'Example Ltd', received_on: '2026-11-20', subject: 'Slow reply from support', details: 'Waited 5 days', rating: 2 } });
+  assert.ok(c.ok);
+  const nope = await call('qms-save', { entity: 'feedback', id: c.row.id, record: { status: 'resolved' } });
+  assert.equal(nope.ok, false);
+  const nc = await call('qms-feedback-to-nc', { id: c.row.id });
+  assert.ok(nc.ok);
+  assert.equal(nc.row.source, 'customer_complaint');
+  assert.equal(one('qms_feedback', (f) => f.id === c.row.id).status, 'investigating');
+  assert.equal((await call('qms-feedback-to-nc', { id: c.row.id })).ok, false);
+  assert.ok((await call('qms-save', { entity: 'feedback', id: c.row.id, record: { status: 'resolved', response: 'Apologised and added a second support shift' } })).ok);
+  const praise = await call('qms-save', { entity: 'feedback', record: { kind: 'compliment', received_on: '2026-11-21', subject: 'Smooth process', rating: 5 } });
+  assert.equal((await call('qms-feedback-to-nc', { id: praise.row.id })).ok, false);
+});
+
+test('the review inputs now include customers, providers, competence and equipment', async () => {
+  const rv = await call('qms-save', { entity: 'review', record: { review_date: '2026-12-11' } });
+  const snap = await call('qms-review-snapshot', { id: rv.row.id });
+  assert.ok(snap.ok);
+  assert.equal(snap.inputs.customers.complaints, 1);
+  assert.equal(snap.inputs.customers.average_rating, 3.5);
+  assert.equal(snap.inputs.providers.approved, 1);
+  assert.equal(snap.inputs.competence.completed, 1);
+  assert.ok(Array.isArray(snap.inputs.equipment.calibration_due));
+});
+
 test('approving every document brings the score to 100 percent once the records exist', async () => {
   for (const d of rowsOf('qms_documents')) {
     if (d.approved_version != null) continue;
@@ -230,6 +305,9 @@ test('the audit pack carries documents, audits with findings, nonconformities wi
   assert.ok(p.audits[0].findings);
   assert.ok(p.nonconformities.some((n) => n.actions.length > 0));
   assert.ok(p.trail.length > 10);
+  assert.ok(p.suppliers.some((s) => s.evaluations.length > 0));
+  assert.ok(p.equipment.some((e) => e.calibrations.length > 0));
+  assert.ok(p.training.length > 0 && p.feedback.length > 0);
   assert.equal(p.percent, 100);
 });
 
