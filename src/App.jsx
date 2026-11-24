@@ -40,6 +40,7 @@ const AuthLayout = lazy(() => import('./components/layout/AuthLayout'));
 const ModuleComingSoon = lazy(() => import('./pages/modules/ModuleComingSoon'));
 const LandingPage = lazy(() => import('./pages/landing/LandingPage'));
 const PublicGapAnalysis = lazy(() => import('./pages/public/PublicGapAnalysis'));
+const ModuleLanding = lazy(() => import('./pages/modules/ModuleLanding'));
 const MicroLanding = lazy(() => import('./pages/micro/MicroLanding'));
 const MicroBudget = lazy(() => import('./pages/micro/MicroBudget'));
 const AdminMicroOffers = lazy(() => import('./pages/admin/AdminMicroOffers'));
@@ -174,6 +175,8 @@ function AppRoutes() {
 
           {/* ---- MICRO companies (1-9 employees) landing page ---- */}
           <Route path="/micro" element={<MicroLanding />} />
+          <Route path="/qms" element={<ModuleLanding module="qms" />} />
+          <Route path="/erp" element={<ModuleLanding module="erp" />} />
           {/* The "What's your budget?" special offer for MICRO companies (shared on social media and LinkedIn). */}
           <Route path="/micro/budget" element={<MicroBudget />} />
 

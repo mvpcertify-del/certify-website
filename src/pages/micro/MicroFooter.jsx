@@ -21,6 +21,8 @@ export default function MicroFooter() {
               <Link to="/#standards">{t('nav.standards')}</Link>
               <Link to="/#benefits">{t('nav.benefits')}</Link>
               <Link to="/micro">{t('nav.micro')}</Link>
+              <Link to="/qms">Certify.cx QMS</Link>
+              <Link to="/erp">Certify.cx ERP</Link>
               <Link to="/micro/budget">{t('nav.microOffer', "What's your budget? (MICRO offer)")}</Link>
             </div>
             <div className="micro-footer__col">

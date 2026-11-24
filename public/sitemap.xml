@@ -59,6 +59,9 @@
     <priority>0.8</priority>
   </url>
 
+  <url><loc>https://certify.cx/qms</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://certify.cx/erp</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+
   <!-- ISO standard landing pages -->
   <url><loc>https://certify.cx/iso/iso-9001</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://certify.cx/iso/iso-14001</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
