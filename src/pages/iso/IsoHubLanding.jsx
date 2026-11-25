@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Award, Globe2, HardHat, Lock, Users, SlidersHorizontal, LayoutDashboard, Landmark } from 'lucide-react';
+import { ArrowRight, Award, Globe2, HardHat, Lock, Users, SlidersHorizontal, LayoutDashboard, Landmark, ShoppingCart, ChevronRight } from 'lucide-react';
 import PublicNav from '../../components/layout/PublicNav';
 import MicroFooter from '../micro/MicroFooter';
 import SEO from '../../components/seo/SEO';
+import { computeTotal } from '../../utils/pricing';
 import { ISO_LANDING_LIST, ISO_HUB_PATH, WHY_US } from '../../content/isoLandings';
 import useJsonLd from './useJsonLd';
 import './IsoStandardLanding.css';
@@ -32,11 +33,14 @@ export default function IsoHubLanding() {
   return (
     <>
       <SEO title={TITLE} description={DESC} path={ISO_HUB_PATH} />
-      <div className="isol" style={{ '--isol-accent': '#1d4ed8', '--isol-soft': '#e8eefc' }}>
+      <div className="isol" style={{ '--isol-a-dark': '#3ecf8e', '--isol-a-light': '#0e9f6e' }}>
         <PublicNav />
 
         <header className="isol-hero isol-hero--hub pubnav-offset">
           <div className="isol-container isol-center">
+            <nav className="isol-crumbs isol-crumbs--center" aria-label="Breadcrumb">
+              <Link to="/">Home</Link><ChevronRight size={14} /><span aria-current="page">ISO certification</span>
+            </nav>
             <h1 className="isol-h1 isol-h1--hub">Choose the right ISO certification for your business</h1>
             <p className="isol-lead isol-lead--center">We help organisations implement and certify management systems that drive growth, compliance and excellence.</p>
           </div>
@@ -48,14 +52,17 @@ export default function IsoHubLanding() {
               <div className="isol-hub">
                 {ISO_LANDING_LIST.map((o) => {
                   const Icon = ICONS[o.slug] || Award;
+                  const price = computeTotal({ standardSlug: o.slug }).subtotal;
                   return (
-                    <Link to={o.path} className="isol-hubcard" key={o.slug} style={{ '--isol-accent': o.accent, '--isol-soft': o.accentSoft }}>
+                    <article className="isol-hubcard" key={o.slug} style={{ '--isol-a-dark': o.accent, '--isol-a-light': o.accentLight }}>
                       <span className="isol-hubcard__icon"><Icon size={26} /></span>
                       <h2>{o.short}</h2>
                       <b>{o.name.replace(' Certification', '')}</b>
                       <p>{BLURB[o.slug]}</p>
-                      <span className="isol-hubcard__more">Learn more <ArrowRight size={15} /></span>
-                    </Link>
+                      <div className="isol-hubcard__price">From <strong>${price.toLocaleString()}</strong></div>
+                      <Link to={o.path} className="isol-btn isol-btn--ghost isol-btn--block">Learn more <ArrowRight size={15} /></Link>
+                      <Link to={`/checkout?iso=${o.slug}`} className="isol-btn isol-btn--primary isol-btn--block"><ShoppingCart size={16} /> Buy now</Link>
+                    </article>
                   );
                 })}
               </div>
@@ -69,7 +76,7 @@ export default function IsoHubLanding() {
               <div className="isol-whygrid">
                 {WHY_US.map(([title, text], i) => {
                   const Icon = WHY_ICONS[i] || Users;
-                  return <div key={title}><Icon size={26} /><b>{title}</b><span>{text}</span></div>;
+                  return <div key={title}><span className="isol-trust__icon"><Icon size={22} /></span><b>{title}</b><span>{text}</span></div>;
                 })}
               </div>
             </div>

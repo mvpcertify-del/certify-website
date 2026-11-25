@@ -347,7 +347,8 @@
   padding-top: 64px;
 }
 
-@media (max-width: 768px) {
+/* The full link row needs about 1100px; below that the hamburger takes over so nothing wraps or crowds. */
+@media (max-width: 1100px) {
   .pubnav__links {
     display: none;
   }
@@ -358,9 +359,11 @@
 
 .pubnav__new { display: inline-block; margin-left: 4px; padding: 1px 6px; border-radius: 999px; font-size: 9px; font-weight: 800; letter-spacing: 0.06em; color: #04140e; background: var(--color-accent); vertical-align: middle; }
 
-.pubnav__logo { margin-right: 28px; flex: none; }
-.pubnav__links { gap: 14px; }
-.pubnav__link--offer { white-space: nowrap; }
+.pubnav__logo { margin-right: 24px; flex: none; }
+.pubnav__links { gap: 18px; flex: none; }
+/* One line each: "How It Works" used to wrap onto two lines and crowd the bar. */
+.pubnav__link, .pubnav__dropdown-trigger, .pubnav__btn { white-space: nowrap; }
+.pubnav__link--offer { color: var(--color-accent-text); font-weight: 600; }
 
 /* Standards dropdown: the four ISO landing pages, then the full lists. */
 .pubnav__dropdown {
