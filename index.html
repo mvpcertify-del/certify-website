@@ -208,6 +208,32 @@
       <img src="/brand-mark.png" alt="" />
       <span></span>
     </div>
+    <!-- Splash failsafe. If the app's own script never starts (a stale cached page after a deploy points at a file that
+         no longer exists, or the download stalls) the splash would spin forever. Reload ONCE (the guard stops loops);
+         if it is still stuck, replace the spinner with a visible way out. When the app has started the splash is gone
+         and the guard is cleared. Plain script on purpose: it must run even when the module script cannot. -->
+    <script>
+      (function () {
+        var KEY = 'certifycx-splash-reloaded';
+        var tried = function () { try { return sessionStorage.getItem(KEY); } catch (e) { return '1'; } };
+        var recover = function () {
+          var splash = document.getElementById('app-splash');
+          if (!splash) return;
+          if (!tried()) { try { sessionStorage.setItem(KEY, '1'); } catch (e) { /* storage blocked */ } location.reload(); return; }
+          if (!splash.querySelector('a')) {
+            splash.insertAdjacentHTML('beforeend', '<p style="margin:0;font:14px/1.5 system-ui,sans-serif;color:#9aa4a0;text-align:center">Certify.cx could not start.<br><a href="/" style="color:#3ecf8e;font-weight:600">Reload the page</a></p>');
+          }
+        };
+        window.addEventListener('error', function (e) {
+          var t = e.target;
+          if (t && t.tagName === 'SCRIPT' && t.src && t.src.indexOf('/assets/') > -1) recover();
+        }, true);
+        setTimeout(function () {
+          if (document.getElementById('app-splash')) recover();
+          else { try { sessionStorage.removeItem(KEY); } catch (e) { /* ignore */ } }
+        }, 10000);
+      })();
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
