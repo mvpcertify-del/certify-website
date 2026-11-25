@@ -361,3 +361,68 @@
 .pubnav__logo { margin-right: 28px; flex: none; }
 .pubnav__links { gap: 14px; }
 .pubnav__link--offer { white-space: nowrap; }
+
+/* Standards dropdown: the four ISO landing pages, then the full lists. */
+.pubnav__dropdown {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.pubnav__dropdown-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.pubnav__dropdown-menu {
+  position: absolute;
+  top: 100%;
+  inset-inline-start: 0;
+  min-width: 270px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+  padding: var(--spacing-sm);
+  z-index: 100;
+}
+
+.pubnav__dropdown-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 9px var(--spacing-base);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.pubnav__dropdown-item b {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.pubnav__dropdown-item:hover,
+.pubnav__dropdown-item:focus-visible {
+  background: var(--color-accent-light);
+}
+
+.pubnav__mobile-heading {
+  padding: 12px 4px 4px;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary, var(--color-text-secondary));
+}
+
+.pubnav__mobile-sub {
+  padding-inline-start: 16px;
+}

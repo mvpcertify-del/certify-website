@@ -115,6 +115,8 @@ const RegisterLanding = lazy(() => import('./pages/register/RegisterLanding'));
 
 // Public ISO Certification Landing (Shareable ISO Links)
 const IsoLanding = lazy(() => import('./pages/iso/IsoLanding'));
+const IsoStandardLanding = lazy(() => import('./pages/iso/IsoStandardLanding'));
+const IsoHubLanding = lazy(() => import('./pages/iso/IsoHubLanding'));
 
 // Public Compliance Audit service page — the non-ISO counterpart to
 // /iso/:slug (SOC, GDPR, PCI DSS, HIPAA, …). Content, price and checkout.
@@ -177,6 +179,13 @@ function AppRoutes() {
 
           {/* ---- Public ISO Certification Landing (per-ISO shareable links) ---- */}
           <Route path="/iso/:slug" element={<IsoLanding />} />
+
+          {/* ---- SEO landing pages for the four flagship standards (client brief, 26 Nov 2026) ---- */}
+          <Route path="/iso-certification" element={<IsoHubLanding />} />
+          <Route path="/iso-9001-certification" element={<IsoStandardLanding slug="iso-9001" />} />
+          <Route path="/iso-14001-certification" element={<IsoStandardLanding slug="iso-14001" />} />
+          <Route path="/iso-45001-certification" element={<IsoStandardLanding slug="iso-45001" />} />
+          <Route path="/iso-27001-certification" element={<IsoStandardLanding slug="iso-iec-27001" />} />
 
           {/* ---- Public Compliance Audit service pages ---- */}
           <Route path="/compliance/:slug" element={<ComplianceLanding />} />

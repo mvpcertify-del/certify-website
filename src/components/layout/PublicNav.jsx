@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import LanguageSwitcher from '../LanguageSwitcher';
 import BrandLogo from '../ui/BrandLogo';
+import { ISO_LANDING_LIST, ISO_HUB_PATH } from '../../content/isoLandings';
 import './PublicNav.css';
 
 // The public site header. This used to be inlined in LandingPage only, which is
@@ -52,6 +53,17 @@ export default function PublicNav() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  // "Standards" is a dropdown: the four ISO landing pages (SEO), then the full list on the SMEs page.
+  const [stdOpen, setStdOpen] = useState(false);
+  const stdRef = useRef(null);
+  useEffect(() => {
+    const onDown = (e) => { if (stdRef.current && !stdRef.current.contains(e.target)) setStdOpen(false); };
+    const onKey = (e) => { if (e.key === 'Escape') setStdOpen(false); };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey); };
+  }, []);
+
   const handleLogout = async () => {
     setProfileOpen(false);
     await logout();
@@ -65,7 +77,39 @@ export default function PublicNav() {
 
         <div className="pubnav__links">
           <a href={anchor('how-it-works')} className="pubnav__link">{t('nav.howItWorks')}</a>
-          <a href={anchor('standards')} className="pubnav__link">{t('nav.standards')}</a>
+          <div
+            className="pubnav__dropdown"
+            ref={stdRef}
+            onMouseEnter={() => setStdOpen(true)}
+            onMouseLeave={() => setStdOpen(false)}
+          >
+            <button
+              type="button"
+              className="pubnav__link pubnav__dropdown-trigger"
+              aria-haspopup="true"
+              aria-expanded={stdOpen}
+              onClick={() => setStdOpen((o) => !o)}
+            >
+              {t('nav.standards')}
+              <ChevronDown size={14} className={`pubnav__profile-chevron ${stdOpen ? 'pubnav__profile-chevron--open' : ''}`} />
+            </button>
+            {stdOpen && (
+              <div className="pubnav__dropdown-menu" role="menu">
+                {ISO_LANDING_LIST.map((o) => (
+                  <Link key={o.slug} to={o.path} className="pubnav__dropdown-item" role="menuitem" onClick={() => setStdOpen(false)}>
+                    <b>{o.display}</b><span>{o.name.replace(' Certification', '')}</span>
+                  </Link>
+                ))}
+                <div className="pubnav__profile-divider" />
+                <Link to={ISO_HUB_PATH} className="pubnav__dropdown-item" role="menuitem" onClick={() => setStdOpen(false)}>
+                  <b>{t('nav.allIso', 'All ISO certifications')}</b><span>{t('nav.allIsoSub', 'Compare the four main standards')}</span>
+                </Link>
+                <a href={anchor('standards')} className="pubnav__dropdown-item" role="menuitem" onClick={() => setStdOpen(false)}>
+                  <b>{t('nav.allStandards', 'All 12 standards')}</b><span>{t('nav.allStandardsSub', 'The full list for SMEs')}</span>
+                </a>
+              </div>
+            )}
+          </div>
           <a href={anchor('benefits')} className="pubnav__link">{t('nav.benefits')}</a>
           <Link to="/blog" className="pubnav__link">{t('nav.blog', 'Blog')}</Link>
           <Link to="/micro/budget" className="pubnav__link pubnav__link--offer">{t('nav.microOfferShort', 'MICRO offer')} <span className="pubnav__new">NEW</span></Link>
@@ -156,7 +200,12 @@ export default function PublicNav() {
       {mobileOpen && (
         <div className="pubnav__mobile-menu">
           <a href={anchor('how-it-works')} className="pubnav__mobile-link" onClick={closeMobile}>{t('nav.howItWorks')}</a>
-          <a href={anchor('standards')} className="pubnav__mobile-link" onClick={closeMobile}>{t('nav.standards')}</a>
+          <span className="pubnav__mobile-heading">{t('nav.standards')}</span>
+          {ISO_LANDING_LIST.map((o) => (
+            <Link key={o.slug} to={o.path} className="pubnav__mobile-link pubnav__mobile-sub" onClick={closeMobile}>{o.display}</Link>
+          ))}
+          <Link to={ISO_HUB_PATH} className="pubnav__mobile-link pubnav__mobile-sub" onClick={closeMobile}>{t('nav.allIso', 'All ISO certifications')}</Link>
+          <a href={anchor('standards')} className="pubnav__mobile-link pubnav__mobile-sub" onClick={closeMobile}>{t('nav.allStandards', 'All 12 standards')}</a>
           <a href={anchor('benefits')} className="pubnav__mobile-link" onClick={closeMobile}>{t('nav.benefits')}</a>
           <Link to="/blog" className="pubnav__mobile-link" onClick={closeMobile}>{t('nav.blog', 'Blog')}</Link>
           <Link to="/micro/budget" className="pubnav__mobile-link" onClick={closeMobile}>{t('nav.microOfferShort', "What's your budget?")} <span className="pubnav__new">NEW</span></Link>
