@@ -4,6 +4,7 @@ import PublicNav from '../../components/layout/PublicNav';
 import MicroFooter from '../micro/MicroFooter';
 import SEO from '../../components/seo/SEO';
 import { computeTotal } from '../../utils/pricing';
+import { whopCheckoutUrl } from '../../utils/whopPlans';
 import { ISO_LANDING_LIST, ISO_HUB_PATH, WHY_US } from '../../content/isoLandings';
 import useJsonLd from './useJsonLd';
 import './IsoStandardLanding.css';
@@ -61,7 +62,9 @@ export default function IsoHubLanding() {
                       <p>{BLURB[o.slug]}</p>
                       <div className="isol-hubcard__price">From <strong>${price.toLocaleString()}</strong></div>
                       <Link to={o.path} className="isol-btn isol-btn--ghost isol-btn--block">Learn more <ArrowRight size={15} /></Link>
-                      <Link to={`/checkout?iso=${o.slug}`} className="isol-btn isol-btn--primary isol-btn--block"><ShoppingCart size={16} /> Buy now</Link>
+                      {whopCheckoutUrl(o.slug)
+                        ? <a href={whopCheckoutUrl(o.slug)} className="isol-btn isol-btn--primary isol-btn--block"><ShoppingCart size={16} /> Buy now</a>
+                        : <Link to={`/checkout?iso=${o.slug}`} className="isol-btn isol-btn--primary isol-btn--block"><ShoppingCart size={16} /> Buy now</Link>}
                     </article>
                   );
                 })}

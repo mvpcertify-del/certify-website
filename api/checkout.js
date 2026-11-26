@@ -15,6 +15,7 @@ import {
   resolveOrderStandardCode,
 } from '../src/utils/pricing.js';
 import { isOfflineMethod, PAYMENT_METHOD_IDS } from '../src/config/paymentMethods.js';
+import { slugForWhopPlan, WHOP_PLANS } from '../src/utils/whopPlans.js';
 import { getRegionFromCountry } from '../src/utils/roles.js';
 import { sendVerificationEmail } from './_sendVerificationEmail.js';
 import { notifyAdmins } from './_notifyAdmins.js';
@@ -930,7 +931,35 @@ async function handleWhopPaymentSucceeded(payment) {
   if (payment?.metadata?.guest === 'true') {
     return fulfillGuestWebhookPayment(payment);
   }
+  // Bought straight on Whop (the ISO 9001 plan in utils/whopPlans.js): no certify.cx order was created first, so
+  // the event carries none of our metadata. Tell the admins who paid; the client is then set up by hand.
+  if (!payment?.metadata?.clientId && !payment?.metadata?.applicationId && !payment?.metadata?.applicationIds
+      && slugForWhopPlan(payment?.plan_id)) {
+    return notifyDirectWhopPayment(payment);
+  }
   return fulfillLoggedInWebhookPayment(payment);
+}
+
+// A payment made on Whop's own checkout page for one of the plans in WHOP_PLANS. Nothing is created in certify.cx
+// from it (no account, no application), so without this alert a paid customer would be invisible here. Idempotent
+// through the webhook-id unique index in whopWebhookHandler: a retried delivery never reaches this function.
+async function notifyDirectWhopPayment(payment) {
+  const slug = slugForWhopPlan(payment?.plan_id);
+  const plan = WHOP_PLANS[slug];
+  const email = payment?.customer_email || null;
+  const name = payment?.user?.name || payment?.user?.username || null;
+  const paid = payment?.usd_total?.amount ?? payment?.total?.amount ?? null;
+  await notifyAdmins(supabaseAdmin, {
+    title: 'New payment on Whop',
+    message: `${name || email || 'A customer'} paid for ${plan?.title || slug} on Whop. Set up their certify.cx account by hand.`,
+    details: [
+      ['Product', plan?.title || slug],
+      ['Customer', [name, email].filter(Boolean).join(' · ') || 'unknown'],
+      ['Amount (USD)', paid != null ? String(paid) : 'see Whop'],
+      ['Promo code used', payment?.promo_code_id ? 'yes (see Whop)' : 'no'],
+      ['Whop payment', payment?.id || ''],
+    ],
+  }).catch(() => {});
 }
 
 // MICRO plan payment confirmed (first charge or a monthly renewal). Records the

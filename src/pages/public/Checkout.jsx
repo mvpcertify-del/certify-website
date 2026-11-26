@@ -12,6 +12,7 @@ import {
   EMPLOYEES_PER_BAND, SURCHARGE_PER_EMPLOYEE_BAND, SURCHARGE_PER_LOCATION,
 } from '../../utils/pricing';
 import { getIsoBySlug, ISO_CATALOG_LIST } from '../../utils/isoCatalog';
+import { whopCheckoutUrl } from '../../utils/whopPlans';
 import {
   getComplianceBySlug, COMPLIANCE_SERVICE_LIST,
 } from '../../utils/complianceServices';
@@ -112,6 +113,13 @@ function CheckoutForm() {
     : null;
   const [chosenSlug, setChosenSlug] = useState(paramSlug);
   const [pickerOpen, setPickerOpen] = useState(!paramSlug);
+
+  // ISO 9001 is sold straight on Whop (utils/whopPlans.js; client, 26 Nov 2026): an old /checkout?iso=iso-9001 link
+  // (emails, partner links, saved pages) is sent on to the Whop checkout so every ISO 9001 payment is made there.
+  const whopRedirect = whopCheckoutUrl(paramSlug || '');
+  useEffect(() => {
+    if (whopRedirect) window.location.replace(whopRedirect);
+  }, [whopRedirect]);
 
   const staff = Math.max(0, Math.floor(Number(searchParams.get('staff')) || 0));
   const locations = Math.max(0, Math.floor(Number(searchParams.get('locations')) || 0));

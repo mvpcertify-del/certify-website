@@ -6,8 +6,9 @@
 // Silver / Gold three-tier model and the 12-month support/audit add-ons.)
 //
 // TWO price points, set by the client on 12 Aug (core trio raised from $999 to $1,500 on 18 Sep):
-//   ISO 9001 / ISO 14001 / ISO 45001 ....... US$ 1,500
+//   ISO 14001 / ISO 45001 .................. US$ 1,500
 //   every other standard ................... US$ 1,999
+//   ISO 9001 ............................... US$ 994 (PRICE_OVERRIDES, 26 Nov: matches its Whop plan)
 // The three cheaper standards are the high-volume management-system trio;
 // everything else (food safety, information security, AI, medical devices, …)
 // is a specialist audit and is priced accordingly. CORE_STANDARDS below is the
@@ -39,6 +40,11 @@ export const CORE_PRICE = 1500;
 export const BASE_PRICE = 1999;
 // The standards that carry CORE_PRICE, by catalog slug.
 export const CORE_STANDARDS = new Set(['iso-9001', 'iso-14001', 'iso-45001']);
+
+// Per-standard prices that replace the two price points above. ISO 9001 is US$994 for micro and small companies, to
+// match the Whop plan it is sold on (client, 26 Nov 2026; see utils/whopPlans.js). Nothing else in the app
+// hard-codes this number. The size and location surcharges below still apply on top of it.
+export const PRICE_OVERRIDES = { 'iso-9001': 994 };
 
 // The one package everyone buys. Stored on applications.selected_package and
 // shown wherever a package name is displayed.
@@ -82,6 +88,7 @@ export function getPriceForStandard(slug, _tier) {
   if (compliance) return compliance.price;
 
   const resolved = resolveStandardSlug(slug);
+  if (resolved && PRICE_OVERRIDES[resolved] != null) return PRICE_OVERRIDES[resolved];
   return resolved && CORE_STANDARDS.has(resolved) ? CORE_PRICE : BASE_PRICE;
 }
 

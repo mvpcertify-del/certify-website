@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { X, Copy, Check, ArrowRight, Tag, BadgeCheck, ShieldCheck, Clock } from 'lucide-react';
 import BrandLogo from '../ui/BrandLogo';
 import {
-  BF_DISCOUNT, BF_CODE, BF_ENDS_AT, BF_CTA_PATH, BF_POPUP_SKIP, BF_POPUP_DELAY_MS, BF_POPUP_STORAGE_KEY,
+  BF_DISCOUNT, BF_CODE, BF_ENDS_AT, BF_CTA_URL, BF_PRODUCT, BF_FULL_PRICE, BF_SALE_PRICE, fmtUsd,
+  BF_POPUP_SKIP, BF_POPUP_DELAY_MS, BF_POPUP_STORAGE_KEY,
 } from '../../config/blackFriday';
 import './BlackFriday.css';
 
@@ -99,7 +100,7 @@ function Banner({ clock }) {
         <span className="bf-banner__grp">
           <span className="bf-banner__tag">Black Friday</span>
           <span className="bf-banner__text">
-            <strong>{BF_DISCOUNT}% OFF</strong><span className="bf-hide-sm"> everything</span>
+            <strong>{BF_DISCOUNT}% OFF</strong><span className="bf-hide-sm"> {BF_PRODUCT}</span>
           </span>
         </span>
         <span className="bf-banner__clock" aria-label="Time left">
@@ -108,7 +109,7 @@ function Banner({ clock }) {
         </span>
         <span className="bf-banner__grp">
           <span className="bf-banner__code bf-hide-md">Code <b>{BF_CODE}</b></span>
-          <Link to={BF_CTA_PATH} className="bf-banner__cta">Claim now <ArrowRight size={14} /></Link>
+          <a href={BF_CTA_URL} className="bf-banner__cta">Claim now <ArrowRight size={14} /></a>
         </span>
       </div>
     </div>
@@ -138,7 +139,7 @@ function Popup({ clock, onClose }) {
             <h2 id="bf-title" className="bf-title"><span>BLACK</span><span className="bf-title__hot">FRIDAY</span></h2>
             <p className="bf-pill">Our Biggest Offer of the Year <span aria-hidden="true">🔥</span></p>
             <p className="bf-off"><b>{BF_DISCOUNT}%</b> <em>OFF</em></p>
-            <p className="bf-sub">on <strong>every certification service</strong> on Certify.cx.</p>
+            <p className="bf-sub"><strong>{BF_PRODUCT}</strong>: {fmtUsd(BF_FULL_PRICE)} now <strong>{fmtUsd(BF_SALE_PRICE)}</strong> with the code.</p>
           </div>
           <div className="bf-modal__art"><GiftBox /></div>
         </div>
@@ -161,16 +162,16 @@ function Popup({ clock, onClose }) {
             <div><small>Your code</small><strong>{BF_CODE}</strong></div>
             <CopyCode />
           </div>
-          <Link to={BF_CTA_PATH} className="bf-claim" onClick={onClose}>Claim {BF_DISCOUNT}% Off Now <ArrowRight size={18} /></Link>
+          <a href={BF_CTA_URL} className="bf-claim" onClick={onClose}>Claim {BF_DISCOUNT}% Off Now <ArrowRight size={18} /></a>
         </div>
 
         <ul className="bf-perks">
-          <li><BadgeCheck size={22} /><span><b>No Hidden Fees</b>Pay full price, get {BF_DISCOUNT}% off</span></li>
-          <li><ShieldCheck size={22} /><span><b>Works on All Services</b>Applied at checkout</span></li>
-          <li><Clock size={22} /><span><b>One-Time Use</b>Hurry, offer ends soon!</span></li>
+          <li><BadgeCheck size={22} /><span><b>No Hidden Fees</b>{fmtUsd(BF_FULL_PRICE)} less {BF_DISCOUNT}%</span></li>
+          <li><ShieldCheck size={22} /><span><b>ISO 9001 Package</b>Micro &amp; small companies</span></li>
+          <li><Clock size={22} /><span><b>Limited Time</b>Hurry, offer ends soon!</span></li>
         </ul>
 
-        <p className="bf-fine">Discount applies automatically at checkout, or enter code {BF_CODE}. Offer ends Nov 30, 2026 at 11:59pm PKT.</p>
+        <p className="bf-fine">Enter code {BF_CODE} at checkout. The offer is for {BF_PRODUCT} and ends Nov 30, 2026 at 11:59pm PKT.</p>
       </div>
     </div>
   );
