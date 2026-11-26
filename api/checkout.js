@@ -13,6 +13,8 @@ import {
   // sold through this same handler since 22 Aug; without this they would be
   // recorded and receipted under their raw URL slug.
   resolveOrderStandardCode,
+  // Canonical slug for a slug / code / stored 'ISO 9001:2015' value: used to check a coupon's standard restriction.
+  resolveStandardSlug,
 } from '../src/utils/pricing.js';
 import { isOfflineMethod, PAYMENT_METHOD_IDS } from '../src/config/paymentMethods.js';
 import { slugForWhopPlan, WHOP_PLANS } from '../src/utils/whopPlans.js';
@@ -184,6 +186,19 @@ function normalizeCouponCode(raw) {
   return SAFE_CODE_RE.test(trimmed) ? trimmed : '';
 }
 
+// A coupon can be limited to ONE standard (discount_coupons.standard_slug, supabase/phase54_cgbf60_coupon.sql). The
+// Black Friday code CGBF60 is 60% off ISO 9001 only: without this a percent coupon discounts every standard, including
+// the US$1,999 audits. A restricted coupon discounts an order only when that order is exactly the one standard it names,
+// so it can never ride along on a mixed basket. No standard_slug (or the column not existing yet) means no restriction.
+function couponCoversStandards(coupon, standards) {
+  const only = coupon?.standard_slug;
+  if (!only) return true;
+  const list = (Array.isArray(standards) ? standards : [standards])
+    .filter(Boolean)
+    .map((x) => resolveStandardSlug(String(x)));
+  return list.length === 1 && list[0] === only;
+}
+
 // ---- Resolve a code typed at checkout, or carried in a ?ref= link ----
 //
 // One code does both jobs. The client asked for "a Unique ID code which will
@@ -197,7 +212,7 @@ function normalizeCouponCode(raw) {
 // and an admin can revoke it.
 //
 // Returns { coupon, referrer, referralCode } — any of which may be null.
-async function resolveCheckoutCode(rawCode) {
+async function resolveCheckoutCode(rawCode, standards) {
   // Reject non-strings and cap the length before this reaches a database
   // query. An object would stringify to "[object Object]" and an array would
   // join itself; neither is a code, and an uncapped string goes straight into
@@ -207,7 +222,7 @@ async function resolveCheckoutCode(rawCode) {
   if (!code) return { coupon: null, referrer: null, referralCode: null };
 
   // 1. A real coupon. May itself belong to a partner (phase25 referrer_id).
-  const coupon = await resolveCoupon(code);
+  const coupon = await resolveCoupon(code, standards);
   if (coupon) {
     let referrer = null;
     if (coupon.referrer_id) {
@@ -394,7 +409,7 @@ async function getReferrerTier(referrerId) {
 // expired, exhausted. Accepts either a raw code or a full share URL with
 // ?coupon=CODE or ?code=CODE in the query string.
 async function validateCouponHandler(req, res) {
-  const { code } = req.body || {};
+  const { code, standardSlug, standards } = req.body || {};
   if (!code || typeof code !== 'string') {
     return res.status(400).json({ valid: false, error: 'Missing code' });
   }
@@ -462,6 +477,11 @@ async function validateCouponHandler(req, res) {
   if (coupon.max_redemptions != null && (coupon.redemption_count || 0) >= coupon.max_redemptions) {
     return res.status(200).json({ valid: false, reason: 'exhausted' });
   }
+  // A coupon limited to one standard (see couponCoversStandards) must be checked against what is being bought.
+  const buying = Array.isArray(standards) ? standards : (standardSlug ? [standardSlug] : []);
+  if (!couponCoversStandards(coupon, buying)) {
+    return res.status(200).json({ valid: false, reason: 'not_applicable' });
+  }
   return res.status(200).json({
     valid: true,
     coupon: {
@@ -527,7 +547,7 @@ async function burnCoupon(couponCode, { clientId, applicationId, finalAmount }) 
 
 // Look up an active, non-expired, non-exhausted coupon by code. Returns the
 // row or null. Shared by the guest and logged-in paths.
-async function resolveCoupon(couponCode) {
+async function resolveCoupon(couponCode, standards) {
   if (!couponCode) return null;
   const { data: c } = await supabaseAdmin
     .from('discount_coupons')
@@ -537,7 +557,7 @@ async function resolveCoupon(couponCode) {
   if (c && c.is_active) {
     const exp = c.expires_at ? new Date(c.expires_at) : null;
     const capped = c.max_redemptions != null && (c.redemption_count || 0) >= c.max_redemptions;
-    if (!capped && (!exp || exp > new Date())) return c;
+    if (!capped && (!exp || exp > new Date()) && couponCoversStandards(c, standards)) return c;
   }
   return null;
 }
@@ -627,13 +647,13 @@ async function guestCheckoutHandler(req, res) {
 
     const totals = computeTotal({ standardSlug: isoName, employeeBands: bands, locations: extraLocations });
 
-    const typed = await resolveCheckoutCode(couponCode);
+    const typed = await resolveCheckoutCode(couponCode, [isoName]);
     // Only resolve the link code if the typed one produced nothing useful, so
     // a code the buyer deliberately typed always wins over one they merely
     // arrived with.
     const needLink = !typed.coupon && !typed.referrer;
     const linked = needLink
-      ? await resolveCheckoutCode(referralCode)
+      ? await resolveCheckoutCode(referralCode, [isoName])
       : { coupon: null, referrer: null, referralCode: null };
 
     // The link's coupon was previously computed and then thrown away, so a
@@ -1809,7 +1829,7 @@ export default async function handler(req, res) {
       if (c && c.is_active) {
         const exp = c.expires_at ? new Date(c.expires_at) : null;
         const capped = c.max_redemptions != null && (c.redemption_count || 0) >= c.max_redemptions;
-        if (!capped && (!exp || exp > new Date())) {
+        if (!capped && (!exp || exp > new Date()) && couponCoversStandards(c, pricedStandards)) {
           coupon = c;
         }
       }

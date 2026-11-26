@@ -1,12 +1,11 @@
-// Black Friday sale settings. Frontend only: the discount itself is a promo code created on the Whop plan (Whop dashboard,
-// plan "ISO 9001 Certification Package for Micro Companies"); this site only shows the offer and sends buyers to that checkout.
-// Change the values here and the banner and popup follow.
+// Black Friday sale settings. The banner and popup only SHOW the offer; the discount itself is the coupon row CGBF60 in
+// discount_coupons (supabase/phase54_cgbf60_coupon.sql), applied by certify.cx's checkout and limited to ISO 9001.
+// Change the values here and the banner and popup follow; the coupon row must be changed to match.
 //
-// 26 Nov 2026 (client): 60% off, code CGBF60, ISO 9001 for micro and small companies, sold on Whop. It was 30% / CGBF30 earlier
-// the same day. The code must exist on Whop with the same spelling and end time, or buyers will see "invalid code".
+// 26 Nov 2026 (client): 60% off, code CGBF60, ISO 9001 for micro and small companies. It was 30% / CGBF30 earlier the same day.
+// The coupon row must exist with the same spelling and end time, or buyers will see "invalid code".
 
 import { getPriceForStandard } from '../utils/pricing';
-import { whopCheckoutUrl } from '../utils/whopPlans';
 
 export const BF_DISCOUNT = 60;
 export const BF_CODE = 'CGBF60';
@@ -20,8 +19,8 @@ export const fmtUsd = (n) => `$${n.toLocaleString('en-US', { minimumFractionDigi
 // Sale ends 30 Nov 2026, 11:59:59 pm Pakistan time (UTC+5). After this moment the banner and popup disappear by themselves.
 export const BF_ENDS_AT = new Date('2026-11-30T23:59:59+05:00').getTime();
 
-// Where the "Claim" buttons go: the Whop checkout of the plan the code works on (the buyer types the code there).
-export const BF_CTA_URL = whopCheckoutUrl('iso-9001');
+// Where the "Claim" buttons go: the ISO 9001 checkout with the code already in the link (the checkout applies it by itself).
+export const BF_CTA_PATH = `/checkout?iso=iso-9001&coupon=${BF_CODE}`;
 
 // Pages where the popup must not appear (forms, checkout). The banner still shows everywhere.
 export const BF_POPUP_SKIP = ['/login', '/signup', '/forgot-password', '/reset-password', '/auth', '/checkout'];

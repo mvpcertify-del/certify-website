@@ -11,14 +11,14 @@
 // The price on Whop and PRICE_OVERRIDES in utils/pricing.js must stay in step (ISO 9001: US$994).
 // -------------------------------------------------------
 
-export const WHOP_PLANS = {
-  'iso-9001': {
-    planId: 'plan_fI3yvWfEHph9C',
-    url: 'https://whop.com/checkout/plan_fI3yvWfEHph9C',
-    // "ISO 9001 Certification Package for Micro Companies" on Whop.
-    title: 'ISO 9001 Certification Package for Micro Companies',
-  },
-};
+// EMPTY on purpose since 26 Nov 2026 (client: "do the discount from code, like before"): ISO 9001 is bought on certify.cx's
+// own checkout again, where the code CGBF60 works (supabase/phase54_cgbf60_coupon.sql). Card payment there is still taken by
+// Whop (api/checkout.js creates a one-off Whop variant per order).
+// To sell ISO 9001 on the Whop plan instead, put this entry back (then the buy buttons, old /checkout?iso=iso-9001 links
+// and the Whop payment alert follow it automatically):
+//   'iso-9001': { planId: 'plan_fI3yvWfEHph9C', url: 'https://whop.com/checkout/plan_fI3yvWfEHph9C',
+//                 title: 'ISO 9001 Certification Package for Micro Companies' },
+export const WHOP_PLANS = {};
 
 // Whop checkout URL for a catalog slug, or null when that standard is bought on certify.cx.
 export function whopCheckoutUrl(slug) {

@@ -164,7 +164,7 @@ export default function PaymentPlaceholder() {
       const r = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'validate-coupon', code }),
+        body: JSON.stringify({ action: 'validate-coupon', code, standards: basketStandards.filter(Boolean) }),
       });
       const data = await r.json();
       if (data.valid) {
@@ -176,6 +176,7 @@ export default function PaymentPlaceholder() {
           data.reason === 'expired' ? t('coupons.expiredCoupon')
           : data.reason === 'exhausted' ? t('coupons.exhaustedCoupon')
           : data.reason === 'inactive' ? t('coupons.inactiveCoupon')
+          : data.reason === 'not_applicable' ? t('coupons.notApplicable', 'This code does not apply to the certification in your order.')
           : t('coupons.invalidCoupon')
         );
       }

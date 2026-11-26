@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { X, Copy, Check, ArrowRight, Tag, BadgeCheck, ShieldCheck, Clock } from 'lucide-react';
 import BrandLogo from '../ui/BrandLogo';
 import {
-  BF_DISCOUNT, BF_CODE, BF_ENDS_AT, BF_CTA_URL, BF_PRODUCT, BF_FULL_PRICE, BF_SALE_PRICE, fmtUsd,
+  BF_DISCOUNT, BF_CODE, BF_ENDS_AT, BF_CTA_PATH, BF_PRODUCT, BF_FULL_PRICE, BF_SALE_PRICE, fmtUsd,
   BF_POPUP_SKIP, BF_POPUP_DELAY_MS, BF_POPUP_STORAGE_KEY,
 } from '../../config/blackFriday';
 import './BlackFriday.css';
@@ -109,7 +109,7 @@ function Banner({ clock }) {
         </span>
         <span className="bf-banner__grp">
           <span className="bf-banner__code bf-hide-md">Code <b>{BF_CODE}</b></span>
-          <a href={BF_CTA_URL} className="bf-banner__cta">Claim now <ArrowRight size={14} /></a>
+          <Link to={BF_CTA_PATH} className="bf-banner__cta">Claim now <ArrowRight size={14} /></Link>
         </span>
       </div>
     </div>
@@ -162,7 +162,7 @@ function Popup({ clock, onClose }) {
             <div><small>Your code</small><strong>{BF_CODE}</strong></div>
             <CopyCode />
           </div>
-          <a href={BF_CTA_URL} className="bf-claim" onClick={onClose}>Claim {BF_DISCOUNT}% Off Now <ArrowRight size={18} /></a>
+          <Link to={BF_CTA_PATH} className="bf-claim" onClick={onClose}>Claim {BF_DISCOUNT}% Off Now <ArrowRight size={18} /></Link>
         </div>
 
         <ul className="bf-perks">
@@ -171,7 +171,7 @@ function Popup({ clock, onClose }) {
           <li><Clock size={22} /><span><b>Limited Time</b>Hurry, offer ends soon!</span></li>
         </ul>
 
-        <p className="bf-fine">Enter code {BF_CODE} at checkout. The offer is for {BF_PRODUCT} and ends Nov 30, 2026 at 11:59pm PKT.</p>
+        <p className="bf-fine">The button applies code {BF_CODE} at checkout, or enter it yourself. The offer is for {BF_PRODUCT} and ends Nov 30, 2026 at 11:59pm PKT.</p>
       </div>
     </div>
   );

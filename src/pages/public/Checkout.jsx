@@ -191,7 +191,7 @@ function CheckoutForm() {
       const r = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'validate-coupon', code }),
+        body: JSON.stringify({ action: 'validate-coupon', code, standardSlug: chosenSlug }),
       });
       const data = await r.json();
       if (data.valid) {
@@ -203,6 +203,7 @@ function CheckoutForm() {
           data.reason === 'expired' ? t('coupons.expiredCoupon')
           : data.reason === 'exhausted' ? t('coupons.exhaustedCoupon')
           : data.reason === 'inactive' ? t('coupons.inactiveCoupon')
+          : data.reason === 'not_applicable' ? t('coupons.notApplicable', 'This code does not apply to the certification in your order.')
           : t('coupons.invalidCoupon')
         );
       }
@@ -226,7 +227,7 @@ function CheckoutForm() {
         const r = await fetch('/api/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'validate-coupon', code: referralCode }),
+          body: JSON.stringify({ action: 'validate-coupon', code: referralCode, standardSlug: chosenSlug }),
         });
         const data = await r.json();
         if (!cancelledFetch && data.valid) {
