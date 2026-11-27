@@ -112,9 +112,14 @@ export default function LandingPage() {
                 {t('home.heroTaglineA')}<br />{t('home.heroTaglineB')}
               </p>
               <p className="home__hero-sub">{t('home.heroSub')}</p>
-              <Link to={gapPath} className="home__btn home__btn--primary">
-                {t('nav.startGapAnalysis')} <ArrowRight size={18} />
-              </Link>
+              <div className="home__hero-actions">
+                <Link to={gapPath} className="home__btn home__btn--primary">
+                  {t('nav.startGapAnalysis')} <ArrowRight size={18} />
+                </Link>
+                <a href="https://certify.wiki" className="home__btn home__btn--ghost">
+                  {t('nav.knowledgeHub', 'Knowledge Hub')} <ArrowRight size={18} />
+                </a>
+              </div>
             </div>
 
             <div className="home__hero-sara" ref={saraRef}>
