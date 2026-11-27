@@ -27,6 +27,7 @@ export default function MicroFooter() {
             </div>
             <div className="micro-footer__col">
               <h4>{t('micro.footResources')}</h4>
+              <a href="https://certify.wiki">{t('nav.knowledgeHub', 'Knowledge Hub')}</a>
               <a href="https://certify.cx/blog">{t('micro.blog')}</a>
               <a href="https://certify.cx/guides">{t('micro.guides')}</a>
               <a href="https://certify.cx/help">{t('micro.helpCenter')}</a>

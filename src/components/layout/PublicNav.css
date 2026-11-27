@@ -366,6 +366,8 @@
   .pubnav__links { gap: 12px; }
   .pubnav__links .lang-switcher__label { display: none; }
 }
+/* Knowledge Hub (certify.wiki): shown only where the bar has room; it is always in the footer and mobile menu. */
+@media (max-width: 1279px) { .pubnav__link--wiki { display: none; } }
 /* One line each: "How It Works" used to wrap onto two lines and crowd the bar. */
 .pubnav__link, .pubnav__dropdown-trigger, .pubnav__btn { white-space: nowrap; }
 .pubnav__link--offer { color: var(--color-accent-text); font-weight: 600; }

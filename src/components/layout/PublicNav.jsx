@@ -112,6 +112,7 @@ export default function PublicNav() {
           </div>
           <a href={anchor('benefits')} className="pubnav__link">{t('nav.benefits')}</a>
           <Link to="/blog" className="pubnav__link">{t('nav.blog', 'Blog')}</Link>
+          <a href="https://certify.wiki" className="pubnav__link pubnav__link--wiki">{t('nav.knowledgeHub', 'Knowledge Hub')}</a>
           <Link to="/micro/budget" className="pubnav__link pubnav__link--offer">{t('nav.microOfferShort', 'MICRO offer')}</Link>
           <LanguageSwitcher variant="landing" />
           <button
@@ -208,6 +209,7 @@ export default function PublicNav() {
           <a href={anchor('standards')} className="pubnav__mobile-link pubnav__mobile-sub" onClick={closeMobile}>{t('nav.allStandards', 'All 12 standards')}</a>
           <a href={anchor('benefits')} className="pubnav__mobile-link" onClick={closeMobile}>{t('nav.benefits')}</a>
           <Link to="/blog" className="pubnav__mobile-link" onClick={closeMobile}>{t('nav.blog', 'Blog')}</Link>
+          <a href="https://certify.wiki" className="pubnav__mobile-link" onClick={closeMobile}>{t('nav.knowledgeHub', 'Knowledge Hub')}</a>
           <Link to="/micro/budget" className="pubnav__mobile-link" onClick={closeMobile}>{t('nav.microOfferShort', "What's your budget?")}</Link>
           {isLoggedIn ? (
             <>
