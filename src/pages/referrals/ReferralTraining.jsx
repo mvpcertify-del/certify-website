@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/ui/FormElements';
 import { TRAINING_TOPICS, wikiUrl } from './trainingTopics';
-import { ArrowRight, PlayCircle, FileDown } from 'lucide-react';
+import { ArrowRight, PlayCircle, FileDown, GraduationCap } from 'lucide-react';
 import DashboardBoxes from '../../components/ui/DashboardBoxes';
 import './Referrals.css';
 
@@ -43,6 +43,20 @@ export default function ReferralTraining() {
           <h1 className="page-title">{t('refTraining.title')}</h1>
           <p className="page-subtitle">{t('refTraining.subtitle')}</p>
         </div>
+      </div>
+
+      {/* The full course lives on the knowledge hub (client, 28 Nov 2026). Same login, so no second registration. */}
+      <div className="referral-training__panel" style={{ marginBottom: 20, display: 'flex', gap: 16, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <GraduationCap size={28} />
+          <div>
+            <h2 className="referral-training__panel-title" style={{ margin: 0 }}>{t('refTraining.academyTitle', 'Affiliate Academy on Certify.wiki™')}</h2>
+            <p style={{ margin: '4px 0 0', color: 'var(--color-text-secondary)' }}>{t('refTraining.academyDesc', 'Nine short modules with quizzes: registering clients, email templates by country, booking meetings and recording results, and marketing Certify.cx™. Sign in with this same account.')}</p>
+          </div>
+        </div>
+        <a href={wikiUrl('academy')} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+          <Button variant="primary" size="md" type="button">{t('refTraining.academyOpen', 'Open the Academy')} <ArrowRight size={16} /></Button>
+        </a>
       </div>
 
       <DashboardBoxes

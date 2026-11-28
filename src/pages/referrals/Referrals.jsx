@@ -10,7 +10,9 @@ import { Input, Button } from '../../components/ui/FormElements';
 import NameFields from '../../components/ui/NameFields';
 import { apiPost } from '../../lib/apiClient';
 import { ISO_CATALOG_LIST } from '../../utils/isoCatalog';
-import { Link2, Check, Users, DollarSign, UserPlus, Gift, Plus, AlertCircle, CheckCircle, Mail, Send, Paperclip } from 'lucide-react';
+import { Link2, Check, Users, DollarSign, UserPlus, Gift, Plus, AlertCircle, CheckCircle, Mail, Send, Paperclip, CalendarDays, CalendarClock } from 'lucide-react';
+import MeetingsModal from './MeetingsModal';
+import { stageLabel } from './meetingStages';
 import './Referrals.css';
 
 export default function Referrals() {
@@ -32,6 +34,31 @@ export default function Referrals() {
   // new. Partner mail now signs off with the partner's own stored name, which
   // is the name the company already holds on the signed agreement — nothing a
   // partner types is placed under the company's domain any more.
+  // Meeting log per client (phase55) and the company booking link shown as "Book a meeting".
+  const [meetingsFor, setMeetingsFor] = useState(null);
+  const [latestMeeting, setLatestMeeting] = useState({});
+  const [calendlyUrl, setCalendlyUrl] = useState('');
+  const handleLatest = useCallback((id, m) => setLatestMeeting(prev => ({ ...prev, [id]: m })), []);
+  useEffect(() => {
+    if (!user?.id) return undefined;
+    let alive = true;
+    (async () => {
+      const [mt, st] = await Promise.all([
+        supabase.from('referral_meetings').select('referral_id,stage,meeting_at,created_at').order('created_at', { ascending: false }),
+        supabase.from('affiliate_settings').select('calendly_url').eq('id', 1).maybeSingle(),
+      ]);
+      if (!alive) return;
+      // The tables arrive with phase55; until it is run both reads fail quietly and the screen works as before.
+      if (!mt.error) {
+        const latest = {};
+        (mt.data || []).forEach(m => { if (!latest[m.referral_id]) latest[m.referral_id] = m; });
+        setLatestMeeting(latest);
+      }
+      if (!st.error && st.data?.calendly_url) setCalendlyUrl(st.data.calendly_url);
+    })();
+    return () => { alive = false; };
+  }, [user?.id]);
+
   const [sendingId, setSendingId] = useState(null);
   const [invitedIds, setInvitedIds] = useState(() => new Set());
 
@@ -285,6 +312,18 @@ export default function Referrals() {
       render: (val) => val ? new Date(val).toLocaleDateString() : '—',
     },
     {
+      key: 'meetings',
+      label: t('referrals.meetings', 'Meetings'),
+      render: (_val, row) => {
+        const m = latestMeeting[row.id];
+        return (
+          <Button size="sm" variant={m ? 'outline' : 'ghost'} onClick={() => setMeetingsFor(row)}>
+            <CalendarClock size={15} /> {m ? stageLabel(m.stage) : t('referrals.meetingLog', 'Log meeting')}
+          </Button>
+        );
+      },
+    },
+    {
       key: 'invite',
       label: t('referrals.invite'),
       render: (_val, row) => {
@@ -337,6 +376,11 @@ export default function Referrals() {
           <p className="page-subtitle">{t('refDash.clientsDesc')}</p>
         </div>
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          {calendlyUrl && (
+            <a href={calendlyUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+              <Button variant="outline" size="md" type="button"><CalendarDays size={18} /> {t('referrals.bookMeeting', 'Book a meeting')}</Button>
+            </a>
+          )}
           <Button variant="primary" size="md" onClick={openAdd}>
             <Plus size={18} /> {t('referrals.addReferral')}
           </Button>
@@ -387,6 +431,8 @@ export default function Referrals() {
           <DataTable columns={columns} data={referrals} emptyMessage={t('referrals.noReferralsShort')} />
         )}
       </div>
+
+      <MeetingsModal key={meetingsFor?.id || "none"} referral={meetingsFor} onClose={() => setMeetingsFor(null)} onLatest={handleLatest} />
 
       {/* Add Referral Modal */}
       <Modal isOpen={showAdd} onClose={() => setShowAdd(false)} title={t('referrals.addReferral')}>
